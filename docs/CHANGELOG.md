@@ -396,13 +396,6 @@ For users upgrading from v1.0.0.41:
 
 ---
 
-## Contributors
-
-Special thanks to all contributors who made this release possible:
-- @Kalaiviswa - Flow Visual Builder, React migration
-- @akhandhediya - WebSocket Playground
-- Community contributors and testers
-
 ---
 
 ## Previous Releases

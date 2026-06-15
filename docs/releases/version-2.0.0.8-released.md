@@ -157,12 +157,6 @@ After applying the APP_KEY-only migration, `_generate_keys_on_first_run` takes t
 
 ***
 
-**Contributors**
-
-* **@marketcalls (Rajandran)** — release management, GTT order implementation for Zerodha and Dhan (#1322), Telegram `/stoppython` command + `/closeall` enhancement (#1231), Historify Parquet aggregation fix (#917), codebase-wide bare-except sweep (#1039), critical Docker `.env` `:ro` hotfix.
-
-***
-
 **Links**
 
 * **Repository**: <https://github.com/rockstarrajeev/tradeboard>

@@ -67,12 +67,6 @@ After this, `_generate_keys_on_first_run` takes the silent fast path for `APP_KE
 
 ***
 
-**Contributors**
-
-* **@marketcalls (Rajandran)** — security hardening of manual-rotation guidance; PEPPER-safety review against the populated-DB upgrade path.
-
-***
-
 **Links**
 
 * **Repository**: <https://github.com/rockstarrajeev/tradeboard>
