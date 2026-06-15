@@ -2,7 +2,7 @@
 Scalping Blueprint - Keyboard-driven options scalping terminal.
 
 Serves the symbol/expiry/strike resolution API for the /scalping React page.
-Reuses OpenAlgo option services and order constants. Order placement and
+Reuses Tradeboard option services and order constants. Order placement and
 position management endpoints are added in later phases.
 
 Order constants (docs/prompt/order-constants.md):
@@ -107,7 +107,7 @@ def _notify_risk_monitor():
 
 
 def _get_api_key():
-    """Resolve the current user's OpenAlgo API key from session."""
+    """Resolve the current user's Tradeboard API key from session."""
     username = session.get("user")
     if not username:
         return None

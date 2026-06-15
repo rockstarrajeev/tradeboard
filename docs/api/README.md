@@ -1,6 +1,6 @@
-# OpenAlgo API Documentation
+# Tradeboard API Documentation
 
-Welcome to the OpenAlgo REST API Documentation. This comprehensive guide covers all API endpoints available for algorithmic trading operations.
+Welcome to the Tradeboard REST API Documentation. This comprehensive guide covers all API endpoints available for algorithmic trading operations.
 
 ## Base URL
 
@@ -221,7 +221,7 @@ All API responses follow a consistent JSON format:
 
 ## Rate Limits
 
-OpenAlgo implements differentiated rate limiting for various API operations:
+Tradeboard implements differentiated rate limiting for various API operations:
 
 | API Type | Rate Limit |
 |----------|------------|
@@ -234,7 +234,7 @@ For detailed rate limiting information including configuration options, see [Rat
 
 ## SDK Support
 
-OpenAlgo provides official SDKs for popular programming languages:
+Tradeboard provides official SDKs for popular programming languages:
 
 - **Python**: `pip install openalgo`
 - **Node.js**: Coming soon
@@ -242,6 +242,6 @@ OpenAlgo provides official SDKs for popular programming languages:
 
 ## Support
 
-- Documentation: https://docs.openalgo.in
-- GitHub: https://github.com/marketcalls/openalgo
-- Discord: https://www.openalgo.in/discord
+- Documentation: https://docs.rajeevupadhyay.com
+- GitHub: https://github.com/rockstarrajeev/tradeboard
+- Discord: https://www.rajeevupadhyay.com/discord

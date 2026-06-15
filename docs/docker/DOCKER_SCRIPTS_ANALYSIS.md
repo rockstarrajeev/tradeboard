@@ -111,24 +111,24 @@ docker run -d ^
 **Current docker-compose.yaml generation (Lines 298-348):**
 ```yaml
 services:
-  openalgo:
-    image: openalgo:latest
+  tradeboard:
+    image: tradeboard:latest
     build:
       context: .
       dockerfile: Dockerfile
 
-    container_name: openalgo-web
+    container_name: tradeboard-web
 
     ports:
       - "127.0.0.1:5000:5000"
       - "127.0.0.1:8765:8765"
 
     volumes:
-      - openalgo_db:/app/db
-      - openalgo_logs:/app/logs
-      - openalgo_log:/app/log
-      - openalgo_strategies:/app/strategies
-      - openalgo_keys:/app/keys
+      - tradeboard_db:/app/db
+      - tradeboard_logs:/app/logs
+      - tradeboard_log:/app/log
+      - tradeboard_strategies:/app/strategies
+      - tradeboard_keys:/app/keys
       - ./.env:/app/.env:ro
 
     environment:
@@ -146,43 +146,43 @@ services:
     restart: unless-stopped
 
 volumes:
-  openalgo_db:
+  tradeboard_db:
     driver: local
-  openalgo_logs:
+  tradeboard_logs:
     driver: local
-  openalgo_log:
+  tradeboard_log:
     driver: local
-  openalgo_strategies:
+  tradeboard_strategies:
     driver: local
-  openalgo_keys:
+  tradeboard_keys:
     driver: local
 ```
 
 **Missing:**
 - ❌ `shm_size: '2gb'` - Required for scipy/numba memory operations
-- ❌ `openalgo_tmp` volume and mount - Required for numba cache
+- ❌ `tradeboard_tmp` volume and mount - Required for numba cache
 
 **Should be:**
 ```yaml
 services:
-  openalgo:
-    image: openalgo:latest
+  tradeboard:
+    image: tradeboard:latest
     build:
       context: .
       dockerfile: Dockerfile
 
-    container_name: openalgo-web
+    container_name: tradeboard-web
 
     ports:
       - "127.0.0.1:5000:5000"
       - "127.0.0.1:8765:8765"
 
     volumes:
-      - openalgo_db:/app/db
-      - openalgo_log:/app/log
-      - openalgo_strategies:/app/strategies
-      - openalgo_keys:/app/keys
-      - openalgo_tmp:/app/tmp
+      - tradeboard_db:/app/db
+      - tradeboard_log:/app/log
+      - tradeboard_strategies:/app/strategies
+      - tradeboard_keys:/app/keys
+      - tradeboard_tmp:/app/tmp
       - ./.env:/app/.env:ro
 
     environment:
@@ -203,23 +203,23 @@ services:
     restart: unless-stopped
 
 volumes:
-  openalgo_db:
+  tradeboard_db:
     driver: local
-  openalgo_log:
+  tradeboard_log:
     driver: local
-  openalgo_strategies:
+  tradeboard_strategies:
     driver: local
-  openalgo_keys:
+  tradeboard_keys:
     driver: local
-  openalgo_tmp:
+  tradeboard_tmp:
     driver: local
 ```
 
 **Changes needed:**
 1. Add `shm_size: '2gb'` after environment section
-2. Add `openalgo_tmp:/app/tmp` volume mount
-3. Add `openalgo_tmp:` volume definition
-4. Remove duplicate `openalgo_logs` volume (unused)
+2. Add `tradeboard_tmp:/app/tmp` volume mount
+3. Add `tradeboard_tmp:` volume definition
+4. Remove duplicate `tradeboard_logs` volume (unused)
 
 ---
 
@@ -258,14 +258,14 @@ After updating scripts:
 ### docker-run.sh
 - [ ] Create new installation: `./docker-run.sh start`
 - [ ] Verify directories created: `db/`, `strategies/`, `log/`, `keys/`, `tmp/`
-- [ ] Test numba: `docker exec openalgo python -c "import numba; print('OK')"`
-- [ ] Check shared memory: `docker inspect openalgo --format='{{.HostConfig.ShmSize}}'`
+- [ ] Test numba: `docker exec tradeboard python -c "import numba; print('OK')"`
+- [ ] Check shared memory: `docker inspect tradeboard --format='{{.HostConfig.ShmSize}}'`
 
 ### docker-run.bat
 - [ ] Create new installation: `docker-run.bat start`
 - [ ] Verify directories created: `db\`, `strategies\`, `log\`, `keys\`, `tmp\`
-- [ ] Test numba: `docker exec openalgo python -c "import numba; print('OK')"`
-- [ ] Check shared memory: `docker inspect openalgo --format='{{.HostConfig.ShmSize}}'`
+- [ ] Test numba: `docker exec tradeboard python -c "import numba; print('OK')"`
+- [ ] Check shared memory: `docker inspect tradeboard --format='{{.HostConfig.ShmSize}}'`
 
 ### install-docker.sh
 - [ ] Run full installation on clean Ubuntu/Debian server

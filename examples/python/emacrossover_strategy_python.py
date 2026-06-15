@@ -1,14 +1,14 @@
 """
 ===============================================================================
                 EMA CROSSOVER WITH FIXED DATETIME HANDLING
-                            OpenAlgo Trading Bot
+                            Tradeboard Trading Bot
 ===============================================================================
 
 Run standalone:
     export OPENALGO_API_KEY="your-api-key"
     python emacrossover_strategy_python.py
 
-Run via OpenAlgo's /python strategy runner:
+Run via Tradeboard's /python strategy runner:
     OPENALGO_API_KEY            : injected per-strategy (PR #1247).
     OPENALGO_STRATEGY_EXCHANGE  : set from the strategy's `exchange` config
                                   (NSE / BSE / NFO / BFO / MCX / BCD / CDS / CRYPTO).
@@ -17,7 +17,7 @@ Run via OpenAlgo's /python strategy runner:
                                   always agree (no NSE-only orders on an MCX-gated
                                   strategy).
     STRATEGY_ID / STRATEGY_NAME : injected for log/order tagging.
-    HOST_SERVER / WEBSOCKET_URL : inherited from OpenAlgo's .env.
+    HOST_SERVER / WEBSOCKET_URL : inherited from Tradeboard's .env.
     No code changes required.
 """
 
@@ -34,11 +34,11 @@ from openalgo import api
 # ===============================================================================
 
 # API Configuration — read from environment with sensible fallbacks.
-# When launched via OpenAlgo's /python runner, these come from the platform:
+# When launched via Tradeboard's /python runner, these come from the platform:
 #   OPENALGO_API_KEY : injected per-strategy (decrypted from DB)
-#   HOST_SERVER      : inherited from OpenAlgo's .env
-#   WEBSOCKET_URL    : inherited from OpenAlgo's .env
-API_KEY = os.getenv("OPENALGO_API_KEY", "openalgo-apikey")
+#   HOST_SERVER      : inherited from Tradeboard's .env
+#   WEBSOCKET_URL    : inherited from Tradeboard's .env
+API_KEY = os.getenv("OPENALGO_API_KEY", "tradeboard-apikey")
 API_HOST = os.getenv("HOST_SERVER", "http://127.0.0.1:5000")
 WS_URL = os.getenv("WEBSOCKET_URL", "ws://127.0.0.1:8765")
 
@@ -117,7 +117,7 @@ class ConfigurableEMABot:
         else:
             self.lookback_days = LOOKBACK_DAYS
 
-        print("[BOT] OpenAlgo Trading Bot Started")
+        print("[BOT] Tradeboard Trading Bot Started")
         print(f"[BOT] Host: {API_HOST} | WS: {WS_URL}")
         print(f"[BOT] Symbol: {SYMBOL} on {EXCHANGE}")
         print(f"[BOT] Direction Mode: {TRADE_DIRECTION}")
@@ -599,14 +599,14 @@ class ConfigurableEMABot:
 # ===============================================================================
 
 if __name__ == "__main__":
-    if not API_KEY or API_KEY == "openalgo-apikey":
+    if not API_KEY or API_KEY == "tradeboard-apikey":
         print(
             "[WARNING] OPENALGO_API_KEY is not set in environment. "
             "Set it before running in live mode."
         )
 
     print("\n" + "=" * 60)
-    print(" OPENALGO EMA STRATEGY - READY TO RUN")
+    print(" TRADEBOARD EMA STRATEGY - READY TO RUN")
     print("=" * 60)
     print(f" Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f" Mode: {TRADE_DIRECTION}")

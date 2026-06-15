@@ -95,7 +95,7 @@ class TelegramUser(Base):
     telegram_id = Column(Integer, unique=True, nullable=False, index=True)
     openalgo_username = Column(String(255), nullable=False, index=True)
     encrypted_api_key = Column(Text)  # Encrypted API key for secure storage
-    host_url = Column(String(500))  # OpenAlgo host URL
+    host_url = Column(String(500))  # Tradeboard host URL
     first_name = Column(String(255))
     last_name = Column(String(255))
     telegram_username = Column(String(255))
@@ -255,7 +255,7 @@ def get_telegram_user(telegram_id: int) -> dict | None:
 
 
 def get_telegram_user_by_username(username: str) -> dict | None:
-    """Get telegram user by OpenAlgo username (cached for 30 minutes)"""
+    """Get telegram user by Tradeboard username (cached for 30 minutes)"""
     cache_key = f"username_{username}"
 
     # Check cache first

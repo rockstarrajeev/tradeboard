@@ -1,5 +1,5 @@
 """
-OpenAlgo WebSocket Feed Example
+Tradeboard WebSocket Feed Example
 """
 
 import time

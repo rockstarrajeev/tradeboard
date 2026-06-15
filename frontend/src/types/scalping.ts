@@ -1,5 +1,5 @@
 // Types for the /scalping keyboard-driven options scalping terminal.
-// Order constants mirror OpenAlgo (docs/prompt/order-constants.md).
+// Order constants mirror Tradeboard (docs/prompt/order-constants.md).
 
 export type OptionType = 'CE' | 'PE'
 export type ScalpingProduct = 'MIS' | 'NRML' | 'CNC'

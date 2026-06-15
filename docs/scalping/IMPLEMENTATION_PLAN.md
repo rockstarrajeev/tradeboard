@@ -1,7 +1,7 @@
 # Scalping Terminal (`/scalping`) — Implementation Plan
 
-A keyboard-driven, low-latency options scalping terminal for OpenAlgo: a one-click
-scaling tool for fast intraday execution. Built as a new surface inside OpenAlgo, reusing
+A keyboard-driven, low-latency options scalping terminal for Tradeboard: a one-click
+scaling tool for fast intraday execution. Built as a new surface inside Tradeboard, reusing
 the existing broker session, WebSocket market-data feed, and service layer.
 
 - **Branch:** `scalping`
@@ -27,7 +27,7 @@ hot path.
 
 ---
 
-## 2. OpenAlgo order constants (authoritative — use these everywhere)
+## 2. Tradeboard order constants (authoritative — use these everywhere)
 
 Source: `docs/prompt/order-constants.md`, `docs/prompt/symbol-format.md`.
 
@@ -35,7 +35,7 @@ Source: `docs/prompt/order-constants.md`, `docs/prompt/symbol-format.md`.
 | --- | --- | --- |
 | **Exchange (underlying)** | `NSE_INDEX`, `BSE_INDEX` | NIFTY/BANKNIFTY → `NSE_INDEX`; SENSEX/BANKEX → `BSE_INDEX` |
 | **Exchange (legs)** | `NFO`, `BFO` | NSE index options → `NFO`; BSE index options → `BFO` |
-| **Product** | `CNC`, `NRML`, `MIS` | `NRML` (carry) or `MIS` (intraday). **Default `NRML`** for F&O (avoids MIS post-15:15 square-off rejections), `MIS` for equity. Shown as the raw OpenAlgo code (`NRML`/`MIS`/`CNC`). `CNC` is equity-only. |
+| **Product** | `CNC`, `NRML`, `MIS` | `NRML` (carry) or `MIS` (intraday). **Default `NRML`** for F&O (avoids MIS post-15:15 square-off rejections), `MIS` for equity. Shown as the raw Tradeboard code (`NRML`/`MIS`/`CNC`). `CNC` is equity-only. |
 | **Price type** | `MARKET`, `LIMIT`, `SL`, `SL-M` | Entry/exit = `MARKET`. (SL handled in-app via trailing logic, not broker `SL` orders in v1.) |
 | **Action** | `BUY`, `SELL` | both |
 
@@ -163,7 +163,7 @@ Before turning Analyzer mode OFF (going live):
 1. **Confirm you are in Sandbox** while testing: `/analyzer` shows Analyzer ON;
    orders appear in the sandbox book, not the live broker.
 2. **Broker session is live and IP-whitelisted** (SEBI static-IP mandate, eff.
-   2026-04-01): the OpenAlgo server's IP is registered with the broker, daily
+   2026-04-01): the Tradeboard server's IP is registered with the broker, daily
    token generated (tokens expire ~3:00 AM IST).
 3. **Verify the keymap** on a single 1-lot order each: ↑ Buy Call, ↓ Sell Call,
    → Buy Put, ← Sell Put — confirm symbol/side/qty in the order book.

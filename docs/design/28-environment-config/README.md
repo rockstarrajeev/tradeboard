@@ -2,7 +2,7 @@
 
 ## Overview
 
-OpenAlgo uses environment variables for configuration, managed through a `.env` file with validation at startup. For cloud deployments (Railway/Render), the `start.sh` script can auto-generate `.env` from environment variables.
+Tradeboard uses environment variables for configuration, managed through a `.env` file with validation at startup. For cloud deployments (Railway/Render), the `start.sh` script can auto-generate `.env` from environment variables.
 
 ## Configuration Files
 

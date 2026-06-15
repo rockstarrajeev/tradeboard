@@ -1,12 +1,12 @@
 @echo off
 REM ============================================================================
-REM OpenAlgo Update Script for Windows
+REM Tradeboard Update Script for Windows
 REM ============================================================================
 REM
 REM Usage: update.bat
 REM
-REM This script updates OpenAlgo to the latest version using the UV method.
-REM Run from the install\ directory or the openalgo project root.
+REM This script updates Tradeboard to the latest version using the UV method.
+REM Run from the install\ directory or the tradeboard project root.
 REM
 REM Prerequisites:
 REM   - Python 3.12+
@@ -21,12 +21,12 @@ setlocal enabledelayedexpansion
 REM Banner
 echo.
 echo   ========================================
-echo        OpenAlgo Update Script
+echo        Tradeboard Update Script
 echo        Windows Edition
 echo   ========================================
 echo.
 
-REM Detect OpenAlgo directory
+REM Detect Tradeboard directory
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
@@ -42,24 +42,24 @@ if exist "%SCRIPT_DIR%\app.py" (
     if exist "app.py" (
         set "OPENALGO_DIR=%CD%"
     ) else (
-        echo [ERROR] Could not find OpenAlgo directory.
+        echo [ERROR] Could not find Tradeboard directory.
         echo.
         echo Please run this script from:
-        echo   - The openalgo project root directory, OR
-        echo   - The install\ directory within openalgo
+        echo   - The tradeboard project root directory, OR
+        echo   - The install\ directory within tradeboard
         echo.
         pause
         exit /b 1
     )
 )
 
-echo [INFO] OpenAlgo directory: %OPENALGO_DIR%
+echo [INFO] Tradeboard directory: %OPENALGO_DIR%
 echo.
 
 REM Verify git repository
 if not exist "%OPENALGO_DIR%\.git" (
     echo [ERROR] Not a git repository: %OPENALGO_DIR%
-    echo Please ensure OpenAlgo was installed via git clone.
+    echo Please ensure Tradeboard was installed via git clone.
     echo.
     pause
     exit /b 1
@@ -295,7 +295,7 @@ REM Summary
 REM ========================================
 echo.
 echo   ========================================
-echo   OpenAlgo Update Complete!
+echo   Tradeboard Update Complete!
 echo   ========================================
 echo.
 echo   Version:   %CURRENT_COMMIT% -^> %NEW_COMMIT%

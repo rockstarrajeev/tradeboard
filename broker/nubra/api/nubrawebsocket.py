@@ -1,9 +1,9 @@
-# openalgo/broker/nubra/api/nubrawebsocket.py
+# tradeboard/broker/nubra/api/nubrawebsocket.py
 """
 Nubra WebSocket client for real-time market data.
 
 Replicates the core functionality of Nubra's official SDK (NubraDataSocket)
-using synchronous websocket-client (standard OpenAlgo dependency) instead of aiohttp.
+using synchronous websocket-client (standard Tradeboard dependency) instead of aiohttp.
 
 Architecture:
 - Uses websocket-client in a background thread
@@ -63,7 +63,7 @@ class NubraWebSocket:
     WebSocket client for streaming Nubra market data.
     """
 
-    def __init__(self, auth_token: str, device_id: str = "OPENALGO", token_provider=None):
+    def __init__(self, auth_token: str, device_id: str = "TRADEBOARD", token_provider=None):
         self.bt = auth_token
         # Optional zero-arg callable returning a fresh auth token from the
         # database. Invoked before each (re)connect so daily token rollover

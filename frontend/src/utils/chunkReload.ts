@@ -5,7 +5,7 @@
 // Lazy import() rejects with a browser-specific error message; we recognise
 // any of those and force-reload to fetch the fresh index.html.
 //
-// See marketcalls/openalgo#1393 for the bug report.
+// See rockstarrajeev/tradeboard#1393 for the bug report.
 
 const CHUNK_ERROR_PATTERNS = [
   // Safari: "Importing a module script failed."

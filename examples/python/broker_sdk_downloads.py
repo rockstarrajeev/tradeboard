@@ -15,7 +15,7 @@ Notes:
   with widening cooldowns (30s -> 60s -> 90s) so the run does not need
   manual restarts.
 - "Last month" is a rolling 30-day window reported by pypistats.org.
-- The list is broker-native SDKs (one per broker). OpenAlgo is included
+- The list is broker-native SDKs (one per broker). Tradeboard is included
   as the only broker-agnostic abstraction layer in the comparison.
 """
 
@@ -33,7 +33,7 @@ BROKERS = [
     ("Groww",        "growwapi"),
     ("ICICI Breeze", "breeze-connect"),
     ("5paisa",       "py5paisa"),
-    ("OpenAlgo",     "openalgo"),
+    ("Tradeboard",     "tradeboard"),
 ]
 
 
@@ -41,7 +41,7 @@ def fetch_last_month(pkg: str, *, max_retries: int = 4, cooldown_sec: int = 30) 
     """Return last-month downloads for ``pkg``, retrying on HTTP 429.
 
     Args:
-        pkg: PyPI package name (e.g. "openalgo").
+        pkg: PyPI package name (e.g. "tradeboard").
         max_retries: Total attempts before giving up.
         cooldown_sec: Base wait between retries (multiplied by attempt index).
 
@@ -79,7 +79,7 @@ def main() -> None:
     print(f"{'-' * 4}  {'-' * 15} {'-' * 25} {'-' * 12}")
     for rank, (broker, pkg, downloads) in enumerate(results, 1):
         amount = f"{downloads:,}" if downloads is not None else "n/a"
-        marker = "  <-- this project" if pkg == "openalgo" else ""
+        marker = "  <-- this project" if pkg == "tradeboard" else ""
         print(f"{rank:>4}  {broker:<15} {pkg:<25} {amount:>12}{marker}")
 
 

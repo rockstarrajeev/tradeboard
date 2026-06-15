@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "[OpenAlgo] Starting up..."
+echo "[Tradeboard] Starting up..."
 
 # ============================================
 # RAILWAY/CLOUD ENVIRONMENT DETECTION & .env GENERATION
@@ -10,13 +10,13 @@ ENV_FILE="/app/.env"
 
 # Check if .env exists, is readable, and has content (not empty)
 if [ -f "$ENV_FILE" ] && [ -r "$ENV_FILE" ] && [ -s "$ENV_FILE" ]; then
-    echo "[OpenAlgo] Using existing .env file"
+    echo "[Tradeboard] Using existing .env file"
 else
-    echo "[OpenAlgo] No .env file found or file is empty. Checking for environment variables..."
+    echo "[Tradeboard] No .env file found or file is empty. Checking for environment variables..."
     
     # Check if we're on Railway/Cloud (HOST_SERVER is the key indicator)
     if [ -n "$HOST_SERVER" ]; then
-        echo "[OpenAlgo] Environment variables detected. Generating .env file..."
+        echo "[Tradeboard] Environment variables detected. Generating .env file..."
         
         # Extract domain without https:// for WebSocket URL
         HOST_DOMAIN="${HOST_SERVER#https://}"
@@ -24,7 +24,7 @@ else
         
         # Try to write to /app/.env, fallback to /tmp/.env if permission denied
         if ! touch "$ENV_FILE" 2>/dev/null; then
-            echo "[OpenAlgo] Cannot write to /app/.env, using /tmp/.env"
+            echo "[Tradeboard] Cannot write to /app/.env, using /tmp/.env"
             ENV_FILE="/tmp/.env"
         fi
         
@@ -32,7 +32,7 @@ else
         APP_PORT="${PORT:-5000}"
         
         cat > "$ENV_FILE" << EOF
-# OpenAlgo Environment Configuration File
+# Tradeboard Environment Configuration File
 # Auto-generated from environment variables
 ENV_CONFIG_VERSION = '${ENV_CONFIG_VERSION:-1.0.4}'
 
@@ -142,13 +142,13 @@ SESSION_COOKIE_NAME = '${SESSION_COOKIE_NAME:-session}'
 CSRF_COOKIE_NAME = '${CSRF_COOKIE_NAME:-csrf_token}'
 EOF
 
-        echo "[OpenAlgo] .env file generated at $ENV_FILE"
-        echo "[OpenAlgo] Configuration: HOST_SERVER=${HOST_SERVER}"
+        echo "[Tradeboard] .env file generated at $ENV_FILE"
+        echo "[Tradeboard] Configuration: HOST_SERVER=${HOST_SERVER}"
         
         # If we wrote to /tmp, create symlink to /app/.env (or copy if symlink fails)
         if [ "$ENV_FILE" = "/tmp/.env" ]; then
             ln -sf /tmp/.env /app/.env 2>/dev/null || cp /tmp/.env /app/.env 2>/dev/null || true
-            echo "[OpenAlgo] Linked .env to /app/.env"
+            echo "[Tradeboard] Linked .env to /app/.env"
         fi
     else
         echo "============================================"
@@ -225,11 +225,11 @@ if [ -f "/app/.env" ]; then
             cat <<'PREFLIGHT_ERR' >&2
 
 ============================================================
-[OpenAlgo] STARTUP BLOCKED — compromised APP_KEY detected
+[Tradeboard] STARTUP BLOCKED — compromised APP_KEY detected
 ============================================================
 
 Your .env contains the publicly-known sample APP_KEY (and
-possibly API_KEY_PEPPER). OpenAlgo v2.0.0.6+ tries to
+possibly API_KEY_PEPPER). Tradeboard v2.0.0.6+ tries to
 auto-rotate these on first run, but the .env file is not
 writable from inside the container, so the rotation cannot
 run.
@@ -239,7 +239,7 @@ v2.0.0.5 or earlier.
 
 Fix on the HOST machine (not inside the container):
 
-  cd /path/to/openalgo
+  cd /path/to/tradeboard
   docker compose down
 
   # 1. Generate a fresh APP_KEY only
@@ -252,12 +252,12 @@ Fix on the HOST machine (not inside the container):
 
   docker compose up -d
 
-After this, OpenAlgo will start cleanly. Existing browser
+After this, Tradeboard will start cleanly. Existing browser
 sessions will need to log in again — APP_KEY rotation
 invalidates session cookies, by design.
 
 ============================================================
-[OpenAlgo] DO NOT regenerate API_KEY_PEPPER
+[Tradeboard] DO NOT regenerate API_KEY_PEPPER
 ============================================================
 
 If you have ANY existing data (users, broker logins,
@@ -290,25 +290,25 @@ fi
 # ============================================
 # Run migrations automatically on startup (idempotent - safe to run multiple times)
 if [ -f "/app/upgrade/migrate_all.py" ]; then
-    echo "[OpenAlgo] Running database migrations..."
-    /app/.venv/bin/python /app/upgrade/migrate_all.py || echo "[OpenAlgo] Migration completed (some may have been skipped)"
+    echo "[Tradeboard] Running database migrations..."
+    /app/.venv/bin/python /app/upgrade/migrate_all.py || echo "[Tradeboard] Migration completed (some may have been skipped)"
 else
-    echo "[OpenAlgo] No migrations found, skipping..."
+    echo "[Tradeboard] No migrations found, skipping..."
 fi
 
 # ============================================
 # WEBSOCKET PROXY SERVER
 # ============================================
-echo "[OpenAlgo] Starting WebSocket proxy server on port 8765..."
+echo "[Tradeboard] Starting WebSocket proxy server on port 8765..."
 /app/.venv/bin/python -m websocket_proxy.server &
 WEBSOCKET_PID=$!
-echo "[OpenAlgo] WebSocket proxy server started with PID $WEBSOCKET_PID"
+echo "[Tradeboard] WebSocket proxy server started with PID $WEBSOCKET_PID"
 
 # ============================================
 # CLEANUP HANDLER
 # ============================================
 cleanup() {
-    echo "[OpenAlgo] Shutting down..."
+    echo "[Tradeboard] Shutting down..."
     if [ ! -z "$WEBSOCKET_PID" ]; then
         kill $WEBSOCKET_PID 2>/dev/null
     fi
@@ -324,7 +324,7 @@ trap cleanup SIGTERM SIGINT
 # Use PORT env var if set (Railway/cloud), otherwise default to 5000
 APP_PORT="${PORT:-5000}"
 
-echo "[OpenAlgo] Starting application on port ${APP_PORT} with eventlet..."
+echo "[Tradeboard] Starting application on port ${APP_PORT} with eventlet..."
 
 # Create gunicorn worker temp directory (must be inside container, not mounted volume)
 mkdir -p /tmp/gunicorn_workers

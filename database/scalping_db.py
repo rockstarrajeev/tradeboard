@@ -76,7 +76,7 @@ class ScalpingSLState(Base):
 class ScalpingTrackedSymbol(Base):
     """Instruments the scalping terminal has traded (its 'scalping list').
 
-    Broker positions carry no OpenAlgo strategy tag, so the terminal records every
+    Broker positions carry no Tradeboard strategy tag, so the terminal records every
     (symbol, exchange, product) it trades here. This is how Close-All / the position
     book are scoped to the scalping strategy instead of the whole account.
     """

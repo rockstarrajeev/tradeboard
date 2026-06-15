@@ -8,7 +8,7 @@
 
 ## 1. Problem Statement
 
-Currently, OpenAlgo strategies (Webhook and Chartink) have no local order/position tracking — everything is delegated to broker APIs. There is no strategy-level stoploss, target, or trailing stop. A trader running multiple strategies on the same symbol has no way to manage or view positions per strategy. All exits rely on `placesmartorder(position_size=0)` which closes ALL positions for a symbol across the entire account, not just the strategy's position.
+Currently, Tradeboard strategies (Webhook and Chartink) have no local order/position tracking — everything is delegated to broker APIs. There is no strategy-level stoploss, target, or trailing stop. A trader running multiple strategies on the same symbol has no way to manage or view positions per strategy. All exits rely on `placesmartorder(position_size=0)` which closes ALL positions for a symbol across the entire account, not just the strategy's position.
 
 ### What's Missing
 
@@ -2178,7 +2178,7 @@ All risk parameters are optional. A strategy with no SL/target/trailing configur
 
 ## 19. Database Migration
 
-Migration follows the existing OpenAlgo pattern: standalone idempotent scripts in `upgrade/`, registered in `migrate_all.py`, run via `uv run upgrade/migrate_all.py`.
+Migration follows the existing Tradeboard pattern: standalone idempotent scripts in `upgrade/`, registered in `migrate_all.py`, run via `uv run upgrade/migrate_all.py`.
 
 ### 19.1 New Migration Script: `upgrade/migrate_strategy_risk.py`
 
@@ -2187,7 +2187,7 @@ Follows the same conventions as `migrate_sandbox.py`:
 ```python
 #!/usr/bin/env python
 """
-Strategy Risk Management Migration Script for OpenAlgo
+Strategy Risk Management Migration Script for Tradeboard
 
 Creates new tables for strategy-level risk management, position tracking,
 and order tracking. Adds risk columns to existing Strategy/ChartinkStrategy

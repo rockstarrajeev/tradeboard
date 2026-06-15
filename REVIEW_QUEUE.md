@@ -1,4 +1,4 @@
-# OpenAlgo Review Queue
+# Tradeboard Review Queue
 
 This queue tracks source-backed ambiguities, mismatches, and review items found during discovery. It does not describe planned behavior.
 

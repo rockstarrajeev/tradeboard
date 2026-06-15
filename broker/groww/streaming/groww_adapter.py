@@ -26,7 +26,7 @@ class _GrowwMarketCache:
 
     Groww splits market data across two NATS topics: an LTP topic that
     carries `ltp/open/high/low/close/volume/ltt`, and a Depth topic that
-    carries `buy[]/sell[]` book levels. Every other broker in OpenAlgo
+    carries `buy[]/sell[]` book levels. Every other broker in Tradeboard
     delivers a unified payload on every depth tick, so the rest of the
     pipeline (proxy, frontend) implicitly assumes a Depth-mode subscriber
     sees LTP for free.
@@ -696,11 +696,11 @@ class GrowwWebSocketAdapter(BaseBrokerWebSocketAdapter):
                         "type": item["sub_type"],
                         # Broker-side exchange (NSE/BSE) — used by topic gen.
                         "exchange": item["groww_exchange"],
-                        # OpenAlgo-facing exchange (NFO/BFO/NSE_INDEX/...) —
+                        # Tradeboard-facing exchange (NFO/BFO/NSE_INDEX/...) —
                         # used by the WS dispatcher to set data["exchange"]
                         # so the adapter's match loop sees the same string
                         # the user subscribed with.
-                        "openalgo_exchange": item["exchange"],
+                        "tradeboard_exchange": item["exchange"],
                         "segment": item["segment"],
                         "token": item["token"],
                         "symbol": item["symbol"],
@@ -743,7 +743,7 @@ class GrowwWebSocketAdapter(BaseBrokerWebSocketAdapter):
             spec = {
                 "type": sub_type,
                 "exchange": sub_info["groww_exchange"],
-                "openalgo_exchange": sub_info["exchange"],
+                "tradeboard_exchange": sub_info["exchange"],
                 "segment": sub_info["segment"],
                 "token": sub_info["token"],
                 "symbol": sub_info["symbol"],
@@ -835,7 +835,7 @@ class GrowwWebSocketAdapter(BaseBrokerWebSocketAdapter):
                             f"Checking {cid}: symbol={sub.get('symbol')}, exchange={sub.get('exchange')}, groww_exchange={sub.get('groww_exchange')}, mode={sub.get('mode')}"
                         )
 
-                        # For index subscriptions, the OpenAlgo exchange is NSE_INDEX/BSE_INDEX but Groww sends NSE/BSE
+                        # For index subscriptions, the Tradeboard exchange is NSE_INDEX/BSE_INDEX but Groww sends NSE/BSE
                         is_index_match = (
                             (mode == "index" or mode == "index_depth")
                             and (

@@ -102,7 +102,7 @@ TOOL_SCOPES: dict[str, str] = {
     # These are exempt from the scope filter because they help clients
     # discover what they can do. Implementing as read:market keeps the
     # check uniform without inventing a fourth scope.
-    "get_openalgo_version": SCOPE_READ_MARKET,
+    "get_tradeboard_version": SCOPE_READ_MARKET,
     "validate_order_constants": SCOPE_READ_MARKET,
 }
 
@@ -142,12 +142,12 @@ def _load_mcpserver_module():
     here = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(here)
     target = os.path.join(project_root, "mcp", "mcpserver.py")
-    spec = importlib.util.spec_from_file_location("openalgo_mcp_server", target)
+    spec = importlib.util.spec_from_file_location("tradeboard_mcp_server", target)
     if spec is None or spec.loader is None:
         logger.error("Could not build spec for mcp/mcpserver.py")
         return None
     module = importlib.util.module_from_spec(spec)
-    sys.modules["openalgo_mcp_server"] = module  # so its decorators bind
+    sys.modules["tradeboard_mcp_server"] = module  # so its decorators bind
     spec.loader.exec_module(module)
     setattr(_load_mcpserver_module, "_module", module)
     return module

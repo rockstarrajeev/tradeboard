@@ -1,5 +1,5 @@
-# Docker Development Setup for OpenAlgo Flask
-This guide focuses on setting up a development environment for OpenAlgo Flask using Docker.
+# Docker Development Setup for Tradeboard Flask
+This guide focuses on setting up a development environment for Tradeboard Flask using Docker.
 
 ## Prerequisites
 * Docker Engine 
@@ -139,7 +139,7 @@ docker-compose ps
 
 ## Directory Structure
 ```
-openalgo/
+tradeboard/
 ├── Dockerfile
 ├── docker-compose.yml
 ├── .dockerignore

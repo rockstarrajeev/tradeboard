@@ -25,7 +25,7 @@ This file lists places where the PRD had to avoid silently choosing between Disc
    - Question: Should BDD source comments be adjusted to cite only proxy action handlers where the scenario is about WebSocket messages?
 
 5. TradingView JSON and GoCharting JSON behavior is route-backed in discovery but only lightly described.
-   - Evidence: `DISCOVERY_MAP.md` route inventory lists `blueprints/tv_json.py:22` and `blueprints/gc_json.py:22`; `docs/bdd/automation_webhooks.feature` says these routes can call OpenAlgo order placement behavior.
+   - Evidence: `DISCOVERY_MAP.md` route inventory lists `blueprints/tv_json.py:22` and `blueprints/gc_json.py:22`; `docs/bdd/automation_webhooks.feature` says these routes can call Tradeboard order placement behavior.
    - Impact: PRD FR-063 states these are automation entry points but does not claim a full payload contract.
    - Question: Should the discovery map be expanded with route internals for TradingView JSON and GoCharting JSON before a fuller PRD requirement is written?
 

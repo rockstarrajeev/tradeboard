@@ -23,7 +23,7 @@ def get_client_id(api_key=None):
     Get Dhan client ID from BROKER_API_KEY or database.
 
     Args:
-        api_key: OpenAlgo API key (optional)
+        api_key: Tradeboard API key (optional)
 
     Returns:
         Client ID string or None
@@ -159,7 +159,7 @@ def parse_basket_margin_response(response_data):
     Parse Dhan multi-margin response into the standard RESTX margin shape.
 
     Dhan's docs show snake_case keys for the multi endpoint. Live responses
-    can use camelCase. Accept both and expose OpenAlgo's common margin fields.
+    can use camelCase. Accept both and expose Tradeboard's common margin fields.
     """
     try:
         if not response_data or not isinstance(response_data, dict):
@@ -260,9 +260,9 @@ def calculate_margin_api(positions, auth, api_key=None):
     benefits are included by the broker.
 
     Args:
-        positions: List of positions in OpenAlgo format
+        positions: List of positions in Tradeboard format
         auth: Authentication token for Dhan
-        api_key: OpenAlgo API key (optional, for client ID lookup)
+        api_key: Tradeboard API key (optional, for client ID lookup)
 
     Returns:
         Tuple of (response, response_data)

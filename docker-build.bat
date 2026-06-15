@@ -1,16 +1,16 @@
 @echo off
-REM OpenAlgo Docker Build and Deployment Script for Windows
-REM This script builds and deploys OpenAlgo with numba/llvmlite support
+REM Tradeboard Docker Build and Deployment Script for Windows
+REM This script builds and deploys Tradeboard with numba/llvmlite support
 
 setlocal enabledelayedexpansion
 
-set IMAGE_NAME=openalgo
+set IMAGE_NAME=tradeboard
 set IMAGE_TAG=latest
-set CONTAINER_NAME=openalgo-web
+set CONTAINER_NAME=tradeboard-web
 
 echo.
 echo ========================================
-echo OpenAlgo Docker Build ^& Deploy
+echo Tradeboard Docker Build ^& Deploy
 echo ========================================
 echo.
 
@@ -69,7 +69,7 @@ docker rm temp-verify >nul 2>nul
 
 REM Start container
 echo.
-echo [5/8] Starting OpenAlgo container...
+echo [5/8] Starting Tradeboard container...
 docker-compose up -d
 if %ERRORLEVEL% NEQ 0 (
     echo ERROR: Failed to start container!
@@ -112,14 +112,14 @@ goto :wait_loop
 REM Test Python dependencies
 echo.
 echo [7/8] Testing Python dependencies...
-docker-compose exec -T openalgo python -c "import numba; import llvmlite; print('SUCCESS')" 2>nul | findstr "SUCCESS" >nul
+docker-compose exec -T tradeboard python -c "import numba; import llvmlite; print('SUCCESS')" 2>nul | findstr "SUCCESS" >nul
 if %ERRORLEVEL% EQU 0 (
     echo OK: numba, llvmlite imports successful
 ) else (
     echo WARNING: Failed to import dependencies - check logs
 )
 
-docker-compose exec -T openalgo python -c "from numba import jit; import numpy as np; jit(nopython=True)(lambda x: x*2)(np.array([1,2,3])); print('SUCCESS')" 2>nul | findstr "SUCCESS" >nul
+docker-compose exec -T tradeboard python -c "from numba import jit; import numpy as np; jit(nopython=True)(lambda x: x*2)(np.array([1,2,3])); print('SUCCESS')" 2>nul | findstr "SUCCESS" >nul
 if %ERRORLEVEL% EQU 0 (
     echo OK: Numba JIT compilation works
 ) else (
@@ -131,7 +131,7 @@ echo.
 echo [8/8] Deployment Complete!
 echo.
 echo ========================================
-echo        OpenAlgo is now running!
+echo        Tradeboard is now running!
 echo ========================================
 echo.
 echo Access URLs:
@@ -144,7 +144,7 @@ echo Useful Commands:
 echo   View logs:        docker-compose logs -f
 echo   Stop container:   docker-compose down
 echo   Restart:          docker-compose restart
-echo   Shell access:     docker-compose exec openalgo bash
+echo   Shell access:     docker-compose exec tradeboard bash
 echo.
 
 REM Detect configured broker

@@ -223,7 +223,7 @@ def download_csv_indmoney_data(output_path):
 
 def reformat_symbol(row, file_segment=None):
     """
-    Reformat symbols according to OpenAlgo standards based on Indmoney data structure
+    Reformat symbols according to Tradeboard standards based on Indmoney data structure
     """
     instrument_name = str(row.get("INSTRUMENT_NAME", ""))
     option_type = str(row.get("OPTION_TYPE", "")) if pd.notna(row.get("OPTION_TYPE")) else ""
@@ -232,7 +232,7 @@ def reformat_symbol(row, file_segment=None):
     expiry_date = str(row.get("EXPIRY_DATE", "")) if pd.notna(row.get("EXPIRY_DATE")) else ""
     strike_price = row.get("STRIKE_PRICE", 0)
 
-    # Format expiry date for OpenAlgo format (DDMMMYY)
+    # Format expiry date for Tradeboard format (DDMMMYY)
     if expiry_date and expiry_date != "-1":
         expiry_formatted = expiry_date.replace("-", "").upper()
     else:
@@ -432,7 +432,7 @@ def process_indmoney_csv(path):
             lambda row: assign_values(row, segment), axis=1, result_type="expand"
         )
 
-        # Generate OpenAlgo formatted symbol
+        # Generate Tradeboard formatted symbol
         df["symbol"] = df.apply(lambda row: reformat_symbol(row, segment), axis=1)
 
         # Handle special cases

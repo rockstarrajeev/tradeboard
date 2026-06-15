@@ -65,7 +65,7 @@ class DhanWebSocket:
             client_id: Dhan client ID
             access_token: Access token for authentication
             is_20_depth: If True, connects to 20-level depth endpoint
-            user_id: OpenAlgo user id, used to re-read a fresh access token from
+            user_id: Tradeboard user id, used to re-read a fresh access token from
                 the database on reconnect (tokens roll over daily at ~3 AM IST)
         """
         self.client_id = client_id

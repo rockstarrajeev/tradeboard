@@ -1,4 +1,4 @@
-# OpenAlgo PRD Index
+# Tradeboard PRD Index
 
 The current-state PRD for this codebase is:
 

@@ -124,7 +124,7 @@ def set_analyze_mode(mode: bool):
 # bytes with no KDF); _decrypt_password() transparently falls back to that
 # legacy key so existing values keep working, and re-saving SMTP settings
 # re-encrypts under the strong key, migrating it forward.
-SMTP_KEY_SALT = os.getenv("SMTP_KEY_SALT", "smtp-openalgo-salt").encode()
+SMTP_KEY_SALT = os.getenv("SMTP_KEY_SALT", "smtp-tradeboard-salt").encode()
 
 
 def _get_smtp_fernet() -> Fernet:

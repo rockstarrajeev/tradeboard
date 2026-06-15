@@ -44,7 +44,7 @@ logger = get_logger(__name__)
 
 
 class TelegramBotService:
-    """Service class for managing Telegram bot operations with OpenAlgo SDK integration"""
+    """Service class for managing Telegram bot operations with Tradeboard SDK integration"""
 
     def __init__(self):
         self.application = None
@@ -54,12 +54,12 @@ class TelegramBotService:
         self.http_client = None  # Will be created in thread
         self.bot_thread = None
         self.bot_loop = None  # Store the bot's event loop
-        self.sdk_clients = {}  # Cache for OpenAlgo SDK clients per user
+        self.sdk_clients = {}  # Cache for Tradeboard SDK clients per user
         self._stop_event = original_threading.Event()  # Thread-safe stop signal
 
-    def _get_sdk_client(self, telegram_id: int) -> openalgo_api | None:
-        """Get or create OpenAlgo SDK client for a user"""
-        from openalgo import api as openalgo_api
+    def _get_sdk_client(self, telegram_id: int) -> tradeboard_api | None:
+        """Get or create Tradeboard SDK client for a user"""
+        from openalgo import api as tradeboard_api
 
         try:
             # Check if client already exists
@@ -76,7 +76,7 @@ class TelegramBotService:
             api_key = credentials["api_key"]
 
             # Create SDK client
-            client = openalgo_api(api_key=api_key, host=host_url)
+            client = tradeboard_api(api_key=api_key, host=host_url)
 
             # Cache the client
             self.sdk_clients[telegram_id] = client
@@ -145,7 +145,7 @@ class TelegramBotService:
                 result_q.put(("err", exc))
 
         t = original_threading.Thread(
-            target=_worker, daemon=True, name="openalgo-kaleido-render"
+            target=_worker, daemon=True, name="tradeboard-kaleido-render"
         )
         t.start()
         t.join()
@@ -879,8 +879,8 @@ class TelegramBotService:
             )
         else:
             await update.message.reply_text(
-                f"Welcome to OpenAlgo Bot, {user.first_name}! 🚀\n\n"
-                "To get started, link your OpenAlgo account:\n"
+                f"Welcome to Tradeboard Bot, {user.first_name}! 🚀\n\n"
+                "To get started, link your Tradeboard account:\n"
                 "`/link <api_key> <host_url>`\n\n"
                 "Example:\n"
                 "`/link your_api_key_here http://127.0.0.1:5000`\n\n"
@@ -898,7 +898,7 @@ class TelegramBotService:
 📚 *Available Commands:*
 
 *Account Management:*
-/link `<api_key> <host_url>` - Link your OpenAlgo account
+/link `<api_key> <host_url>` - Link your Tradeboard account
 /unlink - Unlink your account
 /status - Check connection status
 
@@ -958,10 +958,10 @@ class TelegramBotService:
 
         # Validate API key by making a test call
         try:
-            from openalgo import api as openalgo_api
+            from openalgo import api as tradeboard_api
 
             # Create temporary SDK client for validation
-            test_client = openalgo_api(api_key=api_key, host=host_url)
+            test_client = tradeboard_api(api_key=api_key, host=host_url)
 
             # Test with a simple call
             loop = asyncio.get_event_loop()
@@ -969,7 +969,7 @@ class TelegramBotService:
 
             if test_response and test_response.get("status") == "success":
                 # Valid credentials, save them
-                # Get the actual OpenAlgo username from the API key
+                # Get the actual Tradeboard username from the API key
                 openalgo_username = None
                 try:
                     openalgo_username = get_username_by_apikey(api_key)
@@ -990,7 +990,7 @@ class TelegramBotService:
 
                 # Log for debugging
                 logger.info(
-                    f"Linking Telegram user {user.id} (@{user.username}) with OpenAlgo username: '{openalgo_username}'"
+                    f"Linking Telegram user {user.id} (@{user.username}) with Tradeboard username: '{openalgo_username}'"
                 )
 
                 # If we still can't get username, DON'T use telegram username with @
@@ -999,10 +999,10 @@ class TelegramBotService:
                     # Try to get from session or use telegram ID
                     openalgo_username = f"user_{user.id}"
                     logger.warning(
-                        f"Could not get OpenAlgo username, using fallback: {openalgo_username}"
+                        f"Could not get Tradeboard username, using fallback: {openalgo_username}"
                     )
                 else:
-                    logger.info(f"Successfully retrieved OpenAlgo username: {openalgo_username}")
+                    logger.info(f"Successfully retrieved Tradeboard username: {openalgo_username}")
 
                 # Determine broker for currency symbol selection
                 broker_name = get_broker_name(api_key) or "default"
@@ -1010,7 +1010,7 @@ class TelegramBotService:
 
                 create_or_update_telegram_user(
                     telegram_id=user.id,
-                    username=openalgo_username,  # Use the actual OpenAlgo username
+                    username=openalgo_username,  # Use the actual Tradeboard username
                     telegram_username=user.username,
                     first_name=user.first_name,
                     last_name=user.last_name,
@@ -1106,7 +1106,7 @@ class TelegramBotService:
             )
         else:
             await update.message.reply_text(
-                "❌ No linked account found.\nUse /link to connect your OpenAlgo account.",
+                "❌ No linked account found.\nUse /link to connect your Tradeboard account.",
                 parse_mode=ParseMode.MARKDOWN,
             )
 
@@ -1128,7 +1128,7 @@ class TelegramBotService:
         # Get orderbook using SDK
         client = self._get_sdk_client(user.id)
         if not client:
-            await update.message.reply_text("❌ Failed to connect to OpenAlgo")
+            await update.message.reply_text("❌ Failed to connect to Tradeboard")
             return
 
         loop = asyncio.get_event_loop()
@@ -1256,7 +1256,7 @@ class TelegramBotService:
         # Get tradebook using SDK
         client = self._get_sdk_client(user.id)
         if not client:
-            await update.message.reply_text("❌ Failed to connect to OpenAlgo")
+            await update.message.reply_text("❌ Failed to connect to Tradeboard")
             return
 
         loop = asyncio.get_event_loop()
@@ -1344,7 +1344,7 @@ class TelegramBotService:
         # Get positions using SDK
         client = self._get_sdk_client(user.id)
         if not client:
-            await update.message.reply_text("❌ Failed to connect to OpenAlgo")
+            await update.message.reply_text("❌ Failed to connect to Tradeboard")
             return
 
         loop = asyncio.get_event_loop()
@@ -1440,7 +1440,7 @@ class TelegramBotService:
         # Get holdings using SDK
         client = self._get_sdk_client(user.id)
         if not client:
-            await update.message.reply_text("❌ Failed to connect to OpenAlgo")
+            await update.message.reply_text("❌ Failed to connect to Tradeboard")
             return
 
         loop = asyncio.get_event_loop()
@@ -1541,7 +1541,7 @@ class TelegramBotService:
         # Get funds using SDK
         client = self._get_sdk_client(user.id)
         if not client:
-            await update.message.reply_text("❌ Failed to connect to OpenAlgo")
+            await update.message.reply_text("❌ Failed to connect to Tradeboard")
             return
 
         loop = asyncio.get_event_loop()
@@ -1601,7 +1601,7 @@ class TelegramBotService:
         # Get P&L from funds using SDK
         client = self._get_sdk_client(user.id)
         if not client:
-            await update.message.reply_text("❌ Failed to connect to OpenAlgo")
+            await update.message.reply_text("❌ Failed to connect to Tradeboard")
             return
 
         loop = asyncio.get_event_loop()
@@ -1673,7 +1673,7 @@ class TelegramBotService:
         # Get quote using SDK
         client = self._get_sdk_client(user.id)
         if not client:
-            await update.message.reply_text("❌ Failed to connect to OpenAlgo")
+            await update.message.reply_text("❌ Failed to connect to Tradeboard")
             return
 
         loop = asyncio.get_event_loop()
@@ -1874,7 +1874,7 @@ class TelegramBotService:
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         await update.message.reply_text(
-            "📱 *OpenAlgo Trading Menu*\nSelect an option below:",
+            "📱 *Tradeboard Trading Menu*\nSelect an option below:",
             reply_markup=reply_markup,
             parse_mode=ParseMode.MARKDOWN,
         )
@@ -2196,7 +2196,7 @@ class TelegramBotService:
 
             client = self._get_sdk_client(user.id)
             if not client:
-                await query.edit_message_text("❌ Failed to connect to OpenAlgo")
+                await query.edit_message_text("❌ Failed to connect to Tradeboard")
                 return
 
             await query.edit_message_text("⏳ Closing all positions...")
@@ -2236,7 +2236,7 @@ class TelegramBotService:
 
             client = self._get_sdk_client(user.id)
             if not client:
-                await query.edit_message_text("❌ Failed to connect to OpenAlgo")
+                await query.edit_message_text("❌ Failed to connect to Tradeboard")
                 return
 
             await query.edit_message_text("⏳ Closing all positions and stopping strategies...")
@@ -2474,7 +2474,7 @@ class TelegramBotService:
 
                 timestamp = datetime.now().strftime("%H:%M:%S")
                 await query.edit_message_text(
-                    f"📱 *OpenAlgo Trading Menu*\nSelect an option below:\n_Updated: {timestamp}_",
+                    f"📱 *Tradeboard Trading Menu*\nSelect an option below:\n_Updated: {timestamp}_",
                     reply_markup=reply_markup,
                     parse_mode=ParseMode.MARKDOWN,
                 )
@@ -2495,7 +2495,7 @@ class TelegramBotService:
 
         client = self._get_sdk_client(user.id)
         if not client:
-            await context.bot.send_message(chat_id=chat_id, text="❌ Failed to connect to OpenAlgo")
+            await context.bot.send_message(chat_id=chat_id, text="❌ Failed to connect to Tradeboard")
             return
 
         # Map callback data to API calls and formatters

@@ -1,4 +1,4 @@
-# OpenAlgo File-Descriptor / Resource-Leak Audit
+# Tradeboard File-Descriptor / Resource-Leak Audit
 
 > **Generated**: June 2026
 > **Scope**: SQLAlchemy engines/sessions, raw file handles, network sockets (HTTP/WebSocket/ZeroMQ), subprocesses, threads, executors, and schedulers across the full runtime codebase
@@ -9,7 +9,7 @@
 
 ## Why this audit
 
-OpenAlgo runs as a single long-lived process (Gunicorn `-w 1` + eventlet in production). In that model, any resource opened per-request, per-loop, or per-reconnect and not released accumulates until the process hits the OS file-descriptor limit and starts failing. CLAUDE.md makes two specific FD-hygiene claims that this audit verifies:
+Tradeboard runs as a single long-lived process (Gunicorn `-w 1` + eventlet in production). In that model, any resource opened per-request, per-loop, or per-reconnect and not released accumulates until the process hits the OS file-descriptor limit and starts failing. CLAUDE.md makes two specific FD-hygiene claims that this audit verifies:
 
 1. *"All SQLite databases use NullPool"* — each operation gets a fresh connection closed immediately.
 2. *"FD leak prevention is handled by 5 layers of session cleanup."*
@@ -95,7 +95,7 @@ The 22 core `database/*.py` modules correctly use the guarded pattern (NullPool 
 - **Fix**: Wrap in `with db_session() as session:` like the other groww call sites, and fix FD-2.
 
 ### [FD-6] Per-call `ThreadPoolExecutor` never shut down (Flow Telegram alerts) — RESOLVED
-- **Location**: `services/flow_openalgo_client.py:567`
+- **Location**: `services/flow_tradeboard_client.py:567`
 - **Evidence**:
   ```python
   alert_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="flow_telegram")

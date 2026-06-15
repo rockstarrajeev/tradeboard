@@ -1,5 +1,5 @@
 """
-OpenAlgo WebSocket Market Depth Example
+Tradeboard WebSocket Market Depth Example
 """
 
 import time

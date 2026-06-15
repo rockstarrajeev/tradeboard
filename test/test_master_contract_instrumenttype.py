@@ -248,7 +248,7 @@ def main():
     except Exception as e:
         print(red(f"\nFailed to connect to database: {e}"))
         print(
-            yellow("Make sure OpenAlgo is properly configured and master contracts are downloaded.")
+            yellow("Make sure Tradeboard is properly configured and master contracts are downloaded.")
         )
         return 1
 

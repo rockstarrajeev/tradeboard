@@ -1,5 +1,5 @@
 Feature: Notifications and observability
-  OpenAlgo emits events, sends notifications, and records operational telemetry.
+  Tradeboard emits events, sends notifications, and records operational telemetry.
 
   # Source: blueprints/telegram.py:58, subscribers/telegram_subscriber.py:26
   Scenario: Telegram settings can enable order notifications

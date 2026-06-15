@@ -2,12 +2,12 @@
 
 ## Overview
 
-OpenAlgo follows a modular architecture with clear separation of concerns. This document provides a comprehensive map of the project structure to help developers navigate the codebase effectively.
+Tradeboard follows a modular architecture with clear separation of concerns. This document provides a comprehensive map of the project structure to help developers navigate the codebase effectively.
 
 ## Root Directory
 
 ```
-openalgo/
+tradeboard/
 ├── app.py                    # Flask application entry point
 ├── extensions.py             # Flask extensions (SocketIO, CORS)
 ├── cors.py                   # CORS configuration
@@ -224,7 +224,7 @@ services/
 ├── flow_executor_service.py      # Flow execution engine
 ├── flow_scheduler_service.py     # Scheduled flows
 ├── flow_price_monitor_service.py # Price-triggered flows
-├── flow_openalgo_client.py       # Flow API client
+├── flow_tradeboard_client.py       # Flow API client
 │
 ├── ping_service.py               # Health check
 ├── websocket_service.py          # WebSocket management

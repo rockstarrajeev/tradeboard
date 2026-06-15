@@ -1,6 +1,6 @@
 # BDD Coverage
 
-This directory contains Gherkin scenarios for current OpenAlgo behavior. Each scenario has a source comment immediately above it with at least one route file and line number, plus service citations where needed.
+This directory contains Gherkin scenarios for current Tradeboard behavior. Each scenario has a source comment immediately above it with at least one route file and line number, plus service citations where needed.
 
 ## Inventory
 

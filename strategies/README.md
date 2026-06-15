@@ -1,7 +1,7 @@
 # Python Strategy Management System
 
 ## Overview
-A complete web-based strategy hosting and scheduling system for OpenAlgo, accessible at `/python`.
+A complete web-based strategy hosting and scheduling system for Tradeboard, accessible at `/python`.
 
 ## Features
 - **Upload & Manage**: Upload Python strategy scripts through web interface
@@ -19,7 +19,7 @@ A complete web-based strategy hosting and scheduling system for OpenAlgo, access
 pip install apscheduler psutil
 ```
 
-2. The system is already integrated into OpenAlgo. Access it at:
+2. The system is already integrated into Tradeboard. Access it at:
 ```
 http://localhost:5000/python
 ```
@@ -79,7 +79,7 @@ EXCHANGE = os.getenv(
     os.getenv('EXCHANGE', 'NSE'),
 )
 API_KEY  = os.getenv('OPENALGO_API_KEY', '')
-# HOST_SERVER is the canonical name in OpenAlgo's .env (inherited).
+# HOST_SERVER is the canonical name in Tradeboard's .env (inherited).
 # OPENALGO_HOST is a fallback alias the platform setdefaults to 127.0.0.1:5000.
 API_HOST = os.getenv('HOST_SERVER') or os.getenv('OPENALGO_HOST', 'http://127.0.0.1:5000')
 WS_URL   = os.getenv('WEBSOCKET_URL') or (
@@ -96,7 +96,7 @@ def main():
             # 1. Fetch market data
             # 2. Calculate indicators
             # 3. Generate signals
-            # 4. Place orders via OpenAlgo API
+            # 4. Place orders via Tradeboard API
             
             print(f"[{datetime.now()}] Running strategy...")
             time.sleep(60)  # Check every minute
@@ -124,11 +124,11 @@ These are set directly on each strategy subprocess (only the ones below — the 
 - `STRATEGY_NAME` — name of the strategy
 - `OPENALGO_STRATEGY_EXCHANGE` — the exchange picked at upload/edit time (`NSE` / `BSE` / `NFO` / `BFO` / `MCX` / `BCD` / `CDS` / `CRYPTO`). Read this in your script so its trading calls match the calendar the host is gating against
 - `OPENALGO_API_KEY` — decrypted API key for this user
-- `OPENALGO_HOST` — OpenAlgo host URL, **set with `setdefault` to `http://127.0.0.1:5000`**. If `OPENALGO_HOST` is already present in `.env` (it usually isn't — `.env` uses `HOST_SERVER`), that value is kept. Treat this as a convenience fallback only
+- `OPENALGO_HOST` — Tradeboard host URL, **set with `setdefault` to `http://127.0.0.1:5000`**. If `OPENALGO_HOST` is already present in `.env` (it usually isn't — `.env` uses `HOST_SERVER`), that value is kept. Treat this as a convenience fallback only
 
 ### Inherited from `.env`
 
-Strategies are launched with `os.environ.copy()`, so they inherit **every** variable from OpenAlgo's `.env`. The relevant ones for connecting to OpenAlgo:
+Strategies are launched with `os.environ.copy()`, so they inherit **every** variable from Tradeboard's `.env`. The relevant ones for connecting to Tradeboard:
 
 - `HOST_SERVER` — REST host, e.g. `http://127.0.0.1:5000` (this is the canonical name in `.env`; **prefer this in your scripts**)
 - `WEBSOCKET_URL` — full WS URL, e.g. `ws://127.0.0.1:8765`
@@ -147,7 +147,7 @@ Strategies are launched with `os.environ.copy()`, so they inherit **every** vari
 > )
 > ```
 >
-> Note: there is **no `HOST_URL` variable** anywhere in OpenAlgo. Only `HOST_SERVER` (REST), `OPENALGO_HOST` (injected fallback alias), and `WEBSOCKET_URL` (WS).
+> Note: there is **no `HOST_URL` variable** anywhere in Tradeboard. Only `HOST_SERVER` (REST), `OPENALGO_HOST` (injected fallback alias), and `WEBSOCKET_URL` (WS).
 
 ### Per-strategy parameters
 
@@ -168,13 +168,13 @@ logs/
 
 ## API Integration
 
-Example of integrating with OpenAlgo API in your strategy:
+Example of integrating with Tradeboard API in your strategy:
 
 ```python
 import os
 import requests
 
-class OpenAlgoAPI:
+class TradeboardAPI:
     def __init__(self, host=None, api_key=None):
         # HOST_SERVER (from .env) wins; OPENALGO_HOST is the platform-injected fallback.
         self.host = host or os.getenv('HOST_SERVER') or os.getenv('OPENALGO_HOST', 'http://127.0.0.1:5000')
@@ -273,6 +273,6 @@ When upgrading to the exchange-aware /python:
 
 See `examples/simple_ema_strategy.py` for a complete working example that:
 - Implements EMA crossover logic
-- Integrates with OpenAlgo API
+- Integrates with Tradeboard API
 - Handles errors gracefully
 - Uses environment parameters

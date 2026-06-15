@@ -2,7 +2,7 @@
 
 ## Overview
 
-OpenAlgo's React frontend supports theme customization with light/dark modes and 12 base colors. Theme preferences persist across sessions using Zustand with localStorage. The theme system also manages "App Mode" (live vs analyzer) with distinct visual states.
+Tradeboard's React frontend supports theme customization with light/dark modes and 12 base colors. Theme preferences persist across sessions using Zustand with localStorage. The theme system also manages "App Mode" (live vs analyzer) with distinct visual states.
 
 ## Architecture Diagram
 

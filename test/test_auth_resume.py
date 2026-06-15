@@ -1,4 +1,4 @@
-"""Regression tests for OpenAlgo login broker-session resume."""
+"""Regression tests for Tradeboard login broker-session resume."""
 
 import atexit
 import importlib

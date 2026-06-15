@@ -1,14 +1,14 @@
 @echo off
 REM ============================================================================
-REM OpenAlgo Docker Runner for Windows
+REM Tradeboard Docker Runner for Windows
 REM ============================================================================
 REM
 REM Quick Start (2 commands):
-REM   1. Download: curl.exe -O https://raw.githubusercontent.com/marketcalls/openalgo/main/install/docker-run.bat
+REM   1. Download: curl.exe -O https://raw.githubusercontent.com/rockstarrajeev/tradeboard/main/install/docker-run.bat
 REM   2. Run:      docker-run.bat
 REM
 REM Commands:
-REM   start    - Start OpenAlgo container (default, runs setup if needed)
+REM   start    - Start Tradeboard container (default, runs setup if needed)
 REM   stop     - Stop and remove container
 REM   restart  - Restart container
 REM   logs     - View container logs (live)
@@ -26,10 +26,10 @@ REM ============================================================================
 setlocal enabledelayedexpansion
 
 REM Configuration
-set IMAGE=marketcalls/openalgo:latest
-set CONTAINER=openalgo
+set IMAGE=rockstarrajeev/tradeboard:latest
+set CONTAINER=tradeboard
 set ENV_FILE=.env
-set SAMPLE_ENV_URL=https://raw.githubusercontent.com/marketcalls/openalgo/main/.sample.env
+set SAMPLE_ENV_URL=https://raw.githubusercontent.com/rockstarrajeev/tradeboard/main/.sample.env
 REM Use the directory where the script is located
 set OPENALGO_DIR=%~dp0
 REM Remove trailing backslash
@@ -45,7 +45,7 @@ set VALID_BROKERS=fivepaisa,fivepaisaxts,aliceblue,angel,arrow,compositedge,defi
 REM Banner
 echo.
 echo   ========================================
-echo        OpenAlgo Docker Runner
+echo        Tradeboard Docker Runner
 echo        Windows Desktop Edition
 echo   ========================================
 echo.
@@ -81,7 +81,7 @@ if /i "%CMD%"=="help" goto help
 goto help
 
 :setup
-echo [INFO] Setting up OpenAlgo in %OPENALGO_DIR%...
+echo [INFO] Setting up Tradeboard in %OPENALGO_DIR%...
 echo.
 
 REM Create db directory
@@ -123,7 +123,7 @@ if not exist "%OPENALGO_DIR%\%ENV_FILE%" (
     echo Please check your internet connection.
     echo.
     echo Manual setup:
-    echo   1. Download .sample.env from https://github.com/marketcalls/openalgo
+    echo   1. Download .sample.env from https://github.com/rockstarrajeev/tradeboard
     echo   2. Save it as %OPENALGO_DIR%\.env
     echo   3. Run this script again
     set SETUP_FAILED=1
@@ -253,20 +253,20 @@ echo.
 echo   Redirect URL for broker portal:
 echo   http://127.0.0.1:5000/%BROKER_NAME%/callback
 echo.
-echo   Documentation: https://docs.openalgo.in
+echo   Documentation: https://docs.rajeevupadhyay.com
 echo.
 set /p OPEN_ENV="Open .env in Notepad for review? (y/n): "
 if /i "%OPEN_ENV%"=="y" (
     start notepad "%OPENALGO_DIR%\%ENV_FILE%"
 )
 echo.
-echo [OK] Setup complete! Run 'docker-run.bat start' to launch OpenAlgo.
+echo [OK] Setup complete! Run 'docker-run.bat start' to launch Tradeboard.
 
 :setup_end
 exit /b %SETUP_FAILED%
 
 :start
-echo [INFO] Starting OpenAlgo...
+echo [INFO] Starting Tradeboard...
 echo.
 
 REM Check if setup is needed
@@ -276,12 +276,12 @@ if not exist "%OPENALGO_DIR%\%ENV_FILE%" (
     call :setup
     if errorlevel 1 (
         echo.
-        echo [ERROR] Setup failed. Cannot start OpenAlgo.
+        echo [ERROR] Setup failed. Cannot start Tradeboard.
         echo Please fix the issues above and try again.
         goto end
     )
     echo.
-    echo [INFO] Starting OpenAlgo after setup...
+    echo [INFO] Starting Tradeboard after setup...
     echo.
 )
 
@@ -336,7 +336,7 @@ if %SHM_SIZE_MB% GTR 2048 set SHM_SIZE_MB=2048
 
 REM Thread limits based on RAM (prevents RLIMIT_NPROC exhaustion)
 REM Less than 3GB: 1 thread | 3-6GB: 2 threads | 6GB+: min(4, cores)
-REM See: https://github.com/marketcalls/openalgo/issues/822
+REM See: https://github.com/rockstarrajeev/tradeboard/issues/822
 if %TOTAL_RAM_MB% LSS 3000 (
     set THREAD_LIMIT=1
 ) else if %TOTAL_RAM_MB% LSS 6000 (
@@ -398,7 +398,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo [SUCCESS] OpenAlgo started successfully!
+echo [SUCCESS] Tradeboard started successfully!
 echo.
 echo   ========================================
 echo   Web UI:     http://127.0.0.1:5000
@@ -409,23 +409,23 @@ echo   Data directory: %OPENALGO_DIR%
 echo.
 echo   Useful commands:
 echo     docker-run.bat logs     - View logs
-echo     docker-run.bat stop     - Stop OpenAlgo
-echo     docker-run.bat restart  - Restart OpenAlgo
+echo     docker-run.bat stop     - Stop Tradeboard
+echo     docker-run.bat restart  - Restart Tradeboard
 echo.
 goto end
 
 :stop
-echo [INFO] Stopping OpenAlgo...
+echo [INFO] Stopping Tradeboard...
 docker stop %CONTAINER% >nul 2>&1
 docker rm %CONTAINER% >nul 2>&1
-echo [OK] OpenAlgo stopped.
+echo [OK] Tradeboard stopped.
 goto end
 
 :restart
-echo [INFO] Restarting OpenAlgo...
+echo [INFO] Restarting Tradeboard...
 docker stop %CONTAINER% >nul 2>&1
 docker rm %CONTAINER% >nul 2>&1
-echo [OK] OpenAlgo stopped.
+echo [OK] Tradeboard stopped.
 echo.
 goto start
 
@@ -454,9 +454,9 @@ echo.
 REM Check if container is running
 docker ps --filter "name=%CONTAINER%" --filter "status=running" | findstr %CONTAINER% >nul
 if errorlevel 1 (
-    echo [STATUS] OpenAlgo is NOT running.
+    echo [STATUS] Tradeboard is NOT running.
 ) else (
-    echo [STATUS] OpenAlgo is running.
+    echo [STATUS] Tradeboard is running.
     echo.
     echo   Web UI: http://127.0.0.1:5000
 )
@@ -484,7 +484,7 @@ echo.
 echo Usage: docker-run.bat [command]
 echo.
 echo Commands:
-echo   start    Start OpenAlgo (runs setup if needed, default)
+echo   start    Start Tradeboard (runs setup if needed, default)
 echo   stop     Stop and remove container
 echo   restart  Restart container
 echo   logs     View container logs (live)
@@ -498,7 +498,7 @@ echo.
 echo Quick Start:
 echo   1. Install Docker Desktop: https://www.docker.com/products/docker-desktop
 echo   2. Download this script (use PowerShell):
-echo      curl.exe -O https://raw.githubusercontent.com/marketcalls/openalgo/main/install/docker-run.bat
+echo      curl.exe -O https://raw.githubusercontent.com/rockstarrajeev/tradeboard/main/install/docker-run.bat
 echo   3. Run: docker-run.bat
 echo.
 echo Data Location: %OPENALGO_DIR%

@@ -7,7 +7,7 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# OpenAlgo Update Banner
+# Tradeboard Update Banner
 echo -e "${BLUE}"
 echo "  ██████╗ ██████╗ ███████╗███╗   ██╗ █████╗ ██╗      ██████╗  ██████╗ "
 echo " ██╔═══██╗██╔══██╗██╔════╝████╗  ██║██╔══██╗██║     ██╔════╝ ██╔═══██╗"
@@ -18,8 +18,8 @@ echo "  ╚═════╝ ╚═╝     ╚══════╝╚═╝  �
 echo "                          UPDATE  SCRIPT                                "
 echo -e "${NC}"
 
-# OpenAlgo Update Script
-# Updates an existing OpenAlgo installation to the latest version using the UV method.
+# Tradeboard Update Script
+# Updates an existing Tradeboard installation to the latest version using the UV method.
 # Supports both server deployments (installed via install.sh) and local development setups.
 
 # Create logs directory if it doesn't exist
@@ -47,7 +47,7 @@ check_status() {
 }
 
 # Start logging
-log_message "Starting OpenAlgo update log at: $LOG_FILE" "$BLUE"
+log_message "Starting Tradeboard update log at: $LOG_FILE" "$BLUE"
 log_message "----------------------------------------" "$BLUE"
 
 # Detect OS type
@@ -111,14 +111,14 @@ detect_uv() {
 # Find server deployments installed via install.sh
 #
 # Two layouts are supported:
-#   1. Simple (current install.sh)   /var/python/openalgo, service "openalgo"
-#   2. Legacy multi-deploy           /var/python/openalgo-flask/<deploy>/openalgo,
-#                                    service "openalgo-<deploy>" (still produced
+#   1. Simple (current install.sh)   /var/python/tradeboard, service "tradeboard"
+#   2. Legacy multi-deploy           /var/python/tradeboard-flask/<deploy>/tradeboard,
+#                                    service "tradeboard-<deploy>" (still produced
 #                                    by install/install-multi.sh)
 # We try the simple layout first because it's unambiguous; only fall back
 # to scanning the legacy parent dir when the simple path is absent.
-SIMPLE_PATH="/var/python/openalgo"
-DEPLOY_BASE="/var/python/openalgo-flask"
+SIMPLE_PATH="/var/python/tradeboard"
+DEPLOY_BASE="/var/python/tradeboard-flask"
 SERVER_MODE=false
 STASHED=false
 
@@ -126,7 +126,7 @@ find_deployments() {
     local deployments=()
     if [ -d "$DEPLOY_BASE" ]; then
         for dir in "$DEPLOY_BASE"/*/; do
-            if [ -d "${dir}openalgo/.git" ]; then
+            if [ -d "${dir}tradeboard/.git" ]; then
                 deploy_name=$(basename "$dir")
                 deployments+=("$deploy_name")
             fi
@@ -137,13 +137,13 @@ find_deployments() {
 
 if [ -d "$SIMPLE_PATH/.git" ] && [ -f "$SIMPLE_PATH/.env" ]; then
     SERVER_MODE=true
-    SELECTED_DEPLOY="openalgo"
+    SELECTED_DEPLOY="tradeboard"
     BASE_PATH="$SIMPLE_PATH"
     OPENALGO_PATH="$SIMPLE_PATH"
     VENV_PATH="$SIMPLE_PATH/.venv"
-    SERVICE_NAME="openalgo"
+    SERVICE_NAME="tradeboard"
 
-    log_message "Found OpenAlgo install at $SIMPLE_PATH" "$GREEN"
+    log_message "Found Tradeboard install at $SIMPLE_PATH" "$GREEN"
     log_message "Service: $SERVICE_NAME" "$BLUE"
 else
     DEPLOYMENTS=($(find_deployments))
@@ -175,9 +175,9 @@ if [ "$SERVER_MODE" = false ] && [ ${#DEPLOYMENTS[@]} -gt 0 ]; then
 
     # Derive paths from deployment name (legacy multi-deploy layout)
     BASE_PATH="$DEPLOY_BASE/$SELECTED_DEPLOY"
-    OPENALGO_PATH="$BASE_PATH/openalgo"
+    OPENALGO_PATH="$BASE_PATH/tradeboard"
     VENV_PATH="$BASE_PATH/venv"
-    SERVICE_NAME="openalgo-$SELECTED_DEPLOY"
+    SERVICE_NAME="tradeboard-$SELECTED_DEPLOY"
 
     log_message "\nUpdating deployment: $SELECTED_DEPLOY" "$BLUE"
     log_message "Path: $OPENALGO_PATH" "$BLUE"
@@ -185,15 +185,15 @@ if [ "$SERVER_MODE" = false ] && [ ${#DEPLOYMENTS[@]} -gt 0 ]; then
 fi
 
 if [ "$SERVER_MODE" = false ]; then
-    # Check if we're in or near an openalgo git repo (local development)
+    # Check if we're in or near an tradeboard git repo (local development)
     if [ -d ".git" ] && [ -f "app.py" ]; then
         OPENALGO_PATH="$(pwd)"
     elif [ -d "$SCRIPT_DIR/../.git" ] && [ -f "$SCRIPT_DIR/../app.py" ]; then
         OPENALGO_PATH="$(cd "$SCRIPT_DIR/.." && pwd)"
     else
-        log_message "Error: No OpenAlgo deployment found." "$RED"
+        log_message "Error: No Tradeboard deployment found." "$RED"
         log_message "For server deployments, ensure install.sh was run first." "$YELLOW"
-        log_message "For local development, run this script from the openalgo directory." "$YELLOW"
+        log_message "For local development, run this script from the tradeboard directory." "$YELLOW"
         exit 1
     fi
 
@@ -404,16 +404,16 @@ if [ -f "$OPENALGO_PATH/.env" ]; then
     # Add TRUST_PROXY_HEADERS to .env if missing. Auto-detect whether nginx
     # is configured for this deployment so the default matches reality.
     if ! grep -q "^TRUST_PROXY_HEADERS" "$OPENALGO_PATH/.env"; then
-        # Detect nginx in front of openalgo: any sites-enabled/ or conf.d/
+        # Detect nginx in front of tradeboard: any sites-enabled/ or conf.d/
         # config that mentions a unix-socket proxy_pass or the deployment name.
         BEHIND_NGINX="false"
         if [ -d /etc/nginx/sites-enabled ]; then
-            if find /etc/nginx/sites-enabled -type f -o -type l 2>/dev/null | xargs grep -l "unix:.*\.sock\|openalgo\|gunicorn" 2>/dev/null | head -1 | grep -q .; then
+            if find /etc/nginx/sites-enabled -type f -o -type l 2>/dev/null | xargs grep -l "unix:.*\.sock\|tradeboard\|gunicorn" 2>/dev/null | head -1 | grep -q .; then
                 BEHIND_NGINX="true"
             fi
         fi
         if [ "$BEHIND_NGINX" = "false" ] && [ -d /etc/nginx/conf.d ]; then
-            if find /etc/nginx/conf.d -type f -name "*.conf" 2>/dev/null | xargs grep -l "unix:.*\.sock\|openalgo\|gunicorn" 2>/dev/null | head -1 | grep -q .; then
+            if find /etc/nginx/conf.d -type f -name "*.conf" 2>/dev/null | xargs grep -l "unix:.*\.sock\|tradeboard\|gunicorn" 2>/dev/null | head -1 | grep -q .; then
                 BEHIND_NGINX="true"
             fi
         fi
@@ -516,7 +516,7 @@ if [ "$SERVER_MODE" = true ]; then
     # Reload systemd in case service file changed
     sudo systemctl daemon-reload
 
-    # Start the OpenAlgo service
+    # Start the Tradeboard service
     sudo systemctl start "$SERVICE_NAME"
     check_status "Failed to start $SERVICE_NAME"
 
@@ -561,7 +561,7 @@ fi
 # Summary
 # ============================================
 log_message "\n========================================" "$GREEN"
-log_message "  OpenAlgo Update Summary" "$GREEN"
+log_message "  Tradeboard Update Summary" "$GREEN"
 log_message "========================================" "$GREEN"
 log_message "Version: $CURRENT_COMMIT -> $NEW_COMMIT" "$BLUE"
 log_message "Branch: $CURRENT_BRANCH" "$BLUE"

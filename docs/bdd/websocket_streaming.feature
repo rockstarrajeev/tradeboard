@@ -1,5 +1,5 @@
 Feature: WebSocket streaming
-  OpenAlgo uses example routes, a proxy, ZeroMQ, broker adapters, and frontend subscription management for streaming data.
+  Tradeboard uses example routes, a proxy, ZeroMQ, broker adapters, and frontend subscription management for streaming data.
 
   # Source: blueprints/websocket_example.py:62, websocket_proxy/server.py:542
   Scenario: WebSocket example page depends on proxy authentication

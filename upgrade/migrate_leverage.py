@@ -88,7 +88,7 @@ def migrate_leverage():
 def main():
     """Main function to run the migration"""
     logger.info("=" * 60)
-    logger.info("OpenAlgo Leverage Configuration Migration")
+    logger.info("Tradeboard Leverage Configuration Migration")
     logger.info("=" * 60)
     logger.info("Creating leverage_config table for common crypto leverage setting")
     logger.info("-" * 60)

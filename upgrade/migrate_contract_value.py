@@ -75,7 +75,7 @@ def migrate_contract_value():
 def main():
     """Main function to run the migration"""
     logger.info("=" * 60)
-    logger.info("OpenAlgo Contract Value Migration")
+    logger.info("Tradeboard Contract Value Migration")
     logger.info("=" * 60)
     logger.info("Adding contract_value column to symtoken table for crypto support")
     logger.info("-" * 60)

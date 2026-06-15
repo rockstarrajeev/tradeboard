@@ -6,7 +6,7 @@ GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# openalgo Installation Banner
+# tradeboard Installation Banner
 echo -e "${BLUE}"
 echo "  ██████╗ ██████╗ ███████╗███╗   ██╗ █████╗ ██╗      ██████╗  ██████╗ "
 echo " ██╔═══██╗██╔══██╗██╔════╝████╗  ██║██╔══██╗██║     ██╔════╝ ██╔═══██╗"
@@ -17,7 +17,7 @@ echo "  ╚═════╝ ╚═╝     ╚══════╝╚═╝  �
 echo "                                                                        "
 echo -e "${NC}"
 
-# OpenAlgo Installation and Configuration Script
+# Tradeboard Installation and Configuration Script
 
 
 
@@ -260,7 +260,7 @@ check_and_configure_swap() {
 }
 
 # Start logging
-log_message "Starting OpenAlgo installation log at: $LOG_FILE" "$BLUE"
+log_message "Starting Tradeboard installation log at: $LOG_FILE" "$BLUE"
 log_message "----------------------------------------" "$BLUE"
 
 # Detect OS type and version
@@ -339,7 +339,7 @@ check_and_configure_swap
 check_timezone
 
 # Collect installation parameters
-log_message "OpenAlgo Installation Configuration" "$BLUE"
+log_message "Tradeboard Installation Configuration" "$BLUE"
 log_message "----------------------------------------" "$BLUE"
 
 # Get domain name
@@ -419,7 +419,7 @@ fi
 # Same-domain mode — /mcp and /oauth/* are served from the same nginx
 # vhost as the dashboard, so the existing reverse-proxy config covers it.
 # Local stdio MCP (Claude Desktop / Cursor / Windsurf) works regardless.
-log_message "\nRemote MCP lets hosted AI clients (Claude.ai, ChatGPT) connect to OpenAlgo over HTTPS." "$BLUE"
+log_message "\nRemote MCP lets hosted AI clients (Claude.ai, ChatGPT) connect to Tradeboard over HTTPS." "$BLUE"
 log_message "Skip this if you only use the local MCP server with Claude Desktop / Cursor." "$YELLOW"
 read -p "Enable Remote MCP? (y/N): " enable_mcp_input
 ENABLE_REMOTE_MCP="false"
@@ -435,16 +435,16 @@ API_KEY_PEPPER=$(generate_hex)
 # Installation paths — single deployment per server. For 2+ deployments
 # side-by-side use install/install-multi.sh (different scheme).
 #
-#   App, venv, socket, .env all live under /var/python/openalgo
-#   systemd unit:  openalgo.service
-#   nginx vhost:   openalgo.conf
-DEPLOY_NAME="openalgo"
-OPENALGO_PATH="/var/python/openalgo"
+#   App, venv, socket, .env all live under /var/python/tradeboard
+#   systemd unit:  tradeboard.service
+#   nginx vhost:   tradeboard.conf
+DEPLOY_NAME="tradeboard"
+OPENALGO_PATH="/var/python/tradeboard"
 BASE_PATH="$OPENALGO_PATH"
 VENV_PATH="$OPENALGO_PATH/.venv"
 SOCKET_PATH="$OPENALGO_PATH"
-SOCKET_FILE="$SOCKET_PATH/openalgo.sock"
-SERVICE_NAME="openalgo"
+SOCKET_FILE="$SOCKET_PATH/tradeboard.sock"
+SERVICE_NAME="tradeboard"
 
 # Set Nginx configuration paths based on OS
 case "$OS_TYPE" in
@@ -461,9 +461,9 @@ case "$OS_TYPE" in
         sudo mkdir -p "$NGINX_AVAILABLE"
         ;;
 esac
-NGINX_CONFIG_FILE="$NGINX_AVAILABLE/openalgo.conf"
+NGINX_CONFIG_FILE="$NGINX_AVAILABLE/tradeboard.conf"
 
-log_message "\nStarting OpenAlgo installation for $DEPLOY_NAME..." "$YELLOW"
+log_message "\nStarting Tradeboard installation for $DEPLOY_NAME..." "$YELLOW"
 
 # Update system packages
 log_message "\nUpdating system packages..." "$BLUE"
@@ -505,7 +505,7 @@ case "$OS_TYPE" in
         # Kaleido 1.x ships no bundled browser; it drives a system Chromium via choreographer.
         # Debian/Raspbian have 'chromium' in main. Ubuntu 19.10+ renamed it to 'chromium-browser'
         # which is a transitional package that installs the Chromium snap (works headless).
-        # Non-fatal — if nothing sticks we just warn; the rest of openalgo still installs fine.
+        # Non-fatal — if nothing sticks we just warn; the rest of tradeboard still installs fine.
         log_message "\nInstalling Chromium for Telegram /chart rendering..." "$BLUE"
         if sudo apt-get install -y chromium fonts-liberation 2>/dev/null; then
             log_message "Installed chromium (Debian package)" "$GREEN"
@@ -715,8 +715,8 @@ if ! command -v certbot >/dev/null 2>&1; then
 fi
 log_message "Certbot installed successfully" "$GREEN"
 
-# Check and handle existing OpenAlgo installation
-handle_existing "$BASE_PATH" "installation directory" "OpenAlgo directory for $DEPLOY_NAME"
+# Check and handle existing Tradeboard installation
+handle_existing "$BASE_PATH" "installation directory" "Tradeboard directory for $DEPLOY_NAME"
 
 # Create base directory
 log_message "\nCreating base directory..." "$BLUE"
@@ -724,9 +724,9 @@ sudo mkdir -p $BASE_PATH
 check_status "Failed to create base directory"
 
 # Clone repository
-log_message "\nCloning OpenAlgo repository..." "$BLUE"
-sudo git clone https://github.com/marketcalls/openalgo.git $OPENALGO_PATH
-check_status "Failed to clone OpenAlgo repository"
+log_message "\nCloning Tradeboard repository..." "$BLUE"
+sudo git clone https://github.com/rockstarrajeev/tradeboard.git $OPENALGO_PATH
+check_status "Failed to clone Tradeboard repository"
 
 # Create virtual environment using uv
 log_message "\nSetting up Python virtual environment with uv..." "$BLUE"
@@ -950,13 +950,13 @@ fi
 
 # Configure final Nginx setup with SSL and socket
 log_message "\nConfiguring final Nginx setup..." "$BLUE"
-# Remove the existing openalgo nginx config and any legacy domain-keyed
+# Remove the existing tradeboard nginx config and any legacy domain-keyed
 # files left over from older installs (pre-simple-paths) so the rewrite
-# below leaves exactly one openalgo vhost on disk.
+# below leaves exactly one tradeboard vhost on disk.
 sudo rm -f $NGINX_CONFIG_FILE
 sudo rm -f ${NGINX_AVAILABLE}/${DOMAIN} ${NGINX_AVAILABLE}/${DOMAIN}.conf
 if [ "$NGINX_CONFIG_MODE" = "sites" ]; then
-    sudo rm -f /etc/nginx/sites-enabled/openalgo.conf
+    sudo rm -f /etc/nginx/sites-enabled/tradeboard.conf
     sudo rm -f /etc/nginx/sites-enabled/${DOMAIN}
     sudo rm -f /etc/nginx/sites-enabled/${DOMAIN}.conf
 fi
@@ -1118,13 +1118,13 @@ sudo nginx -t
 check_status "Failed to validate Nginx configuration"
 
 # Check and handle existing systemd service
-handle_existing "/etc/systemd/system/$SERVICE_NAME.service" "systemd service" "OpenAlgo service file"
+handle_existing "/etc/systemd/system/$SERVICE_NAME.service" "systemd service" "Tradeboard service file"
 
 # Create systemd service with unique name
 log_message "\nCreating systemd service..." "$BLUE"
 sudo tee /etc/systemd/system/$SERVICE_NAME.service > /dev/null << EOL
 [Unit]
-Description=OpenAlgo Gunicorn Daemon ($DEPLOY_NAME)
+Description=Tradeboard Gunicorn Daemon ($DEPLOY_NAME)
 After=network.target
 
 [Service]
@@ -1141,7 +1141,7 @@ Environment="NUMBA_CACHE_DIR=$OPENALGO_PATH/tmp/numba_cache"
 Environment="LLVMLITE_TMPDIR=$OPENALGO_PATH/tmp"
 Environment="MPLCONFIGDIR=$OPENALGO_PATH/tmp/matplotlib"
 # Thread limits for OpenBLAS/NumPy to prevent RLIMIT_NPROC issues
-# See: https://github.com/marketcalls/openalgo/issues/822
+# See: https://github.com/rockstarrajeev/tradeboard/issues/822
 Environment="OPENBLAS_NUM_THREADS=2"
 Environment="OMP_NUM_THREADS=2"
 Environment="MKL_NUM_THREADS=2"
@@ -1267,13 +1267,13 @@ fi
 log_message "Installation Log: $LOG_FILE" "$BLUE"
 
 log_message "\nNext Steps:" "$YELLOW"
-log_message "1. Visit https://$DOMAIN to access your OpenAlgo instance" "$GREEN"
+log_message "1. Visit https://$DOMAIN to access your Tradeboard instance" "$GREEN"
 log_message "2. Configure your broker settings in the web interface" "$GREEN"
 log_message "3. Review the logs using: sudo journalctl -u $SERVICE_NAME" "$GREEN"
 log_message "4. Monitor the application status: sudo systemctl status $SERVICE_NAME" "$GREEN"
 
 log_message "\nUseful Commands:" "$YELLOW"
-log_message "Restart OpenAlgo: sudo systemctl restart $SERVICE_NAME" "$BLUE"
+log_message "Restart Tradeboard: sudo systemctl restart $SERVICE_NAME" "$BLUE"
 log_message "View Logs: sudo journalctl -u $SERVICE_NAME" "$BLUE"
 log_message "Check Status: sudo systemctl status $SERVICE_NAME" "$BLUE"
 log_message "View Installation Log: cat $LOG_FILE" "$BLUE"

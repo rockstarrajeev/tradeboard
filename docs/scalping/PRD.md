@@ -3,7 +3,7 @@
 **Status:** Implemented · **Branch:** `scalping` · **Last updated:** 2026-06-14
 
 A keyboard-driven, low-latency options/futures/equity scalping terminal built into
-OpenAlgo (Flask + React 19): a one-click scaling tool for fast intraday execution. It
+Tradeboard (Flask + React 19): a one-click scaling tool for fast intraday execution. It
 reuses the existing broker session, unified WebSocket market-data feed, ZeroMQ bus,
 SocketIO event bus, and service layer — no new broker plumbing.
 
@@ -21,13 +21,13 @@ SocketIO event bus, and service layer — no new broker plumbing.
 - **Segregate sandbox (Analyze) and live orders/state** completely.
 
 **Non-goals**
-- Multi-user. OpenAlgo is single-user-per-deployment.
+- Multi-user. Tradeboard is single-user-per-deployment.
 - LIMIT/SL order types on the hot path (entries/exits are MARKET).
 - Replacing the broker's master-contract data (lot sizes come from `SymToken`).
 
 ---
 
-## 2. Order constants (authoritative — OpenAlgo format)
+## 2. Order constants (authoritative — Tradeboard format)
 
 - **Exchange:** `NSE`, `BSE` (equity); `NFO`, `BFO`, `MCX`, `CDS` (derivatives);
   `NSE_INDEX`/`BSE_INDEX` (underlying quotes).

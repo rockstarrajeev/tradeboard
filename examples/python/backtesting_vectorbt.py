@@ -1,11 +1,11 @@
 """
 RELIANCE 5-Minute EMA Crossover Backtest using VectorBT
-Author : OpenAlgo GPT
+Author : Tradeboard GPT
 Description: Backtests 10/20 EMA crossover strategy on RELIANCE 5m data
-             Data fetched from OpenAlgo API, backtested with VectorBT
+             Data fetched from Tradeboard API, backtested with VectorBT
 """
 
-print("🔁 OpenAlgo Python Bot is running.")
+print("🔁 Tradeboard Python Bot is running.")
 
 from datetime import datetime
 
@@ -59,7 +59,7 @@ def fetch_historical_data():
     # Print the raw response info
     print(f"History Response received: {type(response)}")
 
-    # OpenAlgo history() returns DataFrame directly
+    # Tradeboard history() returns DataFrame directly
     if isinstance(response, pd.DataFrame):
         df = response.copy()
     else:
@@ -364,7 +364,7 @@ def plot_results(df, portfolio, fast_ema, slow_ema, entries, exits):
 # ───────────────────── MAIN EXECUTION ─────────────────────
 if __name__ == "__main__":
     try:
-        # Step 1: Fetch data from OpenAlgo
+        # Step 1: Fetch data from Tradeboard
         df = fetch_historical_data()
 
         # Step 2: Run VectorBT backtest

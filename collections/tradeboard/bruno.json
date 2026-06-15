@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "tradeboard",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

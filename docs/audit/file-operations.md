@@ -2,12 +2,12 @@
 
 ## Overview
 
-This assessment reviews file handling in OpenAlgo for security considerations.
+This assessment reviews file handling in Tradeboard for security considerations.
 
 **Risk Level**: Low
 **Status**: Acceptable
 
-## File Operations in OpenAlgo
+## File Operations in Tradeboard
 
 ### User-Controlled File Operations
 
@@ -19,7 +19,7 @@ This assessment reviews file handling in OpenAlgo for security considerations.
 
 ### Key Finding
 
-**Limited file operations**: OpenAlgo has minimal file upload functionality, reducing attack surface.
+**Limited file operations**: Tradeboard has minimal file upload functionality, reducing attack surface.
 
 ## CSV Upload Analysis
 
@@ -95,7 +95,7 @@ DATABASE_URL=sqlite:///db/openalgo.db
 
 **Configuration**:
 ```python
-LOG_PATH = os.path.join(BASE_DIR, 'logs', 'openalgo.log')
+LOG_PATH = os.path.join(BASE_DIR, 'logs', 'tradeboard.log')
 ```
 
 **Protection**:
@@ -143,7 +143,7 @@ This protects all files if device is lost/stolen.
 ### What to Back Up
 
 ```
-openalgo/
+tradeboard/
 ├── .env              # CRITICAL - encryption keys
 ├── db/               # Trading data
 │   ├── openalgo.db
@@ -185,7 +185,7 @@ On shared systems, `/tmp` is world-readable. For single-user systems:
 
 ## What's Not a Concern
 
-For single-user OpenAlgo:
+For single-user Tradeboard:
 
 | Issue | Why Not Applicable |
 |-------|-------------------|
@@ -219,7 +219,7 @@ For single-user OpenAlgo:
 
 ## Summary
 
-File handling in OpenAlgo is **secure for single-user deployment**:
+File handling in Tradeboard is **secure for single-user deployment**:
 
 - Minimal file operations
 - No user-controlled paths

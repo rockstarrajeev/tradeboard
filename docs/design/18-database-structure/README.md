@@ -2,7 +2,7 @@
 
 ## Overview
 
-OpenAlgo uses **5 separate databases** for data isolation, performance optimization, and specialized use cases. This separation prevents contention and allows each database to be optimized for its specific workload.
+Tradeboard uses **5 separate databases** for data isolation, performance optimization, and specialized use cases. This separation prevents contention and allows each database to be optimized for its specific workload.
 
 ## Architecture Diagram
 
@@ -257,7 +257,7 @@ db/latency.db
 │ rtt_ms           │ FLOAT        │ Round-trip time  │
 │ validation_ms    │ FLOAT        │ Pre-request      │
 │ response_ms      │ FLOAT        │ Post-response    │
-│ overhead_ms      │ FLOAT        │ OpenAlgo overhead│
+│ overhead_ms      │ FLOAT        │ Tradeboard overhead│
 │ total_latency_ms │ FLOAT        │ End-to-end time  │
 │ status           │ VARCHAR(20)  │ SUCCESS/FAILED   │
 └──────────────────┴──────────────┴──────────────────┘
@@ -270,7 +270,7 @@ db/latency.db
 | rtt_ms | Network round-trip to broker |
 | validation_ms | Request validation time |
 | response_ms | Response processing time |
-| overhead_ms | Total OpenAlgo overhead |
+| overhead_ms | Total Tradeboard overhead |
 | P50, P90, P95, P99 | Latency percentiles |
 
 ## Database 4: Sandbox Database (sandbox.db)

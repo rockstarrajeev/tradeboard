@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Samco 2FA Auth Migration Script for OpenAlgo
+Samco 2FA Auth Migration Script for Tradeboard
 
 This migration adds auxiliary columns (aux_param1-4) to the existing auth table.
 These columns are used by Samco for 2FA data (secret key, IP registration)

@@ -1,17 +1,17 @@
-# OpenAlgo Current-State PRD
+# Tradeboard Current-State PRD
 
-This document describes OpenAlgo as it exists in the current source tree. It is not a roadmap. Requirements are grounded in `DISCOVERY_MAP.md` and checked against the BDD suite in `docs/bdd`.
+This document describes Tradeboard as it exists in the current source tree. It is not a roadmap. Requirements are grounded in `DISCOVERY_MAP.md` and checked against the BDD suite in `docs/bdd`.
 
 ## Product Overview And Purpose
 
-OpenAlgo is a self-hosted trading application for retail algo traders. It exposes a Flask and Flask-RESTX backend, a React frontend when `frontend/dist` exists, broker plugins, REST APIs, webhook automation, a Flow workflow builder, Python strategy hosting, analyzer/sandbox mode, market data APIs, and a separate WebSocket proxy. The documented HTTP surface is 57 RESTX `/api/v1` endpoints, 452 Flask blueprint routes, and 1 app-level route, for 510 documented HTTP endpoints. Discovery source: `DISCOVERY_MAP.md` sections `Discovery Summary`, `Entry Points And Runtime`, `RESTX API V1`, and `Flask Blueprint Route Inventory`.
+Tradeboard is a self-hosted trading application for retail algo traders. It exposes a Flask and Flask-RESTX backend, a React frontend when `frontend/dist` exists, broker plugins, REST APIs, webhook automation, a Flow workflow builder, Python strategy hosting, analyzer/sandbox mode, market data APIs, and a separate WebSocket proxy. The documented HTTP surface is 57 RESTX `/api/v1` endpoints, 452 Flask blueprint routes, and 1 app-level route, for 510 documented HTTP endpoints. Discovery source: `DISCOVERY_MAP.md` sections `Discovery Summary`, `Entry Points And Runtime`, `RESTX API V1`, and `Flask Blueprint Route Inventory`.
 
 The product purpose is to let a local trader connect a broker session, issue normalized trading and market-data requests, run automation workflows, test behavior in analyzer mode, and monitor operational state from one self-hosted installation.
 
 ## Target Users And Primary Use Cases
 
 - Retail algo trader: connects a broker, manages an API key, places regular, smart, basket, split, options, and GTT orders, reviews orders in semi-auto mode, and monitors orders, positions, holdings, funds, and margin.
-- Strategy user: routes external webhook signals from Chartink, Strategy webhooks, TradingView JSON, GoCharting JSON, Flow, or Python Strategy into OpenAlgo order flows.
+- Strategy user: routes external webhook signals from Chartink, Strategy webhooks, TradingView JSON, GoCharting JSON, Flow, or Python Strategy into Tradeboard order flows.
 - Market data consumer: requests quotes, multiquotes, depth, history, option chains, option symbols, and WebSocket subscriptions for live market data.
 - Sandbox user: turns on analyzer mode, routes supported calls to sandbox services, reviews sandbox orders, trades, positions, holdings, funds, daily PnL, and configuration.
 - Local operator: configures environment, session security, broker credentials, notifications, health, traffic logs, latency logs, security controls, and optional Remote MCP.
@@ -186,7 +186,7 @@ Live mode sends supported order and data requests to broker-specific modules res
 
 ## Security Model And Posture
 
-OpenAlgo is configured as a self-hosted application with session routes and API-key routes. `APP_KEY` and `API_KEY_PEPPER` are required configuration. API keys are hashed for verification and encrypted for internal retrieval. Broker auth tokens and feed tokens are encrypted. `/api/v1` is CSRF-exempt for external API clients, while session routes keep CSRF protection except for explicit webhook, callback, logout, and health exemptions. CORS, CSP, hardening headers, rate limits, IP ban checks, proxy-header trust, and session expiry are environment-controlled. This PRD does not document secrets, token values, or attack procedures.
+Tradeboard is configured as a self-hosted application with session routes and API-key routes. `APP_KEY` and `API_KEY_PEPPER` are required configuration. API keys are hashed for verification and encrypted for internal retrieval. Broker auth tokens and feed tokens are encrypted. `/api/v1` is CSRF-exempt for external API clients, while session routes keep CSRF protection except for explicit webhook, callback, logout, and health exemptions. CORS, CSP, hardening headers, rate limits, IP ban checks, proxy-header trust, and session expiry are environment-controlled. This PRD does not document secrets, token values, or attack procedures.
 
 ## Performance Characteristics And Known Limits
 

@@ -136,18 +136,18 @@ docker run -d ^
 #### BEFORE:
 ```yaml
 services:
-  openalgo:
-    container_name: openalgo-web
+  tradeboard:
+    container_name: tradeboard-web
     ports:
       - "127.0.0.1:5000:5000"
       - "127.0.0.1:8765:8765"
 
     volumes:
-      - openalgo_db:/app/db
-      - openalgo_logs:/app/logs          # ← EXTRA, UNUSED
-      - openalgo_log:/app/log
-      - openalgo_strategies:/app/strategies
-      - openalgo_keys:/app/keys
+      - tradeboard_db:/app/db
+      - tradeboard_logs:/app/logs          # ← EXTRA, UNUSED
+      - tradeboard_log:/app/log
+      - tradeboard_strategies:/app/strategies
+      - tradeboard_keys:/app/keys
       - ./.env:/app/.env:ro
 
     environment:
@@ -162,29 +162,29 @@ services:
     restart: unless-stopped
 
 volumes:
-  openalgo_db:
-  openalgo_logs:                         # ← EXTRA, UNUSED
-  openalgo_log:
-  openalgo_strategies:
-  openalgo_keys:
-  # MISSING: openalgo_tmp
+  tradeboard_db:
+  tradeboard_logs:                         # ← EXTRA, UNUSED
+  tradeboard_log:
+  tradeboard_strategies:
+  tradeboard_keys:
+  # MISSING: tradeboard_tmp
 ```
 
 #### AFTER:
 ```yaml
 services:
-  openalgo:
-    container_name: openalgo-web
+  tradeboard:
+    container_name: tradeboard-web
     ports:
       - "127.0.0.1:5000:5000"
       - "127.0.0.1:8765:8765"
 
     volumes:
-      - openalgo_db:/app/db
-      - openalgo_log:/app/log
-      - openalgo_strategies:/app/strategies
-      - openalgo_keys:/app/keys
-      - openalgo_tmp:/app/tmp              # ← NEW
+      - tradeboard_db:/app/db
+      - tradeboard_log:/app/log
+      - tradeboard_strategies:/app/strategies
+      - tradeboard_keys:/app/keys
+      - tradeboard_tmp:/app/tmp              # ← NEW
       - ./.env:/app/.env:ro
 
     environment:
@@ -200,11 +200,11 @@ services:
     restart: unless-stopped
 
 volumes:
-  openalgo_db:
-  openalgo_log:
-  openalgo_strategies:
-  openalgo_keys:
-  openalgo_tmp:                            # ← NEW
+  tradeboard_db:
+  tradeboard_log:
+  tradeboard_strategies:
+  tradeboard_keys:
+  tradeboard_tmp:                            # ← NEW
 ```
 
 ---
@@ -286,8 +286,8 @@ All changes are **100% backward compatible**:
 - [ ] Test docker-run.bat on Windows 10/11
 - [ ] Test install-docker.sh on clean Ubuntu 22.04
 - [ ] Test install-docker.sh on clean Debian 12
-- [ ] Verify numba import works: `docker exec openalgo python -c "import numba; print('OK')"`
-- [ ] Verify shared memory: `docker inspect openalgo --format='{{.HostConfig.ShmSize}}'` should show `2147483648`
+- [ ] Verify numba import works: `docker exec tradeboard python -c "import numba; print('OK')"`
+- [ ] Verify shared memory: `docker inspect tradeboard --format='{{.HostConfig.ShmSize}}'` should show `2147483648`
 - [ ] Run trading strategy with indicators
 - [ ] Check master contract download works
 
@@ -329,7 +329,7 @@ docker-run.bat start
 
 **Update Docker Compose Config:**
 ```bash
-cd /opt/openalgo
+cd /opt/tradeboard
 sudo docker compose down
 # Update docker-compose.yaml manually or re-run installer
 sudo docker compose up -d
@@ -344,7 +344,7 @@ sudo docker compose up -d
 **Solution:**
 ```bash
 # macOS/Linux
-chmod 755 /path/to/openalgo
+chmod 755 /path/to/tradeboard
 
 # Or run with sudo if necessary
 sudo ./docker-run.sh start
@@ -354,13 +354,13 @@ sudo ./docker-run.sh start
 
 **Verify shared memory:**
 ```bash
-docker inspect openalgo --format='{{.HostConfig.ShmSize}}'
+docker inspect tradeboard --format='{{.HostConfig.ShmSize}}'
 # Should show: 2147483648 (2GB in bytes)
 ```
 
 **Verify volumes:**
 ```bash
-docker inspect openalgo --format='{{range .Mounts}}{{.Destination}} {{end}}'
+docker inspect tradeboard --format='{{range .Mounts}}{{.Destination}} {{end}}'
 # Should include: /app/tmp
 ```
 

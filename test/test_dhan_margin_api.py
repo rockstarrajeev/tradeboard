@@ -209,7 +209,7 @@ def test_basket_error_body_returns_non_200_response(monkeypatch):
     assert "invalid or expired" in payload["message"]
 
 
-def test_transform_margin_position_accepts_openalgo_option_and_future_symbols(monkeypatch):
+def test_transform_margin_position_accepts_tradeboard_option_and_future_symbols(monkeypatch):
     tokens = {
         ("NIFTY30JUN2624000CE", "NFO"): "71472",
         ("NIFTY30JUN2624000PE", "NFO"): "71473",

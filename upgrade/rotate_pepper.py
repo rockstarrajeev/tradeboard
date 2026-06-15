@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-OpenAlgo PEPPER Rotation Migration (DESTRUCTIVE)
+Tradeboard PEPPER Rotation Migration (DESTRUCTIVE)
 =================================================
 
 This script rotates API_KEY_PEPPER and re-encrypts every field that is
@@ -23,13 +23,13 @@ It must be run explicitly by the operator at a controlled moment:
     uv run rotate_pepper.py --yes      # non-interactive
 
 Pre-flight:
-  1. Stop OpenAlgo (kill the running process / systemctl stop openalgo).
+  1. Stop Tradeboard (kill the running process / systemctl stop tradeboard).
   2. Back up db/openalgo.db (the script also creates a backup, but
      belt-and-braces).
   3. Make sure no other writer is touching the DB.
 
 Post-flight:
-  1. Restart OpenAlgo.
+  1. Restart Tradeboard.
   2. Visit /auth/reset-password and use your TOTP code to set a new
      password (your TOTP secret survives the rotation; only password
      hashes are invalidated).
@@ -114,7 +114,7 @@ def _telegram_db_fernet(pepper: str) -> Fernet:
 
 def _settings_db_fernet(pepper: str) -> Fernet:
     """Match database/settings_db.py:_get_smtp_fernet() (PBKDF2 + SMTP_KEY_SALT)."""
-    salt = os.getenv("SMTP_KEY_SALT", "smtp-openalgo-salt").encode()
+    salt = os.getenv("SMTP_KEY_SALT", "smtp-tradeboard-salt").encode()
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
@@ -465,7 +465,7 @@ def main():
 
     print()
     print("=" * 72)
-    print("  OpenAlgo PEPPER Rotation Migration")
+    print("  Tradeboard PEPPER Rotation Migration")
     print("=" * 72)
     print(f"  DB path     : {db_path}")
     print(f"  .env path   : {env_path}")
@@ -553,7 +553,7 @@ def main():
             print(f"    {k:48s} {v:>5d}")
     print()
     print("  Next steps:")
-    print("    1. Restart OpenAlgo: uv run app.py  (or systemctl restart …)")
+    print("    1. Restart Tradeboard: uv run app.py  (or systemctl restart …)")
     print("    2. Open the web UI and go to /auth/reset-password")
     print("    3. Reset your password using your TOTP code")
     print("    4. Log in normally with the new password")

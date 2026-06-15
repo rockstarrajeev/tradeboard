@@ -39,7 +39,7 @@ def load_symbols(csv_path, limit=2340):
         "NSE_SYMBOLS.csv",
         os.path.join(os.path.dirname(__file__), "NSE_SYMBOLS.csv"),
         os.path.join(os.path.dirname(__file__), "../../../NSE_SYMBOLS.csv"),
-        "D:/Marketcalls/Openalgo_order_mode/NSE_SYMBOLS.csv",
+        "D:/rockstarrajeev/tradeboard_order_mode/NSE_SYMBOLS.csv",
     ]
 
     for path in paths:

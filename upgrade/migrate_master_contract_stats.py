@@ -108,7 +108,7 @@ def migrate_master_contract_status_table():
 def main():
     """Main function to run the migration"""
     logger.info("=" * 60)
-    logger.info("OpenAlgo Master Contract Smart Download Migration")
+    logger.info("Tradeboard Master Contract Smart Download Migration")
     logger.info("=" * 60)
     logger.info("This script adds columns for smart master contract download tracking")
     logger.info("-" * 60)

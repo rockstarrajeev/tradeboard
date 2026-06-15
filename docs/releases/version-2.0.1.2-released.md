@@ -4,7 +4,7 @@
 
 **Maintenance + Performance Release: Option Greeks Rust Core (`opengreeks`, ~13× Faster Chain Refresh with Bit-for-Bit Parity), WebSocket Self-Healing + Subprocess Isolation Under Gunicorn-Eventlet, an Accessibility Sweep, Broker Data-Quality Fixes (Dhan Holdings, Definedge, Kotak Indices), and a Security/Dependency Sweep (ws CVE-2026-45736, SDK 1.0.51 Connection Pooling, idna)**
 
-This release spans 20+ commits since v2.0.1.1. It is a stabilisation and performance pass on top of the WhatsApp release. The headline change is the **option Greeks engine swap** — `py_vollib` is replaced by `opengreeks`, a Rust + PyO3 Black-76 core with byte-identical function signatures, bit-for-bit numerical parity, and a ~13× speedup on a full option-chain refresh. Alongside it, the **WebSocket layer self-heals** on stale broker auth tokens (no more container restart after a new-trading-day re-login) and now runs as an **isolated subprocess under gunicorn-eventlet** to escape the greenlet/real-thread lock-switching hazard. The frontend gets an **accessibility sweep** (aria-labels on 63 icon-only buttons, color-contrast fixes). Three broker data-quality bugs are fixed (Dhan `/holdings`, Definedge master contract, Kotak index quotes). On security, the `ws` npm transitive dependency is patched (CVE-2026-45736), the bundled **openalgo SDK pin moves to 1.0.51** (a connection-pooling fix that prevents socket exhaustion in long-running strategies), and `idna` is bumped.
+This release spans 20+ commits since v2.0.1.1. It is a stabilisation and performance pass on top of the WhatsApp release. The headline change is the **option Greeks engine swap** — `py_vollib` is replaced by `opengreeks`, a Rust + PyO3 Black-76 core with byte-identical function signatures, bit-for-bit numerical parity, and a ~13× speedup on a full option-chain refresh. Alongside it, the **WebSocket layer self-heals** on stale broker auth tokens (no more container restart after a new-trading-day re-login) and now runs as an **isolated subprocess under gunicorn-eventlet** to escape the greenlet/real-thread lock-switching hazard. The frontend gets an **accessibility sweep** (aria-labels on 63 icon-only buttons, color-contrast fixes). Three broker data-quality bugs are fixed (Dhan `/holdings`, Definedge master contract, Kotak index quotes). On security, the `ws` npm transitive dependency is patched (CVE-2026-45736), the bundled **tradeboard SDK pin moves to 1.0.51** (a connection-pooling fix that prevents socket exhaustion in long-running strategies), and `idna` is bumped.
 
 ***
 
@@ -15,8 +15,8 @@ This release spans 20+ commits since v2.0.1.1. It is a stabilisation and perform
 * **WebSocket proxy runs as a subprocess under gunicorn-eventlet (#1421, #1438)** — In-process WS + Flask under eventlet shares one process with the eventlet hub, so monkey-patched stdlib locks touched from both the hub and the WS asyncio thread trigger `greenlet.error: Cannot switch to a different thread` and silently corrupt WS state. The app now detects eventlet at runtime (`is_monkey_patched("socket")`) and spawns `python -m websocket_proxy.server` as a child process with no monkey-patching, so all locks are real OS primitives. Atexit handler SIGTERMs with a SIGKILL fallback; the child stays in the gunicorn cgroup so systemd reaps it on hard crash. The dev-server path (no eventlet) is unchanged.
 * **Accessibility sweep** — `aria-label` added to 63 icon-only buttons across the app, and 9 color-contrast violations resolved on the home page.
 * **Broker data-quality fixes** — **Dhan `/holdings`** now enriches each row with the real exchange (NSE/BSE, resolved via `securityId` probe) and LTP (batch `get_multiquotes`) instead of passing through the demat-wide `"ALL"` placeholder with blank price/P&L (#1446). **Definedge** master contract had swapped `LotSize`/`TickSize` columns in `allmaster.csv` — now corrected (#1450, #1457). **Kotak** index quotes resolve for `MIDCPNIFTY` and other indices (#1436).
-* **Security + dependency sweep** — `ws` npm transitive dependency patched for CVE-2026-45736 (uninitialized memory disclosure) via an `overrides` pin to `>=8.20.1` (resolves to 8.21.0); bundled `openalgo` SDK pin `1.0.50` → `1.0.51` (connection-pooling fix); `idna` `3.11` → `3.15`; unused `scipy` pin dropped; `py_vollib==1.0.1` + `py_lets_be_rational==1.0.1` removed (superseded by `opengreeks`).
-* **Platform version bump** — `2.0.1.1` → `2.0.1.2`. SDK pin (`openalgo`) `1.0.50` → `1.0.51`.
+* **Security + dependency sweep** — `ws` npm transitive dependency patched for CVE-2026-45736 (uninitialized memory disclosure) via an `overrides` pin to `>=8.20.1` (resolves to 8.21.0); bundled `tradeboard` SDK pin `1.0.50` → `1.0.51` (connection-pooling fix); `idna` `3.11` → `3.15`; unused `scipy` pin dropped; `py_vollib==1.0.1` + `py_lets_be_rational==1.0.1` removed (superseded by `opengreeks`).
+* **Platform version bump** — `2.0.1.1` → `2.0.1.2`. SDK pin (`tradeboard`) `1.0.50` → `1.0.51`.
 
 ***
 
@@ -87,7 +87,7 @@ The Greeks/IV math previously ran on `py_vollib==1.0.1` (pure Python, backed by 
 
 ***
 
-**OpenAlgo Python SDK 1.0.51 — connection pooling fix**
+**Tradeboard Python SDK 1.0.51 — connection pooling fix**
 
 Released to PyPI alongside this version and pinned by the platform (`openalgo==1.0.50` → `1.0.51`).
 
@@ -95,7 +95,7 @@ Released to PyPI alongside this version and pinned by the platform (`openalgo==1
 * **The fix:** the SDK now reuses a single shared, connection-pooled HTTP client (keep-alive) across all REST calls instead of opening a fresh connection each time. The Strategy webhook sender got the same treatment.
 * **What you get:** flat socket count all day (no port/socket exhaustion in long sessions), lower per-call latency (no repeated TCP/TLS handshake), lower CPU and kernel overhead, and clean shutdown via `client.close()` / context-manager support.
 * **Note:** the reuse benefit is fully realized in production behind gunicorn (keep-alive). The local dev server closes connections per request, so the effect is less visible there.
-* Available at <https://pypi.org/project/openalgo/1.0.51/>.
+* Available at <https://pypi.org/project/tradeboard/1.0.51/>.
 
 ***
 
@@ -112,7 +112,7 @@ A moderate-severity Dependabot alert (GHSA-58qx-3vcg-4xpx, CVE-2026-45736 — un
 
 * `opengreeks>=0.1.0` added — Rust + PyO3 Black-76 Greeks/IV core; NumPy-only runtime footprint. Replaces `py_vollib`.
 * `py_vollib==1.0.1` and `py_lets_be_rational==1.0.1` **removed** (superseded by `opengreeks`).
-* `openalgo` SDK pin: `1.0.50` → `1.0.51` (PyPI: <https://pypi.org/project/openalgo/1.0.51/>) — connection-pooling fix.
+* `tradeboard` SDK pin: `1.0.50` → `1.0.51` (PyPI: <https://pypi.org/project/tradeboard/1.0.51/>) — connection-pooling fix.
 * `idna` `3.11` → `3.15`.
 * `scipy` — unused pin dropped (`a1eca63b`).
 * `ws` (npm, transitive) → `>=8.20.1` override, resolves to 8.21.0 (clears Dependabot alert 180 / CVE-2026-45736).
@@ -150,7 +150,7 @@ A moderate-severity Dependabot alert (GHSA-58qx-3vcg-4xpx, CVE-2026-45736 — un
 **For existing installs (Native Ubuntu):**
 
 ```bash
-cd /var/python/openalgo-flask/<deploy-name>/openalgo
+cd /var/python/tradeboard-flask/<deploy-name>/tradeboard
 sudo ./install/update.sh
 # update.sh runs migrate_all.py. No schema migration is required for this
 # release; uv sync pulls opengreeks and drops py_vollib automatically.
@@ -159,7 +159,7 @@ sudo ./install/update.sh
 **For existing installs (Docker):**
 
 ```bash
-cd /opt/openalgo/<domain>
+cd /opt/tradeboard/<domain>
 sudo docker compose pull
 sudo docker compose up -d
 ```
@@ -181,7 +181,7 @@ There are no new environment variables and no database schema changes in this re
 
 **Contributors**
 
-* **@marketcalls (Rajandran)** — release management; option Greeks Rust-core migration (`py_vollib` → `opengreeks`) with parity + speedup benchmark suite; Dhan `/holdings` exchange + LTP enrichment (#1446); Kotak index-quote resolution (#1436); accessibility sweep (63 aria-labels + color-contrast fixes); frontend build-warning cleanup and biome safe-fixes; Docker bind-mounted `.env` handling on MCP settings save (#1337); broker token extraction utility and PyPI download-stats example; dependency + security sweep (ws CVE-2026-45736 override, SDK 1.0.51 connection-pooling pin, idna bump, scipy drop); openalgo Python SDK 1.0.51 release.
+* **@marketcalls (Rajandran)** — release management; option Greeks Rust-core migration (`py_vollib` → `opengreeks`) with parity + speedup benchmark suite; Dhan `/holdings` exchange + LTP enrichment (#1446); Kotak index-quote resolution (#1436); accessibility sweep (63 aria-labels + color-contrast fixes); frontend build-warning cleanup and biome safe-fixes; Docker bind-mounted `.env` handling on MCP settings save (#1337); broker token extraction utility and PyPI download-stats example; dependency + security sweep (ws CVE-2026-45736 override, SDK 1.0.51 connection-pooling pin, idna bump, scipy drop); tradeboard Python SDK 1.0.51 release.
 * **@Kalaiviswa** — WebSocket self-heal on stale auth-token failure (#1419) and WS-proxy subprocess isolation under gunicorn-eventlet (#1421, #1438).
 * **Community** — Definedge `allmaster.csv` LotSize/TickSize fix (#1450, #1457).
 
@@ -189,9 +189,9 @@ There are no new environment variables and no database schema changes in this re
 
 **Links**
 
-* **Repository**: <https://github.com/marketcalls/openalgo>
-* **Documentation**: <https://docs.openalgo.in>
-* **Python SDK on PyPI**: <https://pypi.org/project/openalgo/1.0.51/>
-* **Discord**: <https://www.openalgo.in/discord>
-* **YouTube**: <https://www.youtube.com/@openalgo>
-* **Issue tracker**: <https://github.com/marketcalls/openalgo/issues>
+* **Repository**: <https://github.com/rockstarrajeev/tradeboard>
+* **Documentation**: <https://docs.rajeevupadhyay.com>
+* **Python SDK on PyPI**: <https://pypi.org/project/tradeboard/1.0.51/>
+* **Discord**: <https://www.rajeevupadhyay.com/discord>
+* **YouTube**: <https://www.youtube.com/@tradeboard>
+* **Issue tracker**: <https://github.com/rockstarrajeev/tradeboard/issues>

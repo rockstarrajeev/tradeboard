@@ -1,11 +1,11 @@
-# claudebroker.md — Guide to Integrating a New Broker into OpenAlgo
+# claudebroker.md — Guide to Integrating a New Broker into Tradeboard
 
 This is a context/prompt file for Claude (and humans) to build a **new broker
 plugin rapidly and confidently**. It captures the contract, the reference files
 to read, the exact conventions, and the small nuances that are easy to miss.
 Worked example throughout: the **Arrow** broker (`broker/arrow/`).
 
-> Golden rule: OpenAlgo has a **common symbol format, common API, and common
+> Golden rule: Tradeboard has a **common symbol format, common API, and common
 > WebSocket format**. Your only job per file is to translate the broker's
 > specific shapes into those common contracts (and back). Copy a reference
 > broker, then adapt the broker-specific bits.
@@ -78,8 +78,8 @@ broker/<name>/
   api/data.py                         # class BrokerData (quotes/depth/history)
   api/funds.py                        # get_margin_data(auth)
   mapping/__init__.py
-  mapping/transform_data.py           # OpenAlgo order -> broker payload + enum maps
-  mapping/order_data.py               # broker JSON -> OpenAlgo normalized rows
+  mapping/transform_data.py           # Tradeboard order -> broker payload + enum maps
+  mapping/order_data.py               # broker JSON -> Tradeboard normalized rows
   mapping/exchange.py                 # (optional) exchange/index translation (shared)
   database/__init__.py
   database/master_contract_db.py      # master_contract_download() + SymToken
@@ -245,17 +245,17 @@ in a `finally:` (`db_session.remove()`) — it runs in a background thread.
 - **`expiry` format = `DD-MMM-YY` uppercase** (e.g. `30-JUN-26`), empty string
   `''` for EQ/index. Use `pd.to_datetime(x).strftime("%d-%b-%y").upper()`. This
   drives expiry-dropdown logic elsewhere — get it exact.
-- **Symbol construction** (OpenAlgo common format):
+- **Symbol construction** (Tradeboard common format):
   - EQ: bare base symbol (strip broker suffix like `-EQ`; keep `brsymbol` = full broker tradingsymbol)
   - FUT: `f"{underlying}{DDMMMYY}FUT"` e.g. `NIFTY30JUN26FUT`
   - CE/PE: `f"{underlying}{DDMMMYY}{strike}{CE|PE}"` e.g. `NIFTY09JUN2623100CE`
     (strike preserves decimals: `187.5`, drops `.0` for whole numbers)
-  - INDEX: the OpenAlgo index symbol (`NIFTY`, `BANKNIFTY`, `SENSEX`), `brsymbol`
+  - INDEX: the Tradeboard index symbol (`NIFTY`, `BANKNIFTY`, `SENSEX`), `brsymbol`
     = broker index name (`NIFTY 50`), exchange `NSE_INDEX`/`BSE_INDEX`
 - **`name` column**: underlying for FUT/CE/PE (e.g. `NIFTY`); company/full name
   for EQ; display name for index.
 - **`brexchange`** = the raw broker exchange code (kept for quote/history calls);
-  `exchange` = OpenAlgo code.
+  `exchange` = Tradeboard code.
 - **Indices**: split the broker's single index space into `NSE_INDEX` /
   `BSE_INDEX` by parent exchange. `GLOBAL_INDEX` is zerodha/upstox-only — omit it
   unless your broker truly has global index feeds.
@@ -293,14 +293,14 @@ resolve the user via `os.getenv("LOGIN_USERNAME")` — which is often **unset**,
 yielding a `None` token and the cryptic httpx error "Header value must be str
 or bytes, not <class 'NoneType'>". Resolve via LOGIN_USERNAME first, then fall
 back to the single non-revoked row for your broker in the `Auth` table
-(OpenAlgo is single-user), and raise a clear error if neither exists — never
+(Tradeboard is single-user), and raise a clear error if neither exists — never
 let `None` reach a header.
 
 ---
 
 ## 6. Data layer (`BrokerData`) — quotes / depth / history
 
-- `__init__(self, auth_token)` sets `self.timeframe_map` (OpenAlgo interval →
+- `__init__(self, auth_token)` sets `self.timeframe_map` (Tradeboard interval →
   broker interval). intervals_service reads its keys.
 - `get_quotes` → `{ask,bid,high,low,ltp,open,prev_close,volume,oi}`.
 - `get_depth` → `{asks[5]{price,quantity}, bids[5]{...}, high,low,ltp,ltq,oi,
@@ -328,7 +328,7 @@ df["timestamp"] = df["timestamp"].astype("int64") // 10**9
 (If the broker returns naive intraday timestamps, localize to IST first.)
 
 ### NUANCE — index exchange translation
-If the broker uses one `INDEX` pseudo-exchange, translate OpenAlgo
+If the broker uses one `INDEX` pseudo-exchange, translate Tradeboard
 `NSE_INDEX`/`BSE_INDEX` → the broker's index exchange on every quote/depth call,
 and to the parent cash exchange for history. Keep a shared `mapping/exchange.py`.
 
@@ -340,7 +340,7 @@ derivative indices (`NIFTY`, `BANKNIFTY`, `FINNIFTY`, `MIDCPNIFTY`,
 name** for everything else (`NIFTY IT`, `INDIA VIX`, `SMLCAP`). Probe a
 handful of each class with a tiny script before assuming. Robust pattern
 (see `broker/arrow/api/data.py` `_quote_index`): try candidates in order
-(OpenAlgo symbol → uppercased brsymbol → raw brsymbol), treat 400 as
+(Tradeboard symbol → uppercased brsymbol → raw brsymbol), treat 400 as
 "try next", and **cache the verified name per token** so steady state costs
 one request. The option tools (option chain / IV / OI tracker / max pain /
 GEX) all start from the underlying index LTP — if index quotes fail, every
@@ -367,7 +367,7 @@ Pattern (zerodha/upstox/arrow):
   chunks (Arrow: 100/request, ~0.15s delay).
 - `get_history`: throttle (small `time.sleep`) between date-chunks; chunk long
   ranges (broker caps the per-request range, often larger for daily).
-The OpenAlgo `/api/v1/history` endpoint itself is rate-limited by
+The Tradeboard `/api/v1/history` endpoint itself is rate-limited by
 `API_RATE_LIMIT` (see `restx_api/history.py`) — that's separate (per-IP) and not
 your concern in the broker module.
 
@@ -394,12 +394,12 @@ format. Output field names (verified against `docs/api/account-services/*`):
 - funds (`get_margin_data`): `availablecash, collateral, m2munrealized,
   m2mrealized, utiliseddebits` (all 2-dp strings; `{}` on error)
 
-`map_*` functions reverse broker codes to OpenAlgo (product/side/order-type) and
-convert broker symbols to OpenAlgo via `get_oa_symbol(brsymbol, exchange)`. The
+`map_*` functions reverse broker codes to Tradeboard (product/side/order-type) and
+convert broker symbols to Tradeboard via `get_oa_symbol(brsymbol, exchange)`. The
 service calls `map_*` first (mutates in place) then `transform_*`.
 
 ### Order placement mapping (`mapping/transform_data.py`)
-- product: OpenAlgo `CNC/NRML/MIS` → broker codes
+- product: Tradeboard `CNC/NRML/MIS` → broker codes
 - pricetype: `MARKET/LIMIT/SL/SL-M` → broker codes (some brokers disable plain
   market — emulate with a flag, e.g. Arrow `mpp:true`)
 - action: `BUY/SELL` → broker codes

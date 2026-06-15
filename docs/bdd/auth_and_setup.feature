@@ -1,5 +1,5 @@
 Feature: Setup and authenticated user session
-  OpenAlgo requires initial setup, session login, optional TOTP, and explicit logout.
+  Tradeboard requires initial setup, session login, optional TOTP, and explicit logout.
 
   # Source: blueprints/auth.py:131, blueprints/core.py:20
   Scenario: New installation exposes setup state before login

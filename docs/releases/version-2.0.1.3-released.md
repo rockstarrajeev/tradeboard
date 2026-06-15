@@ -16,11 +16,11 @@ This release spans 80+ commits since v2.0.1.2. The headline feature is the **Arr
   * **Zero inline fsync on the order path**: the latency record and traffic log commits (previously synchronous SQLite fsyncs before the HTTP response) now run on background single-worker executors; the per-request IP-ban query and per-order order-mode query are cached with explicit invalidation, so enforcement semantics are unchanged.
   * **Honest measurement**: the API Playground previously included its CSRF-token round trip in the displayed response time, reading 10-40ms high; the timer now covers only the actual request.
 * **Broker-token rollover resilience (#1419, #1226, #1421, #1453, #1468)** — WebSocket adapters read a fresh auth token on every (re)connect and self-heal on Zerodha auth failures; the broker token is revoked at the daily session rollover so the next morning's WS comes up clean; the data-stall watchdog is fed from ping/pong so it stops false-firing; Socket.IO heartbeats relax to engine.io defaults to stop reconnect loops; depth packets route to LTP consumers.
-* **Session UX on token expiry** — An expired broker token no longer logs you out of OpenAlgo: the session stays intact, the UI flags the stale token and offers a re-authentication path, and login resume requires a valid broker session.
+* **Session UX on token expiry** — An expired broker token no longer logs you out of Tradeboard: the session stays intact, the UI flags the stale token and offers a re-authentication path, and login resume requires a valid broker session.
 * **FD/resource-leak audit** — A full file-descriptor audit (documented in `docs/`), two leak fixes (FD-5, FD-6), and a shared `database/engine_factory.py` that enforces NullPool for every SQLite engine project-wide.
 * **Vite 8 frontend toolchain** — Migration completed (the attempt reverted in v2.0.1.2 now lands cleanly), with precompressed assets + vendor chunk splitting for faster page loads, Plotly compatibility fixes for `/tools` pages, zero Biome lint warnings, and stabilized e2e waits.
 * **Security hardening** — `APP_KEY` is validated at startup instead of silently allowing `None`; SMTP key derivation strengthened and weak pepper fallbacks removed; first-run secret rotation now persists through Docker bind-mounted `.env`; `starlette` bumped 0.52.1 → 1.0.1 and `react-router`/`vitest` CVEs patched.
-* **Platform version bump** — `2.0.1.2` → `2.0.1.3`. SDK pin (`openalgo`) `1.0.51` → `2.0.1`, `opengreeks` `0.1.0` → `0.2.0`.
+* **Platform version bump** — `2.0.1.2` → `2.0.1.3`. SDK pin (`tradeboard`) `1.0.51` → `2.0.1`, `opengreeks` `0.1.0` → `0.2.0`.
 
 ***
 
@@ -114,7 +114,7 @@ Measured end-to-end with live NHPC MIS MARKET orders on Arrow:
 
 **Dependencies**
 
-* `openalgo` SDK pin: `1.0.51` → `2.0.0` → **`2.0.1`** (PyPI: <https://pypi.org/project/openalgo/>).
+* `tradeboard` SDK pin: `1.0.51` → `2.0.0` → **`2.0.1`** (PyPI: <https://pypi.org/project/tradeboard/>).
 * `opengreeks` `0.1.0` → `0.2.0`.
 * `starlette` `0.52.1` → `1.0.1`.
 * Frontend toolchain: `vite` 7 → 8; `react-router` / `vitest` security bumps.
@@ -144,14 +144,14 @@ There are **no database schema changes** in this release.
 **For existing installs (Native Ubuntu):**
 
 ```bash
-cd /var/python/openalgo-flask/<deploy-name>/openalgo
+cd /var/python/tradeboard-flask/<deploy-name>/tradeboard
 sudo ./install/update.sh
 ```
 
 **For existing installs (Docker):**
 
 ```bash
-cd /opt/openalgo/<domain>
+cd /opt/tradeboard/<domain>
 sudo docker compose pull
 sudo docker compose up -d
 ```
@@ -181,9 +181,9 @@ uv run app.py
 
 **Links**
 
-* **Repository**: <https://github.com/marketcalls/openalgo>
-* **Documentation**: <https://docs.openalgo.in>
-* **Python SDK on PyPI**: <https://pypi.org/project/openalgo/>
-* **Discord**: <https://www.openalgo.in/discord>
-* **YouTube**: <https://www.youtube.com/@openalgo>
-* **Issue tracker**: <https://github.com/marketcalls/openalgo/issues>
+* **Repository**: <https://github.com/rockstarrajeev/tradeboard>
+* **Documentation**: <https://docs.rajeevupadhyay.com>
+* **Python SDK on PyPI**: <https://pypi.org/project/tradeboard/>
+* **Discord**: <https://www.rajeevupadhyay.com/discord>
+* **YouTube**: <https://www.youtube.com/@tradeboard>
+* **Issue tracker**: <https://github.com/rockstarrajeev/tradeboard/issues>

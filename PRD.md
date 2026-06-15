@@ -1,4 +1,4 @@
-# OpenAlgo PRD
+# Tradeboard PRD
 
 The canonical current-state PRD is maintained at [docs/prd/PRD.md](./docs/prd/PRD.md).
 

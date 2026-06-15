@@ -1,5 +1,5 @@
 """
-OpenAlgo REST API benchmark.
+Tradeboard REST API benchmark.
 
 Usage (key from env, not hardcoded):
     OPENALGO_APIKEY=xxxx python benchmark_api.py
@@ -54,7 +54,7 @@ def pct(vals, p):
 
 
 print("=" * 74)
-print(f"OpenAlgo API benchmark   base={BASE}   key=...{APIKEY[-6:]}")
+print(f"Tradeboard API benchmark   base={BASE}   key=...{APIKEY[-6:]}")
 print(f"history window: {start_5d} .. {end_today}")
 print("=" * 74)
 

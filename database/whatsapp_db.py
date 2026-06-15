@@ -79,7 +79,7 @@ def _resolve_whatsapp_salt() -> bytes:
             return bytes.fromhex(raw) + b":whatsapp-session"
         except ValueError:
             pass
-    return b"openalgo_static_salt:whatsapp-session"
+    return b"tradeboard_static_salt:whatsapp-session"
 
 
 def _build_fernet() -> Fernet:
@@ -95,7 +95,7 @@ def _build_fernet() -> Fernet:
 fernet = _build_fernet()
 
 
-# SQLAlchemy engine — same NullPool pattern as the rest of OpenAlgo SQLite usage.
+# SQLAlchemy engine — same NullPool pattern as the rest of Tradeboard SQLite usage.
 if DATABASE_URL and "sqlite" in DATABASE_URL:
     engine = create_engine(
         DATABASE_URL, poolclass=NullPool, connect_args={"check_same_thread": False}
@@ -124,7 +124,7 @@ class WhatsAppConfig(Base):
     own_jid = Column(String(120))  # Device's own WhatsApp JID after pair
     own_phone = Column(String(32))  # Device's own phone number (E.164 digits)
     bot_username = Column(String(255))  # Display name of paired device
-    # Single-user OpenAlgo: the operator who paired the device is the bot's
+    # Single-user Tradeboard: the operator who paired the device is the bot's
     # implicit "owner". We capture their internal user_id at pair time so the
     # bot's command handlers can look up the right api_key without depending
     # on any per-WhatsApp-user linking step.
@@ -141,7 +141,7 @@ class WhatsAppConfig(Base):
 
 
 class WhatsAppUser(Base):
-    """Linked recipient — a WhatsApp number associated with an OpenAlgo user.
+    """Linked recipient — a WhatsApp number associated with an Tradeboard user.
     The same physical phone may be both the device owner (own_jid in config)
     and a linked user (one row here) so it can run command-mode queries."""
 

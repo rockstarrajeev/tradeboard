@@ -130,7 +130,7 @@ class FyersHSMWebSocket:
         Args:
             access_token: Fyers access token in format "appid:token"
             log_path: Path for logging (optional)
-            user_id: OpenAlgo user id, used to re-read a fresh access token from
+            user_id: Tradeboard user id, used to re-read a fresh access token from
                 the database on reconnect (tokens roll over daily at ~3 AM IST)
         """
         self.access_token = access_token
@@ -201,7 +201,7 @@ class FyersHSMWebSocket:
         self.depth_data = {}
 
         # Source identifier
-        self.source = "OpenAlgo-HSM"
+        self.source = "Tradeboard-HSM"
         self.mode = "P"  # Production mode
 
     def _extract_hsm_key(self, access_token: str) -> str | None:

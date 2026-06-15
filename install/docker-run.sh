@@ -1,14 +1,14 @@
 #!/bin/bash
 # ============================================================================
-# OpenAlgo Docker Runner for macOS/Linux
+# Tradeboard Docker Runner for macOS/Linux
 # ============================================================================
 #
 # Quick Start (2 commands):
-#   1. Download: curl -O https://raw.githubusercontent.com/marketcalls/openalgo/main/install/docker-run.sh && chmod +x docker-run.sh
+#   1. Download: curl -O https://raw.githubusercontent.com/rockstarrajeev/tradeboard/main/install/docker-run.sh && chmod +x docker-run.sh
 #   2. Run:      ./docker-run.sh
 #
 # Commands:
-#   start    - Start OpenAlgo container (default, runs setup if needed)
+#   start    - Start Tradeboard container (default, runs setup if needed)
 #   stop     - Stop and remove container
 #   restart  - Restart container
 #   logs     - View container logs (live)
@@ -32,10 +32,10 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-IMAGE="marketcalls/openalgo:latest"
-CONTAINER="openalgo"
+IMAGE="rockstarrajeev/tradeboard:latest"
+CONTAINER="tradeboard"
 ENV_FILE=".env"
-SAMPLE_ENV_URL="https://raw.githubusercontent.com/marketcalls/openalgo/main/.sample.env"
+SAMPLE_ENV_URL="https://raw.githubusercontent.com/rockstarrajeev/tradeboard/main/.sample.env"
 # Use the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OPENALGO_DIR="$SCRIPT_DIR"
@@ -49,7 +49,7 @@ VALID_BROKERS="fivepaisa,fivepaisaxts,aliceblue,angel,arrow,compositedge,defined
 # Banner
 echo ""
 echo -e "${BLUE}  ========================================${NC}"
-echo -e "${BLUE}       OpenAlgo Docker Runner${NC}"
+echo -e "${BLUE}       Tradeboard Docker Runner${NC}"
 echo -e "${BLUE}       Desktop Edition (macOS/Linux)${NC}"
 echo -e "${BLUE}  ========================================${NC}"
 echo ""
@@ -116,7 +116,7 @@ is_xts_broker() {
 
 # Setup function
 do_setup() {
-    log_info "Setting up OpenAlgo in $OPENALGO_DIR..."
+    log_info "Setting up Tradeboard in $OPENALGO_DIR..."
     echo ""
 
     # Create db directory
@@ -309,7 +309,7 @@ do_setup() {
     echo "  Redirect URL for broker portal:"
     echo "  http://127.0.0.1:5000/$BROKER_NAME/callback"
     echo ""
-    echo "  Documentation: https://docs.openalgo.in"
+    echo "  Documentation: https://docs.rajeevupadhyay.com"
     echo ""
 
     # Try to open .env in editor (non-blocking)
@@ -330,14 +330,14 @@ do_setup() {
     fi
 
     echo ""
-    log_ok "Setup complete! Run './docker-run.sh start' to launch OpenAlgo."
+    log_ok "Setup complete! Run './docker-run.sh start' to launch Tradeboard."
     echo ""
     return 0
 }
 
 # Start function
 do_start() {
-    log_info "Starting OpenAlgo..."
+    log_info "Starting Tradeboard..."
     echo ""
 
     # Check if setup is needed
@@ -346,12 +346,12 @@ do_start() {
         echo ""
         if ! do_setup; then
             echo ""
-            log_error "Setup failed. Cannot start OpenAlgo."
+            log_error "Setup failed. Cannot start Tradeboard."
             echo "Please fix the issues above and try again."
             exit 1
         fi
         echo ""
-        log_info "Starting OpenAlgo after setup..."
+        log_info "Starting Tradeboard after setup..."
         echo ""
     fi
 
@@ -404,7 +404,7 @@ do_start() {
 
     # Thread limits based on RAM (prevents RLIMIT_NPROC exhaustion)
     # <3GB: 1 thread | 3-6GB: 2 threads | 6GB+: min(4, cores)
-    # See: https://github.com/marketcalls/openalgo/issues/822
+    # See: https://github.com/rockstarrajeev/tradeboard/issues/822
     if [ $TOTAL_RAM_MB -lt 3000 ]; then
         THREAD_LIMIT=1
     elif [ $TOTAL_RAM_MB -lt 6000 ]; then
@@ -450,7 +450,7 @@ do_start() {
         "$IMAGE"; then
 
         echo ""
-        log_success "OpenAlgo started successfully!"
+        log_success "Tradeboard started successfully!"
         echo ""
         echo -e "${GREEN}  ========================================${NC}"
         echo -e "${GREEN}  Web UI:     http://127.0.0.1:5000${NC}"
@@ -461,8 +461,8 @@ do_start() {
         echo ""
         echo "  Useful commands:"
         echo "    ./docker-run.sh logs     - View logs"
-        echo "    ./docker-run.sh stop     - Stop OpenAlgo"
-        echo "    ./docker-run.sh restart  - Restart OpenAlgo"
+        echo "    ./docker-run.sh stop     - Stop Tradeboard"
+        echo "    ./docker-run.sh restart  - Restart Tradeboard"
         echo ""
     else
         echo ""
@@ -479,15 +479,15 @@ do_start() {
 
 # Stop function
 do_stop() {
-    log_info "Stopping OpenAlgo..."
+    log_info "Stopping Tradeboard..."
     docker stop "$CONTAINER" >/dev/null 2>&1
     docker rm "$CONTAINER" >/dev/null 2>&1
-    log_ok "OpenAlgo stopped."
+    log_ok "Tradeboard stopped."
 }
 
 # Restart function
 do_restart() {
-    log_info "Restarting OpenAlgo..."
+    log_info "Restarting Tradeboard..."
     do_stop
     echo ""
     do_start
@@ -521,11 +521,11 @@ do_status() {
 
     # Check if container is running
     if docker ps --filter "name=$CONTAINER" --filter "status=running" | grep -q "$CONTAINER"; then
-        echo -e "${GREEN}[STATUS]${NC} OpenAlgo is running."
+        echo -e "${GREEN}[STATUS]${NC} Tradeboard is running."
         echo ""
         echo "  Web UI: http://127.0.0.1:5000"
     else
-        echo -e "${YELLOW}[STATUS]${NC} OpenAlgo is NOT running."
+        echo -e "${YELLOW}[STATUS]${NC} Tradeboard is NOT running."
     fi
     echo ""
     echo "  Data directory: $OPENALGO_DIR"
@@ -554,7 +554,7 @@ do_help() {
     echo "Usage: ./docker-run.sh [command]"
     echo ""
     echo "Commands:"
-    echo "  start    Start OpenAlgo (runs setup if needed, default)"
+    echo "  start    Start Tradeboard (runs setup if needed, default)"
     echo "  stop     Stop and remove container"
     echo "  restart  Restart container"
     echo "  logs     View container logs (live)"
@@ -571,7 +571,7 @@ do_help() {
     echo "     Linux: https://docs.docker.com/desktop/install/linux-install/"
     echo ""
     echo "  2. Download and run:"
-    echo "     curl -O https://raw.githubusercontent.com/marketcalls/openalgo/main/install/docker-run.sh"
+    echo "     curl -O https://raw.githubusercontent.com/rockstarrajeev/tradeboard/main/install/docker-run.sh"
     echo "     chmod +x docker-run.sh"
     echo "     ./docker-run.sh"
     echo ""

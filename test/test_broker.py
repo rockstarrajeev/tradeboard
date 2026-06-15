@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-OpenAlgo – New Broker Integration Test
+Tradeboard – New Broker Integration Test
 • Stage‑by‑stage progress output
 • Immediate reporting of any failing symbol / order‑id
 • Final green / red roll‑up
@@ -369,7 +369,7 @@ if __name__ == "__main__":
     try:
         from openalgo import api as OAClient
     except ImportError:
-        print(red("openalgo SDK missing – pip install openalgo"))
+        print(red("tradeboard SDK missing – pip install openalgo"))
         sys.exit(1)
 
     client = OAClient(api_key=API_KEY, host=HOST)

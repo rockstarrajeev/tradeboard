@@ -255,7 +255,7 @@ def map_portfolio_data(portfolio_data):
     calculate_portfolio_statistics and transform_holdings_data both
     consume:
 
-    - ``_oa_symbol``: OpenAlgo symbol resolved from securityId+exchange
+    - ``_oa_symbol``: Tradeboard symbol resolved from securityId+exchange
     - ``_exchange``: real exchange ("NSE" or "BSE"), never "ALL"
     - ``_ltp``: last-traded price (0.0 if multiquote failed/missing — the
       frontend's useLivePrice hook fills it in via WebSocket within seconds)

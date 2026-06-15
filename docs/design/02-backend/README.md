@@ -2,7 +2,7 @@
 
 ## Overview
 
-OpenAlgo backend is a production-ready Flask application providing a unified API layer across **29 Indian brokers**. It features a plugin-based broker system, multi-database architecture, real-time WebSocket streaming, and comprehensive security layers.
+Tradeboard backend is a production-ready Flask application providing a unified API layer across **29 Indian brokers**. It features a plugin-based broker system, multi-database architecture, real-time WebSocket streaming, and comprehensive security layers.
 
 ## Technology Stack
 
@@ -73,7 +73,7 @@ OpenAlgo backend is a production-ready Flask application providing a unified API
 ## Directory Structure
 
 ```
-openalgo/
+tradeboard/
 ├── app.py                      # Application entry point
 ├── extensions.py               # Flask extensions (SocketIO)
 ├── limiter.py                  # Rate limiting configuration
@@ -227,8 +227,8 @@ broker/zerodha/
 ```json
 {
     "Plugin Name": "zerodha",
-    "Plugin URI": "https://openalgo.in",
-    "Description": "Zerodha OpenAlgo Plugin",
+    "Plugin URI": "https://rajeevupadhyay.com",
+    "Description": "Zerodha Tradeboard Plugin",
     "Version": "1.0",
     "Author": "Rajandran R"
 }

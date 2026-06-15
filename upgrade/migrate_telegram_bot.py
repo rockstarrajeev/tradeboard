@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Telegram Bot Migration Script for OpenAlgo
+Telegram Bot Migration Script for Tradeboard
 
 This migration creates all necessary tables for the Telegram bot integration.
 It handles both new installations and updates from previous versions.
@@ -445,7 +445,7 @@ class TelegramBotMigration:
 
 def main():
     parser = argparse.ArgumentParser(
-        description=f"Telegram Bot Migration for OpenAlgo - {MIGRATION_DESCRIPTION}"
+        description=f"Telegram Bot Migration for Tradeboard - {MIGRATION_DESCRIPTION}"
     )
     parser.add_argument(
         "--downgrade", action="store_true", help="Rollback migration (remove tables)"

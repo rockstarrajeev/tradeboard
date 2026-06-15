@@ -1,7 +1,7 @@
 # blueprints/system_permissions.py
 """
 System permissions monitoring API.
-Checks file and directory permissions for OpenAlgo components.
+Checks file and directory permissions for Tradeboard components.
 Cross-platform compatible (Windows, Linux, macOS).
 """
 
@@ -77,7 +77,7 @@ def get_permission_checks():
 
 
 def get_base_path():
-    """Get the base path of the OpenAlgo application."""
+    """Get the base path of the Tradeboard application."""
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 

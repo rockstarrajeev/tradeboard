@@ -1,5 +1,5 @@
 Feature: Automation webhooks and Python strategies
-  External automation routes convert webhook or strategy events into OpenAlgo actions.
+  External automation routes convert webhook or strategy events into Tradeboard actions.
 
   # Source: blueprints/chartink.py:787, blueprints/chartink.py:67
   Scenario: Chartink webhook queues regular or smart orders
@@ -18,14 +18,14 @@ Feature: Automation webhooks and Python strategies
   # Source: blueprints/tv_json.py:22, restx_api/place_order.py:25
   Scenario: TradingView JSON route accepts order automation payloads
     Given an external client sends a TradingView JSON request
-    When the payload maps to an OpenAlgo action
+    When the payload maps to an Tradeboard action
     Then the route can call the same order API behavior used by RESTX order placement
 
   # Source: blueprints/gc_json.py:22, restx_api/place_order.py:25
   Scenario: GoCharting route accepts order automation payloads
     Given an external client sends a GoCharting request
-    When the payload maps to an OpenAlgo action
-    Then the route can call OpenAlgo order placement behavior
+    When the payload maps to an Tradeboard action
+    Then the route can call Tradeboard order placement behavior
 
   # Source: blueprints/python_strategy.py:1761, blueprints/python_strategy.py:1907
   Scenario: Python Strategy can start and schedule a strategy

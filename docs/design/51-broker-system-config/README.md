@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Profile section in OpenAlgo provides configuration interfaces for broker credentials and system settings. These settings are stored in the `.env` file and database, with security measures for sensitive data.
+The Profile section in Tradeboard provides configuration interfaces for broker credentials and system settings. These settings are stored in the `.env` file and database, with security measures for sensitive data.
 
 ## Architecture Diagram
 
