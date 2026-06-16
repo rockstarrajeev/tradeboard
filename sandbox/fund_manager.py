@@ -418,6 +418,17 @@ class FundManager:
     def _get_leverage(self, exchange, product, symbol, action=None):
         """Get leverage multiplier based on exchange, product, symbol type, and action"""
         try:
+            # Crypto exchanges
+            if exchange == "CRYPTO":
+                try:
+                    from database.leverage_db import get_leverage
+                    db_leverage = get_leverage()
+                    if db_leverage and db_leverage > 0:
+                        return Decimal(str(int(db_leverage)))
+                except Exception as e:
+                    logger.warning(f"Could not read crypto leverage config: {e}")
+                return Decimal(get_config("futures_leverage", "10"))
+
             # Equity exchanges
             if exchange in ["NSE", "BSE"]:
                 if product == "MIS":
