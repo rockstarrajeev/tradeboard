@@ -1,4 +1,4 @@
-import { Activity, Briefcase, Calendar, Download, Package, Settings } from 'lucide-react'
+import { Activity, Briefcase, Calendar, CalendarDays, Download, Package, Settings } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
@@ -15,6 +15,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn, makeFormatCurrency } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
+
+import CalendarLedger from './CalendarLedger'
 
 interface DailyPnL {
   date: string
@@ -243,6 +245,10 @@ export default function SandboxPnL() {
           <TabsTrigger value="trades" className="gap-2">
             <Activity className="h-4 w-4" />
             Recent Trades
+          </TabsTrigger>
+          <TabsTrigger value="calendar" className="gap-2">
+            <CalendarDays className="h-4 w-4" />
+            Calendar Ledger
           </TabsTrigger>
         </TabsList>
 
@@ -551,6 +557,11 @@ export default function SandboxPnL() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Calendar Ledger Tab */}
+        <TabsContent value="calendar">
+          <CalendarLedger embedded />
         </TabsContent>
       </Tabs>
     </div>

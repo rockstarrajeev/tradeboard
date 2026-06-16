@@ -2,7 +2,7 @@ import {
   BarChart3,
   Bell,
   BookOpen,
-  CalendarDays,
+
   ClipboardList,
   Code2,
   Database,
@@ -76,7 +76,7 @@ export const profileMenuItems: NavItem[] = [
   { href: '/search/token', label: 'Search', icon: Search },
   { href: '/sandbox', label: 'Sandbox', icon: FlaskConical },
   { href: '/sandbox/mypnl', label: 'P\u0026L History', icon: BarChart3 },
-  { href: '/sandbox/calendar', label: 'Calendar Ledger', icon: CalendarDays },
+
   { href: '/leverage', label: 'Leverage', icon: Gauge },
   { href: '/admin', label: 'Admin', icon: Settings },
 ]

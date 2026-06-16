@@ -14,7 +14,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn, makeFormatCurrency } from '@/lib/utils'
-import { useAuthStore } from '@/stores/authStore'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -37,109 +36,9 @@ interface DayData {
 
 type ViewMode = 'monthly' | 'annual'
 
-// ─── Mock data generator ─────────────────────────────────────────────────────
+// ─── Data source ───────────────────────────────────────────────────────────────
 
-const SYMBOLS = [
-  'NIFTY24DEC23000CE',
-  'NIFTY24DEC23000PE',
-  'BANKNIFTY24NOV50000CE',
-  'RELIANCE',
-  'INFY',
-  'TCS',
-  'HDFC',
-  'NIFTY24DEC22900CE',
-  'NIFTY24DEC23100PE',
-]
-
-const INDIAN_HOLIDAYS_2024_2025 = new Set([
-  '2024-01-22',
-  '2024-01-26',
-  '2024-03-08',
-  '2024-03-25',
-  '2024-03-29',
-  '2024-04-14',
-  '2024-04-17',
-  '2024-04-21',
-  '2024-05-23',
-  '2024-06-17',
-  '2024-07-17',
-  '2024-08-15',
-  '2024-10-02',
-  '2024-10-12',
-  '2024-11-01',
-  '2024-11-15',
-  '2024-11-20',
-  '2024-12-25',
-  '2025-01-26',
-  '2025-02-19',
-  '2025-03-14',
-  '2025-03-31',
-  '2025-04-10',
-  '2025-04-14',
-  '2025-04-18',
-  '2025-05-01',
-])
-
-/** Seeded pseudo-random for stable mock data across renders */
-function seededRandom(seed: number): number {
-  const x = Math.sin(seed) * 10000
-  return x - Math.floor(x)
-}
-
-function generateTrades(dateStr: string, dayIndex: number): TradeEntry[] {
-  const count = Math.floor(seededRandom(dayIndex * 7 + 1) * 5) + 1
-  return Array.from({ length: count }, (_, i) => {
-    const pnl = (seededRandom(dayIndex * 13 + i * 3) - 0.4) * 4000
-    return {
-      id: `${dateStr}-t${i}`,
-      symbol: SYMBOLS[Math.floor(seededRandom(dayIndex * 5 + i) * SYMBOLS.length)],
-      action: seededRandom(dayIndex + i * 2) > 0.5 ? 'BUY' : 'SELL',
-      qty: (Math.floor(seededRandom(dayIndex * 11 + i) * 10) + 1) * 50,
-      price: Math.floor(seededRandom(dayIndex * 9 + i) * 500 + 100),
-      pnl: Math.round(pnl),
-      time: `${String(9 + Math.floor(seededRandom(dayIndex * 3 + i) * 5)).padStart(2, '0')}:${String(Math.floor(seededRandom(dayIndex + i * 7) * 59)).padStart(2, '0')}`,
-    }
-  })
-}
-
-/**
- * Generate mock trading data from Jan 2024 → Jun 2025,
- * skipping weekends and known Indian market holidays.
- */
-function generateMockData(): Map<string, DayData> {
-  const map = new Map<string, DayData>()
-  const start = new Date('2024-01-01')
-  const end = new Date('2025-06-30')
-  let dayIndex = 0
-
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    const dow = d.getDay()
-    if (dow === 0 || dow === 6) continue // weekend
-    const dateStr = d.toISOString().slice(0, 10)
-    if (INDIAN_HOLIDAYS_2024_2025.has(dateStr)) continue
-
-    // ~85% of days have trades
-    if (seededRandom(dayIndex * 17) < 0.15) {
-      dayIndex++
-      continue
-    }
-
-    const trades = generateTrades(dateStr, dayIndex)
-    const pnl = trades.reduce((sum, t) => sum + t.pnl, 0)
-    map.set(dateStr, {
-      date: dateStr,
-      pnl: Math.round(pnl),
-      tradeCount: trades.length,
-      trades,
-    })
-    dayIndex++
-  }
-
-  return map
-}
-
-// Singleton so data doesn't regenerate on each render
-const MOCK_DATA = generateMockData()
+const MOCK_DATA = new Map<string, DayData>()
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -840,10 +739,13 @@ function AnnualView({ year, onSelectDay, formatCurrency }: AnnualViewProps) {
  * CalendarLedger — P&L Calendar view for sandbox mode.
  * Pure in-memory mock data, Jan 2024 → Jun 2025.
  * Supports monthly grid and annual heatmap views with a trade detail drawer.
+ *
+ * @param embedded - When true, hides the page header & outer padding for
+ *   embedding inside another page (e.g. SandboxPnL tab).
  */
-export default function CalendarLedger() {
-  const { user } = useAuthStore()
-  const formatCurrency = useMemo(() => makeFormatCurrency(user?.broker), [user?.broker])
+export default function CalendarLedger({ embedded = false }: { embedded?: boolean }) {
+  // Force INR for Sandbox
+  const formatCurrency = useMemo(() => makeFormatCurrency('sandbox'), [])
 
   const today = new Date()
   const [view, setView] = useState<ViewMode>('monthly')
@@ -881,25 +783,27 @@ export default function CalendarLedger() {
   const handleCloseDrawer = () => setSelectedDay(null)
 
   return (
-    <div className="container mx-auto py-6 px-4">
-      {/* Page header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <CalendarDays className="h-6 w-6 text-primary" />
-            Calendar Ledger
-          </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Visualise your sandbox P&amp;L · Jan 2024 – Jun 2025
-          </p>
+    <div className={embedded ? '' : 'container mx-auto py-6 px-4'}>
+      {/* Page header — hidden when embedded inside another page */}
+      {!embedded && (
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <CalendarDays className="h-6 w-6 text-primary" />
+              Calendar Ledger
+            </h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Visualise your sandbox P&amp;L · Jan 2024 – Jun 2025
+            </p>
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/sandbox">
+              <FlaskConical className="h-4 w-4 mr-1.5" />
+              Sandbox Config
+            </Link>
+          </Button>
         </div>
-        <Button asChild variant="outline" size="sm">
-          <Link to="/sandbox">
-            <FlaskConical className="h-4 w-4 mr-1.5" />
-            Sandbox Config
-          </Link>
-        </Button>
-      </div>
+      )}
 
       {/* Controls: view toggle + month/year navigation */}
       <Card className="mb-5 border-border/60">

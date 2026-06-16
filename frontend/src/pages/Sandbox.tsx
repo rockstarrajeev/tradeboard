@@ -55,16 +55,16 @@ const DAYS_OF_WEEK = [
 ]
 
 const CAPITAL_OPTIONS = [
-  { value: '1000', label: '1,000' },
-  { value: '5000', label: '5,000' },
-  { value: '10000', label: '10,000' },
-  { value: '50000', label: '50,000' },
-  { value: '100000', label: '1,00,000 (1 Lakh)' },
-  { value: '500000', label: '5,00,000 (5 Lakhs)' },
-  { value: '1000000', label: '10,00,000 (10 Lakhs)' },
-  { value: '2500000', label: '25,00,000 (25 Lakhs)' },
-  { value: '5000000', label: '50,00,000 (50 Lakhs)' },
-  { value: '10000000', label: '1,00,00,000 (1 Crore)' },
+  { value: '1000', label: '₹1,000 (1 Thousand)' },
+  { value: '5000', label: '₹5,000 (5 Thousand)' },
+  { value: '10000', label: '₹10,000 (10 Thousand)' },
+  { value: '50000', label: '₹50,000 (50 Thousand)' },
+  { value: '100000', label: '₹1,00,000 (1 Lakh)' },
+  { value: '500000', label: '₹5,00,000 (5 Lakhs)' },
+  { value: '1000000', label: '₹10,00,000 (10 Lakhs)' },
+  { value: '2500000', label: '₹25,00,000 (25 Lakhs)' },
+  { value: '5000000', label: '₹50,00,000 (50 Lakhs)' },
+  { value: '10000000', label: '₹1,00,00,000 (1 Crore)' },
 ]
 
 function formatConfigLabel(key: string): string {
