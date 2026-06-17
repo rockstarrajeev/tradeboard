@@ -168,15 +168,15 @@ export function useOptionChainLive(
           const tickSize = strike.ce.tick_size
           newStrike.ce = {
             ...strike.ce,
-            ltp: roundToTickSize(wsSymbolData.data.ltp, tickSize) ?? strike.ce.ltp,
+            ltp: roundToTickSize(wsSymbolData.data.ltp, tickSize) || strike.ce.ltp,
             bid:
-              roundToTickSize(depthBuy?.price ?? wsSymbolData.data.bid_price, tickSize) ??
+              roundToTickSize(depthBuy?.price ?? wsSymbolData.data.bid_price, tickSize) ||
               strike.ce.bid,
             ask:
-              roundToTickSize(depthSell?.price ?? wsSymbolData.data.ask_price, tickSize) ??
+              roundToTickSize(depthSell?.price ?? wsSymbolData.data.ask_price, tickSize) ||
               strike.ce.ask,
-            bid_qty: depthBuy?.quantity ?? wsSymbolData.data.bid_size ?? strike.ce.bid_qty ?? 0,
-            ask_qty: depthSell?.quantity ?? wsSymbolData.data.ask_size ?? strike.ce.ask_qty ?? 0,
+            bid_qty: depthBuy?.quantity || wsSymbolData.data.bid_size || strike.ce.bid_qty || 0,
+            ask_qty: depthSell?.quantity || wsSymbolData.data.ask_size || strike.ce.ask_qty || 0,
           }
         }
       }
@@ -192,15 +192,15 @@ export function useOptionChainLive(
           const tickSize = strike.pe.tick_size
           newStrike.pe = {
             ...strike.pe,
-            ltp: roundToTickSize(wsSymbolData.data.ltp, tickSize) ?? strike.pe.ltp,
+            ltp: roundToTickSize(wsSymbolData.data.ltp, tickSize) || strike.pe.ltp,
             bid:
-              roundToTickSize(depthBuy?.price ?? wsSymbolData.data.bid_price, tickSize) ??
+              roundToTickSize(depthBuy?.price ?? wsSymbolData.data.bid_price, tickSize) ||
               strike.pe.bid,
             ask:
-              roundToTickSize(depthSell?.price ?? wsSymbolData.data.ask_price, tickSize) ??
+              roundToTickSize(depthSell?.price ?? wsSymbolData.data.ask_price, tickSize) ||
               strike.pe.ask,
-            bid_qty: depthBuy?.quantity ?? wsSymbolData.data.bid_size ?? strike.pe.bid_qty ?? 0,
-            ask_qty: depthSell?.quantity ?? wsSymbolData.data.ask_size ?? strike.pe.ask_qty ?? 0,
+            bid_qty: depthBuy?.quantity || wsSymbolData.data.bid_size || strike.pe.bid_qty || 0,
+            ask_qty: depthSell?.quantity || wsSymbolData.data.ask_size || strike.pe.ask_qty || 0,
           }
         }
       }

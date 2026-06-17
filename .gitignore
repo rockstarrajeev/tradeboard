@@ -93,3 +93,7 @@ yarn-error.log*
 
 # Windows NUL file
 nul
+
+# Graphify
+graphify-out/
+

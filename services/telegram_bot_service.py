@@ -2605,3 +2605,25 @@ class TelegramBotService:
 
 # Create global instance
 telegram_bot_service = TelegramBotService()
+
+
+# Module-level wrapper functions for compatibility
+def get_telegram_bot():
+    """Returns the global TelegramBotService instance."""
+    return telegram_bot_service
+
+
+def init_bot_sync(token: str, _=None):
+    """Synchronously initializes the global TelegramBotService instance."""
+    return telegram_bot_service.initialize_bot_sync(token)
+
+
+def start_bot_sync():
+    """Synchronously starts the global TelegramBotService instance."""
+    return telegram_bot_service.start_bot()
+
+
+def stop_bot_sync():
+    """Synchronously stops the global TelegramBotService instance."""
+    return telegram_bot_service.stop_bot()
+

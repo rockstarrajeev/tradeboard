@@ -150,6 +150,8 @@ dependencies = [
   "zipp==3.23.1",
   "zmq==0.0.0",
   "opengreeks>=0.2.0",
+  "eventlet",
+  "gunicorn>=25.0,<26",
 ]
 
 [build-system]
@@ -200,6 +202,7 @@ packages = []
 testpaths = ["test"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
+pythonpath = ["."]
 addopts = "-v --timeout=60"
 filterwarnings = [
     "ignore::DeprecationWarning",

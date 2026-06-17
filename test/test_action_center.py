@@ -26,6 +26,17 @@ from services.order_router_service import queue_order, should_route_to_pending
 class TestOrderModeDatabase:
     """Test order mode database functions"""
 
+    @pytest.fixture(autouse=True)
+    def setup_user(self):
+        from database.auth_db import upsert_api_key, ApiKeys, db_session
+        upsert_api_key("test_user", "test-api-key")
+        yield
+        try:
+            ApiKeys.query.filter_by(user_id="test_user").delete()
+            db_session.commit()
+        except Exception:
+            db_session.rollback()
+
     def test_get_order_mode_default(self):
         """Test default order mode is 'auto'"""
         mode = get_order_mode("test_user")
@@ -97,7 +108,7 @@ class TestPendingOrdersDatabase:
         order_data = {"symbol": "HDFC", "action": "BUY"}
         order_id = create_pending_order("test_user", "placeorder", order_data)
 
-        success = approve_pending_order(order_id, approved_by="test_approver")
+        success = approve_pending_order(order_id, approved_by="test_approver", user_id="test_user")
         assert success is True, "Should successfully approve order"
 
         order = get_pending_order_by_id(order_id)
@@ -111,7 +122,7 @@ class TestPendingOrdersDatabase:
         order_id = create_pending_order("test_user", "placeorder", order_data)
 
         reason = "Market conditions unfavorable"
-        success = reject_pending_order(order_id, reason, rejected_by="test_rejector")
+        success = reject_pending_order(order_id, reason, rejected_by="test_rejector", user_id="test_user")
         assert success is True, "Should successfully reject order"
 
         order = get_pending_order_by_id(order_id)
@@ -126,10 +137,10 @@ class TestPendingOrdersDatabase:
         order_id = create_pending_order("test_user", "placeorder", order_data)
 
         # Approve first
-        approve_pending_order(order_id, approved_by="test_user")
+        approve_pending_order(order_id, approved_by="test_user", user_id="test_user")
 
         # Delete
-        success = delete_pending_order(order_id)
+        success = delete_pending_order(order_id, user_id="test_user")
         assert success is True, "Should successfully delete approved order"
 
         order = get_pending_order_by_id(order_id)
@@ -140,7 +151,7 @@ class TestPendingOrdersDatabase:
         order_data = {"symbol": "WIPRO", "action": "BUY"}
         order_id = create_pending_order("test_user", "placeorder", order_data)
 
-        success = delete_pending_order(order_id)
+        success = delete_pending_order(order_id, user_id="test_user")
         assert success is False, "Should not delete order in pending status"
 
     def test_update_broker_status(self):
@@ -148,7 +159,7 @@ class TestPendingOrdersDatabase:
         order_data = {"symbol": "TCS", "action": "BUY"}
         order_id = create_pending_order("test_user", "placeorder", order_data)
 
-        approve_pending_order(order_id, approved_by="test_user")
+        approve_pending_order(order_id, approved_by="test_user", user_id="test_user")
 
         success = update_broker_status(order_id, "BROKER123456", "open")
         assert success is True, "Should successfully update broker status"

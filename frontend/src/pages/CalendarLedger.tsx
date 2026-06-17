@@ -23,7 +23,7 @@ interface TradeEntry {
   action: 'BUY' | 'SELL'
   qty: number
   price: number
-  pnl: number
+  pnl?: number
   time: string
 }
 
@@ -36,9 +36,7 @@ interface DayData {
 
 type ViewMode = 'monthly' | 'annual'
 
-// ─── Data source ───────────────────────────────────────────────────────────────
 
-const MOCK_DATA = new Map<string, DayData>()
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -83,7 +81,7 @@ interface MonthSummary {
   worstDay: number
 }
 
-function computeMonthSummary(year: number, month: number): MonthSummary {
+function computeMonthSummary(year: number, month: number, ledgerData: Map<string, DayData>): MonthSummary {
   let totalPnl = 0
   let tradingDays = 0
   let winDays = 0
@@ -93,7 +91,7 @@ function computeMonthSummary(year: number, month: number): MonthSummary {
 
   for (let d = 1; d <= days; d++) {
     const ds = toDateStr(year, month, d)
-    const day = MOCK_DATA.get(ds)
+    const day = ledgerData.get(ds)
     if (!day) continue
     totalPnl += day.pnl
     tradingDays++
@@ -118,13 +116,13 @@ interface AnnualSummary {
   totalTrades: number
 }
 
-function computeAnnualSummary(year: number): AnnualSummary {
+function computeAnnualSummary(year: number, ledgerData: Map<string, DayData>): AnnualSummary {
   let totalPnl = 0
   let tradingDays = 0
   let winDays = 0
   let totalTrades = 0
 
-  for (const [dateStr, day] of MOCK_DATA.entries()) {
+  for (const [dateStr, day] of ledgerData.entries()) {
     if (!dateStr.startsWith(String(year))) continue
     totalPnl += day.pnl
     tradingDays++
@@ -181,11 +179,12 @@ interface DayCellProps {
   isToday: boolean
   onClick: (dateStr: string) => void
   formatCurrency: (v: number) => string
+  ledgerData: Map<string, DayData>
 }
 
 /** A single day cell in the monthly grid */
-function DayCell({ dateStr, dayNum, isToday, onClick, formatCurrency }: DayCellProps) {
-  const day = MOCK_DATA.get(dateStr)
+function DayCell({ dateStr, dayNum, isToday, onClick, formatCurrency, ledgerData }: DayCellProps) {
+  const day = ledgerData.get(dateStr)
 
   return (
     <button
@@ -234,14 +233,15 @@ function DayCell({ dateStr, dayNum, isToday, onClick, formatCurrency }: DayCellP
 
 interface TradeDrawerProps {
   dateStr: string | null
+  ledgerData: Map<string, DayData>
   onClose: () => void
   formatCurrency: (v: number) => string
 }
 
 /** Slide-in drawer showing individual trades for a selected day */
-function TradeDrawer({ dateStr, onClose, formatCurrency }: TradeDrawerProps) {
+function TradeDrawer({ dateStr, ledgerData, onClose, formatCurrency }: TradeDrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null)
-  const day = dateStr ? MOCK_DATA.get(dateStr) : undefined
+  const day = dateStr ? ledgerData.get(dateStr) : undefined
   const isOpen = !!dateStr && !!day
 
   // Focus trap
@@ -277,8 +277,6 @@ function TradeDrawer({ dateStr, onClose, formatCurrency }: TradeDrawerProps) {
 
   if (!isOpen || !day) return null
 
-  const totalPnl = day.trades.reduce((s, t) => s + t.pnl, 0)
-  const winTrades = day.trades.filter((t) => t.pnl > 0).length
   const formattedDate = new Date(`${dateStr}T00:00:00`).toLocaleDateString('en-IN', {
     weekday: 'long',
     day: 'numeric',
@@ -341,30 +339,22 @@ function TradeDrawer({ dateStr, onClose, formatCurrency }: TradeDrawerProps) {
             <span
               className={cn(
                 'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold',
-                totalPnl >= 0
+                day.pnl >= 0
                   ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                   : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
               )}
             >
-              {totalPnl >= 0 ? (
+              {day.pnl >= 0 ? (
                 <TrendingUp className="h-3 w-3" />
               ) : (
                 <TrendingDown className="h-3 w-3" />
               )}
-              {totalPnl >= 0 ? '+' : ''}
-              {formatCurrency(totalPnl)}
+              {day.pnl >= 0 ? '+' : ''}
+              {formatCurrency(day.pnl)}
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
               <BarChart3 className="h-3 w-3" />
               {day.tradeCount} trades
-            </span>
-            <span
-              className={cn(
-                'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium',
-                'bg-muted text-muted-foreground'
-              )}
-            >
-              {winTrades}/{day.tradeCount} wins
             </span>
           </div>
         </div>
@@ -376,9 +366,9 @@ function TradeDrawer({ dateStr, onClose, formatCurrency }: TradeDrawerProps) {
               key={trade.id}
               className={cn(
                 'rounded-lg border p-3 transition-colors',
-                trade.pnl >= 0
-                  ? 'border-green-200/50 bg-green-50/50 dark:border-green-900/30 dark:bg-green-950/20'
-                  : 'border-red-200/50 bg-red-50/50 dark:border-red-900/30 dark:bg-red-950/20'
+                trade.action === 'BUY'
+                  ? 'border-blue-200/50 bg-blue-50/50 dark:border-blue-900/30 dark:bg-blue-950/20'
+                  : 'border-amber-200/50 bg-amber-50/50 dark:border-amber-900/30 dark:bg-amber-950/20'
               )}
             >
               <div className="flex items-start justify-between gap-2">
@@ -397,17 +387,6 @@ function TradeDrawer({ dateStr, onClose, formatCurrency }: TradeDrawerProps) {
                     <span className="text-xs text-muted-foreground">{trade.time}</span>
                   </div>
                 </div>
-                <span
-                  className={cn(
-                    'text-sm font-bold tabular-nums shrink-0',
-                    trade.pnl >= 0
-                      ? 'text-green-600 dark:text-green-400'
-                      : 'text-red-600 dark:text-red-400'
-                  )}
-                >
-                  {trade.pnl >= 0 ? '+' : ''}
-                  {formatCurrency(trade.pnl)}
-                </span>
               </div>
             </div>
           ))}
@@ -424,13 +403,14 @@ interface MonthlyViewProps {
   month: number
   onSelectDay: (dateStr: string) => void
   formatCurrency: (v: number) => string
+  ledgerData: Map<string, DayData>
 }
 
-function MonthlyView({ year, month, onSelectDay, formatCurrency }: MonthlyViewProps) {
+function MonthlyView({ year, month, onSelectDay, formatCurrency, ledgerData }: MonthlyViewProps) {
   const todayStr = new Date().toISOString().slice(0, 10)
   const firstDow = getFirstDayOfWeek(year, month)
   const daysInMonth = getDaysInMonth(year, month)
-  const summary = useMemo(() => computeMonthSummary(year, month), [year, month])
+  const summary = useMemo(() => computeMonthSummary(year, month, ledgerData), [year, month, ledgerData])
 
   // Build cell grid: empty prefix cells + day cells
   const cells: Array<{ dayNum: number; dateStr: string } | null> = [
@@ -502,6 +482,7 @@ function MonthlyView({ year, month, onSelectDay, formatCurrency }: MonthlyViewPr
               isToday={cell.dateStr === todayStr}
               onClick={onSelectDay}
               formatCurrency={formatCurrency}
+              ledgerData={ledgerData}
             />
           ) : (
             <div key={`empty-${idx}`} className="min-h-16" />
@@ -518,15 +499,16 @@ interface AnnualViewProps {
   year: number
   onSelectDay: (dateStr: string) => void
   formatCurrency: (v: number) => string
+  ledgerData: Map<string, DayData>
 }
 
-function AnnualView({ year, onSelectDay, formatCurrency }: AnnualViewProps) {
+function AnnualView({ year, onSelectDay, formatCurrency, ledgerData }: AnnualViewProps) {
   const [tooltip, setTooltip] = useState<{
     dateStr: string
     x: number
     y: number
   } | null>(null)
-  const summary = useMemo(() => computeAnnualSummary(year), [year])
+  const summary = useMemo(() => computeAnnualSummary(year, ledgerData), [year, ledgerData])
 
   // Build 52-week grid: columns = weeks (Sun→Sat), rows = day-of-week Mon=0…Sun=6
   // We'll build columns of 7 cells, starting from Jan 1 of the year
@@ -552,7 +534,7 @@ function AnnualView({ year, onSelectDay, formatCurrency }: AnnualViewProps) {
       }
       const d = new Date(year, 0, 1 + dayOffset)
       const ds = d.toISOString().slice(0, 10)
-      week.push({ dateStr: ds, pnl: MOCK_DATA.get(ds)?.pnl })
+      week.push({ dateStr: ds, pnl: ledgerData.get(ds)?.pnl })
     }
     weeks.push(week)
   }
@@ -671,7 +653,7 @@ function AnnualView({ year, onSelectDay, formatCurrency }: AnnualViewProps) {
             {weeks.map((week, wi) => (
               <div key={wi} className="flex flex-col gap-0.5">
                 {week.map(({ dateStr, pnl }, di) => {
-                  const hasData = dateStr && MOCK_DATA.has(dateStr)
+                  const hasData = dateStr && ledgerData.has(dateStr)
                   return (
                     <button
                       key={di}
@@ -708,7 +690,7 @@ function AnnualView({ year, onSelectDay, formatCurrency }: AnnualViewProps) {
       {/* Tooltip */}
       {tooltip &&
         (() => {
-          const day = MOCK_DATA.get(tooltip.dateStr)
+          const day = ledgerData.get(tooltip.dateStr)
           if (!day) return null
           const fmtDate = new Date(`${tooltip.dateStr}T00:00:00`).toLocaleDateString('en-IN', {
             day: 'numeric',
@@ -744,18 +726,67 @@ function AnnualView({ year, onSelectDay, formatCurrency }: AnnualViewProps) {
  *   embedding inside another page (e.g. SandboxPnL tab).
  */
 export default function CalendarLedger({ embedded = false }: { embedded?: boolean }) {
-  // Force INR for Sandbox
-  const formatCurrency = useMemo(() => makeFormatCurrency('sandbox'), [])
+  // Force USD for Sandbox
+  const formatCurrency = useMemo(() => makeFormatCurrency('deltaexchange'), [])
 
   const today = new Date()
   const [view, setView] = useState<ViewMode>('monthly')
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth() + 1)
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
+  
+  const [ledgerData, setLedgerData] = useState<Map<string, DayData>>(new Map())
+  const [loading, setLoading] = useState(true)
 
-  // Constrain nav to data range: Jan 2024 → Jun 2025
+  useEffect(() => {
+    setLoading(true)
+    fetch('/sandbox/api/calendar-ledger')
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 'success') {
+          const newMap = new Map<string, DayData>()
+          
+          // 1. Populate map with daily snapshots
+          res.daily_pnls.forEach((dp: any) => {
+            newMap.set(dp.date, {
+              date: dp.date,
+              pnl: dp.total_mtm,
+              tradeCount: 0,
+              trades: [] as TradeEntry[],
+            })
+          })
+          
+          // 2. Associate trades with respective days
+          res.trades.forEach((t: any) => {
+            const dayEntry = newMap.get(t.date) || {
+              date: t.date,
+              pnl: 0.0,
+              tradeCount: 0,
+              trades: [] as TradeEntry[],
+            }
+            
+            dayEntry.trades.push({
+              id: t.id,
+              symbol: t.symbol,
+              action: t.action as 'BUY' | 'SELL',
+              qty: t.qty,
+              price: t.price,
+              time: t.time,
+            })
+            dayEntry.tradeCount = dayEntry.trades.length
+            newMap.set(t.date, dayEntry)
+          })
+          
+          setLedgerData(newMap)
+        }
+      })
+      .catch((err) => console.error('Error fetching calendar ledger:', err))
+      .finally(() => setLoading(false))
+  }, [])
+
+  // Constrain nav to data range: Jan 2024 → Dec 2026
   const canGoPrev = view === 'monthly' ? !(year === 2024 && month === 1) : year > 2024
-  const canGoNext = view === 'monthly' ? !(year === 2025 && month === 6) : year < 2025
+  const canGoNext = view === 'monthly' ? !(year === 2026 && month === 12) : year < 2026
 
   const handlePrev = () => {
     if (view === 'monthly') {
@@ -793,7 +824,7 @@ export default function CalendarLedger({ embedded = false }: { embedded?: boolea
               Calendar Ledger
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Visualise your sandbox P&amp;L · Jan 2024 – Jun 2025
+              Visualise your sandbox P&amp;L · Jan 2024 – Dec 2026
             </p>
           </div>
           <Button asChild variant="outline" size="sm">
@@ -879,15 +910,25 @@ export default function CalendarLedger({ embedded = false }: { embedded?: boolea
           </CardTitle>
         </CardHeader>
         <CardContent className="px-4 pb-5">
-          {view === 'monthly' ? (
+          {loading ? (
+            <div className="flex h-48 items-center justify-center">
+              <span className="text-sm text-muted-foreground">Loading calendar data...</span>
+            </div>
+          ) : view === 'monthly' ? (
             <MonthlyView
               year={year}
               month={month}
               onSelectDay={handleSelectDay}
               formatCurrency={formatCurrency}
+              ledgerData={ledgerData}
             />
           ) : (
-            <AnnualView year={year} onSelectDay={handleSelectDay} formatCurrency={formatCurrency} />
+            <AnnualView
+              year={year}
+              onSelectDay={handleSelectDay}
+              formatCurrency={formatCurrency}
+              ledgerData={ledgerData}
+            />
           )}
         </CardContent>
       </Card>
@@ -895,6 +936,7 @@ export default function CalendarLedger({ embedded = false }: { embedded?: boolea
       {/* Trade detail drawer */}
       <TradeDrawer
         dateStr={selectedDay}
+        ledgerData={ledgerData}
         onClose={handleCloseDrawer}
         formatCurrency={formatCurrency}
       />
