@@ -97,3 +97,10 @@ nul
 # Graphify
 graphify-out/
 
+# Scratch and Backup files
+*.bak
+test_chain.py
+test_db.py
+test_get_quotes.py
+
+
