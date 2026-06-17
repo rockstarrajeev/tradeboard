@@ -55,16 +55,19 @@ const DAYS_OF_WEEK = [
 ]
 
 const CAPITAL_OPTIONS = [
-  { value: '1000', label: '₹1,000 (1 Thousand)' },
-  { value: '5000', label: '₹5,000 (5 Thousand)' },
-  { value: '10000', label: '₹10,000 (10 Thousand)' },
-  { value: '50000', label: '₹50,000 (50 Thousand)' },
-  { value: '100000', label: '₹1,00,000 (1 Lakh)' },
-  { value: '500000', label: '₹5,00,000 (5 Lakhs)' },
-  { value: '1000000', label: '₹10,00,000 (10 Lakhs)' },
-  { value: '2500000', label: '₹25,00,000 (25 Lakhs)' },
-  { value: '5000000', label: '₹50,00,000 (50 Lakhs)' },
-  { value: '10000000', label: '₹1,00,00,000 (1 Crore)' },
+  { value: '50', label: '$50 (50 USD)' },
+  { value: '100', label: '$100 (100 USD)' },
+  { value: '500', label: '$500 (500 USD)' },
+  { value: '1000', label: '$1,000 (1 Thousand USD)' },
+  { value: '5000', label: '$5,000 (5 Thousand USD)' },
+  { value: '10000', label: '$10,000 (10 Thousand USD)' },
+  { value: '50000', label: '$50,000 (50 Thousand USD)' },
+  { value: '100000', label: '$100,000 (100 Thousand USD)' },
+  { value: '500000', label: '$500,000 (500 Thousand USD)' },
+  { value: '1000000', label: '$1,000,000 (1 Million USD)' },
+  { value: '2500000', label: '$2,500,000 (2.5 Million USD)' },
+  { value: '5000000', label: '$5,000,000 (5 Million USD)' },
+  { value: '10000000', label: '$10,000,000 (10 Million USD)' },
 ]
 
 function formatConfigLabel(key: string): string {

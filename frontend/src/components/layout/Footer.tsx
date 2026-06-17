@@ -30,7 +30,7 @@ export function Footer({ className }: FooterProps) {
   return (
     <footer className={cn('mt-auto border-t bg-muted/30', className)}>
       <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4 text-sm text-muted-foreground">
+        <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4 text-sm text-amber-500">
           <div className="flex items-center gap-2">
             <span>Copyright 2026</span>
             <span className="hidden md:inline">|</span>

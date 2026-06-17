@@ -449,6 +449,66 @@ def squareoff_status():
         ), 500
 
 
+@sandbox_bp.route("/api/calendar-ledger")
+@check_session_validity
+@limiter.limit(API_RATE_LIMIT)
+def api_calendar_ledger():
+    """API endpoint to get all trades and daily P&L records for the calendar ledger"""
+    try:
+        user_id = session.get("user")
+
+        # Get ALL trades for this user
+        trades = (
+            SandboxTrades.query.filter_by(user_id=user_id)
+            .order_by(SandboxTrades.trade_timestamp.asc())
+            .all()
+        )
+
+        # Get ALL daily P&L records for this user
+        from database.sandbox_db import SandboxDailyPnL
+        daily_pnls = (
+            SandboxDailyPnL.query.filter_by(user_id=user_id)
+            .order_by(SandboxDailyPnL.date.asc())
+            .all()
+        )
+
+        # Format trades for the frontend
+        trade_list = []
+        for t in trades:
+            trade_list.append({
+                "id": str(t.id),
+                "tradeid": t.tradeid,
+                "orderid": t.orderid,
+                "symbol": t.symbol,
+                "exchange": t.exchange,
+                "action": t.action,  # BUY or SELL
+                "qty": t.quantity,
+                "price": float(t.price),
+                "product": t.product,
+                "strategy": t.strategy,
+                "time": t.trade_timestamp.strftime("%H:%M:%S"),
+                "date": t.trade_timestamp.strftime("%Y-%m-%d"),
+            })
+
+        # Format daily P&L records
+        pnl_list = []
+        for p in daily_pnls:
+            pnl_list.append({
+                "date": p.date.strftime("%Y-%m-%d"),
+                "realized_pnl": float(p.realized_pnl or 0),
+                "total_mtm": float(p.total_mtm or 0),
+            })
+
+        return jsonify({
+            "status": "success",
+            "trades": trade_list,
+            "daily_pnls": pnl_list
+        })
+    except Exception as e:
+        logger.exception(f"Error loading calendar ledger data: {str(e)}")
+        return jsonify({"status": "error", "message": f"Error loading calendar ledger data: {str(e)}"}), 500
+
+
 @sandbox_bp.route("/mypnl/api/data")
 @check_session_validity
 @limiter.limit(API_RATE_LIMIT)
@@ -812,12 +872,14 @@ def validate_config(config_key, config_value):
                 # Additional validations
                 if config_key == "starting_capital":
                     valid_capitals = [
+                        50, 100, 500,                        # USD sandbox amounts
                         1000, 5000, 10000, 50000,           # small sandbox amounts
                         100000, 500000, 1000000, 2500000, 5000000, 10000000,
                     ]
                     if value not in valid_capitals:
                         return (
                             "Starting capital must be one of: "
+                            "$50, $100, $500 (USD) or "
                             "₹1K, ₹5K, ₹10K, ₹50K, ₹1L, ₹5L, ₹10L, ₹25L, ₹50L, or ₹1Cr"
                         )
 

@@ -95,7 +95,7 @@ export function Navbar() {
                 onClick={() => setMobileOpen(false)}
               >
                 <img src="/logo.png" alt="Tradeboard" className="h-8 w-8" />
-                <span className="font-semibold">Tradeboard</span>
+                <span className="font-semibold text-teal-500">Tradeboard</span>
               </Link>
 
               {/* Secondary nav items (not in bottom nav) */}
@@ -111,11 +111,11 @@ export function Navbar() {
                     className={cn(
                       'flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors min-h-[44px] touch-manipulation',
                       isActive(item.href)
-                        ? 'bg-primary text-primary-foreground'
+                        ? 'bg-slate-800 text-amber-400'
                         : 'hover:bg-muted active:bg-muted'
                     )}
                   >
-                    <item.icon className="h-4 w-4" />
+                    <item.icon className="h-4 w-4 text-teal-500" />
                     {item.label}
                   </Link>
                 ))}
@@ -134,11 +134,11 @@ export function Navbar() {
                     className={cn(
                       'flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors min-h-[44px] touch-manipulation',
                       isActive(item.href)
-                        ? 'bg-primary text-primary-foreground'
+                        ? 'bg-slate-800 text-amber-400'
                         : 'hover:bg-muted active:bg-muted'
                     )}
                   >
-                    <item.icon className="h-4 w-4" />
+                    <item.icon className="h-4 w-4 text-teal-500" />
                     {item.label}
                   </Link>
                 ))}
@@ -160,7 +160,7 @@ export function Navbar() {
         {/* Logo */}
         <Link to="/dashboard" className="flex items-center gap-2 mr-6">
           <img src="/logo.png" alt="Tradeboard" className="h-8 w-8" />
-          <span className="hidden font-semibold sm:inline-block">Tradeboard</span>
+          <span className="hidden font-semibold sm:inline-block text-teal-500">Tradeboard</span>
         </Link>
 
         {/* Desktop Navigation.
@@ -176,12 +176,12 @@ export function Navbar() {
               className={cn(
                 'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                 isActive(item.href)
-                  ? 'bg-primary text-primary-foreground'
+                  ? 'bg-slate-800 text-amber-400'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               )}
             >
-              <item.icon className="h-4 w-4 shrink-0" />
-              <span className="hidden xl:inline">{item.label}</span>
+              <item.icon className="h-4 w-4 shrink-0 text-teal-500" />
+              <span className="hidden xl:inline text-amber-500">{item.label}</span>
             </Link>
           ))}
         </nav>
@@ -248,7 +248,7 @@ export function Navbar() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 rounded-full bg-primary text-primary-foreground"
+                className="h-8 w-8 rounded-full bg-teal-500 text-white"
                 aria-label="Open user menu"
               >
                 <span className="text-sm font-medium">
@@ -261,20 +261,20 @@ export function Navbar() {
                 <DropdownMenuItem
                   key={item.href}
                   onSelect={() => navigate(item.href)}
-                  className="cursor-pointer"
+                  className="cursor-pointer text-amber-500 focus:text-amber-500"
                 >
-                  <item.icon className="h-4 w-4 mr-2" />
+                  <item.icon className="h-4 w-4 mr-2 text-teal-500" />
                   {item.label}
                 </DropdownMenuItem>
               ))}
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem asChild className="text-amber-500 focus:text-amber-500">
                 <a
                   href="https://docs.rajeevupadhyay.com"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"
                 >
-                  <BookOpen className="h-4 w-4" />
+                  <BookOpen className="h-4 w-4 text-teal-500" />
                   Docs
                 </a>
               </DropdownMenuItem>
