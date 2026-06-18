@@ -457,6 +457,13 @@ def api_calendar_ledger():
     try:
         user_id = session.get("user")
 
+        # Run catch-up tasks first to ensure any missed snapshots for past days are backfilled
+        try:
+            from sandbox.catch_up_processor import run_catch_up_tasks
+            run_catch_up_tasks()
+        except Exception as catch_up_err:
+            logger.error(f"Error running catch-up tasks in calendar ledger api: {catch_up_err}")
+
         # Get ALL trades for this user
         trades = (
             SandboxTrades.query.filter_by(user_id=user_id)
@@ -464,7 +471,7 @@ def api_calendar_ledger():
             .all()
         )
 
-        # Get ALL daily P&L records for this user
+        # Get ALL daily P&L records for this user (including backfilled ones)
         from database.sandbox_db import SandboxDailyPnL
         daily_pnls = (
             SandboxDailyPnL.query.filter_by(user_id=user_id)
@@ -498,6 +505,43 @@ def api_calendar_ledger():
                 "realized_pnl": float(p.realized_pnl or 0),
                 "total_mtm": float(p.total_mtm or 0),
             })
+
+        # Compute and inject today's live P&L (since today's snapshot won't be captured until 23:59)
+        try:
+            import pytz
+            from decimal import Decimal
+            from database.sandbox_db import SandboxPositions, SandboxHoldings, SandboxFunds
+
+            today_ist = datetime.now(pytz.timezone("Asia/Kolkata")).date()
+            today_str = today_ist.strftime("%Y-%m-%d")
+
+            positions = SandboxPositions.query.filter_by(user_id=user_id).all()
+            positions_unrealized = sum(Decimal(str(p.pnl or 0)) for p in positions if p.quantity != 0)
+
+            holdings = SandboxHoldings.query.filter_by(user_id=user_id).all()
+            holdings_unrealized = sum(Decimal(str(h.pnl or 0)) for h in holdings if h.quantity != 0)
+
+            funds = SandboxFunds.query.filter_by(user_id=user_id).first()
+            today_realized = Decimal(str(funds.today_realized_pnl or 0)) if funds else Decimal("0.00")
+            today_total_mtm = today_realized + positions_unrealized + holdings_unrealized
+
+            has_today = any(p["date"] == today_str for p in pnl_list)
+            if not has_today:
+                pnl_list.append({
+                    "date": today_str,
+                    "realized_pnl": float(today_realized),
+                    "total_mtm": float(today_total_mtm),
+                    "is_live": True
+                })
+            else:
+                # If today already exists, merge the live data
+                for p in pnl_list:
+                    if p["date"] == today_str:
+                        p["is_live"] = True
+                        p["total_mtm"] = float(today_total_mtm)
+                        p["realized_pnl"] = float(today_realized)
+        except Exception as live_calc_err:
+            logger.error(f"Error computing live P&L for calendar ledger: {live_calc_err}")
 
         return jsonify({
             "status": "success",

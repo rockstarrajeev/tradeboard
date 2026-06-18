@@ -32,6 +32,7 @@ interface DayData {
   pnl: number
   tradeCount: number
   trades: TradeEntry[]
+  isLive?: boolean
 }
 
 type ViewMode = 'monthly' | 'annual'
@@ -209,6 +210,16 @@ function DayCell({ dateStr, dayNum, isToday, onClick, formatCurrency, ledgerData
         {dayNum}
       </span>
 
+      {day?.isLive && (
+        <span className="absolute top-1 right-1.5 flex items-center gap-1">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500"></span>
+          </span>
+          <span className="text-[8px] font-bold uppercase tracking-wider text-blue-500">Live</span>
+        </span>
+      )}
+
       {day && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 px-1 pt-4">
           <span
@@ -293,42 +304,34 @@ function TradeDrawer({ dateStr, ledgerData, onClose, formatCurrency }: TradeDraw
         onClick={onClose}
       />
 
-      {/* Drawer panel — bottom sheet on mobile, right panel on desktop */}
+      {/* Centered Modal popup */}
       <div
         ref={drawerRef}
         role="dialog"
         aria-modal="true"
         aria-label={`Trades on ${formattedDate}`}
         className={cn(
-          'fixed z-50 bg-card shadow-2xl border-border',
+          'fixed z-50 bg-slate-900 text-slate-50 shadow-2xl border-slate-800',
           'transition-all duration-300 ease-out',
-          // Mobile: bottom sheet
-          'bottom-0 left-0 right-0 rounded-t-2xl border-t max-h-[85vh] overflow-y-auto',
-          // Desktop: right panel
-          'md:bottom-0 md:right-0 md:top-0 md:left-auto md:w-[420px] md:rounded-none md:rounded-l-2xl md:border-l md:border-t-0 md:max-h-screen',
+          'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-[450px] max-h-[85vh] rounded-2xl border overflow-y-auto',
           'scrollbar-thin'
         )}
       >
-        {/* Handle bar */}
-        <div className="flex justify-center pt-3 pb-1 md:hidden">
-          <div className="h-1 w-12 rounded-full bg-muted-foreground/30" />
-        </div>
-
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm px-5 py-4 border-b border-border">
+        <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm px-5 py-4 border-b border-slate-800">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
+              <p className="text-sm text-slate-400 uppercase tracking-widest font-bold">
                 Trade Log
               </p>
-              <h2 className="text-base font-semibold mt-0.5 leading-tight">{formattedDate}</h2>
+              <h2 className="text-base font-semibold mt-1 leading-tight text-white">{formattedDate}</h2>
             </div>
             <button
               id="drawer-close-btn"
               type="button"
               aria-label="Close drawer"
               onClick={onClose}
-              className="rounded-full p-1.5 hover:bg-muted transition-colors shrink-0"
+              className="rounded-full p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors shrink-0"
             >
               <X className="h-4 w-4" />
             </button>
@@ -340,8 +343,8 @@ function TradeDrawer({ dateStr, ledgerData, onClose, formatCurrency }: TradeDraw
               className={cn(
                 'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold',
                 day.pnl >= 0
-                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                  : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                  ? 'bg-green-500/20 text-green-400'
+                  : 'bg-red-500/20 text-red-400'
               )}
             >
               {day.pnl >= 0 ? (
@@ -352,7 +355,7 @@ function TradeDrawer({ dateStr, ledgerData, onClose, formatCurrency }: TradeDraw
               {day.pnl >= 0 ? '+' : ''}
               {formatCurrency(day.pnl)}
             </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+            <span className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2.5 py-1 text-xs font-medium text-slate-300">
               <BarChart3 className="h-3 w-3" />
               {day.tradeCount} trades
             </span>
@@ -361,19 +364,19 @@ function TradeDrawer({ dateStr, ledgerData, onClose, formatCurrency }: TradeDraw
 
         {/* Trade list */}
         <div className="px-4 py-3 space-y-2">
-          {day.trades.map((trade) => (
+          {[...day.trades].sort((a, b) => (a.time || '').localeCompare(b.time || '')).map((trade) => (
             <div
               key={trade.id}
               className={cn(
                 'rounded-lg border p-3 transition-colors',
                 trade.action === 'BUY'
-                  ? 'border-blue-200/50 bg-blue-50/50 dark:border-blue-900/30 dark:bg-blue-950/20'
-                  : 'border-amber-200/50 bg-amber-50/50 dark:border-amber-900/30 dark:bg-amber-950/20'
+                  ? 'border-blue-900/50 bg-blue-950/30'
+                  : 'border-amber-900/50 bg-amber-950/30'
               )}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-sm truncate">{trade.symbol}</p>
+                  <p className="font-medium text-sm truncate text-slate-200">{trade.symbol}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <Badge
                       variant={trade.action === 'BUY' ? 'default' : 'destructive'}
@@ -381,10 +384,10 @@ function TradeDrawer({ dateStr, ledgerData, onClose, formatCurrency }: TradeDraw
                     >
                       {trade.action}
                     </Badge>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-slate-400">
                       {trade.qty} × {formatCurrency(trade.price)}
                     </span>
-                    <span className="text-xs text-muted-foreground">{trade.time}</span>
+                    <span className="text-xs text-slate-500">{trade.time}</span>
                   </div>
                 </div>
               </div>
@@ -753,6 +756,7 @@ export default function CalendarLedger({ embedded = false }: { embedded?: boolea
               pnl: dp.total_mtm,
               tradeCount: 0,
               trades: [] as TradeEntry[],
+              isLive: !!dp.is_live,
             })
           })
           

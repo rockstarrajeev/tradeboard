@@ -220,8 +220,9 @@ def catch_up_daily_pnl_reset():
 
 def catch_up_daily_pnl_snapshot():
     """
-    Check and create daily P&L snapshots for missed days
-    If the app was down at 23:59 IST, the snapshot wouldn't have been captured
+    Check and create daily P&L snapshots for missed days.
+    If the app was down at 23:59 IST, or the user logs in the next day,
+    this backfills the snapshots up to yesterday (inclusive).
     """
     try:
         from datetime import date, timedelta
@@ -243,47 +244,78 @@ def catch_up_daily_pnl_snapshot():
         for funds in all_funds:
             user_id = funds.user_id
 
-            # Check if yesterday's snapshot exists
-            existing_snapshot = SandboxDailyPnL.query.filter_by(
-                user_id=user_id, date=yesterday
-            ).first()
+            # Find the latest snapshot date for this user
+            latest_snapshot = (
+                SandboxDailyPnL.query.filter_by(user_id=user_id)
+                .order_by(SandboxDailyPnL.date.desc())
+                .first()
+            )
 
-            if existing_snapshot:
-                logger.debug(f"Catch-up: Yesterday's snapshot already exists for user {user_id}")
+            if latest_snapshot:
+                start_date = latest_snapshot.date + timedelta(days=1)
+            else:
+                # If no snapshot exists, start from yesterday
+                start_date = yesterday
+
+            # If the start_date is in the future relative to yesterday, we are caught up
+            if start_date > yesterday:
+                logger.debug(f"Catch-up: P&L snapshots already caught up for user {user_id}")
                 continue
 
-            # Calculate yesterday's P&L from available data
-            # Since we don't have exact yesterday's values, use what we can reconstruct:
-            # - All-time realized - today's realized = yesterday's (approximate)
-            all_time_realized = Decimal(str(funds.realized_pnl or 0))
-            today_realized = Decimal(str(funds.today_realized_pnl or 0))
+            # Calculate current positions & holdings unrealized P&L
+            positions = (
+                SandboxPositions.query.filter_by(user_id=user_id)
+                .filter(SandboxPositions.quantity != 0)
+                .all()
+            )
+            positions_unrealized = sum(Decimal(str(p.pnl or 0)) for p in positions)
 
-            # Yesterday's realized = All-time - Today's
-            # This is approximate but better than nothing
-            yesterday_realized = all_time_realized - today_realized
+            holdings = (
+                SandboxHoldings.query.filter_by(user_id=user_id)
+                .filter(SandboxHoldings.quantity != 0)
+                .all()
+            )
+            holdings_unrealized = sum(Decimal(str(h.pnl or 0)) for h in holdings)
+            total_unrealized = positions_unrealized + holdings_unrealized
 
-            # For unrealized, we can't know yesterday's values accurately
-            # So we'll set them to 0 (positions may have changed)
-            positions_unrealized = Decimal("0.00")
-            holdings_unrealized = Decimal("0.00")
+            # Loop through all missed days up to yesterday
+            current_date = start_date
+            while current_date <= yesterday:
+                # If it's yesterday, we use the un-reset today_realized_pnl
+                if current_date == yesterday:
+                    realized_pnl = Decimal(str(funds.today_realized_pnl or 0))
+                else:
+                    # For intermediate days when app was down and no trading happened
+                    realized_pnl = Decimal("0.00")
 
-            # Only create snapshot if there was some activity
-            if yesterday_realized != 0 or all_time_realized != 0:
-                snapshot = SandboxDailyPnL(
-                    user_id=user_id,
-                    date=yesterday,
-                    realized_pnl=yesterday_realized,
-                    positions_unrealized_pnl=positions_unrealized,
-                    holdings_unrealized_pnl=holdings_unrealized,
-                    total_mtm=yesterday_realized,  # Only realized since we don't know unrealized
-                    available_balance=funds.available_balance,
-                    used_margin=funds.used_margin,
-                    portfolio_value=funds.available_balance + funds.used_margin,
+                total_mtm = realized_pnl + total_unrealized
+                portfolio_value = Decimal(str(funds.available_balance or 0)) + Decimal(
+                    str(funds.used_margin or 0)
                 )
-                db_session.add(snapshot)
-                logger.info(
-                    f"Catch-up: Created yesterday's P&L snapshot for user {user_id}, realized={yesterday_realized}"
-                )
+
+                # Check if snapshot already exists for this date (just in case)
+                existing = SandboxDailyPnL.query.filter_by(
+                    user_id=user_id, date=current_date
+                ).first()
+
+                if not existing:
+                    snapshot = SandboxDailyPnL(
+                        user_id=user_id,
+                        date=current_date,
+                        realized_pnl=realized_pnl,
+                        positions_unrealized_pnl=positions_unrealized,
+                        holdings_unrealized_pnl=holdings_unrealized,
+                        total_mtm=total_mtm,
+                        available_balance=funds.available_balance,
+                        used_margin=funds.used_margin,
+                        portfolio_value=portfolio_value,
+                    )
+                    db_session.add(snapshot)
+                    logger.info(
+                        f"Catch-up: Created daily P&L snapshot for user {user_id} on {current_date}, realized={realized_pnl}"
+                    )
+                
+                current_date += timedelta(days=1)
 
         db_session.commit()
         logger.info("Catch-up: Daily P&L snapshot backfill completed")
@@ -309,13 +341,15 @@ def run_catch_up_tasks():
         # Run T+1 settlement catch-up
         catch_up_t1_settlement()
 
+        # Run daily PnL snapshot catch-up (for missed days) first
+        # This MUST run before daily PnL reset to capture previous day's today_realized_pnl
+        catch_up_daily_pnl_snapshot()
+
         # Run daily PnL reset catch-up
         catch_up_daily_pnl_reset()
-
-        # Run daily PnL snapshot catch-up (for missed days)
-        catch_up_daily_pnl_snapshot()
 
         logger.info("Catch-up tasks completed")
 
     except Exception as e:
         logger.exception(f"Error running catch-up tasks: {e}")
+
