@@ -9,12 +9,12 @@ NC='\033[0m' # No Color
 
 # Tradeboard Update Banner
 echo -e "${BLUE}"
-echo " ████████╗██████╗  █████╗ ██████╗ ███████╗██████╗  ██████╗  █████╗ ██████╗ ██████╗ "
-echo " ╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔══██╗██╔═══██╗██╔══██╗██╔══██╗██╔══██╗"
-echo "    ██║   ██████╔╝███████║██║  ██║█████╗  ██████╔╝██║   ██║███████║██████╔╝██║  ██║"
-echo "    ██║   ██╔══██╗██╔══██║██║  ██║██╔══╝  ██╔══██╗██║   ██║██╔══██║██╔══██╗██║  ██║"
-echo "    ██║   ██║  ██║██║  ██║██████╔╝███████╗██████╔╝╚██████╔╝██║  ██║██║  ██║██████╔╝"
-echo "    ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚══════╝╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ "
+echo " â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•—â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•—  â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•— â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•— â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•—â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•—  â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•—  â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•— â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•— â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•— "
+echo " â•šâ•â•â–ˆâ–ˆâ•”â•â•â•â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—â–ˆâ–ˆâ•”â•â•â•â•â•â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—â–ˆâ–ˆâ•”â•â•â•â–ˆâ–ˆâ•—â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—"
+echo "    â–ˆâ–ˆâ•‘   â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•”â•â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•‘â–ˆâ–ˆâ•‘  â–ˆâ–ˆâ•‘â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•—  â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•”â•â–ˆâ–ˆâ•‘   â–ˆâ–ˆâ•‘â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•‘â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•”â•â–ˆâ–ˆâ•‘  â–ˆâ–ˆâ•‘"
+echo "    â–ˆâ–ˆâ•‘   â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•‘â–ˆâ–ˆâ•‘  â–ˆâ–ˆâ•‘â–ˆâ–ˆâ•”â•â•â•  â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—â–ˆâ–ˆâ•‘   â–ˆâ–ˆâ•‘â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•‘â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—â–ˆâ–ˆâ•‘  â–ˆâ–ˆâ•‘"
+echo "    â–ˆâ–ˆâ•‘   â–ˆâ–ˆâ•‘  â–ˆâ–ˆâ•‘â–ˆâ–ˆâ•‘  â–ˆâ–ˆâ•‘â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•”â•â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•—â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•”â•â•šâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•”â•â–ˆâ–ˆâ•‘  â–ˆâ–ˆâ•‘â–ˆâ–ˆâ•‘  â–ˆâ–ˆâ•‘â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•”â•"
+echo "    â•šâ•â•   â•šâ•â•  â•šâ•â•â•šâ•â•  â•šâ•â•â•šâ•â•â•â•â•â• â•šâ•â•â•â•â•â•â•â•šâ•â•â•â•â•â•  â•šâ•â•â•â•â•â• â•šâ•â•  â•šâ•â•â•šâ•â•  â•šâ•â•â•šâ•â•â•â•â•â• "
 echo "                                 UPDATE  SCRIPT                                    "
 echo -e "${NC}"
 
@@ -201,6 +201,33 @@ if [ "$SERVER_MODE" = false ]; then
 
     log_message "Detected local development setup at: $TRADEBOARD_PATH" "$GREEN"
 fi
+
+# Configure safe.directory to prevent dubious ownership fatal errors
+configure_safe_directory() {
+    local path="$1"
+    if [ "$SERVER_MODE" = true ]; then
+        # Configure system-wide (covers all users, including root and web server user)
+        if ! sudo git config --system --get-all safe.directory 2>/dev/null | grep -qFx "$path"; then
+            log_message "Adding $path to system-wide git safe directories..." "$YELLOW"
+            sudo git config --system --add safe.directory "$path"
+        fi
+        # Fallback to user-specific configurations
+        if ! sudo git config --global --get-all safe.directory 2>/dev/null | grep -qFx "$path"; then
+            log_message "Adding $path to sudo global git safe directories..." "$YELLOW"
+            sudo git config --global --add safe.directory "$path"
+        fi
+        if ! sudo -u "$WEB_USER" git config --global --get-all safe.directory 2>/dev/null | grep -qFx "$path"; then
+            log_message "Adding $path to $WEB_USER global git safe directories..." "$YELLOW"
+            sudo -u "$WEB_USER" git config --global --add safe.directory "$path"
+        fi
+    else
+        if ! git config --global --get-all safe.directory 2>/dev/null | grep -qFx "$path"; then
+            log_message "Adding $path to global git safe directories..." "$YELLOW"
+            git config --global --add safe.directory "$path"
+        fi
+    fi
+}
+configure_safe_directory "$TRADEBOARD_PATH"
 
 # Detect uv
 detect_uv
@@ -438,12 +465,12 @@ if [ -f "$TRADEBOARD_PATH/.env" ]; then
         if [ "$BEHIND_NGINX" = "true" ]; then
             if [ "$SERVER_MODE" = true ]; then
                 echo "" | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
-                echo "# Auto-added by update.sh — nginx reverse proxy detected." | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
+                echo "# Auto-added by update.sh â€” nginx reverse proxy detected." | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
                 echo "TRUST_PROXY_HEADERS = 'TRUE'" | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
             else
                 {
                     echo ""
-                    echo "# Auto-added by update.sh — nginx reverse proxy detected."
+                    echo "# Auto-added by update.sh â€” nginx reverse proxy detected."
                     echo "TRUST_PROXY_HEADERS = 'TRUE'"
                 } >> "$TRADEBOARD_PATH/.env"
             fi
@@ -451,13 +478,13 @@ if [ -f "$TRADEBOARD_PATH/.env" ]; then
         else
             if [ "$SERVER_MODE" = true ]; then
                 echo "" | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
-                echo "# Auto-added by update.sh — set to TRUE only if behind a reverse proxy" | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
+                echo "# Auto-added by update.sh â€” set to TRUE only if behind a reverse proxy" | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
                 echo "# that strips client-supplied X-Forwarded-For / CF-Connecting-IP / X-Real-IP." | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
                 echo "TRUST_PROXY_HEADERS = 'FALSE'" | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
             else
                 {
                     echo ""
-                    echo "# Auto-added by update.sh — set to TRUE only if behind a reverse proxy"
+                    echo "# Auto-added by update.sh â€” set to TRUE only if behind a reverse proxy"
                     echo "# that strips client-supplied X-Forwarded-For / CF-Connecting-IP / X-Real-IP."
                     echo "TRUST_PROXY_HEADERS = 'FALSE'"
                 } >> "$TRADEBOARD_PATH/.env"
