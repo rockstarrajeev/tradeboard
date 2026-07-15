@@ -367,7 +367,7 @@ class Tester:
 # ─────────────────── main ───────────────────
 if __name__ == "__main__":
     try:
-        from tradeboard import api as OAClient
+        from openalgo import api as OAClient
     except ImportError:
         print(red("tradeboard SDK missing – pip install tradeboard"))
         sys.exit(1)

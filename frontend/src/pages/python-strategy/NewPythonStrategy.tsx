@@ -18,7 +18,7 @@ This is a minimal example showing how to use the Tradeboard Python SDK.
 
 import os
 import time
-from tradeboard import api
+from openalgo import api
 
 # Get API key from environment variable
 API_KEY = os.getenv('TRADEBOARD_API_KEY')

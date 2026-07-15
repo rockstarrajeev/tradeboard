@@ -34,7 +34,7 @@ client = api(api_key='your_api_key_here', host='http://127.0.0.1:5000')
 
 ```python
 import openalgo 
-tradeboard.__version__
+openalgo.__version__
 ```
 
 ### Examples

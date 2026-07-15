@@ -59,7 +59,7 @@ class TelegramBotService:
 
     def _get_sdk_client(self, telegram_id: int) -> tradeboard_api | None:
         """Get or create Tradeboard SDK client for a user"""
-        from tradeboard import api as tradeboard_api
+        from openalgo import api as tradeboard_api
 
         try:
             # Check if client already exists
@@ -958,7 +958,7 @@ class TelegramBotService:
 
         # Validate API key by making a test call
         try:
-            from tradeboard import api as tradeboard_api
+            from openalgo import api as tradeboard_api
 
             # Create temporary SDK client for validation
             test_client = tradeboard_api(api_key=api_key, host=host_url)

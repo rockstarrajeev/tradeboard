@@ -467,7 +467,7 @@ Tradeboard is community-driven:
 
 ```bash
 # Check Tradeboard version
-uv run python -c "import openalgo; print(tradeboard.__version__)"
+uv run python -c "import openalgo; print(openalgo.__version__)"
 
 # Check system info
 uname -a

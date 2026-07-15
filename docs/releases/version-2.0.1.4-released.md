@@ -139,7 +139,7 @@ A new `database/scalping_db.py` table persists scalping strategy/SL state; it is
 
 `utils/version.py`: `VERSION = "2.0.1.4"`
 
-`pyproject.toml`: `version = "2.0.1.4"`; `tradeboard==2.0.2` (`uv.lock` regenerated).
+`pyproject.toml`: `version = "2.0.1.4"`; `openalgo==2.0.2` (`uv.lock` regenerated).
 
 `.sample.env`:
 

@@ -1104,7 +1104,7 @@ class WhatsAppBotService:
             )
         host_url = os.getenv("HOST_SERVER", "http://127.0.0.1:5000")
         try:
-            from tradeboard import api as tradeboard_api  # type: ignore
+            from openalgo import api as tradeboard_api  # type: ignore
         except Exception:
             return None, "tradeboard SDK not available on this server."
         try:

@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 
 import httpx
 from mcp.server.fastmcp import FastMCP
-from tradeboard import api
+from openalgo import api
 
 # Two boot paths share this module:
 #
@@ -1106,9 +1106,9 @@ def get_option_greeks(
 def get_tradeboard_version() -> str:
     """Get the Tradeboard library version."""
     try:
-        import tradeboard
+        import openalgo
 
-        return f"Tradeboard version: {tradeboard.__version__}"
+        return f"Tradeboard version: {openalgo.__version__}"
     except Exception as e:
         return f"Error getting version: {str(e)}"
 
@@ -1348,7 +1348,7 @@ def analyzer_toggle(mode: bool) -> str:
 # RESEARCH TOOLS — TECHNICAL INDICATORS (tradeboard.ta)
 # ============================================================
 # These tools fetch OHLCV history via the SDK (client.history) and
-# compute indicators with `from tradeboard import ta`. They are SDK-only
+# compute indicators with `from openalgo import ta`. They are SDK-only
 # and work under BOTH the stdio and HTTP transports.
 
 # Indicators whose first inputs are High/Low/Close (and optionally

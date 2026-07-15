@@ -39,7 +39,7 @@ import time
 from datetime import datetime, timedelta
 
 import pandas as pd
-from tradeboard import api
+from openalgo import api
 
 # ===============================================================================
 # TRADING CONFIGURATION

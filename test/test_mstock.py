@@ -2,7 +2,7 @@ import os
 import unittest
 
 from dotenv import load_dotenv
-from tradeboard import api as OAClient
+from openalgo import api as OAClient
 
 # Load environment variables from .env file
 load_dotenv()

@@ -3,7 +3,7 @@
 Simple EMA Crossover Strategy Example
 This strategy demonstrates how to integrate with Tradeboard API
 """
-from tradeboard import api
+from openalgo import api
 import pandas as pd
 import numpy as np
 import time

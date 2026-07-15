@@ -12,14 +12,14 @@ import time
 from collections import defaultdict
 from datetime import datetime
 
-# Add parent directory to path to import tradeboard
+# Add parent directory to path to import openalgo
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 try:
-    from tradeboard import api
+    from openalgo import api
 except ImportError:
-    print("Error: Could not import tradeboard. Make sure you're running from the correct directory.")
+    print("Error: Could not import openalgo. Make sure you're running from the correct directory.")
     sys.exit(1)
 
 
