@@ -6,6 +6,7 @@ import time
 import httpx
 
 from broker.nubra.mapping.transform_data import (
+    _market_protection_pct,
     map_product_type,
     reverse_map_product_type,
     transform_data,
@@ -25,6 +26,22 @@ NUBRA_BASE_URL = "https://api.nubra.io"
 # Trading APIs: 10 ops/sec (PROD), 100 ops/sec (UAT)
 _MAX_RETRIES = 3
 _RATE_LIMIT_BASE_DELAY = 1.0  # Base delay for 429 retry (seconds)
+
+
+class _StubResponse:
+    """Minimal response stand-in for paths that fail before any HTTP call.
+
+    The service layer only reads ``.status`` (and occasionally ``.text``), so we
+    mimic an httpx response without performing a request.
+    """
+
+    def __init__(self, status_code, text=""):
+        self.status_code = status_code
+        self.status = status_code
+        self.text = text
+
+    def json(self):
+        return {}
 
 
 def get_api_response(endpoint, auth, method="GET", payload=""):
@@ -81,10 +98,59 @@ def get_api_response(endpoint, auth, method="GET", payload=""):
         return {}
 
 
+def _compute_mpp_price_paise(symbol, exchange, action, auth):
+    """
+    Compute the Market-Protection-Price (MPP, in paise) for a MARKET order.
+
+    Nubra does not support price_type=MARKET and has no broker-side
+    market-protection flag, so an Tradeboard MARKET order is emulated the way
+    Zerodha's market_protection / Arrow's mpp works: a DAY LIMIT priced at the
+    LTP offset by the protection band:
+      - BUY  -> LTP * (1 + band)   (upper protection price)
+      - SELL -> LTP * (1 - band)   (lower protection price)
+    The order rests as a DAY limit (NOT IOC). The band is NUBRA_MARKET_PROTECTION_PCT
+    (percent, default 1.0).
+
+    Returns:
+        int price in paise, or None if no price context could be obtained
+        (the caller must then refuse to place the order rather than send price 0).
+    """
+    token = get_token(symbol, exchange)
+    if not token or not str(token).isdigit():
+        logger.warning(f"Nubra MPP emulation: no numeric ref_id for {symbol} on {exchange}")
+        return None
+
+    try:
+        resp = get_api_response(f"/orderbooks/{token}?levels=1", auth)
+    except Exception as e:
+        logger.warning(f"Nubra MPP emulation: order book fetch failed for {symbol}: {e}")
+        return None
+
+    orderbook = resp.get("orderBook") or {} if isinstance(resp, dict) else {}
+    side = action.upper()
+
+    # Reference price = LTP; fall back to the best opposite quote if LTP missing
+    ref_price = int(orderbook.get("ltp", 0) or 0)
+    if not ref_price:
+        if side == "BUY":
+            asks = [int(a.get("p", 0) or 0) for a in (orderbook.get("ask") or []) if a.get("p")]
+            ref_price = asks[0] if asks else 0
+        else:
+            bids = [int(b.get("p", 0) or 0) for b in (orderbook.get("bid") or []) if b.get("p")]
+            ref_price = bids[0] if bids else 0
+
+    if not ref_price:
+        logger.warning(f"Nubra MPP emulation: no LTP/quote for {symbol} on {exchange}")
+        return None
+
+    band = _market_protection_pct()
+    return int(round(ref_price * (1 + band))) if side == "BUY" else int(round(ref_price * (1 - band)))
+
+
 def get_order_book(auth):
     """
     Fetch all orders for the day from Nubra API.
-    
+
     Nubra API: GET /orders/v2
     Returns list of orders with their current status.
     """
@@ -589,10 +655,17 @@ def modify_order(data, auth):
     # Get the shared httpx client with connection pooling
     client = get_httpx_client()
 
+    # MARKET emulation on modify: derive the Market-Protection-Price (DAY limit, MPP style)
+    market_price_paise = None
+    if data.get("pricetype", "MARKET").upper() == "MARKET" and data.get("symbol") and data.get("exchange"):
+        market_price_paise = _compute_mpp_price_paise(
+            data["symbol"], data["exchange"], data.get("action", "BUY"), AUTH_TOKEN
+        )
+
     # Transform Tradeboard data to Nubra modify order format
     # Note: token/ref_id is not needed for modify order
-    transformed_data = transform_modify_order_data(data, None)
-    
+    transformed_data = transform_modify_order_data(data, None, market_price_paise=market_price_paise)
+
     # Get order_id from the data
     orderid = data.get("orderid", "")
     
@@ -688,12 +761,14 @@ def cancel_all_orders_api(data, auth):
     if not orders:
         return [], []
 
-    # Filter orders that are in 'open' or 'pending' state
-    # Nubra uses ORDER_STATUS_OPEN, ORDER_STATUS_PENDING
+    # Filter orders that are still cancellable (not filled/cancelled/rejected).
+    # Per Nubra's OrderStatus enum the working states are PENDING, SENT, OPEN and
+    # TRIGGERED (there is no ORDER_STATUS_TRIGGER_PENDING).
     open_statuses = [
-        "ORDER_STATUS_OPEN", 
+        "ORDER_STATUS_OPEN",
         "ORDER_STATUS_PENDING",
-        "ORDER_STATUS_TRIGGER_PENDING",
+        "ORDER_STATUS_SENT",
+        "ORDER_STATUS_TRIGGERED",
     ]
     
     orders_to_cancel = [

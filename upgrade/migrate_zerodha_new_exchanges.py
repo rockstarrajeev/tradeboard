@@ -51,7 +51,7 @@ logger = get_logger(__name__)
 
 
 def _resolve_database_url() -> str:
-    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///db/openalgo.db")
+    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///db/tradeboard.db")
     if DATABASE_URL.startswith("sqlite:///") and not DATABASE_URL.startswith("sqlite:////"):
         db_path = DATABASE_URL.replace("sqlite:///", "")
         parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

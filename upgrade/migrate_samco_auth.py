@@ -39,7 +39,7 @@ load_dotenv(os.path.join(parent_dir, ".env"))
 
 def get_engine():
     """Get main database engine"""
-    database_url = os.getenv("DATABASE_URL", "sqlite:///db/openalgo.db")
+    database_url = os.getenv("DATABASE_URL", "sqlite:///db/tradeboard.db")
 
     if database_url.startswith("sqlite:///"):
         db_path = database_url.replace("sqlite:///", "")

@@ -7,11 +7,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from datetime import datetime, timedelta
 
 import pandas as pd
-from openalgo import api
+from tradeboard import api
 
 # Test the history API to see the response format
 client = api(
-    api_key="56c3dc6ba7d9c9df478e4f19ffc5d3e15e1dd91b5aa11e91c910f202c91eff9d",
+    api_key=os.getenv("TRADEBOARD_API_KEY"),
     host="http://127.0.0.1:5000",
 )
 

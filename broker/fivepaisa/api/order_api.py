@@ -296,12 +296,21 @@ def place_order_api(data: dict[str, Any], auth: str) -> dict[str, Any]:
     AUTH_TOKEN = auth
 
     token = get_token(data["symbol"], data["exchange"])
-    newdata = transform_data(data, token)
+    # Pass the auth token so transform_data can fetch quotes for Market Price
+    # Protection (5Paisa rejects plain market orders; MARKET -> protected LIMIT).
+    newdata = transform_data(data, token, AUTH_TOKEN)
     headers = {"Content-Type": "application/json", "Authorization": f"bearer {AUTH_TOKEN}"}
 
     json_data = {"head": {"key": api_key}, "body": newdata}
 
     payload = json.dumps(json_data)
+
+    # Log the order body at INFO so placements are captured even at the default
+    # INFO level. We deliberately log only `body`, never the full payload: the
+    # `head.key` field carries the broker API key in plaintext and the JSON key
+    # name "key" is NOT covered by the logger's redaction patterns, so logging
+    # the whole payload would leak the credential to app logs on every order.
+    logger.info(f"5Paisa PlaceOrder request body: {json.dumps(newdata)}")
 
     try:
         # Get the shared httpx client

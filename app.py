@@ -7,6 +7,27 @@ import os
 import re
 import sys
 
+
+def _ensure_db_directory() -> None:
+    """Create the SQLite database directory before any engine connects.
+
+    On a fresh install ``db/`` does not exist yet, and the database engines (and
+    their background threads) are created/used in parallel during startup. The
+    first connection then fails with ``unable to open database file``, which can
+    leave a database partially initialized. Creating the directory up front, before
+    any database module is imported, removes that race. Derived from DATABASE_URL
+    (all SQLite databases live under the same directory).
+    """
+    db_url = os.getenv("DATABASE_URL", "sqlite:///db/tradeboard.db")
+    if db_url.startswith("sqlite:///"):
+        db_path = db_url.replace("sqlite:///", "", 1)
+        db_dir = os.path.dirname(os.path.abspath(db_path))
+        if db_dir:
+            os.makedirs(db_dir, exist_ok=True)
+
+
+_ensure_db_directory()
+
 # Show loading indicator early (before heavy imports) so user sees immediate feedback.
 # The full banner with "Ready" status prints later, right before the server accepts connections.
 if __name__ == "__main__":
@@ -35,6 +56,7 @@ from blueprints.broker_credentials import (
     broker_credentials_bp,  # Import the broker credentials blueprint
 )
 from blueprints.chartink import chartink_bp  # Import the chartink blueprint
+from blueprints.chart_test import chart_test_bp  # Standalone chart test page (dev/testing only)
 from blueprints.strategy_portfolio import strategy_portfolio_bp  # Strategy Builder portfolio
 from blueprints.core import core_bp
 from blueprints.dashboard import dashboard_bp
@@ -275,6 +297,7 @@ def create_app():
     app.register_blueprint(strategy_bp)
     app.register_blueprint(master_contract_status_bp)
     app.register_blueprint(websocket_bp)  # Register WebSocket example blueprint
+    app.register_blueprint(chart_test_bp)  # Register standalone chart test page (dev/testing only)
     app.register_blueprint(pnltracker_bp)  # Register PnL tracker blueprint
     app.register_blueprint(python_strategy_bp)  # Register Python strategy blueprint
     app.register_blueprint(telegram_bp)  # Register Telegram blueprint
@@ -295,6 +318,7 @@ def create_app():
     app.register_blueprint(gex_bp)  # Register GEX blueprint
     app.register_blueprint(ivsmile_bp)  # Register IV Smile blueprint
     app.register_blueprint(oiprofile_bp)  # Register OI Profile blueprint
+    app.register_blueprint(arbitrage_bp)  # Register Arbitrage blueprint
     app.register_blueprint(flow_bp)  # Register Flow blueprint
     app.register_blueprint(broker_credentials_bp)  # Register Broker credentials blueprint
     app.register_blueprint(system_permissions_bp)  # Register System permissions blueprint

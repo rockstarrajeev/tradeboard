@@ -11,8 +11,8 @@ from dotenv import load_dotenv
 # Placeholder values shipped in .sample.env. Tradeboard detects these on startup
 # and rotates them to fresh random secrets on first run. Coordinated with the
 # install/*.sh scripts which use the same strings as their sed targets.
-PLACEHOLDER_APP_KEY = "OPENALGO_PLACEHOLDER_APP_KEY_REGENERATE_BEFORE_USE"
-PLACEHOLDER_PEPPER = "OPENALGO_PLACEHOLDER_API_KEY_PEPPER_REGENERATE_BEFORE_USE"
+PLACEHOLDER_APP_KEY = "TRADEBOARD_PLACEHOLDER_APP_KEY_REGENERATE_BEFORE_USE"
+PLACEHOLDER_PEPPER = "TRADEBOARD_PLACEHOLDER_API_KEY_PEPPER_REGENERATE_BEFORE_USE"
 
 # Historical leaked literals: these were the original values in .sample.env
 # committed to the public repo before the placeholder switch. Any .env that
@@ -239,7 +239,7 @@ def _db_has_user_data(env_dir: str) -> bool:
 
     Args:
         env_dir: Absolute directory containing the .env file. Used to
-            resolve a relative DATABASE_URL such as ``sqlite:///db/openalgo.db``
+            resolve a relative DATABASE_URL such as ``sqlite:///db/tradeboard.db``
             against the project root.
 
     Returns:
@@ -473,7 +473,7 @@ def _atomic_replace_text(path: str, content: str) -> None:
 
 # .sample.env ships this placeholder so install scripts and the bootstrap
 # rotation can swap it the same way they swap APP_KEY / API_KEY_PEPPER.
-PLACEHOLDER_FERNET_SALT = "OPENALGO_PLACEHOLDER_FERNET_SALT_REGENERATE_BEFORE_USE"
+PLACEHOLDER_FERNET_SALT = "TRADEBOARD_PLACEHOLDER_FERNET_SALT_REGENERATE_BEFORE_USE"
 
 
 def _warn_fernet_write_failed(reason: str, error: BaseException) -> None:
@@ -508,12 +508,12 @@ def _ensure_fernet_salt(env_path: str) -> None:
     Background:
         ``database/auth_db.py`` originally derived the Fernet key from
         ``API_KEY_PEPPER`` with a hardcoded static salt
-        (``b"openalgo_static_salt"``). Identical salt across every Tradeboard
+        (``b"tradeboard_static_salt"``). Identical salt across every Tradeboard
         install removes the rainbow-table / cross-install-correlation
         protections that PBKDF2 salts exist for. Fix: rotate to a per-install
         random salt persisted as ``FERNET_SALT`` in .env, placed adjacent to
         ``API_KEY_PEPPER`` (the .sample.env template ships with the
-        placeholder ``OPENALGO_PLACEHOLDER_FERNET_SALT_REGENERATE_BEFORE_USE``
+        placeholder ``TRADEBOARD_PLACEHOLDER_FERNET_SALT_REGENERATE_BEFORE_USE``
         in that exact spot).
 
     Behaviour matrix — five disjoint cases, decided from the .env file
@@ -672,7 +672,7 @@ def _ensure_fernet_salt(env_path: str) -> None:
         )
         return Fernet(base64.urlsafe_b64encode(kdf.derive(pepper.encode())))
 
-    old_fernet = _make_fernet(b"openalgo_static_salt")
+    old_fernet = _make_fernet(b"tradeboard_static_salt")
 
     # ---- Sanity check (case E detection).
     db_url = os.getenv("DATABASE_URL", "")
@@ -757,7 +757,7 @@ def _move_fernet_line_after_pepper(
 
 
 def _resolve_sqlite_path(db_url: str, env_path: str) -> str | None:
-    """Return absolute path to the openalgo.db SQLite file, or None for non-SQLite."""
+    """Return absolute path to the tradeboard.db SQLite file, or None for non-SQLite."""
     m = re.match(r"sqlite:///(.+)", db_url)
     if not m:
         return None
@@ -813,7 +813,7 @@ def _try_decrypt(fernet, ct, invalid_token_exc) -> bool:
 
 
 def _migrate_fernet_db(env_path: str, pepper: str, new_salt: str) -> None:
-    """Re-encrypt every Fernet-protected column in openalgo.db.
+    """Re-encrypt every Fernet-protected column in tradeboard.db.
 
     Decrypts each ciphertext with the legacy static-salt key and re-encrypts
     with the per-install ``new_salt`` key. Rows whose ciphertext can't be
@@ -845,7 +845,7 @@ def _migrate_fernet_db(env_path: str, pepper: str, new_salt: str) -> None:
         )
         return Fernet(base64.urlsafe_b64encode(kdf.derive(pepper.encode())))
 
-    old_fernet = _make_fernet(b"openalgo_static_salt")
+    old_fernet = _make_fernet(b"tradeboard_static_salt")
     new_fernet = _make_fernet(bytes.fromhex(new_salt))
 
     targets = [

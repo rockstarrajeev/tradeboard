@@ -1,17 +1,17 @@
 import json
-import os
-
-import httpx
 import threading
 import time
 
+import httpx
+
+from broker.definedge.api.baseurl import get_url
+from broker.definedge.api.rate_limiter import rate_limited_request
 from broker.definedge.mapping.transform_data import (
     map_product_type,
     reverse_map_product_type,
     transform_data,
     transform_modify_order_data,
 )
-from database.auth_db import get_auth_token
 from database.token_db import get_br_symbol, get_oa_symbol, get_token
 from utils.httpx_client import get_httpx_client
 from utils.logging import get_logger
@@ -28,22 +28,21 @@ def get_api_response(endpoint, auth, method="GET", payload=None):
         # Get the shared httpx client with connection pooling
         client = get_httpx_client()
 
-        url = f"https://integrate.definedgesecurities.com/dart/v1{endpoint}"
+        url = get_url(endpoint)
 
         headers = {"Authorization": api_session_key, "Content-Type": "application/json"}
 
         logger.debug(f"Making {method} request to DefinedGe API: {url}")
 
-        if method.upper() == "GET":
-            response = client.get(url, headers=headers)
-        elif method.upper() == "POST":
-            response = client.post(url, json=payload if payload else {}, headers=headers)
-        elif method.upper() == "PUT":
-            response = client.put(url, json=payload if payload else {}, headers=headers)
-        elif method.upper() == "DELETE":
-            response = client.delete(url, headers=headers)
-        else:
+        method = method.upper()
+        if method not in ("GET", "POST", "PUT", "DELETE"):
             raise ValueError(f"Unsupported HTTP method: {method}")
+
+        kwargs = {"headers": headers}
+        if method in ("POST", "PUT"):
+            kwargs["json"] = payload if payload else {}
+
+        response = rate_limited_request(client, method, url, **kwargs)
 
         response.raise_for_status()
         response_data = response.json()
@@ -261,8 +260,13 @@ def place_order_api(data, auth):
             logger.error(f"Full error response: {response_data}")
             orderid = None
 
-        # Add status attribute to response object to match what PlaceOrder endpoint expects
+        # Add status attribute to response object to match what PlaceOrder endpoint expects.
+        # Definedge returns HTTP 200 even for rejected orders - surface a non-200
+        # status when no order id came back so the service layer reports the
+        # failure instead of a false success (see issues #1618/#1623).
         response.status = response.status_code
+        if orderid is None and response.status == 200:
+            response.status = 400
 
         return response, response_data, orderid
 

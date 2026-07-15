@@ -24,7 +24,7 @@ else:
 # Get option chain (5 strikes around ATM)
 # -------------------------------------------------------
 chain = client.optionchain(
-    underlying="NIFTY", exchange="NSE_INDEX", expiry_date="30DEC25", strike_count=5
+    underlying="NIFTY", exchange="NSE_INDEX", expiry_date="30JUN26", strike_count=5
 )
 
 print("\nNIFTY Option Chain (5 strikes around ATM):")

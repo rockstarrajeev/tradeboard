@@ -9,7 +9,7 @@ NOT re-implement crypto.
 PRECONDITIONS:
   - Run inside the Tradeboard venv:    uv run python scripts/extract_broker_token.py
   - .env must contain the same API_KEY_PEPPER used to encrypt the row
-  - db/openalgo.db must contain an active Auth row (i.e. you've logged in today
+  - db/tradeboard.db must contain an active Auth row (i.e. you've logged in today
     via the Tradeboard UI — Indian broker tokens expire daily ~3:00 AM IST)
 
 SECURITY NOTES (read before using):
@@ -77,7 +77,7 @@ def main(as_json: bool = False) -> int:
 
     if not rows:
         sys.stderr.write(
-            "No auth rows in db/openalgo.db. Log in via the Tradeboard UI to "
+            "No auth rows in db/tradeboard.db. Log in via the Tradeboard UI to "
             "create one (tokens expire daily, so this is normal first thing "
             "in the morning).\n"
         )

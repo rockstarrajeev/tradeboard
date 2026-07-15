@@ -102,10 +102,10 @@ DEPLOY_BASE="/var/python/tradeboard-flask"
 if [ -f "$SIMPLE_PATH/.env" ]; then
     SELECTED_DEPLOY="tradeboard"
     BASE_PATH="$SIMPLE_PATH"
-    OPENALGO_PATH="$SIMPLE_PATH"
+    TRADEBOARD_PATH="$SIMPLE_PATH"
     SOCKET_FILE="$SIMPLE_PATH/tradeboard.sock"
     SERVICE_NAME="tradeboard"
-    ENV_FILE="$OPENALGO_PATH/.env"
+    ENV_FILE="$TRADEBOARD_PATH/.env"
     log_message "Found Tradeboard install at $SIMPLE_PATH" "$GREEN"
 else
     if [ ! -d "$DEPLOY_BASE" ]; then
@@ -152,10 +152,10 @@ else
 
     # Derive paths (legacy multi-deploy layout)
     BASE_PATH="$DEPLOY_BASE/$SELECTED_DEPLOY"
-    OPENALGO_PATH="$BASE_PATH/tradeboard"
+    TRADEBOARD_PATH="$BASE_PATH/tradeboard"
     SOCKET_FILE="$BASE_PATH/tradeboard.sock"
     SERVICE_NAME="tradeboard-$SELECTED_DEPLOY"
-    ENV_FILE="$OPENALGO_PATH/.env"
+    ENV_FILE="$TRADEBOARD_PATH/.env"
 fi
 
 # ============================================
@@ -215,7 +215,7 @@ log_message "  Current Deployment Configuration" "$YELLOW"
 log_message "========================================" "$YELLOW"
 log_message "" ""
 log_message "Deployment Name:    $SELECTED_DEPLOY" "$BLUE"
-log_message "Install Path:       $OPENALGO_PATH" "$BLUE"
+log_message "Install Path:       $TRADEBOARD_PATH" "$BLUE"
 log_message "Service Name:       $SERVICE_NAME" "$BLUE"
 log_message "Socket File:        $SOCKET_FILE" "$BLUE"
 log_message "" ""
@@ -363,7 +363,7 @@ fi
 # ============================================
 log_message "\n[Step 2/6] Backing up current configuration..." "$BLUE"
 
-BACKUP_DIR="$OPENALGO_PATH/db/domain_change_backup_${TIMESTAMP}"
+BACKUP_DIR="$TRADEBOARD_PATH/db/domain_change_backup_${TIMESTAMP}"
 sudo mkdir -p "$BACKUP_DIR"
 
 # Backup .env

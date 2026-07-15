@@ -45,7 +45,7 @@ export interface WhatsAppUser {
   id: number
   whatsapp_jid: string
   phone_number: string
-  openalgo_username: string
+  tradeboard_username: string
   display_name: string | null
   broker: string
   notifications_enabled: boolean

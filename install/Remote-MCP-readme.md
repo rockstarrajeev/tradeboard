@@ -286,9 +286,9 @@ This is **not** automated — but it's the same pattern as the existing
 | Audit log | `log/mcp.jsonl` (one JSON line per tool call) |
 | Errors | `log/errors.jsonl` (write-tool pre-execution warnings show up here too) |
 | Signing keys | `keys/mcp_oauth_<kid>.pem` (chmod 600) |
-| OAuth client list | `sqlite3 db/openalgo.db 'SELECT * FROM oauth_clients'` |
-| Active refresh tokens | `sqlite3 db/openalgo.db 'SELECT id, client_id, family_id, revoked_at FROM oauth_refresh_tokens'` |
-| Kill switch (revoke everything) | `sqlite3 db/openalgo.db "UPDATE oauth_refresh_tokens SET revoked_at=CURRENT_TIMESTAMP WHERE revoked_at IS NULL"` |
+| OAuth client list | `sqlite3 db/tradeboard.db 'SELECT * FROM oauth_clients'` |
+| Active refresh tokens | `sqlite3 db/tradeboard.db 'SELECT id, client_id, family_id, revoked_at FROM oauth_refresh_tokens'` |
+| Kill switch (revoke everything) | `sqlite3 db/tradeboard.db "UPDATE oauth_refresh_tokens SET revoked_at=CURRENT_TIMESTAMP WHERE revoked_at IS NULL"` |
 
 ## Threat model summary
 

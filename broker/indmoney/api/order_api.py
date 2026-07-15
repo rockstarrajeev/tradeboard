@@ -6,6 +6,10 @@ import threading
 import time
 
 from broker.indmoney.api.baseurl import get_url
+from broker.indmoney.mapping.order_data import (
+    OPEN_STATUSES,
+    TRIGGER_PENDING_STATUSES,
+)
 from broker.indmoney.mapping.transform_data import (
     map_exchange,
     map_exchange_type,
@@ -21,6 +25,43 @@ from utils.httpx_client import get_httpx_client
 from utils.logging import get_logger
 
 logger = get_logger(__name__)
+
+# 429 (rate-limit) retry configuration. IndStocks enforces per-category rate
+# limits (Order 10/s, Data/Quote 5/s, Non-Trading 15/s) and returns 429 on
+# breach (docs 03-conventions / 14-errors), so requests retry with backoff.
+_MAX_RETRIES = 3
+_RATE_LIMIT_BASE_DELAY = 1.0  # seconds; doubled each attempt (1s, 2s, 4s)
+
+
+def request_with_retry(client, method, url, **kwargs):
+    """
+    Perform an httpx request, retrying HTTP 429 with exponential backoff
+    (honouring Retry-After when present). Sets ``.status`` for compatibility
+    with the existing codebase.
+    """
+    response = None
+    for attempt in range(_MAX_RETRIES):
+        response = client.request(method.upper(), url, **kwargs)
+        if response.status_code == 429 and attempt < _MAX_RETRIES - 1:
+            retry_after = response.headers.get("Retry-After")
+            try:
+                delay = (
+                    min(float(retry_after), 30.0)
+                    if retry_after
+                    else _RATE_LIMIT_BASE_DELAY * (2 ** attempt)
+                )
+            except (TypeError, ValueError):
+                delay = _RATE_LIMIT_BASE_DELAY * (2 ** attempt)
+            logger.warning(
+                f"Rate limit hit (429) on {url}, retrying in {delay:.1f}s "
+                f"(attempt {attempt + 1}/{_MAX_RETRIES})"
+            )
+            time.sleep(delay)
+            continue
+        break
+    if response is not None:
+        response.status = response.status_code
+    return response
 
 
 def get_api_response(endpoint, auth, method="GET", payload="", params=None):
@@ -39,15 +80,19 @@ def get_api_response(endpoint, auth, method="GET", payload="", params=None):
     url = get_url(endpoint)
 
     try:
+        # request_with_retry handles HTTP 429 with backoff and sets .status
         if method == "GET":
-            response = client.get(url, headers=headers, params=params)
+            response = request_with_retry(
+                client, "GET", url, headers=headers, params=params
+            )
         elif method == "POST":
-            response = client.post(url, headers=headers, content=payload, params=params)
+            response = request_with_retry(
+                client, "POST", url, headers=headers, content=payload, params=params
+            )
         else:
-            response = client.request(method, url, headers=headers, content=payload, params=params)
-
-        # Add status attribute for compatibility with existing codebase
-        response.status = response.status_code
+            response = request_with_retry(
+                client, method, url, headers=headers, content=payload, params=params
+            )
 
         # Check if response is successful
         if response.status_code not in [200, 201]:
@@ -341,23 +386,24 @@ def get_open_position(tradingsymbol, exchange, product, auth):
             if not isinstance(position, dict):
                 continue
 
-            # Map the actual IndMoney API fields
-            position_symbol = position.get("symbol")  # Actual field name from API
-            position_segment = position.get("segment", "")
+            # Read documented IndMoney position fields (with legacy fallbacks)
+            position_token = str(position.get("security_id", "") or "")
+            position_symbol = position.get("trading_symbol") or position.get("symbol")
+            position_qty = position.get("net_quantity", position.get("net_qty", 0))
 
-            # Map segment to exchange format for comparison
-            if position_segment == "F&O" or position_segment == "FUTURES":
-                mapped_exchange = "NFO"
-            elif position_segment == "EQUITY":
-                mapped_exchange = "NSE"  # Default for equity
-            elif position_segment == "COMMODITY":
-                mapped_exchange = "MCX"
-            else:
-                mapped_exchange = position_segment
+            # Map exchange_segment (e.g. NSE_EQ, NSE_FNO, BSE_EQ) to the
+            # NSE/BSE/MCX root returned by map_exchange_type()
+            mapped_exchange = map_exchange_type(
+                _map_exchange_segment(
+                    position.get("exchange_segment", position.get("segment", ""))
+                )
+            )
 
-            # Check if this position matches our search criteria
-            if position_symbol == tradingsymbol and mapped_exchange == map_exchange_type(exchange):
-                net_qty = str(position.get("net_qty", 0))
+            # Prefer a reliable security_id match; fall back to symbol match
+            token_match = target_token and position_token == target_token
+            symbol_match = position_symbol == tradingsymbol
+            if (token_match or symbol_match) and mapped_exchange == map_exchange_type(exchange):
+                net_qty = str(position_qty)
                 break  # Return the first match
 
     return net_qty
@@ -544,8 +590,8 @@ def close_all_positions(current_api_key, auth):
             if not isinstance(position, dict):
                 continue
 
-            # Skip if net quantity is zero - using actual API field name
-            net_qty = position.get("net_qty", 0)
+            # Skip if net quantity is zero - documented field with legacy fallback
+            net_qty = position.get("net_quantity", position.get("net_qty", 0))
             if int(net_qty) == 0:
                 continue
 
@@ -625,10 +671,7 @@ def cancel_order(orderid, auth):
 
     # Make the POST request to cancel order using httpx
     url = get_url("/order/cancel")
-    res = client.post(url, headers=headers, content=json.dumps(payload))
-
-    # Add status attribute for compatibility with existing codebase
-    res.status = res.status_code
+    res = request_with_retry(client, "POST", url, headers=headers, content=json.dumps(payload))
 
     # Parse the response
     data = json.loads(res.text)
@@ -675,10 +718,7 @@ def modify_order(data, auth):
     url = get_url("/order/modify")
 
     # Make the POST request using httpx
-    res = client.post(url, headers=headers, content=payload)
-
-    # Add status attribute for compatibility with existing codebase
-    res.status = res.status_code
+    res = request_with_retry(client, "POST", url, headers=headers, content=payload)
 
     # Parse the response
     data = json.loads(res.text)

@@ -2,7 +2,7 @@ import os
 import unittest
 
 from dotenv import load_dotenv
-from openalgo import api as OAClient
+from tradeboard import api as OAClient
 
 # Load environment variables from .env file
 load_dotenv()
@@ -14,7 +14,7 @@ class TestMstockBroker(unittest.TestCase):
         # The test assumes that the Tradeboard server is running and
         # the user is already logged into the mstock broker.
         self.api_key = os.getenv(
-            "OPENALGO_API_KEY", "3bb8d260915ff680a7258108c0483b9eb7675ced31309a36f5846366943ee9fa"
+            "TRADEBOARD_API_KEY", "3bb8d260915ff680a7258108c0483b9eb7675ced31309a36f5846366943ee9fa"
         )
         self.client = OAClient(api_key=self.api_key, host="http://127.0.0.1:5000")
 

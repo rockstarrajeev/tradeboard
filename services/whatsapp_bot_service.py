@@ -13,7 +13,7 @@ Lifecycle:
                               on_connected from wars
                                           |
                                           v
-                        export_session bytes -> encrypt -> openalgo.db
+                        export_session bytes -> encrypt -> tradeboard.db
                                           |
                                           v
     [paired, idle]  --start_bot-->  [paired, connected]
@@ -511,7 +511,7 @@ class WhatsAppBotService:
         owner_username: str | None = None,
     ) -> None:
         """Export the wars session from the temp client, encrypt+persist the
-        blob into openalgo.db, then disconnect the temp client and auto-start
+        blob into tradeboard.db, then disconnect the temp client and auto-start
         the long-lived bot from the saved bytes."""
         try:
             logger.info("WhatsApp pair: exporting session bytes from temp client")
@@ -550,7 +550,7 @@ class WhatsAppBotService:
             )
             if not ok:
                 raise RuntimeError("Persisting WhatsApp session blob failed")
-            logger.info("WhatsApp pair: session blob encrypted and saved to openalgo.db")
+            logger.info("WhatsApp pair: session blob encrypted and saved to tradeboard.db")
 
             with self._lock:
                 self._pair_state["status"] = "paired"
@@ -1104,7 +1104,7 @@ class WhatsAppBotService:
             )
         host_url = os.getenv("HOST_SERVER", "http://127.0.0.1:5000")
         try:
-            from openalgo import api as tradeboard_api  # type: ignore
+            from tradeboard import api as tradeboard_api  # type: ignore
         except Exception:
             return None, "tradeboard SDK not available on this server."
         try:

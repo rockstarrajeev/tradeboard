@@ -32,7 +32,7 @@ logger = get_logger(__name__)
 def migrate_leverage():
     """Create or recreate leverage_config as a single-row config table."""
 
-    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///db/openalgo.db")
+    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///db/tradeboard.db")
 
     # Adjust path for SQLite if relative (since we're in upgrade folder)
     if DATABASE_URL.startswith("sqlite:///") and not DATABASE_URL.startswith("sqlite:////"):

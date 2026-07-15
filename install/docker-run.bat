@@ -31,16 +31,16 @@ set CONTAINER=tradeboard
 set ENV_FILE=.env
 set SAMPLE_ENV_URL=https://raw.githubusercontent.com/rockstarrajeev/tradeboard/main/.sample.env
 REM Use the directory where the script is located
-set OPENALGO_DIR=%~dp0
+set TRADEBOARD_DIR=%~dp0
 REM Remove trailing backslash
-if "%OPENALGO_DIR:~-1%"=="\" set OPENALGO_DIR=%OPENALGO_DIR:~0,-1%
+if "%TRADEBOARD_DIR:~-1%"=="\" set TRADEBOARD_DIR=%TRADEBOARD_DIR:~0,-1%
 set SETUP_FAILED=0
 
 REM XTS Brokers that require market data credentials
 set XTS_BROKERS=fivepaisaxts,compositedge,ibulls,iifl,jainamxts,rmoney,wisdom
 
 REM Valid brokers list
-set VALID_BROKERS=fivepaisa,fivepaisaxts,aliceblue,angel,arrow,compositedge,definedge,deltaexchange,dhan,dhan_sandbox,firstock,flattrade,fyers,groww,ibulls,iifl,iiflcapital,indmoney,jainamxts,kotak,motilal,mstock,nubra,paytm,pocketful,rmoney,samco,shoonya,tradejini,upstox,wisdom,zebu,zerodha
+set VALID_BROKERS=fivepaisa,fivepaisaxts,aliceblue,angel,arrow,compositedge,definedge,deltaexchange,dhan,dhan_sandbox,firstock,flattrade,fyers,groww,ibulls,iifl,iiflcapital,indmoney,jainamxts,kotak,motilal,mstock,nubra,paytm,pocketful,rmoney,samco,shoonya,tradejini,tradesmart,upstox,wisdom,zebu,zerodha
 
 REM Banner
 echo.
@@ -81,13 +81,13 @@ if /i "%CMD%"=="help" goto help
 goto help
 
 :setup
-echo [INFO] Setting up Tradeboard in %OPENALGO_DIR%...
+echo [INFO] Setting up Tradeboard in %TRADEBOARD_DIR%...
 echo.
 
 REM Create db directory
-if not exist "%OPENALGO_DIR%\db\" (
+if not exist "%TRADEBOARD_DIR%\db\" (
     echo [INFO] Creating database directory...
-    md "%OPENALGO_DIR%\db" 2>nul
+    md "%TRADEBOARD_DIR%\db" 2>nul
     if errorlevel 1 (
         echo [ERROR] Failed to create database directory
         set SETUP_FAILED=1
@@ -96,8 +96,8 @@ if not exist "%OPENALGO_DIR%\db\" (
 )
 
 REM Check if .env already exists
-if exist "%OPENALGO_DIR%\%ENV_FILE%" (
-    echo [WARNING] .env file already exists at %OPENALGO_DIR%\%ENV_FILE%
+if exist "%TRADEBOARD_DIR%\%ENV_FILE%" (
+    echo [WARNING] .env file already exists at %TRADEBOARD_DIR%\%ENV_FILE%
     set /p OVERWRITE="Do you want to overwrite it? (y/n): "
     if /i not "!OVERWRITE!"=="y" (
         echo [INFO] Setup cancelled. Using existing .env file.
@@ -112,19 +112,19 @@ REM Try curl.exe first (Windows 10/11 has this)
 where curl.exe >nul 2>&1
 if errorlevel 1 (
     echo [INFO] curl.exe not found, trying PowerShell...
-    powershell -Command "Invoke-WebRequest -Uri '%SAMPLE_ENV_URL%' -OutFile '%OPENALGO_DIR%\%ENV_FILE%'" 2>nul
+    powershell -Command "Invoke-WebRequest -Uri '%SAMPLE_ENV_URL%' -OutFile '%TRADEBOARD_DIR%\%ENV_FILE%'" 2>nul
 ) else (
-    curl.exe -sL "%SAMPLE_ENV_URL%" -o "%OPENALGO_DIR%\%ENV_FILE%" 2>nul
+    curl.exe -sL "%SAMPLE_ENV_URL%" -o "%TRADEBOARD_DIR%\%ENV_FILE%" 2>nul
 )
 
 REM Check if download succeeded
-if not exist "%OPENALGO_DIR%\%ENV_FILE%" (
+if not exist "%TRADEBOARD_DIR%\%ENV_FILE%" (
     echo [ERROR] Failed to download configuration template!
     echo Please check your internet connection.
     echo.
     echo Manual setup:
     echo   1. Download .sample.env from https://github.com/rockstarrajeev/tradeboard
-    echo   2. Save it as %OPENALGO_DIR%\.env
+    echo   2. Save it as %TRADEBOARD_DIR%\.env
     echo   3. Run this script again
     set SETUP_FAILED=1
     goto setup_end
@@ -145,8 +145,8 @@ if errorlevel 1 (
 
 REM Update .env file with generated keys
 echo [INFO] Updating configuration with secure keys...
-powershell -Command "(Get-Content '%OPENALGO_DIR%\%ENV_FILE%') -replace 'OPENALGO_PLACEHOLDER_APP_KEY_REGENERATE_BEFORE_USE', '%APP_KEY%' | Set-Content '%OPENALGO_DIR%\%ENV_FILE%'"
-powershell -Command "(Get-Content '%OPENALGO_DIR%\%ENV_FILE%') -replace 'OPENALGO_PLACEHOLDER_API_KEY_PEPPER_REGENERATE_BEFORE_USE', '%API_KEY_PEPPER%' | Set-Content '%OPENALGO_DIR%\%ENV_FILE%'"
+powershell -Command "(Get-Content '%TRADEBOARD_DIR%\%ENV_FILE%') -replace 'TRADEBOARD_PLACEHOLDER_APP_KEY_REGENERATE_BEFORE_USE', '%APP_KEY%' | Set-Content '%TRADEBOARD_DIR%\%ENV_FILE%'"
+powershell -Command "(Get-Content '%TRADEBOARD_DIR%\%ENV_FILE%') -replace 'TRADEBOARD_PLACEHOLDER_API_KEY_PEPPER_REGENERATE_BEFORE_USE', '%API_KEY_PEPPER%' | Set-Content '%TRADEBOARD_DIR%\%ENV_FILE%'"
 echo [OK] Secure keys generated and saved.
 
 REM Get broker configuration
@@ -160,7 +160,7 @@ echo   fivepaisa, fivepaisaxts, aliceblue, angel, compositedge,
 echo   definedge, deltaexchange, dhan, dhan_sandbox, firstock, flattrade, fyers,
 echo   groww, ibulls, iifl, iiflcapital, indmoney, jainamxts, kotak, motilal,
 echo   mstock, nubra, paytm, pocketful, rmoney, samco, shoonya,
-echo   tradejini, upstox, wisdom, zebu, zerodha
+echo   tradejini, tradesmart, upstox, wisdom, zebu, zerodha
 echo.
 
 :get_broker
@@ -222,16 +222,16 @@ echo.
 echo [INFO] Updating broker configuration...
 
 REM Update broker credentials
-powershell -Command "(Get-Content '%OPENALGO_DIR%\%ENV_FILE%') -replace 'BROKER_API_KEY = ''YOUR_BROKER_API_KEY''', 'BROKER_API_KEY = ''%BROKER_API_KEY%''' | Set-Content '%OPENALGO_DIR%\%ENV_FILE%'"
-powershell -Command "(Get-Content '%OPENALGO_DIR%\%ENV_FILE%') -replace 'BROKER_API_SECRET = ''YOUR_BROKER_API_SECRET''', 'BROKER_API_SECRET = ''%BROKER_API_SECRET%''' | Set-Content '%OPENALGO_DIR%\%ENV_FILE%'"
+powershell -Command "(Get-Content '%TRADEBOARD_DIR%\%ENV_FILE%') -replace 'BROKER_API_KEY = ''YOUR_BROKER_API_KEY''', 'BROKER_API_KEY = ''%BROKER_API_KEY%''' | Set-Content '%TRADEBOARD_DIR%\%ENV_FILE%'"
+powershell -Command "(Get-Content '%TRADEBOARD_DIR%\%ENV_FILE%') -replace 'BROKER_API_SECRET = ''YOUR_BROKER_API_SECRET''', 'BROKER_API_SECRET = ''%BROKER_API_SECRET%''' | Set-Content '%TRADEBOARD_DIR%\%ENV_FILE%'"
 
 REM Update redirect URL with broker name (replace <broker> placeholder)
-powershell -Command "(Get-Content '%OPENALGO_DIR%\%ENV_FILE%') -replace '<broker>', '%BROKER_NAME%' | Set-Content '%OPENALGO_DIR%\%ENV_FILE%'"
+powershell -Command "(Get-Content '%TRADEBOARD_DIR%\%ENV_FILE%') -replace '<broker>', '%BROKER_NAME%' | Set-Content '%TRADEBOARD_DIR%\%ENV_FILE%'"
 
 REM Update XTS market data credentials if applicable
 if "%IS_XTS%"=="1" (
-    powershell -Command "(Get-Content '%OPENALGO_DIR%\%ENV_FILE%') -replace 'BROKER_API_KEY_MARKET = ''YOUR_BROKER_MARKET_API_KEY''', 'BROKER_API_KEY_MARKET = ''!BROKER_API_KEY_MARKET!''' | Set-Content '%OPENALGO_DIR%\%ENV_FILE%'"
-    powershell -Command "(Get-Content '%OPENALGO_DIR%\%ENV_FILE%') -replace 'BROKER_API_SECRET_MARKET = ''YOUR_BROKER_MARKET_API_SECRET''', 'BROKER_API_SECRET_MARKET = ''!BROKER_API_SECRET_MARKET!''' | Set-Content '%OPENALGO_DIR%\%ENV_FILE%'"
+    powershell -Command "(Get-Content '%TRADEBOARD_DIR%\%ENV_FILE%') -replace 'BROKER_API_KEY_MARKET = ''YOUR_BROKER_MARKET_API_KEY''', 'BROKER_API_KEY_MARKET = ''!BROKER_API_KEY_MARKET!''' | Set-Content '%TRADEBOARD_DIR%\%ENV_FILE%'"
+    powershell -Command "(Get-Content '%TRADEBOARD_DIR%\%ENV_FILE%') -replace 'BROKER_API_SECRET_MARKET = ''YOUR_BROKER_MARKET_API_SECRET''', 'BROKER_API_SECRET_MARKET = ''!BROKER_API_SECRET_MARKET!''' | Set-Content '%TRADEBOARD_DIR%\%ENV_FILE%'"
 )
 
 echo [OK] Broker configuration saved.
@@ -244,11 +244,11 @@ echo   Broker:         %BROKER_NAME%
 if "%IS_XTS%"=="1" (
     echo   Type:           XTS API [with market data]
 )
-echo   Data directory: %OPENALGO_DIR%
-echo   Config file:    %OPENALGO_DIR%\%ENV_FILE%
-echo   Database:       %OPENALGO_DIR%\db\
-echo   Strategies:     %OPENALGO_DIR%\strategies\
-echo   Logs:           %OPENALGO_DIR%\log\
+echo   Data directory: %TRADEBOARD_DIR%
+echo   Config file:    %TRADEBOARD_DIR%\%ENV_FILE%
+echo   Database:       %TRADEBOARD_DIR%\db\
+echo   Strategies:     %TRADEBOARD_DIR%\strategies\
+echo   Logs:           %TRADEBOARD_DIR%\log\
 echo.
 echo   Redirect URL for broker portal:
 echo   http://127.0.0.1:5000/%BROKER_NAME%/callback
@@ -257,7 +257,7 @@ echo   Documentation: https://docs.rajeevupadhyay.com
 echo.
 set /p OPEN_ENV="Open .env in Notepad for review? (y/n): "
 if /i "%OPEN_ENV%"=="y" (
-    start notepad "%OPENALGO_DIR%\%ENV_FILE%"
+    start notepad "%TRADEBOARD_DIR%\%ENV_FILE%"
 )
 echo.
 echo [OK] Setup complete! Run 'docker-run.bat start' to launch Tradeboard.
@@ -270,7 +270,7 @@ echo [INFO] Starting Tradeboard...
 echo.
 
 REM Check if setup is needed
-if not exist "%OPENALGO_DIR%\%ENV_FILE%" (
+if not exist "%TRADEBOARD_DIR%\%ENV_FILE%" (
     echo [INFO] First time setup detected. Running setup...
     echo.
     call :setup
@@ -286,28 +286,28 @@ if not exist "%OPENALGO_DIR%\%ENV_FILE%" (
 )
 
 REM Create db, strategies, log, keys, and tmp directories if not exist
-if not exist "%OPENALGO_DIR%\db\" (
+if not exist "%TRADEBOARD_DIR%\db\" (
     echo [INFO] Creating database directory...
-    md "%OPENALGO_DIR%\db" 2>nul
+    md "%TRADEBOARD_DIR%\db" 2>nul
 )
-if not exist "%OPENALGO_DIR%\strategies\" (
+if not exist "%TRADEBOARD_DIR%\strategies\" (
     echo [INFO] Creating strategies directory...
-    md "%OPENALGO_DIR%\strategies" 2>nul
-    md "%OPENALGO_DIR%\strategies\scripts" 2>nul
-    md "%OPENALGO_DIR%\strategies\examples" 2>nul
+    md "%TRADEBOARD_DIR%\strategies" 2>nul
+    md "%TRADEBOARD_DIR%\strategies\scripts" 2>nul
+    md "%TRADEBOARD_DIR%\strategies\examples" 2>nul
 )
-if not exist "%OPENALGO_DIR%\log\" (
+if not exist "%TRADEBOARD_DIR%\log\" (
     echo [INFO] Creating log directory...
-    md "%OPENALGO_DIR%\log" 2>nul
-    md "%OPENALGO_DIR%\log\strategies" 2>nul
+    md "%TRADEBOARD_DIR%\log" 2>nul
+    md "%TRADEBOARD_DIR%\log\strategies" 2>nul
 )
-if not exist "%OPENALGO_DIR%\keys\" (
+if not exist "%TRADEBOARD_DIR%\keys\" (
     echo [INFO] Creating keys directory...
-    md "%OPENALGO_DIR%\keys" 2>nul
+    md "%TRADEBOARD_DIR%\keys" 2>nul
 )
-if not exist "%OPENALGO_DIR%\tmp\" (
+if not exist "%TRADEBOARD_DIR%\tmp\" (
     echo [INFO] Creating temp directory...
-    md "%OPENALGO_DIR%\tmp" 2>nul
+    md "%TRADEBOARD_DIR%\tmp" 2>nul
 )
 
 REM Pull latest image
@@ -376,12 +376,12 @@ docker run -d ^
     -e "NUMBA_NUM_THREADS=%THREAD_LIMIT%" ^
     -e "STRATEGY_MEMORY_LIMIT_MB=%STRATEGY_MEM_LIMIT%" ^
     -e "TZ=Asia/Kolkata" ^
-    -v "%OPENALGO_DIR%\db:/app/db" ^
-    -v "%OPENALGO_DIR%\strategies:/app/strategies" ^
-    -v "%OPENALGO_DIR%\log:/app/log" ^
-    -v "%OPENALGO_DIR%\keys:/app/keys" ^
-    -v "%OPENALGO_DIR%\tmp:/app/tmp" ^
-    -v "%OPENALGO_DIR%\.env:/app/.env" ^
+    -v "%TRADEBOARD_DIR%\db:/app/db" ^
+    -v "%TRADEBOARD_DIR%\strategies:/app/strategies" ^
+    -v "%TRADEBOARD_DIR%\log:/app/log" ^
+    -v "%TRADEBOARD_DIR%\keys:/app/keys" ^
+    -v "%TRADEBOARD_DIR%\tmp:/app/tmp" ^
+    -v "%TRADEBOARD_DIR%\.env:/app/.env" ^
     --restart unless-stopped ^
     %IMAGE%
 
@@ -392,7 +392,7 @@ if errorlevel 1 (
     echo Troubleshooting:
     echo   1. Check if ports 5000 and 8765 are available
     echo   2. Ensure Docker Desktop is running
-    echo   3. Check .env file: %OPENALGO_DIR%\%ENV_FILE%
+    echo   3. Check .env file: %TRADEBOARD_DIR%\%ENV_FILE%
     echo.
     goto end
 )
@@ -405,7 +405,7 @@ echo   Web UI:     http://127.0.0.1:5000
 echo   WebSocket:  ws://127.0.0.1:8765
 echo   ========================================
 echo.
-echo   Data directory: %OPENALGO_DIR%
+echo   Data directory: %TRADEBOARD_DIR%
 echo.
 echo   Useful commands:
 echo     docker-run.bat logs     - View logs
@@ -461,7 +461,7 @@ if errorlevel 1 (
     echo   Web UI: http://127.0.0.1:5000
 )
 echo.
-echo   Data directory: %OPENALGO_DIR%
+echo   Data directory: %TRADEBOARD_DIR%
 goto end
 
 :shell
@@ -501,11 +501,11 @@ echo   2. Download this script (use PowerShell):
 echo      curl.exe -O https://raw.githubusercontent.com/rockstarrajeev/tradeboard/main/install/docker-run.bat
 echo   3. Run: docker-run.bat
 echo.
-echo Data Location: %OPENALGO_DIR%
-echo   - Config:     %OPENALGO_DIR%\.env
-echo   - Database:   %OPENALGO_DIR%\db\
-echo   - Strategies: %OPENALGO_DIR%\strategies\
-echo   - Logs:       %OPENALGO_DIR%\log\
+echo Data Location: %TRADEBOARD_DIR%
+echo   - Config:     %TRADEBOARD_DIR%\.env
+echo   - Database:   %TRADEBOARD_DIR%\db\
+echo   - Strategies: %TRADEBOARD_DIR%\strategies\
+echo   - Logs:       %TRADEBOARD_DIR%\log\
 echo.
 echo XTS Brokers (require market data credentials):
 echo   fivepaisaxts, compositedge, ibulls, iifl, jainamxts, rmoney, wisdom

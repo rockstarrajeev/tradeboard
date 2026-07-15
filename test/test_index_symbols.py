@@ -186,7 +186,7 @@ def get_database_url(env_vars):
     db_url = env_vars.get("DATABASE_URL") or os.getenv("DATABASE_URL")
     if not db_url:
         return None
-    # Resolve relative sqlite paths (e.g. sqlite:///db/openalgo.db)
+    # Resolve relative sqlite paths (e.g. sqlite:///db/tradeboard.db)
     # to be relative to project root, not CWD
     if db_url.startswith("sqlite:///") and not db_url.startswith("sqlite:////"):
         relative_path = db_url[len("sqlite:///"):]

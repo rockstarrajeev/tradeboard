@@ -3,7 +3,7 @@
 Simple EMA Crossover Strategy Example
 This strategy demonstrates how to integrate with Tradeboard API
 """
-from openalgo import api
+from tradeboard import api
 import pandas as pd
 import numpy as np
 import time
@@ -13,14 +13,14 @@ import os
 
 # Read API credentials and endpoints from environment.
 # When this strategy is launched via Tradeboard's /python runner,
-# OPENALGO_API_KEY is injected by the platform and HOST_SERVER /
+# TRADEBOARD_API_KEY is injected by the platform and HOST_SERVER /
 # WEBSOCKET_URL are inherited from Tradeboard's .env file.
-api_key = os.getenv('OPENALGO_API_KEY')
+api_key = os.getenv('TRADEBOARD_API_KEY')
 host    = os.getenv('HOST_SERVER', 'http://127.0.0.1:5000')
 ws_url  = os.getenv('WEBSOCKET_URL', 'ws://127.0.0.1:8765')
 
 if not api_key:
-    print("Error: OPENALGO_API_KEY environment variable not set")
+    print("Error: TRADEBOARD_API_KEY environment variable not set")
     exit(1)
 
 

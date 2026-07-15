@@ -274,8 +274,8 @@ export default function TelegramAnalytics() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {user.openalgo_username ? (
-                          <Badge variant="outline">{user.openalgo_username}</Badge>
+                        {user.tradeboard_username ? (
+                          <Badge variant="outline">{user.tradeboard_username}</Badge>
                         ) : (
                           <span className="text-muted-foreground">-</span>
                         )}

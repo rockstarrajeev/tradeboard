@@ -18,10 +18,10 @@ This is a minimal example showing how to use the Tradeboard Python SDK.
 
 import os
 import time
-from openalgo import api
+from tradeboard import api
 
 # Get API key from environment variable
-API_KEY = os.getenv('OPENALGO_API_KEY')
+API_KEY = os.getenv('TRADEBOARD_API_KEY')
 
 # Initialize the API client
 client = api(
@@ -203,7 +203,7 @@ export default function NewPythonStrategy() {
         <Info className="h-4 w-4" />
         <AlertDescription>
           Your Python script should use the <code className="bg-muted px-1 rounded">tradeboard</code>{' '}
-          SDK. Install it with: <code className="bg-muted px-1 rounded">pip install openalgo</code>
+          SDK. Install it with: <code className="bg-muted px-1 rounded">pip install tradeboard</code>
         </AlertDescription>
       </Alert>
 

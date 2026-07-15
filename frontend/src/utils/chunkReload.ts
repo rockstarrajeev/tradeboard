@@ -21,7 +21,7 @@ const CHUNK_ERROR_PATTERNS = [
   /Failed to load resource.*\.(?:js|mjs|css)/i,
 ]
 
-const RELOAD_FLAG = 'openalgo:chunk-reload-attempted'
+const RELOAD_FLAG = 'tradeboard:chunk-reload-attempted'
 
 /** True iff the error message looks like a stale-chunk import failure. */
 export function isChunkLoadError(message: string | undefined | null): boolean {

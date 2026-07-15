@@ -50,6 +50,7 @@ const SandboxPnL = lazy(() => import('@/pages/SandboxPnL'))
 const CalendarLedger = lazy(() => import('@/pages/CalendarLedger'))
 const Analyzer = lazy(() => import('@/pages/Analyzer'))
 const WebSocketTest = lazy(() => import('@/pages/WebSocketTest'))
+const ChartTest = lazy(() => import('@/pages/ChartTest'))
 const Playground = lazy(() => import('@/pages/Playground'))
 const Historify = lazy(() => import('@/pages/Historify'))
 const HistorifyCharts = lazy(() => import('@/pages/HistorifyCharts'))
@@ -60,6 +61,8 @@ const OptionChain = lazy(() => import('@/pages/OptionChain'))
 const IVChart = lazy(() => import('@/pages/IVChart'))
 const Scalping = lazy(() => import('@/pages/Scalping'))
 const OITracker = lazy(() => import('@/pages/OITracker'))
+const OIRange = lazy(() => import('@/pages/OIRange'))
+const GammaDensity = lazy(() => import('@/pages/GammaDensity'))
 const MaxPain = lazy(() => import('@/pages/MaxPain'))
 const StraddleChart = lazy(() => import('@/pages/StraddleChart'))
 const CustomStraddle = lazy(() => import('@/pages/CustomStraddle'))
@@ -67,6 +70,7 @@ const VolSurface = lazy(() => import('@/pages/VolSurface'))
 const GEXDashboard = lazy(() => import('@/pages/GEXDashboard'))
 const IVSmile = lazy(() => import('@/pages/IVSmile'))
 const OIProfile = lazy(() => import('@/pages/OIProfile'))
+const Arbitrage = lazy(() => import('@/pages/Arbitrage'))
 const StrategyBuilder = lazy(() => import('@/pages/StrategyBuilder'))
 const StrategyPortfolio = lazy(() => import('@/pages/StrategyPortfolio'))
 
@@ -198,6 +202,8 @@ function App() {
                 <Route path="/optionchain" element={<OptionChain />} />
                 <Route path="/ivchart" element={<IVChart />} />
                 <Route path="/oitracker" element={<OITracker />} />
+                <Route path="/oirange" element={<OIRange />} />
+                <Route path="/gammadensity" element={<GammaDensity />} />
                 <Route path="/maxpain" element={<MaxPain />} />
                 <Route path="/straddle" element={<StraddleChart />} />
                 <Route path="/straddlepnl" element={<CustomStraddle />} />
@@ -205,6 +211,7 @@ function App() {
                 <Route path="/gex" element={<GEXDashboard />} />
                 <Route path="/ivsmile" element={<IVSmile />} />
                 <Route path="/oiprofile" element={<OIProfile />} />
+                <Route path="/arbitrage" element={<Arbitrage />} />
                 <Route path="/strategybuilder" element={<StrategyBuilder />} />
                 <Route path="/strategybuilder/portfolio" element={<StrategyPortfolio />} />
                 {/* Legacy /tools/strategy paths — redirect to the new route. */}
@@ -217,6 +224,7 @@ function App() {
                   element={<Navigate to="/strategybuilder/portfolio" replace />}
                 />
                 <Route path="/websocket/test" element={<WebSocketTest />} />
+                <Route path="/chart/test" element={<ChartTest />} />
                 <Route path="/websocket/test/20" element={<WebSocketTest depthLevel={20} />} />
                 <Route path="/websocket/test/30" element={<WebSocketTest depthLevel={30} />} />
                 <Route path="/websocket/test/50" element={<WebSocketTest depthLevel={50} />} />

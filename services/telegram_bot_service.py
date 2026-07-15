@@ -59,7 +59,7 @@ class TelegramBotService:
 
     def _get_sdk_client(self, telegram_id: int) -> tradeboard_api | None:
         """Get or create Tradeboard SDK client for a user"""
-        from openalgo import api as tradeboard_api
+        from tradeboard import api as tradeboard_api
 
         try:
             # Check if client already exists
@@ -958,7 +958,7 @@ class TelegramBotService:
 
         # Validate API key by making a test call
         try:
-            from openalgo import api as tradeboard_api
+            from tradeboard import api as tradeboard_api
 
             # Create temporary SDK client for validation
             test_client = tradeboard_api(api_key=api_key, host=host_url)
@@ -970,39 +970,39 @@ class TelegramBotService:
             if test_response and test_response.get("status") == "success":
                 # Valid credentials, save them
                 # Get the actual Tradeboard username from the API key
-                openalgo_username = None
+                tradeboard_username = None
                 try:
-                    openalgo_username = get_username_by_apikey(api_key)
-                    logger.info(f"API key lookup returned: '{openalgo_username}'")
+                    tradeboard_username = get_username_by_apikey(api_key)
+                    logger.info(f"API key lookup returned: '{tradeboard_username}'")
                 except Exception as e:
                     logger.exception(f"Error getting username from API key: {e}")
 
                 # If we couldn't get username from API key, try to extract from response
-                if not openalgo_username and test_response.get("data"):
+                if not tradeboard_username and test_response.get("data"):
                     # Some brokers return username in the funds response
                     data = test_response.get("data", {})
                     if isinstance(data, dict):
-                        openalgo_username = (
+                        tradeboard_username = (
                             data.get("username") or data.get("user_id") or data.get("client_id")
                         )
-                        if openalgo_username:
-                            logger.info(f"Got username from funds response: {openalgo_username}")
+                        if tradeboard_username:
+                            logger.info(f"Got username from funds response: {tradeboard_username}")
 
                 # Log for debugging
                 logger.info(
-                    f"Linking Telegram user {user.id} (@{user.username}) with Tradeboard username: '{openalgo_username}'"
+                    f"Linking Telegram user {user.id} (@{user.username}) with Tradeboard username: '{tradeboard_username}'"
                 )
 
                 # If we still can't get username, DON'T use telegram username with @
                 # Use a proper fallback
-                if not openalgo_username:
+                if not tradeboard_username:
                     # Try to get from session or use telegram ID
-                    openalgo_username = f"user_{user.id}"
+                    tradeboard_username = f"user_{user.id}"
                     logger.warning(
-                        f"Could not get Tradeboard username, using fallback: {openalgo_username}"
+                        f"Could not get Tradeboard username, using fallback: {tradeboard_username}"
                     )
                 else:
-                    logger.info(f"Successfully retrieved Tradeboard username: {openalgo_username}")
+                    logger.info(f"Successfully retrieved Tradeboard username: {tradeboard_username}")
 
                 # Determine broker for currency symbol selection
                 broker_name = get_broker_name(api_key) or "default"
@@ -1010,7 +1010,7 @@ class TelegramBotService:
 
                 create_or_update_telegram_user(
                     telegram_id=user.id,
-                    username=openalgo_username,  # Use the actual Tradeboard username
+                    username=tradeboard_username,  # Use the actual Tradeboard username
                     telegram_username=user.username,
                     first_name=user.first_name,
                     last_name=user.last_name,
@@ -1019,7 +1019,7 @@ class TelegramBotService:
                     broker=broker_name,
                 )
 
-                logger.info(f"Database updated - Username stored as: {openalgo_username}")
+                logger.info(f"Database updated - Username stored as: {tradeboard_username}")
 
                 await update.message.reply_text(
                     "✅ Account linked successfully!\n"
@@ -1087,10 +1087,10 @@ class TelegramBotService:
             else:
                 status = "🔴 Client Error"
 
-            # Get display name (prefer telegram_username, fallback to openalgo_username)
+            # Get display name (prefer telegram_username, fallback to tradeboard_username)
             display_name = (
                 telegram_user.get("telegram_username")
-                or telegram_user.get("openalgo_username")
+                or telegram_user.get("tradeboard_username")
                 or "N/A"
             )
             host_url = telegram_user.get("host_url") or "N/A"
@@ -1611,36 +1611,7 @@ class TelegramBotService:
             await update.message.reply_text("❌ Failed to fetch P&L")
             return
 
-        funds = response.get("data", {})
-
-        # Handle P&L values that might be strings from some brokers
-        try:
-            realized_pnl = float(funds.get("m2mrealized", 0))
-        except (ValueError, TypeError):
-            realized_pnl = 0.0
-
-        try:
-            unrealized_pnl = float(funds.get("m2munrealized", 0))
-        except (ValueError, TypeError):
-            unrealized_pnl = 0.0
-
-        total_pnl = realized_pnl + unrealized_pnl
-
-        # Emojis based on P&L
-        realized_emoji = "🟢" if realized_pnl > 0 else "🔴" if realized_pnl < 0 else "⚪"
-        unrealized_emoji = "🟢" if unrealized_pnl > 0 else "🔴" if unrealized_pnl < 0 else "⚪"
-        total_emoji = "🟢" if total_pnl > 0 else "🔴" if total_pnl < 0 else "⚪"
-
-        message = (
-            "💹 *PROFIT & LOSS*\n"
-            "━━━━━━━━━━━━━━━\n\n"
-            f"{realized_emoji} *Realized P&L*\n"
-            f"└ {cs}{realized_pnl:,.2f}\n\n"
-            f"{unrealized_emoji} *Unrealized P&L*\n"
-            f"└ {cs}{unrealized_pnl:,.2f}\n\n"
-            f"{total_emoji} *Total P&L*\n"
-            f"└ {cs}{total_pnl:,.2f}"
-        )
+        message = self._format_pnl_funds(response, cs=cs)
 
         await update.message.reply_text(message, parse_mode=ParseMode.MARKDOWN)
         log_command(user.id, "pnl", update.effective_chat.id)
@@ -2022,22 +1993,45 @@ class TelegramBotService:
             f"💼 Total: {cs}{(available + collateral):,.2f}"
         )
 
-    def _format_pnl(self, response: dict, cs: str = '₹') -> str:
-        """Format P&L response into message (uses positionbook data)"""
+    def _format_pnl_funds(self, response: dict, cs: str = '₹') -> str:
+        """Format P&L from the funds response (realized + unrealized + total).
+
+        Shared by the /pnl command and the menu P&L button so both report the
+        exact same values from the same source (GitHub issue #1576 — the menu
+        button previously summed positionbook day-P&L, which disagreed with /pnl).
+        """
         if not response or response.get("status") != "success":
             return "❌ Failed to fetch P&L"
 
-        positions = response.get("data", [])
-        total_pnl = 0.0
-        for pos in positions:
-            try:
-                pnl = float(pos.get("pnl", 0))
-                total_pnl += pnl
-            except Exception:
-                pass
+        funds = response.get("data", {})
 
-        pnl_emoji = "🟢" if total_pnl > 0 else "🔴" if total_pnl < 0 else "⚪"
-        return f"💹 *PROFIT & LOSS*\n━━━━━━━━━━━━━━━\n\n{pnl_emoji} *Day P&L*\n└ {cs}{total_pnl:,.2f}"
+        # P&L values may arrive as strings from some brokers
+        try:
+            realized_pnl = float(funds.get("m2mrealized", 0))
+        except (ValueError, TypeError):
+            realized_pnl = 0.0
+
+        try:
+            unrealized_pnl = float(funds.get("m2munrealized", 0))
+        except (ValueError, TypeError):
+            unrealized_pnl = 0.0
+
+        total_pnl = realized_pnl + unrealized_pnl
+
+        realized_emoji = "🟢" if realized_pnl > 0 else "🔴" if realized_pnl < 0 else "⚪"
+        unrealized_emoji = "🟢" if unrealized_pnl > 0 else "🔴" if unrealized_pnl < 0 else "⚪"
+        total_emoji = "🟢" if total_pnl > 0 else "🔴" if total_pnl < 0 else "⚪"
+
+        return (
+            "💹 *PROFIT & LOSS*\n"
+            "━━━━━━━━━━━━━━━\n\n"
+            f"{realized_emoji} *Realized P&L*\n"
+            f"└ {cs}{realized_pnl:,.2f}\n\n"
+            f"{unrealized_emoji} *Unrealized P&L*\n"
+            f"└ {cs}{unrealized_pnl:,.2f}\n\n"
+            f"{total_emoji} *Total P&L*\n"
+            f"└ {cs}{total_pnl:,.2f}"
+        )
 
     async def cmd_closeall(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /closeall command — close all open positions with confirmation"""
@@ -2518,8 +2512,8 @@ class TelegramBotService:
                 response = await loop.run_in_executor(None, client.funds)
                 message = self._format_funds(response, cs=cs)
             elif callback_data == "pnl":
-                response = await loop.run_in_executor(None, client.positionbook)
-                message = self._format_pnl(response, cs=cs)
+                response = await loop.run_in_executor(None, client.funds)
+                message = self._format_pnl_funds(response, cs=cs)
             else:
                 message = "❌ Unknown command"
 
@@ -2570,11 +2564,11 @@ class TelegramBotService:
                         for u in users
                         if u.get("notifications_enabled") == filters["notifications_enabled"]
                     ]
-                if filters.get("openalgo_username"):
+                if filters.get("tradeboard_username"):
                     users = [
                         u
                         for u in users
-                        if u.get("openalgo_username") == filters["openalgo_username"]
+                        if u.get("tradeboard_username") == filters["tradeboard_username"]
                     ]
 
             success_count = 0

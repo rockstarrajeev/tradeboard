@@ -7,7 +7,7 @@ stdio (legacy):
 
 HTTP / SSE (new):
     ``blueprints/mcp_http.py`` imports this module after setting
-    ``OPENALGO_MCP_HTTP_BOOT=1``. We expose:
+    ``TRADEBOARD_MCP_HTTP_BOOT=1``. We expose:
 
     * ``TOOL_SCOPES`` — explicit map of tool_name → required OAuth scope.
       Maintained here (not derived from FastMCP) so security review can
@@ -98,6 +98,16 @@ TOOL_SCOPES: dict[str, str] = {
     "get_timings": SCOPE_READ_MARKET,
     "check_holiday": SCOPE_READ_MARKET,
     "get_instruments": SCOPE_READ_MARKET,
+    # ---- Research: technical indicators (tradeboard.ta over history) ----
+    "calculate_indicator": SCOPE_READ_MARKET,
+    "get_trend_snapshot": SCOPE_READ_MARKET,
+    "get_momentum_snapshot": SCOPE_READ_MARKET,
+    "get_volatility_snapshot": SCOPE_READ_MARKET,
+    "get_support_resistance": SCOPE_READ_MARKET,
+    "detect_signals": SCOPE_READ_MARKET,
+    "screen_instruments": SCOPE_READ_MARKET,
+    "multi_timeframe_analysis": SCOPE_READ_MARKET,
+    "correlation_beta": SCOPE_READ_MARKET,
     # ---- Info / introspection — readable by anyone with any scope ----
     # These are exempt from the scope filter because they help clients
     # discover what they can do. Implementing as read:market keeps the
@@ -157,7 +167,7 @@ def get_tool_callable(tool_name: str) -> Callable | None:
     """Resolve the underlying Python function for a tool.
 
     The HTTP transport is responsible for setting
-    ``OPENALGO_MCP_HTTP_BOOT=1`` before this module is loaded so the
+    ``TRADEBOARD_MCP_HTTP_BOOT=1`` before this module is loaded so the
     stdio argv check is bypassed.
     """
     if tool_name not in TOOL_SCOPES:

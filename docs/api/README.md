@@ -1,18 +1,19 @@
 # Tradeboard API Documentation
 
-Welcome to the Tradeboard REST API Documentation. This comprehensive guide covers all API endpoints available for algorithmic trading operations.
+This directory documents the registered Tradeboard v1 REST API and the separate WebSocket protocol. The source of truth for REST registration is `restx_api/__init__.py`; request validation is defined in `restx_api/schemas.py`, `restx_api/data_schemas.py`, and `restx_api/account_schema.py`.
 
-## Base URL
+## Base URLs
 
-```http
-Local Host   :  http://127.0.0.1:5000/api/v1
-Ngrok Domain :  https://<your-ngrok-domain>.ngrok-free.app/api/v1
-Custom Domain:  https://<your-custom-domain>/api/v1
+```text
+REST API:  http://127.0.0.1:5000/api/v1
+WebSocket: ws://127.0.0.1:8765
 ```
+
+Replace the local host with the configured HTTPS/WSS domain in a remote deployment.
 
 ## Authentication
 
-All API endpoints require authentication using an API key. Include your API key in the request body:
+Most POST endpoints accept the Tradeboard API key as `apikey` in a JSON object. GET endpoints accept it as the `apikey` query parameter. Telegram and WhatsApp management endpoints may also accept `X-API-KEY`; the Telegram webhook authenticates with `X-Telegram-Bot-Api-Secret-Token` instead of an Tradeboard key.
 
 ```json
 {

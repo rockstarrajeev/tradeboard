@@ -27,9 +27,9 @@ Every surface above runs on the same Sandbox engine (₹1 Crore sandbox capital,
 
 ## Python Compatibility
 
-**Supports Python 3.11, 3.12, 3.13, and 3.14**
+**Requires Python 3.12 or newer.**
 
-## Supported Brokers (30+)
+## Supported Brokers (34 plugins)
 
 <details>
 <summary>View All Supported Brokers</summary>
@@ -61,6 +61,7 @@ Every surface above runs on the same Sandbox engine (₹1 Crore sandbox capital,
 - Samco
 - Shoonya (Finvasia)
 - Tradejini
+- TradeSmart
 - Upstox
 - Wisdom Capital
 - Zebu
@@ -68,19 +69,19 @@ Every surface above runs on the same Sandbox engine (₹1 Crore sandbox capital,
 
 </details>
 
-All brokers share a unified API interface, making it easy to switch between brokers without changing your code.
+Plugins share Tradeboard's normalized API shapes. Exchange coverage, authentication, market-data entitlement, GTT support, and other optional capabilities still vary by adapter and broker account.
 
 ## Core Features
 
 ### Unified REST API Layer (`/api/v1/`)
-A single, standardized API across all brokers with 30+ endpoints:
+A maintained contract with 57 REST method/path pairs under `/api/v1`:
 - **Order Management**: Place, modify, cancel orders, basket orders, smart orders with position sizing
 - **Portfolio**: Get positions, holdings, order book, trade book, funds
 - **Market Data**: Real-time quotes, historical data, market depth (Level 5), symbol search
 - **Advanced**: Option Greeks calculator, margin calculator, synthetic futures, auto-split orders
 
 ### Real-Time WebSocket Streaming
-- Unified WebSocket proxy server for all brokers (port 8765)
+- Unified WebSocket proxy server (port 8765 by default)
 - Common WebSocket implementation using ZMQ for normalized data across brokers
 - Subscribe to LTP, Quote, or Market Depth for any symbol
 - ZeroMQ-based message bus for high-performance data distribution
@@ -97,7 +98,7 @@ Build trading strategies visually without writing code:
 - **Visual debugging** with execution flow highlighting
 
 ### Options & Strategy Analytics Tools (`/tools`)
-A complete suite of twelve built-in analytical tools for options trading and market analysis — no external subscriptions required. Accessible from the **Tools** page in the sidebar:
+A suite of twelve built-in analytical tools for options trading and market analysis. The pages use the active broker connection; broker market-data entitlements and exchange coverage still apply. Accessible from the **Tools** page in the sidebar:
 
 | Tool | Route | What it does |
 |------|-------|--------------|
@@ -114,15 +115,15 @@ A complete suite of twelve built-in analytical tools for options trading and mar
 | **IV Smile** | `/ivsmile` | Implied Volatility smile with Call/Put IV curves, ATM IV, and skew analysis |
 | **OI Profile** | `/oiprofile` | Futures candlestick with OI butterfly and daily OI change across strikes |
 
-All tools stream live from your connected broker via the unified WebSocket feed and work identically across every supported broker.
+Tools use the active broker's REST and WebSocket capabilities. Data availability and supported exchanges vary by plugin and account entitlement.
 
 ### API Analyzer Mode
 Complete testing environment with ₹1 Crore sandbox capital:
 - Test strategies with real market data without risking money
 - Pre-deployment testing for strategy validation
-- Supports all order types (Market, Limit, SL, SL-M)
+- Supports the core MARKET, LIMIT, SL, and SL-M price types
 - Realistic margin system with leverage
-- Auto square-off at exchange timings
+- Configurable sandbox square-off schedules
 - Separate database for complete isolation
 
 [API Analyzer Documentation](https://docs.rajeevupadhyay.com/new-features/api-analyzer)
@@ -258,8 +259,8 @@ Receive your strategy alerts directly to **Telegram** for all platforms.
 - **axe-core** - Accessibility testing
 
 ### Databases
-- **SQLite** - 4 separate databases (main, logs, latency, sandbox)
-- **DuckDB** - Historical market data (Historify)
+- **SQLite** - 5 databases (main, logs, latency, health, sandbox)
+- **DuckDB** - 1 historical market-data store (Historify)
 
 ## Official SDKs
 
@@ -294,7 +295,7 @@ Tradeboard is part of a larger open-source trading ecosystem:
 - **RAM**: 2GB (or 0.5GB + 2GB swap)
 - **Disk**: 1GB
 - **CPU**: 1 vCPU
-- **Python**: 3.11, 3.12, 3.13, or 3.14
+- **Python**: 3.12 or newer
 - **Node.js**: 20.20+, 22.22+, or 24.13+ (for frontend development)
 
 ### Quick Start with UV
@@ -329,7 +330,7 @@ Complete API reference and examples:
 
 ## Key Benefits
 
-- **Zero-Config Installation**: One-command setup with UV
+- **Guided Installation**: UV and production install scripts with explicit broker configuration
 - **Single API, Multiple Brokers**: Switch brokers without code changes
 - **No Data Collection**: Complete privacy - your data stays on your server
 - **Visual Strategy Builder**: Create strategies with drag-and-drop Flow editor
@@ -370,7 +371,7 @@ We welcome contributions! To contribute:
 
 ## License
 
-Tradeboard is released under the **AGPL V3.0 License**. See [LICENSE](LICENSE) for details.
+Tradeboard is released under the **AGPL V3.0 License**. See [License.md](License.md) for details.
 
 ## Credits & Acknowledgments
 

@@ -38,13 +38,13 @@ ENV_FILE=".env"
 SAMPLE_ENV_URL="https://raw.githubusercontent.com/rockstarrajeev/tradeboard/main/.sample.env"
 # Use the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-OPENALGO_DIR="$SCRIPT_DIR"
+TRADEBOARD_DIR="$SCRIPT_DIR"
 
 # XTS Brokers that require market data credentials
 XTS_BROKERS="fivepaisaxts,compositedge,ibulls,iifl,jainamxts,rmoney,wisdom"
 
 # Valid brokers list
-VALID_BROKERS="fivepaisa,fivepaisaxts,aliceblue,angel,arrow,compositedge,definedge,deltaexchange,dhan,dhan_sandbox,firstock,flattrade,fyers,groww,ibulls,iifl,iiflcapital,indmoney,jainamxts,kotak,motilal,mstock,nubra,paytm,pocketful,rmoney,samco,shoonya,tradejini,upstox,wisdom,zebu,zerodha"
+VALID_BROKERS="fivepaisa,fivepaisaxts,aliceblue,angel,arrow,compositedge,definedge,deltaexchange,dhan,dhan_sandbox,firstock,flattrade,fyers,groww,ibulls,iifl,iiflcapital,indmoney,jainamxts,kotak,motilal,mstock,nubra,paytm,pocketful,rmoney,samco,shoonya,tradejini,tradesmart,upstox,wisdom,zebu,zerodha"
 
 # Banner
 echo ""
@@ -116,13 +116,13 @@ is_xts_broker() {
 
 # Setup function
 do_setup() {
-    log_info "Setting up Tradeboard in $OPENALGO_DIR..."
+    log_info "Setting up Tradeboard in $TRADEBOARD_DIR..."
     echo ""
 
     # Create db directory
-    if [ ! -d "$OPENALGO_DIR/db" ]; then
+    if [ ! -d "$TRADEBOARD_DIR/db" ]; then
         log_info "Creating database directory..."
-        mkdir -p "$OPENALGO_DIR/db"
+        mkdir -p "$TRADEBOARD_DIR/db"
         if [ $? -ne 0 ]; then
             log_error "Failed to create database directory"
             return 1
@@ -130,8 +130,8 @@ do_setup() {
     fi
 
     # Check if .env already exists
-    if [ -f "$OPENALGO_DIR/$ENV_FILE" ]; then
-        log_warn ".env file already exists at $OPENALGO_DIR/$ENV_FILE"
+    if [ -f "$TRADEBOARD_DIR/$ENV_FILE" ]; then
+        log_warn ".env file already exists at $TRADEBOARD_DIR/$ENV_FILE"
         read -p "Do you want to overwrite it? (y/n): " OVERWRITE
         if [[ ! "$OVERWRITE" =~ ^[Yy]$ ]]; then
             log_info "Setup cancelled. Using existing .env file."
@@ -141,7 +141,7 @@ do_setup() {
 
     # Download sample.env from GitHub
     log_info "Downloading configuration template from GitHub..."
-    if ! curl -sL "$SAMPLE_ENV_URL" -o "$OPENALGO_DIR/$ENV_FILE"; then
+    if ! curl -sL "$SAMPLE_ENV_URL" -o "$TRADEBOARD_DIR/$ENV_FILE"; then
         log_error "Failed to download configuration template!"
         echo "Please check your internet connection."
         return 1
@@ -175,12 +175,12 @@ do_setup() {
     log_info "Updating configuration with secure keys..."
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # macOS sed syntax
-        sed -i '' "s/OPENALGO_PLACEHOLDER_APP_KEY_REGENERATE_BEFORE_USE/$APP_KEY/g" "$OPENALGO_DIR/$ENV_FILE"
-        sed -i '' "s/OPENALGO_PLACEHOLDER_API_KEY_PEPPER_REGENERATE_BEFORE_USE/$API_KEY_PEPPER/g" "$OPENALGO_DIR/$ENV_FILE"
+        sed -i '' "s/TRADEBOARD_PLACEHOLDER_APP_KEY_REGENERATE_BEFORE_USE/$APP_KEY/g" "$TRADEBOARD_DIR/$ENV_FILE"
+        sed -i '' "s/TRADEBOARD_PLACEHOLDER_API_KEY_PEPPER_REGENERATE_BEFORE_USE/$API_KEY_PEPPER/g" "$TRADEBOARD_DIR/$ENV_FILE"
     else
         # Linux sed syntax
-        sed -i "s/OPENALGO_PLACEHOLDER_APP_KEY_REGENERATE_BEFORE_USE/$APP_KEY/g" "$OPENALGO_DIR/$ENV_FILE"
-        sed -i "s/OPENALGO_PLACEHOLDER_API_KEY_PEPPER_REGENERATE_BEFORE_USE/$API_KEY_PEPPER/g" "$OPENALGO_DIR/$ENV_FILE"
+        sed -i "s/TRADEBOARD_PLACEHOLDER_APP_KEY_REGENERATE_BEFORE_USE/$APP_KEY/g" "$TRADEBOARD_DIR/$ENV_FILE"
+        sed -i "s/TRADEBOARD_PLACEHOLDER_API_KEY_PEPPER_REGENERATE_BEFORE_USE/$API_KEY_PEPPER/g" "$TRADEBOARD_DIR/$ENV_FILE"
     fi
     # .env is now bind-mounted read+write into the container so auto-rotation
     # of compromised APP_KEY/API_KEY_PEPPER (utils/env_check.py) can run.
@@ -190,14 +190,14 @@ do_setup() {
     # Docker Desktop handles UID mapping in its VM so chown is a no-op.
     if [ "$(uname)" = "Linux" ]; then
         if [ "$EUID" -ne 0 ] && command -v sudo >/dev/null 2>&1; then
-            sudo chown 1000:1000 "$OPENALGO_DIR/$ENV_FILE" 2>/dev/null || true
-            sudo chmod 600 "$OPENALGO_DIR/$ENV_FILE" 2>/dev/null || true
+            sudo chown 1000:1000 "$TRADEBOARD_DIR/$ENV_FILE" 2>/dev/null || true
+            sudo chmod 600 "$TRADEBOARD_DIR/$ENV_FILE" 2>/dev/null || true
         else
-            chown 1000:1000 "$OPENALGO_DIR/$ENV_FILE" 2>/dev/null || true
-            chmod 600 "$OPENALGO_DIR/$ENV_FILE" 2>/dev/null || true
+            chown 1000:1000 "$TRADEBOARD_DIR/$ENV_FILE" 2>/dev/null || true
+            chmod 600 "$TRADEBOARD_DIR/$ENV_FILE" 2>/dev/null || true
         fi
     else
-        chmod 600 "$OPENALGO_DIR/$ENV_FILE" 2>/dev/null || true
+        chmod 600 "$TRADEBOARD_DIR/$ENV_FILE" 2>/dev/null || true
     fi
     log_ok "Secure keys generated and saved."
 
@@ -212,7 +212,7 @@ do_setup() {
     echo "  definedge, deltaexchange, dhan, dhan_sandbox, firstock, flattrade, fyers,"
     echo "  groww, ibulls, iifl, iiflcapital, indmoney, jainamxts, kotak, motilal,"
     echo "  mstock, nubra, paytm, pocketful, rmoney, samco, shoonya,"
-    echo "  tradejini, upstox, wisdom, zebu, zerodha"
+    echo "  tradejini, tradesmart, upstox, wisdom, zebu, zerodha"
     echo ""
 
     # Get broker name with validation
@@ -269,23 +269,23 @@ do_setup() {
 
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # macOS sed syntax
-        sed -i '' "s/BROKER_API_KEY = 'YOUR_BROKER_API_KEY'/BROKER_API_KEY = '$BROKER_API_KEY'/g" "$OPENALGO_DIR/$ENV_FILE"
-        sed -i '' "s/BROKER_API_SECRET = 'YOUR_BROKER_API_SECRET'/BROKER_API_SECRET = '$BROKER_API_SECRET'/g" "$OPENALGO_DIR/$ENV_FILE"
-        sed -i '' "s|<broker>|$BROKER_NAME|g" "$OPENALGO_DIR/$ENV_FILE"
+        sed -i '' "s/BROKER_API_KEY = 'YOUR_BROKER_API_KEY'/BROKER_API_KEY = '$BROKER_API_KEY'/g" "$TRADEBOARD_DIR/$ENV_FILE"
+        sed -i '' "s/BROKER_API_SECRET = 'YOUR_BROKER_API_SECRET'/BROKER_API_SECRET = '$BROKER_API_SECRET'/g" "$TRADEBOARD_DIR/$ENV_FILE"
+        sed -i '' "s|<broker>|$BROKER_NAME|g" "$TRADEBOARD_DIR/$ENV_FILE"
 
         if [ "$IS_XTS" -eq 1 ]; then
-            sed -i '' "s/BROKER_API_KEY_MARKET = 'YOUR_BROKER_MARKET_API_KEY'/BROKER_API_KEY_MARKET = '$BROKER_API_KEY_MARKET'/g" "$OPENALGO_DIR/$ENV_FILE"
-            sed -i '' "s/BROKER_API_SECRET_MARKET = 'YOUR_BROKER_MARKET_API_SECRET'/BROKER_API_SECRET_MARKET = '$BROKER_API_SECRET_MARKET'/g" "$OPENALGO_DIR/$ENV_FILE"
+            sed -i '' "s/BROKER_API_KEY_MARKET = 'YOUR_BROKER_MARKET_API_KEY'/BROKER_API_KEY_MARKET = '$BROKER_API_KEY_MARKET'/g" "$TRADEBOARD_DIR/$ENV_FILE"
+            sed -i '' "s/BROKER_API_SECRET_MARKET = 'YOUR_BROKER_MARKET_API_SECRET'/BROKER_API_SECRET_MARKET = '$BROKER_API_SECRET_MARKET'/g" "$TRADEBOARD_DIR/$ENV_FILE"
         fi
     else
         # Linux sed syntax
-        sed -i "s/BROKER_API_KEY = 'YOUR_BROKER_API_KEY'/BROKER_API_KEY = '$BROKER_API_KEY'/g" "$OPENALGO_DIR/$ENV_FILE"
-        sed -i "s/BROKER_API_SECRET = 'YOUR_BROKER_API_SECRET'/BROKER_API_SECRET = '$BROKER_API_SECRET'/g" "$OPENALGO_DIR/$ENV_FILE"
-        sed -i "s|<broker>|$BROKER_NAME|g" "$OPENALGO_DIR/$ENV_FILE"
+        sed -i "s/BROKER_API_KEY = 'YOUR_BROKER_API_KEY'/BROKER_API_KEY = '$BROKER_API_KEY'/g" "$TRADEBOARD_DIR/$ENV_FILE"
+        sed -i "s/BROKER_API_SECRET = 'YOUR_BROKER_API_SECRET'/BROKER_API_SECRET = '$BROKER_API_SECRET'/g" "$TRADEBOARD_DIR/$ENV_FILE"
+        sed -i "s|<broker>|$BROKER_NAME|g" "$TRADEBOARD_DIR/$ENV_FILE"
 
         if [ "$IS_XTS" -eq 1 ]; then
-            sed -i "s/BROKER_API_KEY_MARKET = 'YOUR_BROKER_MARKET_API_KEY'/BROKER_API_KEY_MARKET = '$BROKER_API_KEY_MARKET'/g" "$OPENALGO_DIR/$ENV_FILE"
-            sed -i "s/BROKER_API_SECRET_MARKET = 'YOUR_BROKER_MARKET_API_SECRET'/BROKER_API_SECRET_MARKET = '$BROKER_API_SECRET_MARKET'/g" "$OPENALGO_DIR/$ENV_FILE"
+            sed -i "s/BROKER_API_KEY_MARKET = 'YOUR_BROKER_MARKET_API_KEY'/BROKER_API_KEY_MARKET = '$BROKER_API_KEY_MARKET'/g" "$TRADEBOARD_DIR/$ENV_FILE"
+            sed -i "s/BROKER_API_SECRET_MARKET = 'YOUR_BROKER_MARKET_API_SECRET'/BROKER_API_SECRET_MARKET = '$BROKER_API_SECRET_MARKET'/g" "$TRADEBOARD_DIR/$ENV_FILE"
         fi
     fi
 
@@ -300,11 +300,11 @@ do_setup() {
     if [ "$IS_XTS" -eq 1 ]; then
         echo "  Type:           XTS API (with market data)"
     fi
-    echo "  Data directory: $OPENALGO_DIR"
-    echo "  Config file:    $OPENALGO_DIR/$ENV_FILE"
-    echo "  Database:       $OPENALGO_DIR/db/"
-    echo "  Strategies:     $OPENALGO_DIR/strategies/"
-    echo "  Logs:           $OPENALGO_DIR/log/"
+    echo "  Data directory: $TRADEBOARD_DIR"
+    echo "  Config file:    $TRADEBOARD_DIR/$ENV_FILE"
+    echo "  Database:       $TRADEBOARD_DIR/db/"
+    echo "  Strategies:     $TRADEBOARD_DIR/strategies/"
+    echo "  Logs:           $TRADEBOARD_DIR/log/"
     echo ""
     echo "  Redirect URL for broker portal:"
     echo "  http://127.0.0.1:5000/$BROKER_NAME/callback"
@@ -316,16 +316,16 @@ do_setup() {
     read -p "Open .env in editor for review? (y/n): " OPEN_EDITOR
     if [[ "$OPEN_EDITOR" =~ ^[Yy]$ ]]; then
         if [[ "$OSTYPE" == "darwin"* ]]; then
-            open -t "$OPENALGO_DIR/$ENV_FILE"
+            open -t "$TRADEBOARD_DIR/$ENV_FILE"
         elif command -v xdg-open &> /dev/null; then
             # Linux with desktop environment - non-blocking
-            xdg-open "$OPENALGO_DIR/$ENV_FILE" &>/dev/null &
+            xdg-open "$TRADEBOARD_DIR/$ENV_FILE" &>/dev/null &
         elif command -v gedit &> /dev/null; then
-            gedit "$OPENALGO_DIR/$ENV_FILE" &>/dev/null &
+            gedit "$TRADEBOARD_DIR/$ENV_FILE" &>/dev/null &
         elif command -v code &> /dev/null; then
-            code "$OPENALGO_DIR/$ENV_FILE"
+            code "$TRADEBOARD_DIR/$ENV_FILE"
         else
-            echo "  Edit .env manually: $OPENALGO_DIR/$ENV_FILE"
+            echo "  Edit .env manually: $TRADEBOARD_DIR/$ENV_FILE"
         fi
     fi
 
@@ -341,7 +341,7 @@ do_start() {
     echo ""
 
     # Check if setup is needed
-    if [ ! -f "$OPENALGO_DIR/$ENV_FILE" ]; then
+    if [ ! -f "$TRADEBOARD_DIR/$ENV_FILE" ]; then
         log_info "First time setup detected. Running setup..."
         echo ""
         if ! do_setup; then
@@ -356,26 +356,26 @@ do_start() {
     fi
 
     # Create db, strategies, log, keys, and tmp directories if not exist
-    if [ ! -d "$OPENALGO_DIR/db" ]; then
+    if [ ! -d "$TRADEBOARD_DIR/db" ]; then
         log_info "Creating database directory..."
-        mkdir -p "$OPENALGO_DIR/db"
+        mkdir -p "$TRADEBOARD_DIR/db"
     fi
-    if [ ! -d "$OPENALGO_DIR/strategies" ]; then
+    if [ ! -d "$TRADEBOARD_DIR/strategies" ]; then
         log_info "Creating strategies directory..."
-        mkdir -p "$OPENALGO_DIR/strategies/scripts"
-        mkdir -p "$OPENALGO_DIR/strategies/examples"
+        mkdir -p "$TRADEBOARD_DIR/strategies/scripts"
+        mkdir -p "$TRADEBOARD_DIR/strategies/examples"
     fi
-    if [ ! -d "$OPENALGO_DIR/log" ]; then
+    if [ ! -d "$TRADEBOARD_DIR/log" ]; then
         log_info "Creating log directory..."
-        mkdir -p "$OPENALGO_DIR/log/strategies"
+        mkdir -p "$TRADEBOARD_DIR/log/strategies"
     fi
-    if [ ! -d "$OPENALGO_DIR/keys" ]; then
+    if [ ! -d "$TRADEBOARD_DIR/keys" ]; then
         log_info "Creating keys directory..."
-        mkdir -p "$OPENALGO_DIR/keys"
+        mkdir -p "$TRADEBOARD_DIR/keys"
     fi
-    if [ ! -d "$OPENALGO_DIR/tmp" ]; then
+    if [ ! -d "$TRADEBOARD_DIR/tmp" ]; then
         log_info "Creating temp directory..."
-        mkdir -p "$OPENALGO_DIR/tmp"
+        mkdir -p "$TRADEBOARD_DIR/tmp"
     fi
 
     # Pull latest image
@@ -440,12 +440,12 @@ do_start() {
         -e "NUMBA_NUM_THREADS=${THREAD_LIMIT}" \
         -e "STRATEGY_MEMORY_LIMIT_MB=${STRATEGY_MEM_LIMIT}" \
         -e "TZ=Asia/Kolkata" \
-        -v "$OPENALGO_DIR/db:/app/db" \
-        -v "$OPENALGO_DIR/strategies:/app/strategies" \
-        -v "$OPENALGO_DIR/log:/app/log" \
-        -v "$OPENALGO_DIR/keys:/app/keys" \
-        -v "$OPENALGO_DIR/tmp:/app/tmp" \
-        -v "$OPENALGO_DIR/.env:/app/.env" \
+        -v "$TRADEBOARD_DIR/db:/app/db" \
+        -v "$TRADEBOARD_DIR/strategies:/app/strategies" \
+        -v "$TRADEBOARD_DIR/log:/app/log" \
+        -v "$TRADEBOARD_DIR/keys:/app/keys" \
+        -v "$TRADEBOARD_DIR/tmp:/app/tmp" \
+        -v "$TRADEBOARD_DIR/.env:/app/.env" \
         --restart unless-stopped \
         "$IMAGE"; then
 
@@ -457,7 +457,7 @@ do_start() {
         echo -e "${GREEN}  WebSocket:  ws://127.0.0.1:8765${NC}"
         echo -e "${GREEN}  ========================================${NC}"
         echo ""
-        echo "  Data directory: $OPENALGO_DIR"
+        echo "  Data directory: $TRADEBOARD_DIR"
         echo ""
         echo "  Useful commands:"
         echo "    ./docker-run.sh logs     - View logs"
@@ -471,7 +471,7 @@ do_start() {
         echo "Troubleshooting:"
         echo "  1. Check if ports 5000 and 8765 are available"
         echo "  2. Ensure Docker Desktop is running"
-        echo "  3. Check .env file: $OPENALGO_DIR/$ENV_FILE"
+        echo "  3. Check .env file: $TRADEBOARD_DIR/$ENV_FILE"
         echo ""
         exit 1
     fi
@@ -528,7 +528,7 @@ do_status() {
         echo -e "${YELLOW}[STATUS]${NC} Tradeboard is NOT running."
     fi
     echo ""
-    echo "  Data directory: $OPENALGO_DIR"
+    echo "  Data directory: $TRADEBOARD_DIR"
 }
 
 # Shell function
@@ -575,11 +575,11 @@ do_help() {
     echo "     chmod +x docker-run.sh"
     echo "     ./docker-run.sh"
     echo ""
-    echo "Data Location: $OPENALGO_DIR"
-    echo "  - Config:     $OPENALGO_DIR/.env"
-    echo "  - Database:   $OPENALGO_DIR/db/"
-    echo "  - Strategies: $OPENALGO_DIR/strategies/"
-    echo "  - Logs:       $OPENALGO_DIR/log/"
+    echo "Data Location: $TRADEBOARD_DIR"
+    echo "  - Config:     $TRADEBOARD_DIR/.env"
+    echo "  - Database:   $TRADEBOARD_DIR/db/"
+    echo "  - Strategies: $TRADEBOARD_DIR/strategies/"
+    echo "  - Logs:       $TRADEBOARD_DIR/log/"
     echo ""
     echo "XTS Brokers (require market data credentials):"
     echo "  fivepaisaxts, compositedge, ibulls, iifl, jainamxts, rmoney, wisdom"
