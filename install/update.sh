@@ -21,6 +21,8 @@ echo -e "${NC}"
 # Tradeboard Update Script
 # Updates an existing Tradeboard installation to the latest version using the UV method.
 # Supports both server deployments (installed via install.sh) and local development setups.
+REPO_URL="https://github.com/rockstarrajeev/tradeboard.git"
+DEFAULT_BRANCH="main"
 
 # Create logs directory if it doesn't exist
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -135,7 +137,7 @@ find_deployments() {
     echo "${deployments[@]}"
 }
 
-if [ -d "$SIMPLE_PATH/.git" ] && [ -f "$SIMPLE_PATH/.env" ]; then
+if [ -d "$SIMPLE_PATH/.git" ]; then
     SERVER_MODE=true
     SELECTED_DEPLOY="tradeboard"
     BASE_PATH="$SIMPLE_PATH"
@@ -185,7 +187,7 @@ if [ "$SERVER_MODE" = false ] && [ ${#DEPLOYMENTS[@]} -gt 0 ]; then
 fi
 
 if [ "$SERVER_MODE" = false ]; then
-    # Check if we're in or near an tradeboard git repo (local development)
+    # Check if we're in or near a tradeboard git repo (local development)
     if [ -d ".git" ] && [ -f "app.py" ]; then
         TRADEBOARD_PATH="$(pwd)"
     elif [ -d "$SCRIPT_DIR/../.git" ] && [ -f "$SCRIPT_DIR/../app.py" ]; then
@@ -207,10 +209,10 @@ detect_uv
 cd "$TRADEBOARD_PATH"
 if [ "$SERVER_MODE" = true ]; then
     CURRENT_COMMIT=$(sudo git -C "$TRADEBOARD_PATH" rev-parse --short HEAD 2>/dev/null || echo "unknown")
-    CURRENT_BRANCH=$(sudo git -C "$TRADEBOARD_PATH" branch --show-current 2>/dev/null || echo "main")
+    CURRENT_BRANCH=$(sudo git -C "$TRADEBOARD_PATH" branch --show-current 2>/dev/null || echo "$DEFAULT_BRANCH")
 else
     CURRENT_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-    CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "main")
+    CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "$DEFAULT_BRANCH")
 fi
 log_message "\nCurrent version: $CURRENT_COMMIT (branch: $CURRENT_BRANCH)" "$BLUE"
 
@@ -307,13 +309,45 @@ if [ -n "$LOCAL_CHANGES" ]; then
     STASHED=true
 fi
 
-# Pull latest code
+# Ensure git remote is correct for existing app updates
 if [ "$SERVER_MODE" = true ]; then
-    sudo git -C "$TRADEBOARD_PATH" pull origin "$CURRENT_BRANCH"
+    CURRENT_REMOTE=$(sudo git -C "$TRADEBOARD_PATH" remote get-url origin 2>/dev/null || true)
 else
-    git pull origin "$CURRENT_BRANCH"
+    CURRENT_REMOTE=$(git -C "$TRADEBOARD_PATH" remote get-url origin 2>/dev/null || true)
 fi
-check_status "Failed to pull latest code. Please resolve any conflicts and try again"
+
+if [ -z "$CURRENT_REMOTE" ]; then
+    log_message "No git origin found. Adding origin: $REPO_URL" "$YELLOW"
+    if [ "$SERVER_MODE" = true ]; then
+        sudo git -C "$TRADEBOARD_PATH" remote add origin "$REPO_URL"
+    else
+        git -C "$TRADEBOARD_PATH" remote add origin "$REPO_URL"
+    fi
+    check_status "Failed to add git origin"
+elif [ "$CURRENT_REMOTE" != "$REPO_URL" ]; then
+    log_message "Updating git origin from $CURRENT_REMOTE to $REPO_URL" "$YELLOW"
+    if [ "$SERVER_MODE" = true ]; then
+        sudo git -C "$TRADEBOARD_PATH" remote set-url origin "$REPO_URL"
+    else
+        git -C "$TRADEBOARD_PATH" remote set-url origin "$REPO_URL"
+    fi
+    check_status "Failed to update git origin"
+fi
+
+if [ -z "$CURRENT_BRANCH" ] || [ "$CURRENT_BRANCH" = "HEAD" ]; then
+    CURRENT_BRANCH="$DEFAULT_BRANCH"
+fi
+
+if [ "$SERVER_MODE" = true ]; then
+    sudo git -C "$TRADEBOARD_PATH" fetch origin "$CURRENT_BRANCH"
+    check_status "Failed to fetch latest code from origin/$CURRENT_BRANCH"
+    sudo git -C "$TRADEBOARD_PATH" reset --hard "origin/$CURRENT_BRANCH"
+else
+    git -C "$TRADEBOARD_PATH" fetch origin "$CURRENT_BRANCH"
+    check_status "Failed to fetch latest code from origin/$CURRENT_BRANCH"
+    git -C "$TRADEBOARD_PATH" reset --hard "origin/$CURRENT_BRANCH"
+fi
+check_status "Failed to update working tree to origin/$CURRENT_BRANCH"
 
 # Get new commit hash
 if [ "$SERVER_MODE" = true ]; then
@@ -329,7 +363,7 @@ else
 fi
 
 if [ "$STASHED" = true ]; then
-    log_message "Note: Local changes were stashed. Use 'git stash pop' to restore if needed." "$YELLOW"
+    log_message "Note: Local changes were stashed. Use 'git stash list' and 'git stash pop' to restore if needed." "$YELLOW"
 fi
 
 # ============================================
@@ -362,10 +396,6 @@ elif [ ! -f "$TRADEBOARD_PATH/.env" ]; then
     fi
 
     # Generate fresh APP_KEY and API_KEY_PEPPER and substitute the placeholders.
-    # Without this, the new .env would carry the public sample placeholder values
-    # — the app's startup check would then auto-rotate them, which works, but
-    # generating here keeps update.sh symmetric with install.sh and avoids the
-    # noisy "first-run setup" message after what the user thinks is just an update.
     NEW_APP_KEY=$($PYTHON_CMD -c "import secrets; print(secrets.token_hex(32))")
     NEW_PEPPER=$($PYTHON_CMD -c "import secrets; print(secrets.token_hex(32))")
     if [ "$SERVER_MODE" = true ]; then
@@ -384,15 +414,7 @@ fi
 # ============================================
 # Step 4b: Existing-install hardening
 # ============================================
-# Two one-time fixups for deployments that predate the v2.0.0.6 security
-# release: they may carry world-readable .env perms (the old install.sh did
-# `chmod -R 755`) and they don't have TRUST_PROXY_HEADERS set so the
-# default-secure value of FALSE would silently disable IP-based features
-# behind their nginx proxy.
 if [ -f "$TRADEBOARD_PATH/.env" ]; then
-    # Tighten .env to mode 0o600 if it isn't already (server mode only —
-    # the file is owned by the web user and gunicorn runs as that user, so
-    # owner-only read is correct).
     if [ "$SERVER_MODE" = true ]; then
         ENV_PERMS=$(stat -c '%a' "$TRADEBOARD_PATH/.env" 2>/dev/null || stat -f '%Lp' "$TRADEBOARD_PATH/.env" 2>/dev/null)
         if [ "$ENV_PERMS" != "600" ]; then
@@ -401,11 +423,7 @@ if [ -f "$TRADEBOARD_PATH/.env" ]; then
         fi
     fi
 
-    # Add TRUST_PROXY_HEADERS to .env if missing. Auto-detect whether nginx
-    # is configured for this deployment so the default matches reality.
     if ! grep -q "^TRUST_PROXY_HEADERS" "$TRADEBOARD_PATH/.env"; then
-        # Detect nginx in front of tradeboard: any sites-enabled/ or conf.d/
-        # config that mentions a unix-socket proxy_pass or the deployment name.
         BEHIND_NGINX="false"
         if [ -d /etc/nginx/sites-enabled ]; then
             if find /etc/nginx/sites-enabled -type f -o -type l 2>/dev/null | xargs grep -l "unix:.*\.sock\|tradeboard\|gunicorn" 2>/dev/null | head -1 | grep -q .; then
@@ -418,15 +436,32 @@ if [ -f "$TRADEBOARD_PATH/.env" ]; then
             fi
         fi
         if [ "$BEHIND_NGINX" = "true" ]; then
-            echo "" | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
-            echo "# Auto-added by update.sh — nginx reverse proxy detected." | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
-            echo "TRUST_PROXY_HEADERS = 'TRUE'" | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
+            if [ "$SERVER_MODE" = true ]; then
+                echo "" | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
+                echo "# Auto-added by update.sh — nginx reverse proxy detected." | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
+                echo "TRUST_PROXY_HEADERS = 'TRUE'" | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
+            else
+                {
+                    echo ""
+                    echo "# Auto-added by update.sh — nginx reverse proxy detected."
+                    echo "TRUST_PROXY_HEADERS = 'TRUE'"
+                } >> "$TRADEBOARD_PATH/.env"
+            fi
             log_message "Added TRUST_PROXY_HEADERS=TRUE to .env (nginx reverse proxy detected)" "$GREEN"
         else
-            echo "" | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
-            echo "# Auto-added by update.sh — set to TRUE only if behind a reverse proxy" | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
-            echo "# that strips client-supplied X-Forwarded-For / CF-Connecting-IP / X-Real-IP." | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
-            echo "TRUST_PROXY_HEADERS = 'FALSE'" | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
+            if [ "$SERVER_MODE" = true ]; then
+                echo "" | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
+                echo "# Auto-added by update.sh — set to TRUE only if behind a reverse proxy" | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
+                echo "# that strips client-supplied X-Forwarded-For / CF-Connecting-IP / X-Real-IP." | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
+                echo "TRUST_PROXY_HEADERS = 'FALSE'" | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
+            else
+                {
+                    echo ""
+                    echo "# Auto-added by update.sh — set to TRUE only if behind a reverse proxy"
+                    echo "# that strips client-supplied X-Forwarded-For / CF-Connecting-IP / X-Real-IP."
+                    echo "TRUST_PROXY_HEADERS = 'FALSE'"
+                } >> "$TRADEBOARD_PATH/.env"
+            fi
             log_message "Added TRUST_PROXY_HEADERS=FALSE to .env (no proxy detected)" "$YELLOW"
         fi
     fi
@@ -438,22 +473,28 @@ fi
 log_message "\n[Step 5/7] Updating Python dependencies..." "$BLUE"
 
 if [ "$SERVER_MODE" = true ]; then
-    # Server mode: use uv pip install with the deployment venv
+    if [ ! -x "$VENV_PATH/bin/python" ]; then
+        log_message "Virtual environment missing at $VENV_PATH. Recreating..." "$YELLOW"
+        sudo mkdir -p "$VENV_PATH"
+        sudo $UV_CMD venv "$VENV_PATH"
+        check_status "Failed to recreate Python virtual environment"
+    fi
+
     sudo $UV_CMD pip install --python "$VENV_PATH/bin/python" -r "$TRADEBOARD_PATH/requirements-nginx.txt"
     check_status "Failed to update Python dependencies"
 
-    # Ensure gunicorn and eventlet are installed
     ACTIVATE_CMD="source $VENV_PATH/bin/activate"
     if ! sudo bash -c "$ACTIVATE_CMD && pip freeze | grep -q 'gunicorn=='"; then
         log_message "  Installing gunicorn..." "$YELLOW"
         sudo $UV_CMD pip install --python "$VENV_PATH/bin/python" "gunicorn>=25.0,<26"
+        check_status "Failed to install gunicorn"
     fi
     if ! sudo bash -c "$ACTIVATE_CMD && pip freeze | grep -q 'eventlet=='"; then
         log_message "  Installing eventlet..." "$YELLOW"
         sudo $UV_CMD pip install --python "$VENV_PATH/bin/python" eventlet
+        check_status "Failed to install eventlet"
     fi
 else
-    # Local mode: use uv sync (reads pyproject.toml)
     cd "$TRADEBOARD_PATH"
     $UV_CMD sync
     check_status "Failed to update Python dependencies"
@@ -467,11 +508,9 @@ log_message "Dependencies updated successfully" "$GREEN"
 if [ "$SERVER_MODE" = true ]; then
     log_message "\n[Step 6/7] Setting permissions and running database migrations..." "$BLUE"
 
-    # Fix ownership and permissions before running migrations
     sudo chown -R "$WEB_USER:$WEB_GROUP" "$BASE_PATH"
     sudo chmod -R 755 "$BASE_PATH"
 
-    # Ensure required directories exist with correct ownership
     sudo mkdir -p "$TRADEBOARD_PATH/db"
     sudo mkdir -p "$TRADEBOARD_PATH/tmp/numba_cache"
     sudo mkdir -p "$TRADEBOARD_PATH/tmp/matplotlib"
@@ -482,15 +521,19 @@ if [ "$SERVER_MODE" = true ]; then
     sudo chown -R "$WEB_USER:$WEB_GROUP" "$TRADEBOARD_PATH"
     sudo chmod 700 "$TRADEBOARD_PATH/keys"
 
+    if [ -f "$TRADEBOARD_PATH/.env" ]; then
+        sudo chmod 600 "$TRADEBOARD_PATH/.env"
+    fi
+
     log_message "Permissions set successfully" "$GREEN"
 
-    # Run migrations as the web user (database files are owned by web user)
     if [ -f "$TRADEBOARD_PATH/upgrade/migrate_all.py" ]; then
         log_message "Running database migrations..." "$BLUE"
-        sudo -u "$WEB_USER" bash -c "source $VENV_PATH/bin/activate && cd $TRADEBOARD_PATH && python upgrade/migrate_all.py" 2>&1 | tee -a "$LOG_FILE"
+        sudo -u "$WEB_USER" bash -c "source $VENV_PATH/bin/activate && cd \"$TRADEBOARD_PATH\" && python upgrade/migrate_all.py" 2>&1 | tee -a "$LOG_FILE"
         if [ ${PIPESTATUS[0]} -ne 0 ]; then
             log_message "Retrying migrations with elevated permissions..." "$YELLOW"
-            sudo bash -c "source $VENV_PATH/bin/activate && cd $TRADEBOARD_PATH && python upgrade/migrate_all.py" 2>&1 | tee -a "$LOG_FILE"
+            sudo bash -c "source $VENV_PATH/bin/activate && cd \"$TRADEBOARD_PATH\" && python upgrade/migrate_all.py" 2>&1 | tee -a "$LOG_FILE"
+            check_status "Failed to run database migrations"
         fi
         log_message "Database migrations completed" "$GREEN"
     else
@@ -501,6 +544,7 @@ else
     if [ -f "$TRADEBOARD_PATH/upgrade/migrate_all.py" ]; then
         cd "$TRADEBOARD_PATH"
         $UV_CMD run upgrade/migrate_all.py 2>&1 | tee -a "$LOG_FILE"
+        check_status "Failed to run database migrations"
         log_message "Database migrations completed" "$GREEN"
     else
         log_message "No migration script found (upgrade/migrate_all.py)" "$YELLOW"
@@ -513,87 +557,43 @@ fi
 if [ "$SERVER_MODE" = true ]; then
     log_message "\n[Step 7/7] Restarting services..." "$BLUE"
 
-    # Reload systemd in case service file changed
     sudo systemctl daemon-reload
 
-    # Start the Tradeboard service
     sudo systemctl start "$SERVICE_NAME"
     check_status "Failed to start $SERVICE_NAME"
 
-    # Reload Nginx
-    sudo systemctl reload nginx
-    check_status "Failed to reload Nginx"
+    if systemctl list-unit-files | grep -q '^nginx\.service'; then
+        sudo systemctl reload nginx
+        check_status "Failed to reload Nginx"
+    fi
 
     log_message "Services restarted successfully" "$GREEN"
 
-    # Verify service is running
     sleep 3
     if sudo systemctl is-active --quiet "$SERVICE_NAME"; then
         log_message "Service $SERVICE_NAME is running" "$GREEN"
     else
-        log_message "Warning: Service $SERVICE_NAME may not have started correctly" "$RED"
-        log_message "Check logs with: sudo journalctl -u $SERVICE_NAME -n 50" "$YELLOW"
+        log_message "Warning: Service $SERVICE_NAME may not be running correctly" "$RED"
+        log_message "Check status with: sudo systemctl status $SERVICE_NAME" "$YELLOW"
+        log_message "View logs with: sudo journalctl -u $SERVICE_NAME -n 100 --no-pager" "$YELLOW"
+        exit 1
     fi
 else
-    log_message "\n[Step 7/7] Finalizing update..." "$BLUE"
-
-    # Build frontend if dist/ directory is missing and npm is available
-    if [ ! -d "$TRADEBOARD_PATH/frontend/dist" ]; then
-        if command -v npm >/dev/null 2>&1; then
-            log_message "Building React frontend (dist/ not found)..." "$BLUE"
-            cd "$TRADEBOARD_PATH/frontend"
-            npm ci && npm run build
-            if [ $? -eq 0 ]; then
-                log_message "Frontend built successfully" "$GREEN"
-            else
-                log_message "Frontend build failed. Run manually: cd frontend && npm ci && npm run build" "$YELLOW"
-            fi
-        else
-            log_message "Warning: frontend/dist/ not found and Node.js is not installed." "$YELLOW"
-            log_message "Install Node.js 20.20+, 22.22+, or 24.13+ and run: cd frontend && npm ci && npm run build" "$YELLOW"
-        fi
-    fi
-
-    log_message "Update finalized" "$GREEN"
+    log_message "\n[Step 7/7] Local development update complete." "$GREEN"
 fi
 
-# ============================================
-# Summary
-# ============================================
 log_message "\n========================================" "$GREEN"
-log_message "  Tradeboard Update Summary" "$GREEN"
+log_message "Tradeboard update completed successfully!" "$GREEN"
 log_message "========================================" "$GREEN"
-log_message "Version: $CURRENT_COMMIT -> $NEW_COMMIT" "$BLUE"
-log_message "Branch: $CURRENT_BRANCH" "$BLUE"
-log_message "Path: $TRADEBOARD_PATH" "$BLUE"
-if [ -d "$BACKUP_DIR" ]; then
-    log_message "Database Backup: $BACKUP_DIR" "$BLUE"
-fi
-if [ "$SERVER_MODE" = true ]; then
-    log_message "Service: $SERVICE_NAME" "$BLUE"
-    log_message "Mode: Server (Nginx + Gunicorn)" "$BLUE"
-else
-    log_message "Mode: Local Development" "$BLUE"
-fi
-log_message "Update Log: $LOG_FILE" "$BLUE"
 
 if [ "$SERVER_MODE" = true ]; then
-    log_message "\nUseful Commands:" "$YELLOW"
-    log_message "  Check status:  sudo systemctl status $SERVICE_NAME" "$BLUE"
-    log_message "  View logs:     sudo journalctl -u $SERVICE_NAME -n 50" "$BLUE"
-    log_message "  Restart:       sudo systemctl restart $SERVICE_NAME" "$BLUE"
+    log_message "Updated app path: $TRADEBOARD_PATH" "$BLUE"
+    log_message "Virtualenv path:  $VENV_PATH" "$BLUE"
+    log_message "Service name:     $SERVICE_NAME" "$BLUE"
+    log_message "Check status:     sudo systemctl status $SERVICE_NAME" "$BLUE"
+    log_message "View logs:        sudo journalctl -u $SERVICE_NAME -f" "$BLUE"
 else
-    log_message "\nNext Steps:" "$YELLOW"
-    log_message "  Start application: uv run app.py" "$BLUE"
-    log_message "  API documentation: https://docs.rajeevupadhyay.com/api-documentation/v1" "$BLUE"
+    log_message "Updated local repository: $TRADEBOARD_PATH" "$BLUE"
 fi
 
-if [ -n "$NEW_VARS" ]; then
-    log_message "\nReminder: New environment variables were found. Please review .sample.env." "$YELLOW"
-fi
-
-if [ "$STASHED" = true ]; then
-    log_message "\nReminder: Local changes were stashed. Run 'git stash pop' to restore." "$YELLOW"
-fi
-
-log_message "\nUpdate completed successfully!" "$GREEN"
+log_message "Update log saved to: $LOG_FILE" "$BLUE"
