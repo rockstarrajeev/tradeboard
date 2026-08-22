@@ -134,9 +134,9 @@ class BrokerData:
             {"max_days": float("inf"), "min_interval": "10080"},  # >1080 days: 10080 min minimum
         ]
 
-    def _convert_tradeboard_to_groww_derivative_symbol(self, symbol):
+    def _convert_openalgo_to_groww_derivative_symbol(self, symbol):
         """
-        Convert Tradeboard NFO/BFO symbol format to Groww format
+        Convert OpenAlgo NFO/BFO symbol format to Groww format
 
         Examples:
         - SBIN30SEP25FUT -> SBIN25SEPFUT
@@ -220,7 +220,7 @@ class BrokerData:
                 logger.debug(f"Found broker symbol in database: {trading_symbol}")
             else:
                 # If not in database, convert format
-                trading_symbol = self._convert_tradeboard_to_groww_derivative_symbol(symbol)
+                trading_symbol = self._convert_openalgo_to_groww_derivative_symbol(symbol)
                 logger.debug(f"Converted derivative symbol: {symbol} -> {trading_symbol}")
         else:
             # For equity, use broker symbol if available
@@ -253,7 +253,7 @@ class BrokerData:
         if interval in ["D", "1D", "1d", "W", "w", "1W", "1w"]:
             logger.info(f"Setting all {interval} candles to 09:15:00 IST market open time")
             new_index = []
-            for i, idx in enumerate(df.index):
+            for _i, idx in enumerate(df.index):
                 # Convert the date part to a Python date object
                 if isinstance(idx, pd.Timestamp):
                     date_part = idx.date()
@@ -886,7 +886,7 @@ class BrokerData:
                 }
 
                 # Create the DataFrame with timestamp as a column (not an index)
-                # NOTE: For TradeboardXTS, return non-indexed DataFrame with timestamp as a column
+                # NOTE: For OpenAlgoXTS, return non-indexed DataFrame with timestamp as a column
                 # This matches the FivePaisa pattern that has been proven to work correctly
                 result_df = pd.DataFrame(data)
 
@@ -933,7 +933,7 @@ class BrokerData:
 
     def get_intervals(self) -> dict[str, dict[str, list[str]]]:
         """
-        Get supported timeframes for Groww historical data in the Tradeboard format.
+        Get supported timeframes for Groww historical data in the OpenAlgo format.
 
         Note that Groww has time-based constraints on minimum interval size:
         - 0-3 days: 1 min minimum
@@ -958,7 +958,7 @@ class BrokerData:
             "months": [],  # Groww doesn't support month-level data
         }
 
-        # Return in the standard Tradeboard format
+        # Return in the standard OpenAlgo format
         return {"status": "success", "data": intervals}
 
     def get_valid_interval(self, start_time: str, end_time: str, requested_interval: str) -> str:
@@ -1060,7 +1060,7 @@ class BrokerData:
             timeout: Timeout in seconds.
 
         Returns:
-            Dict[str, Any]: Quote data in Tradeboard format
+            Dict[str, Any]: Quote data in OpenAlgo format
         """
         # Back-compat: legacy callers passed timeout in the second positional slot.
         if isinstance(exchange, int) and not isinstance(exchange, bool):
@@ -1142,7 +1142,7 @@ class BrokerData:
                 # Get token for this symbol
                 token = get_token(symbol, exchange)
 
-                # Map Tradeboard exchange to Groww exchange format
+                # Map OpenAlgo exchange to Groww exchange format
                 if exchange == "NSE":
                     groww_exchange = EXCHANGE_NSE
                     segment = SEGMENT_CASH
@@ -1168,7 +1168,7 @@ class BrokerData:
                 if br_symbol:
                     trading_symbol = br_symbol
                 elif exchange in ("NFO", "BFO"):
-                    trading_symbol = self._convert_tradeboard_to_groww_derivative_symbol(symbol)
+                    trading_symbol = self._convert_openalgo_to_groww_derivative_symbol(symbol)
                 else:
                     trading_symbol = symbol
 
@@ -1262,13 +1262,13 @@ class BrokerData:
 
                             logger.info(f"Processed OHLC data: {ohlc}")
 
-                            # Create quote_item in Tradeboard format
+                            # Create quote_item in OpenAlgo format
                             # Print each field being extracted for debugging
                             logger.info(f"last_price: {response.get('last_price')}")
                             logger.info(f"ohlc: {ohlc}")
                             logger.info(f"volume: {response.get('volume')}")
 
-                            # CRITICAL: Build the quote item directly with values extracted from the response, using field names that Tradeboard understands
+                            # CRITICAL: Build the quote item directly with values extracted from the response, using field names that OpenAlgo understands
                             # The quote_item should use the frontend-compatible field names
                             last_price = safe_float(response.get("last_price"))
                             logger.info(f"EXTRACTED last_price = {last_price}")
@@ -1466,7 +1466,7 @@ class BrokerData:
             logger.warning("No quote data found for the requested symbols")
             return {"status": "error", "message": "No data retrieved"}
 
-        # Single symbol case - return in simpler format for Tradeboard frontend
+        # Single symbol case - return in simpler format for OpenAlgo frontend
         if isinstance(symbol_list, (str, dict)) or len(symbol_list) == 1:
             logger.info("Returning data for single symbol")
 
@@ -1482,7 +1482,7 @@ class BrokerData:
         return {"status": "success", "data": quote_data}
 
     def _format_single_quote_response(self, quote_data):
-        """Helper method to convert from standard dict to the format expected by Tradeboard frontend
+        """Helper method to convert from standard dict to the format expected by OpenAlgo frontend
 
         Returns only the data portion without status wrapper - status added by the caller
         """
@@ -1508,7 +1508,7 @@ class BrokerData:
             "oi": quote.get("oi", 0),  # Add Open Interest field
         }
 
-        logger.debug(f"Final Tradeboard quote format (data only): {result}")
+        logger.debug(f"Final OpenAlgo quote format (data only): {result}")
         return result
 
         # Commented out alternate implementation
@@ -1525,9 +1525,9 @@ class BrokerData:
         #    quote = quote_data[0] if isinstance(quote_data, list) and len(quote_data) > 0 else {}
 
         logger.info(f"EXTRACTED QUOTE: {quote}")
-        logger.info(f"Formatting single quote response for Tradeboard frontend: {quote}")
+        logger.info(f"Formatting single quote response for OpenAlgo frontend: {quote}")
 
-        # Based on the sample response, Tradeboard expects exactly these fields
+        # Based on the sample response, OpenAlgo expects exactly these fields
         # Keep this extremely simple - just the required fields
         simple_data = {
             "ltp": 0,
@@ -1543,7 +1543,7 @@ class BrokerData:
 
         # Now grab values from our quote data, using the field that matches best
 
-        # LTP - preferred field name in Tradeboard
+        # LTP - preferred field name in OpenAlgo
         if "ltp" in quote and quote["ltp"] is not None:
             simple_data["ltp"] = float(quote["ltp"])
         elif "last_price" in quote and quote["last_price"] is not None:
@@ -1587,14 +1587,14 @@ class BrokerData:
 
         # Debug output
         logger.info("FINAL SIMPLE FORMAT:")
-        for key, value in simple_data.items():
+        for _key, value in simple_data.items():
             logger.info(f"{{key}}: {value}")
 
-        # Return exact structure expected by Tradeboard
+        # Return exact structure expected by OpenAlgo
         result = {"status": "success", "data": simple_data}
 
         logger.info(f"FINAL FORMATTED RESULT: {result}")
-        logger.info(f"Formatted result for Tradeboard frontend: {result}")
+        logger.info(f"Formatted result for OpenAlgo frontend: {result}")
 
         return result
 
@@ -1612,12 +1612,11 @@ class BrokerData:
             timeout: Timeout in seconds.
 
         Returns:
-            Dict[str, Any]: Market depth data in Tradeboard format
+            Dict[str, Any]: Market depth data in OpenAlgo format
         """
         # Back-compat: legacy callers passed timeout in the second positional
         # slot. If we got an int there, treat it as the timeout and ignore.
         if isinstance(exchange, int) and not isinstance(exchange, bool):
-            timeout = exchange
             exchange = None
 
         # If a bare-string symbol came in along with an explicit exchange,
@@ -1663,9 +1662,7 @@ class BrokerData:
                 if isinstance(sym, dict) and "symbol" in sym and "exchange" in sym:
                     symbols_to_process.append(sym)
                 elif isinstance(sym, str):
-                    symbols_to_process.append(
-                        {"symbol": sym, "exchange": _infer_exchange(sym)}
-                    )
+                    symbols_to_process.append({"symbol": sym, "exchange": _infer_exchange(sym)})
 
         # No valid symbols to process
         if not symbols_to_process:
@@ -1678,9 +1675,9 @@ class BrokerData:
         exchange = sym_data["exchange"]
 
         # Get token for this symbol
-        token = get_token(symbol, exchange)
+        get_token(symbol, exchange)
 
-        # Map Tradeboard exchange to Groww exchange format
+        # Map OpenAlgo exchange to Groww exchange format
         if exchange == "NSE":
             groww_exchange = EXCHANGE_NSE
             segment = SEGMENT_CASH
@@ -1706,7 +1703,7 @@ class BrokerData:
                 logger.debug(f"Found broker symbol in database: {trading_symbol}")
             else:
                 # If not in database, convert format
-                trading_symbol = self._convert_tradeboard_to_groww_derivative_symbol(symbol)
+                trading_symbol = self._convert_openalgo_to_groww_derivative_symbol(symbol)
                 logger.debug(f"Converted derivative symbol: {symbol} -> {trading_symbol}")
         else:
             # For equity, use broker symbol if available
@@ -1743,7 +1740,7 @@ class BrokerData:
             payload = response["payload"]
             logger.info(f"Extracted payload with keys: {list(payload.keys())[:10]}")
 
-            # Create a properly formatted response for Tradeboard
+            # Create a properly formatted response for OpenAlgo
             depth_response = {}
 
             # Safely convert values to float/int, handling None values
@@ -1832,7 +1829,7 @@ class BrokerData:
             # Determine if this is a derivative instrument
             is_derivative = exchange in ["NFO", "BFO"] or segment == SEGMENT_FNO
 
-            # Format the depth response according to Tradeboard requirements
+            # Format the depth response according to OpenAlgo requirements
             depth_response = {
                 "bids": bids,
                 "asks": asks,
@@ -1935,16 +1932,16 @@ class BrokerData:
             try:
                 # Get broker symbol from database. The brsymbol stored in
                 # SymToken is already the format Groww expects (mirrors what
-                # the CSV's trading_symbol provides). Re-running the Tradeboard
+                # the CSV's trading_symbol provides). Re-running the OpenAlgo
                 # → Groww regex on it would mangle valid Groww symbols whose
-                # shape happens to match the Tradeboard pattern (e.g. JUN26
+                # shape happens to match the OpenAlgo pattern (e.g. JUN26
                 # contracts: "NIFTY26JUN22350PE" → "NIFTY22JUN350PE").
-                # Only convert from Tradeboard when DB lookup misses.
+                # Only convert from OpenAlgo when DB lookup misses.
                 br_symbol = get_br_symbol(symbol, exchange)
 
                 if not br_symbol:
                     if exchange in ["NFO", "BFO"]:
-                        br_symbol = self._convert_tradeboard_to_groww_derivative_symbol(symbol)
+                        br_symbol = self._convert_openalgo_to_groww_derivative_symbol(symbol)
                     if not br_symbol:
                         logger.warning(
                             f"Skipping symbol {symbol} on {exchange}: could not resolve broker symbol"
@@ -2236,9 +2233,7 @@ class BrokerData:
         # us in cooldown and continuing only delays the user.
         MAX_CONSECUTIVE_429 = 4
         # Index existing results so we can merge by (symbol, exchange).
-        result_index = {
-            (r.get("symbol"), r.get("exchange")): r for r in existing_results
-        }
+        result_index = {(r.get("symbol"), r.get("exchange")): r for r in existing_results}
 
         def _fetch_one(exchange_symbol: str) -> dict:
             original = symbol_map.get(exchange_symbol, {})
@@ -2265,9 +2260,7 @@ class BrokerData:
                     debug=False,
                 )
             except Exception as fetch_err:
-                logger.warning(
-                    f"Quote fetch failed for {exchange_symbol}: {fetch_err}"
-                )
+                logger.warning(f"Quote fetch failed for {exchange_symbol}: {fetch_err}")
                 return {
                     "symbol": original.get("symbol", exchange_symbol),
                     "exchange": original.get("exchange", "UNKNOWN"),
@@ -2443,4 +2436,3 @@ class BrokerData:
             f"Full-quote overlay: {overlaid}/{len(exchange_symbols)} strikes enriched "
             f"with bid/ask/qty/volume/OI."
         )
-

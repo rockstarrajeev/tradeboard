@@ -14,7 +14,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 class SimpleFeed:
-    """A simplified wrapper around the Tradeboard WebSocket client for Market Depth data"""
+    """A simplified wrapper around the OpenAlgo WebSocket client for Market Depth data"""
 
     def __init__(self, host: str = "localhost", port: int = 8765, api_key: str | None = None):
         """
@@ -370,7 +370,7 @@ if __name__ == "__main__":
 
     load_dotenv()
 
-    print("Tradeboard Simple Market Depth Feed Test")
+    print("OpenAlgo Simple Market Depth Feed Test")
 
     api_key = os.getenv("API_KEY")
     if not api_key:
@@ -400,7 +400,7 @@ if __name__ == "__main__":
 
     # Live data can also be continuously polled using this method
     print("\nReceiving market data for 10 seconds...")
-    for i in range(10):
+    for _i in range(10):
         # Sleep to allow depth data to be received and printed by the callback
         time.sleep(1)
 

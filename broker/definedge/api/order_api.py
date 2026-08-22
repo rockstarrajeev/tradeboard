@@ -85,14 +85,14 @@ def get_holdings(auth):
 # --- Per-Symbol Smart Order Lock ---
 # Ensures only one smart order per symbol executes at a time.
 # Others queue and execute sequentially, each getting a fresh position book.
-_symbol_locks = {}          # {symbol_key: threading.Lock}
+_symbol_locks = {}  # {symbol_key: threading.Lock}
 _symbol_locks_lock = threading.Lock()
 
 # --- Position Book Cache ---
 # Caches get_positions() for 1 second. Invalidated after each smart order placement.
-_position_cache = {}        # {auth_token: {"data": ..., "timestamp": ...}}
+_position_cache = {}  # {auth_token: {"data": ..., "timestamp": ...}}
 _position_cache_lock = threading.Lock()
-_POSITION_CACHE_TTL = 1.0   # seconds
+_POSITION_CACHE_TTL = 1.0  # seconds
 
 
 def _get_symbol_lock(symbol, exchange, product):
@@ -127,10 +127,9 @@ def _invalidate_position_cache(auth):
         _position_cache.pop(auth, None)
 
 
-
 def get_open_position(tradingsymbol, exchange, product, auth):
     """Get open position for a specific symbol."""
-    # Convert Trading Symbol from Tradeboard Format to Broker Format Before Search in OpenPosition
+    # Convert Trading Symbol from OpenAlgo Format to Broker Format Before Search in OpenPosition
     tradingsymbol = get_br_symbol(tradingsymbol, exchange)
 
     logger.debug("=== GET OPEN POSITION ===")
@@ -223,11 +222,13 @@ def place_order_api(data, auth):
         # Prepare headers
         headers = {"Authorization": api_session_key, "Content-Type": "application/json"}
 
-        logger.debug(f"Place order payload being sent to Definedge: {json.dumps(newdata, indent=2)}")
+        logger.debug(
+            f"Place order payload being sent to Definedge: {json.dumps(newdata, indent=2)}"
+        )
 
         # Make the API request
-        url = "https://integrate.definedgesecurities.com/dart/v1/placeorder"
-        response = client.post(url, json=newdata, headers=headers)
+        url = get_url("/placeorder")
+        response = rate_limited_request(client, "POST", url, json=newdata, headers=headers)
 
         # Log the raw response
         logger.debug(f"Definedge API Response Status: {response.status_code}")
@@ -317,7 +318,9 @@ def place_smartorder_api(data, auth):
             position_size = int(data.get("position_size", "0"))
 
             # Get current open position for the symbol
-            current_position = int(get_open_position(symbol, exchange, map_product_type(product), auth))
+            current_position = int(
+                get_open_position(symbol, exchange, map_product_type(product), auth)
+            )
 
             logger.debug("=== SMART ORDER EXECUTION ===")
             logger.debug(f"Symbol: {symbol}, Exchange: {exchange}, Product: {product}")
@@ -494,14 +497,14 @@ def close_all_positions(current_api_key, auth):
                 f"Closing position: {tradingsymbol} ({exchange}) - Qty: {netqty_int}, Action: {action}"
             )
 
-            # Get tradeboard symbol to send to placeorder function
+            # Get openalgo symbol to send to placeorder function
             symbol = get_oa_symbol(tradingsymbol, exchange)
 
             if not symbol:
-                logger.error(f"Failed to get Tradeboard symbol for {tradingsymbol} on {exchange}")
+                logger.error(f"Failed to get OpenAlgo symbol for {tradingsymbol} on {exchange}")
                 symbol = tradingsymbol  # Use original as fallback
 
-            logger.debug(f"Tradeboard symbol: {symbol}")
+            logger.debug(f"OpenAlgo symbol: {symbol}")
 
             # Prepare the order payload
             place_order_payload = {
@@ -569,12 +572,12 @@ def cancel_order(orderid, auth):
         headers = {"Authorization": api_session_key}
 
         # According to API docs, cancel is a GET request with orderid in URL
-        url = f"https://integrate.definedgesecurities.com/dart/v1/cancel/{orderid}"
+        url = get_url(f"/cancel/{orderid}")
 
         logger.debug(f"Making GET request to: {url}")
 
         # Make the GET request
-        response = client.get(url, headers=headers)
+        response = rate_limited_request(client, "GET", url, headers=headers)
 
         # Log the raw response
         logger.debug(f"Definedge Cancel API Response Status: {response.status_code}")
@@ -652,8 +655,8 @@ def modify_order(data, auth):
     logger.debug(f"Final JSON payload being sent: {payload}")
 
     # Make the request using the shared client
-    response = client.post(
-        "https://integrate.definedgesecurities.com/dart/v1/modify", headers=headers, content=payload
+    response = rate_limited_request(
+        client, "POST", get_url("/modify"), headers=headers, content=payload
     )
 
     # Add status attribute for compatibility with the existing codebase
@@ -671,7 +674,7 @@ def modify_order(data, auth):
         return {
             "status": "error",
             "message": data.get("emsg", data.get("message", "Failed to modify order")),
-        }, response.status
+        }, response.status if response.status != 200 else 400
 
 
 def cancel_all_orders_api(data, auth):
@@ -722,14 +725,22 @@ def cancel_all_orders_api(data, auth):
 
     logger.debug(f"Total orders in order book: {len(orders_data)}")
 
-    # Filter orders that are in 'open' or 'trigger_pending' state
-    # Definedge may use different status values, so check multiple variations
+    # Filter orders that are still cancellable
+    # API order_status values: CANCELED / COMPLETE / NEW / OPEN / REJECTED / REPLACED
+    cancellable = [
+        "open",
+        "new",
+        "replaced",
+        "trigger pending",
+        "pending",
+        "open pending",
+        "trigger_pending",
+    ]
     orders_to_cancel = [
         order
         for order in orders_data
-        if order.get("status", "").lower()
-        in ["open", "trigger pending", "pending", "open pending", "trigger_pending"]
-        or order.get("order_status", "").upper() in ["OPEN", "PENDING", "TRIGGER_PENDING"]
+        if order.get("status", "").lower() in cancellable
+        or order.get("order_status", "").lower() in cancellable
     ]
 
     logger.debug(f"Found {len(orders_to_cancel)} open orders to cancel")
@@ -757,9 +768,7 @@ def cancel_all_orders_api(data, auth):
                     logger.debug(f"Successfully cancelled order: {orderid}")
                 else:
                     failed_cancellations.append(orderid)
-                    logger.error(
-                        f"Failed to cancel order: {orderid}, Response: {cancel_response}"
-                    )
+                    logger.error(f"Failed to cancel order: {orderid}, Response: {cancel_response}")
             except Exception as e:
                 failed_cancellations.append(orderid)
                 logger.error(f"Exception while cancelling order {orderid}: {str(e)}")

@@ -1,4 +1,4 @@
-# Mapping Tradeboard API Request https://rajeevupadhyay.com/docs
+# Mapping OpenAlgo API Request https://openalgo.in/docs
 # Mapping Upstox Margin API https://upstox.com/developer/api-documentation/margin
 
 from broker.upstox.mapping.transform_data import map_product_type
@@ -10,10 +10,10 @@ logger = get_logger(__name__)
 
 def transform_margin_positions(positions):
     """
-    Transform Tradeboard margin position format to Upstox margin format.
+    Transform OpenAlgo margin position format to Upstox margin format.
 
     Args:
-        positions: List of positions in Tradeboard format
+        positions: List of positions in OpenAlgo format
 
     Returns:
         List of positions in Upstox format
@@ -89,13 +89,13 @@ def transform_margin_positions(positions):
 
 def parse_margin_response(response_data):
     """
-    Parse Upstox margin response to Tradeboard standard format.
+    Parse Upstox margin response to OpenAlgo standard format.
 
     Args:
         response_data: Raw response from Upstox margin API
 
     Returns:
-        Standardized margin response matching Tradeboard format
+        Standardized margin response matching OpenAlgo format
     """
     try:
         if not response_data or not isinstance(response_data, dict):
@@ -119,7 +119,7 @@ def parse_margin_response(response_data):
         final_margin = data.get("final_margin", 0)
 
         # Calculate margin benefit (difference between required and final margin)
-        margin_benefit = required_margin - final_margin
+        required_margin - final_margin
 
         # Extract margin breakdown (array of margins per instrument)
         margins = data.get("margins", [])
@@ -132,7 +132,7 @@ def parse_margin_response(response_data):
             total_span += margin.get("span_margin", 0)
             total_exposure += margin.get("exposure_margin", 0)
 
-        # Return standardized format matching Tradeboard API specification
+        # Return standardized format matching OpenAlgo API specification
         return {
             "status": "success",
             "data": {

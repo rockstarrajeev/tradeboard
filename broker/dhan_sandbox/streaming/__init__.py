@@ -1,5 +1,5 @@
 """
-Dhan WebSocket streaming integration for Tradeboard.
+Dhan WebSocket streaming integration for OpenAlgo.
 """
 
 from .dhan_adapter import DhanWebSocketAdapter

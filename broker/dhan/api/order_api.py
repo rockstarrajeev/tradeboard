@@ -1,9 +1,9 @@
 import json
 import os
-
-import httpx
 import threading
 import time
+
+import httpx
 
 from broker.dhan.api.baseurl import get_url
 from broker.dhan.mapping.transform_data import (
@@ -24,7 +24,7 @@ logger = get_logger(__name__)
 
 def get_api_response(endpoint, auth, method="GET", payload=""):
     AUTH_TOKEN = auth
-    api_key = os.getenv("BROKER_API_KEY")
+    os.getenv("BROKER_API_KEY")
 
     # Get the shared httpx client with connection pooling
     client = get_httpx_client()
@@ -98,14 +98,14 @@ def get_holdings(auth):
 # --- Per-Symbol Smart Order Lock ---
 # Ensures only one smart order per symbol executes at a time.
 # Others queue and execute sequentially, each getting a fresh position book.
-_symbol_locks = {}          # {symbol_key: threading.Lock}
+_symbol_locks = {}  # {symbol_key: threading.Lock}
 _symbol_locks_lock = threading.Lock()
 
 # --- Position Book Cache ---
 # Caches get_positions() for 1 second. Invalidated after each smart order placement.
-_position_cache = {}        # {auth_token: {"data": ..., "timestamp": ...}}
+_position_cache = {}  # {auth_token: {"data": ..., "timestamp": ...}}
 _position_cache_lock = threading.Lock()
-_POSITION_CACHE_TTL = 1.0   # seconds
+_POSITION_CACHE_TTL = 1.0  # seconds
 
 
 def _get_symbol_lock(symbol, exchange, product):
@@ -140,9 +140,8 @@ def _invalidate_position_cache(auth):
         _position_cache.pop(auth, None)
 
 
-
 def get_open_position(tradingsymbol, exchange, product, auth):
-    # Convert Trading Symbol from Tradeboard Format to Broker Format Before Search in OpenPosition
+    # Convert Trading Symbol from OpenAlgo Format to Broker Format Before Search in OpenPosition
     tradingsymbol = get_br_symbol(tradingsymbol, exchange)
     positions_data = _get_cached_positions(auth)
     net_qty = "0"
@@ -240,7 +239,7 @@ def place_order_api(data, auth):
 
 def place_smartorder_api(data, auth):
     AUTH_TOKEN = auth
-    BROKER_API_KEY = os.getenv("BROKER_API_KEY")
+    os.getenv("BROKER_API_KEY")
     # If no API call is made in this function then res will return None
     res = None
 
@@ -343,7 +342,7 @@ def close_all_positions(current_api_key, auth):
             # print(f"Trading Symbol : {position['tradingsymbol']}")
             # print(f"Exchange : {position['exchange']}")
 
-            # get tradeboard symbol to send to placeorder function
+            # get openalgo symbol to send to placeorder function
             symbol = get_symbol(position["securityId"], map_exchange(position["exchangeSegment"]))
             logger.debug(f"The Symbol is {symbol}")
 

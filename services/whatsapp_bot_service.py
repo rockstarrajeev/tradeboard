@@ -3,7 +3,7 @@ WhatsApp Bot Service — pair, connect, send, and command dispatch.
 
 Wraps the `wars` library (PyO3 binding over whatsapp-rust). wars is a
 synchronous, single-process WhatsApp Web client: one paired session per
-process. Tradeboard already runs `gunicorn -w 1` for SocketIO compatibility,
+process. OpenAlgo already runs `gunicorn -w 1` for SocketIO compatibility,
 so the one-process-only constraint costs nothing.
 
 Lifecycle:
@@ -13,7 +13,7 @@ Lifecycle:
                               on_connected from wars
                                           |
                                           v
-                        export_session bytes -> encrypt -> tradeboard.db
+                        export_session bytes -> encrypt -> openalgo.db
                                           |
                                           v
     [paired, idle]  --start_bot-->  [paired, connected]
@@ -139,7 +139,7 @@ def normalize_phone(raw) -> str:
 
 # Attachment paths are server-local file paths the caller wants to forward
 # over WhatsApp. Without bounds, a leaked API key could exfiltrate any file
-# the Tradeboard process can read (/etc/passwd, env files, broker token DB,
+# the OpenAlgo process can read (/etc/passwd, env files, broker token DB,
 # etc.) by sending it to an attacker-controlled WhatsApp number.
 #
 # Defense in depth:
@@ -198,9 +198,7 @@ def validate_attachment_path(path: str | None) -> str | None:
             or resolved.lower() == os.path.abspath(r).lower()
             for r in roots
         ):
-            logger.warning(
-                "Attachment path rejected: outside WHATSAPP_ATTACHMENT_ROOTS allowlist"
-            )
+            logger.warning("Attachment path rejected: outside WHATSAPP_ATTACHMENT_ROOTS allowlist")
             return None
         if not os.path.isfile(resolved):
             logger.warning("Attachment path rejected: not a regular file")
@@ -236,6 +234,7 @@ class WarsNotInstalled(RuntimeError):
 def _import_wars():
     try:
         import wars  # type: ignore
+
         return wars
     except Exception as e:  # ImportError or compile errors on first install
         raise WarsNotInstalled() from e
@@ -355,7 +354,7 @@ class WhatsAppBotService:
             # cannot snapshot an in-memory DB (Rust + Python use different
             # SQLite library instances). 0600 perms; deleted as soon as we
             # have the bytes.
-            fd, tmp_path = tempfile.mkstemp(suffix=".db", prefix="tradeboard_wa_pair_")
+            fd, tmp_path = tempfile.mkstemp(suffix=".db", prefix="openalgo_wa_pair_")
             os.close(fd)
             try:
                 os.chmod(tmp_path, 0o600)
@@ -511,7 +510,7 @@ class WhatsAppBotService:
         owner_username: str | None = None,
     ) -> None:
         """Export the wars session from the temp client, encrypt+persist the
-        blob into tradeboard.db, then disconnect the temp client and auto-start
+        blob into openalgo.db, then disconnect the temp client and auto-start
         the long-lived bot from the saved bytes."""
         try:
             logger.info("WhatsApp pair: exporting session bytes from temp client")
@@ -550,7 +549,7 @@ class WhatsAppBotService:
             )
             if not ok:
                 raise RuntimeError("Persisting WhatsApp session blob failed")
-            logger.info("WhatsApp pair: session blob encrypted and saved to tradeboard.db")
+            logger.info("WhatsApp pair: session blob encrypted and saved to openalgo.db")
 
             with self._lock:
                 self._pair_state["status"] = "paired"
@@ -560,7 +559,10 @@ class WhatsAppBotService:
             # Emit BOTH events. whatsapp_paired carries the identity; the
             # status event re-broadcasts the full pair_state for any client
             # that missed the first one.
-            self._emit("whatsapp_paired", {"own_phone": own_phone, "own_jid": str(own_jid) if own_jid else None})
+            self._emit(
+                "whatsapp_paired",
+                {"own_phone": own_phone, "own_jid": str(own_jid) if own_jid else None},
+            )
             self._emit("whatsapp_pair_status", self.get_pair_state())
             logger.info("WhatsApp pair: emitted whatsapp_paired + whatsapp_pair_status")
 
@@ -772,8 +774,10 @@ class WhatsAppBotService:
             "9198..."      -> single recipient (digits, +91..., JID, or group JID)
             ["a", "b", ...] -> list (capped at MAX_RECIPIENTS)
         """
-        if to is None or (isinstance(to, str) and not to.strip()) or (
-            isinstance(to, list) and not to
+        if (
+            to is None
+            or (isinstance(to, str) and not to.strip())
+            or (isinstance(to, list) and not to)
         ):
             return [self._SELF_MARKER]
         if isinstance(to, str):
@@ -812,7 +816,11 @@ class WhatsAppBotService:
         """
         if not self._is_running or self._wa is None:
             logger.warning("WhatsApp send: bot not running, dropping message")
-            return {"sent": [], "failed": [{"to": "<bot>", "error": "Bot not connected"}], "skipped": 0}
+            return {
+                "sent": [],
+                "failed": [{"to": "<bot>", "error": "Bot not connected"}],
+                "skipped": 0,
+            }
 
         # Re-entrancy: a slash-command handler (running on the bot thread
         # itself via wars's on_message dispatch) can call send_sync without
@@ -843,9 +851,7 @@ class WhatsAppBotService:
                 "failed": [{"to": "<bot>", "error": result_holder["error"]}],
                 "skipped": 0,
             }
-        return result_holder.get(
-            "result", {"sent": [], "failed": [], "skipped": 0}
-        )
+        return result_holder.get("result", {"sent": [], "failed": [], "skipped": 0})
 
     def _send_on_bot_thread(
         self,
@@ -959,9 +965,7 @@ class WhatsAppBotService:
                 logger.warning("WhatsApp wars on_disconnect fired")
                 with self._lock:
                     self._is_running = False
-                self._emit(
-                    "whatsapp_status", {"is_running": False, "is_paired": self.is_paired}
-                )
+                self._emit("whatsapp_status", {"is_running": False, "is_paired": self.is_paired})
                 return
 
             # kind == "message"
@@ -974,7 +978,7 @@ class WhatsAppBotService:
             text = (text or "").strip()
             if not text or not text.startswith("/"):
                 return
-            # Single-user Tradeboard: only the operator's own device (is_from_me)
+            # Single-user OpenAlgo: only the operator's own device (is_from_me)
             # may drive the bot; messages from any other contact are ignored so
             # a random sender cannot run /closeall.
             if not is_from_me:
@@ -1048,7 +1052,7 @@ class WhatsAppBotService:
     def _cmd_help(self, wa, msg, chat, sender_jid, args) -> None:
         self.send_sync(
             chat,
-            "Tradeboard WhatsApp Bot\n"
+            "OpenAlgo WhatsApp Bot\n"
             "/status - connection + paired status\n"
             "/orderbook - today's orders\n"
             "/tradebook - today's trades\n"
@@ -1073,7 +1077,7 @@ class WhatsAppBotService:
             lines.append(f"Owner: {cfg['owner_username']}")
         self.send_sync(chat, "\n".join(lines))
 
-    # SDK helpers. Single-user Tradeboard — the operator who paired the device
+    # SDK helpers. Single-user OpenAlgo — the operator who paired the device
     # is the only identity that can issue commands. We look up their api_key
     # from auth_db using the owner_user_id captured at pair time, so the
     # operator never has to /link or paste credentials from the phone.
@@ -1089,14 +1093,15 @@ class WhatsAppBotService:
         if not owner_username:
             return None, (
                 "No owner recorded for this paired device. Re-pair from the "
-                "/whatsapp page while logged in to Tradeboard."
+                "/whatsapp page while logged in to OpenAlgo."
             )
         try:
             from database.auth_db import get_api_key_for_tradingview
+
             api_key = get_api_key_for_tradingview(owner_username)
         except Exception:
             logger.exception("Failed to load owner api_key from auth_db")
-            return None, "Could not load Tradeboard API key for the owner."
+            return None, "Could not load OpenAlgo API key for the owner."
         if not api_key:
             return None, (
                 "No API key on file for the owner. Generate one at /apikey "
@@ -1104,13 +1109,13 @@ class WhatsAppBotService:
             )
         host_url = os.getenv("HOST_SERVER", "http://127.0.0.1:5000")
         try:
-            from openalgo import api as tradeboard_api  # type: ignore
+            from openalgo import api as openalgo_api  # type: ignore
         except Exception:
-            return None, "tradeboard SDK not available on this server."
+            return None, "openalgo SDK not available on this server."
         try:
-            return tradeboard_api(api_key=api_key, host=host_url), None
+            return openalgo_api(api_key=api_key, host=host_url), None
         except Exception as e:
-            logger.exception("Failed to create tradeboard client")
+            logger.exception("Failed to create openalgo client")
             return None, f"SDK error: {e}"
 
     def _sdk_client(self, sender_jid: str):

@@ -4,7 +4,6 @@ from broker.iiflcapital.mapping.transform_data import (
 )
 from database.token_db import get_symbol
 
-
 # Fields that indicate a dict is an actual order/trade/position/holding row,
 # not a status/metadata wrapper. Used to avoid fabricating phantom UI rows
 # when IIFL returns an empty book wrapped as `{"result": {...wrapper...}}`.
@@ -230,7 +229,9 @@ def transform_order_data(orders):
                 "trigger_price": _to_float(_first_present(row, "slTriggerPrice", "triggerPrice")),
                 "pricetype": reverse_map_order_type(str(row.get("orderType", "MARKET"))),
                 "product": reverse_map_product_type(str(row.get("product", "INTRADAY"))),
-                "orderid": str(_first_present(row, "brokerOrderId", "exchangeOrderId", "orderId") or ""),
+                "orderid": str(
+                    _first_present(row, "brokerOrderId", "exchangeOrderId", "orderId") or ""
+                ),
                 "order_status": _map_status(str(row.get("orderStatus", ""))),
                 "rejection_reason": str(row.get("rejectionReason", "") or ""),
                 "timestamp": _first_present(
@@ -270,7 +271,9 @@ def transform_tradebook_data(tradebook_data):
                 "quantity": qty,
                 "average_price": avg_price,
                 "trade_value": qty * avg_price,
-                "orderid": str(_first_present(row, "brokerOrderId", "exchangeOrderId", "orderId") or ""),
+                "orderid": str(
+                    _first_present(row, "brokerOrderId", "exchangeOrderId", "orderId") or ""
+                ),
                 "timestamp": _first_present(
                     row,
                     "fillTimestamp",
@@ -305,7 +308,7 @@ def transform_positions_data(positions_data):
         ltp = _to_float(_first_present(row, "ltp", "lastPrice", "previousDayClose"))
 
         # Spec exposes `realizedPnl` only. Compute MTM unrealized from netQuantity
-        # and netAveragePrice so Tradeboard's `pnl` field reflects total P&L —
+        # and netAveragePrice so OpenAlgo's `pnl` field reflects total P&L —
         # but only when LTP is genuinely populated. A missing LTP defaulting
         # to 0 would otherwise fabricate a (-average_price * quantity) loss.
         realized_pnl = _to_float(row.get("realizedPnl"))
@@ -383,7 +386,12 @@ def transform_holdings_data(holdings_data):
         elif bse_symbol:
             symbol, exchange = bse_symbol, "BSE"
         else:
-            symbol = row.get("tradingSymbol") or row.get("formattedInstrumentName") or row.get("symbol") or ""
+            symbol = (
+                row.get("tradingSymbol")
+                or row.get("formattedInstrumentName")
+                or row.get("symbol")
+                or ""
+            )
             exchange = "NSE"
 
         # Skip empty placeholder rows IIFL returns when the account has no

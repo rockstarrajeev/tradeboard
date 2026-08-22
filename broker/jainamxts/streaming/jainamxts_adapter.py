@@ -236,9 +236,7 @@ class JainamXTSWebSocketAdapter(BaseBrokerWebSocketAdapter):
                     with self.lock:
                         self.reconnect_attempts += 1
                         attempts = self.reconnect_attempts
-                    delay = min(
-                        self.reconnect_delay * (2**attempts), self.max_reconnect_delay
-                    )
+                    delay = min(self.reconnect_delay * (2**attempts), self.max_reconnect_delay)
                     self.logger.error(f"Connection failed: {e}. Retrying in {delay} seconds...")
                     time.sleep(delay)
 
@@ -683,7 +681,7 @@ class JainamXTSWebSocketAdapter(BaseBrokerWebSocketAdapter):
             active_modes = []
             mode_to_str = {1: "LTP", 2: "QUOTE", 3: "DEPTH"}
 
-            for correlation_id, sub in self.subscriptions.items():
+            for _correlation_id, sub in self.subscriptions.items():
                 if sub.get("symbol") == symbol and sub.get("exchange") == exchange:
                     active_modes.append(sub.get("mode"))
 

@@ -1,6 +1,6 @@
 import { BarChart3, BookOpen, FileText, MessageCircle, Search, Zap } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { useOrderEventRefresh } from '@/hooks/useOrderEventRefresh'
@@ -204,7 +204,7 @@ export default function Dashboard() {
   const quickAccessCards = [
     {
       href: '/search',
-      label: 'Tradeboard Symbols',
+      label: 'OpenAlgo Symbols',
       description: 'Universal symbology across brokers',
       icon: Search,
       gradient: 'from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10',
@@ -224,7 +224,7 @@ export default function Dashboard() {
       borderColor: 'border-violet-500/20 hover:border-violet-500/40',
     },
     {
-      href: 'https://docs.rajeevupadhyay.com',
+      href: 'https://docs.openalgo.in',
       label: 'Documentation',
       description: 'Tutorials, API docs & features',
       icon: BookOpen,

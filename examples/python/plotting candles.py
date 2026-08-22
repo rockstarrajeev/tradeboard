@@ -155,7 +155,7 @@ def plot_candlestick(df: pd.DataFrame):
             x=x_category,
             y=df["bb_upper"],
             name="BB Upper",
-            line=dict(color="rgba(173, 216, 230, 0.8)", width=1),
+            line={"color": "rgba(173, 216, 230, 0.8)", "width": 1},
             showlegend=True,
         ),
         row=1,
@@ -168,7 +168,7 @@ def plot_candlestick(df: pd.DataFrame):
             x=x_category,
             y=df["bb_middle"],
             name="BB Middle",
-            line=dict(color="rgba(255, 165, 0, 0.8)", width=1, dash="dash"),
+            line={"color": "rgba(255, 165, 0, 0.8)", "width": 1, "dash": "dash"},
             showlegend=True,
         ),
         row=1,
@@ -181,7 +181,7 @@ def plot_candlestick(df: pd.DataFrame):
             x=x_category,
             y=df["bb_lower"],
             name="BB Lower",
-            line=dict(color="rgba(173, 216, 230, 0.8)", width=1),
+            line={"color": "rgba(173, 216, 230, 0.8)", "width": 1},
             fill="tonexty",  # Fill area between upper and lower bands
             fillcolor="rgba(173, 216, 230, 0.1)",
             showlegend=True,
@@ -198,7 +198,7 @@ def plot_candlestick(df: pd.DataFrame):
             x=x_category,
             y=df["rsi"],
             name=f"RSI ({RSI_PERIOD})",
-            line=dict(color="#ab47bc", width=1.5),
+            line={"color": "#ab47bc", "width": 1.5},
             showlegend=True,
         ),
         row=2,
@@ -234,18 +234,18 @@ def plot_candlestick(df: pd.DataFrame):
 
     # ───────── LAYOUT ─────────
     fig.update_layout(
-        title=dict(
-            text=f"{SYMBOL} Technical Analysis<br><sup>{START_DATE} to {END_DATE}</sup>",
-            x=0.5,
-            font=dict(size=18),
-        ),
+        title={
+            "text": f"{SYMBOL} Technical Analysis<br><sup>{START_DATE} to {END_DATE}</sup>",
+            "x": 0.5,
+            "font": {"size": 18},
+        },
         template="plotly_dark",
         height=900,
         width=1400,
         hovermode="x unified",
-        margin=dict(l=60, r=100, t=80, b=80),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        xaxis2=dict(rangeslider=dict(visible=False)),
+        margin={"l": 60, "r": 100, "t": 80, "b": 80},
+        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
+        xaxis2={"rangeslider": {"visible": False}},
     )
 
     # Update x-axes
@@ -256,7 +256,7 @@ def plot_candlestick(df: pd.DataFrame):
         tickangle=-45,
         showgrid=True,
         gridcolor="rgba(128, 128, 128, 0.2)",
-        rangeslider=dict(visible=False),
+        rangeslider={"visible": False},
         row=1,
         col=1,
     )

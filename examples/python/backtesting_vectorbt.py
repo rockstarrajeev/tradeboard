@@ -222,7 +222,7 @@ def plot_results(df, portfolio, fast_ema, slow_ema, entries, exits):
             x=x_category,
             y=fast_ema.ma.values.flatten(),
             name=f"EMA {FAST_EMA}",
-            line=dict(color="blue", width=1),
+            line={"color": "blue", "width": 1},
             showlegend=True,
         ),
         row=1,
@@ -235,7 +235,7 @@ def plot_results(df, portfolio, fast_ema, slow_ema, entries, exits):
             x=x_category,
             y=slow_ema.ma.values.flatten(),
             name=f"EMA {SLOW_EMA}",
-            line=dict(color="orange", width=1),
+            line={"color": "orange", "width": 1},
             showlegend=True,
         ),
         row=1,
@@ -255,7 +255,7 @@ def plot_results(df, portfolio, fast_ema, slow_ema, entries, exits):
                 y=entry_y,
                 mode="markers",
                 name="Buy Signal",
-                marker=dict(symbol="triangle-up", size=10, color="lime"),
+                marker={"symbol": "triangle-up", "size": 10, "color": "lime"},
                 showlegend=True,
             ),
             row=1,
@@ -275,7 +275,7 @@ def plot_results(df, portfolio, fast_ema, slow_ema, entries, exits):
                 y=exit_y,
                 mode="markers",
                 name="Sell Signal",
-                marker=dict(symbol="triangle-down", size=10, color="red"),
+                marker={"symbol": "triangle-down", "size": 10, "color": "red"},
                 showlegend=True,
             ),
             row=1,
@@ -288,7 +288,7 @@ def plot_results(df, portfolio, fast_ema, slow_ema, entries, exits):
             x=x_category,
             y=equity_data.values,
             name="Equity",
-            line=dict(color="#00bcd4", width=1.5),
+            line={"color": "#00bcd4", "width": 1.5},
             fill="tozeroy",
             fillcolor="rgba(0, 188, 212, 0.1)",
             showlegend=True,
@@ -313,7 +313,7 @@ def plot_results(df, portfolio, fast_ema, slow_ema, entries, exits):
             x=x_category,
             y=drawdown_data.values,
             name="Drawdown",
-            line=dict(color="brown", width=1),
+            line={"color": "brown", "width": 1},
             fill="tozeroy",
             fillcolor="rgba(165, 42, 42, 0.3)",
             showlegend=True,
@@ -324,19 +324,19 @@ def plot_results(df, portfolio, fast_ema, slow_ema, entries, exits):
 
     # ───────── LAYOUT ─────────
     fig.update_layout(
-        title=dict(
-            text=f"{SYMBOL} EMA({FAST_EMA}/{SLOW_EMA}) Crossover Backtest<br>"
+        title={
+            "text": f"{SYMBOL} EMA({FAST_EMA}/{SLOW_EMA}) Crossover Backtest<br>"
             f"<sup>{START_DATE} to {END_DATE} | Initial: ₹{INITIAL_CAPITAL:,} | "
             f"Final: ₹{equity_data.iloc[-1]:,.2f}</sup>",
-            x=0.5,
-            font=dict(size=16),
-        ),
+            "x": 0.5,
+            "font": {"size": 16},
+        },
         template="plotly_dark",
         height=1000,
         width=1400,
         hovermode="x unified",
-        margin=dict(l=60, r=100, t=100, b=80),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        margin={"l": 60, "r": 100, "t": 100, "b": 80},
+        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
     )
 
     # Update x-axes
@@ -348,7 +348,7 @@ def plot_results(df, portfolio, fast_ema, slow_ema, entries, exits):
             tickangle=-45,
             showgrid=True,
             gridcolor="rgba(128, 128, 128, 0.2)",
-            rangeslider=dict(visible=False),
+            rangeslider={"visible": False},
             row=row,
             col=1,
         )

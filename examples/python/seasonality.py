@@ -1,5 +1,5 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 from openalgo import api
 
@@ -158,32 +158,32 @@ def build_heatmap_figure(matrix):
 
     fig = go.Figure(data=[go.Table(
         columnwidth=[80] + [100] * 12,
-        header=dict(
-            values=header,
-            fill_color=HEADER_BG,
-            font=dict(color=TEXT_COLOR, size=15, family="Trebuchet MS, sans-serif"),
-            align="center",
-            line=dict(color=LINE_COLOR, width=1),
-            height=40,
-        ),
-        cells=dict(
-            values=cell_values,
-            fill_color=cell_colors,
-            font=dict(color=TEXT_COLOR, size=14, family="Trebuchet MS, sans-serif"),
-            align="center",
-            line=dict(color=LINE_COLOR, width=1),
-            height=36,
-        ),
+        header={
+            "values": header,
+            "fill_color": HEADER_BG,
+            "font": {"color": TEXT_COLOR, "size": 15, "family": "Trebuchet MS, sans-serif"},
+            "align": "center",
+            "line": {"color": LINE_COLOR, "width": 1},
+            "height": 40,
+        },
+        cells={
+            "values": cell_values,
+            "fill_color": cell_colors,
+            "font": {"color": TEXT_COLOR, "size": 14, "family": "Trebuchet MS, sans-serif"},
+            "align": "center",
+            "line": {"color": LINE_COLOR, "width": 1},
+            "height": 36,
+        },
     )])
 
     fig.update_layout(
-        title=dict(
-            text=f"Seasonality — {SYMBOL} ({EXCHANGE}) Monthly Returns",
-            font=dict(color=TEXT_COLOR, size=16, family="Trebuchet MS, sans-serif"),
-            x=0.5,
-        ),
+        title={
+            "text": f"Seasonality — {SYMBOL} ({EXCHANGE}) Monthly Returns",
+            "font": {"color": TEXT_COLOR, "size": 16, "family": "Trebuchet MS, sans-serif"},
+            "x": 0.5,
+        },
         paper_bgcolor=BG_COLOR,
-        margin=dict(l=10, r=10, t=50, b=10),
+        margin={"l": 10, "r": 10, "t": 50, "b": 10},
         height=max(400, 40 + n_rows * 36 + 60),
     )
 

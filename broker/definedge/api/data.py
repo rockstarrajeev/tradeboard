@@ -18,9 +18,11 @@ from utils.logging import get_logger
 def _is_eventlet_patched():
     try:
         import eventlet.patcher
+
         return eventlet.patcher.is_monkey_patched("socket")
     except (ImportError, AttributeError):
         return False
+
 
 USE_ASYNC = not _is_eventlet_patched()
 
@@ -250,7 +252,7 @@ class BrokerData:
             if response.get("status") != "SUCCESS":
                 raise Exception(f"API returned status: {response.get('status', 'Unknown')}")
 
-            # Map Definedge response fields to Tradeboard format
+            # Map Definedge response fields to OpenAlgo format
             # Definedge fields based on the documentation:
             # - best_bid_price1 -> bid
             # - best_ask_price1 -> ask
@@ -834,9 +836,7 @@ class BrokerData:
 
                     # Check if we have valid data
                     if chunk_df.empty:
-                        logger.debug(
-                            f"No valid data after parsing CSV for {timeframe} timeframe"
-                        )
+                        logger.debug(f"No valid data after parsing CSV for {timeframe} timeframe")
                         logger.debug("This might be due to incorrect date parsing")
                         current_start = current_end + timedelta(days=1)
                         continue
@@ -970,7 +970,7 @@ class BrokerData:
                 # For intraday intervals (minute data)
                 # Definedge returns timestamps in IST (Indian Standard Time)
                 # We need to localize them as IST and convert to UTC before converting to Unix epoch
-                # This ensures the Tradeboard client interprets them correctly
+                # This ensures the OpenAlgo client interprets them correctly
                 # Localize as IST (the timestamps from Definedge are in IST)
                 df["timestamp"] = df["timestamp"].dt.tz_localize("Asia/Kolkata")
                 # Convert to UTC for storage as Unix epoch
@@ -1000,7 +1000,7 @@ class BrokerData:
                     .reset_index(drop=True)
                 )
 
-            # Reorder columns to match Tradeboard format (timestamp should be 5th column)
+            # Reorder columns to match OpenAlgo format (timestamp should be 5th column)
             # Order: close, high, low, open, timestamp, volume, oi
             df = df[["close", "high", "low", "open", "timestamp", "volume", "oi"]]
 

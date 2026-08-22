@@ -55,7 +55,7 @@ def generate_webhook_secret():
 
 
 def get_workflow_api_key(workflow):
-    """Decrypt and return a workflow's stored Tradeboard API key.
+    """Decrypt and return a workflow's stored OpenAlgo API key.
 
     The api_key column transitioned from plaintext to Fernet-encrypted
     (auth_db Fernet, PBKDF2 over API_KEY_PEPPER). Pre-migration plaintext
@@ -64,6 +64,7 @@ def get_workflow_api_key(workflow):
     if not workflow or not workflow.api_key:
         return None
     from database.auth_db import safe_decrypt_token
+
     return safe_decrypt_token(workflow.api_key)
 
 
@@ -72,6 +73,7 @@ def _encrypt_api_key(api_key):
     if not api_key:
         return None
     from database.auth_db import encrypt_token
+
     return encrypt_token(api_key)
 
 
@@ -447,8 +449,23 @@ def get_workflow_executions(workflow_id, limit=50):
         return []
 
 
-def update_execution_status(execution_id, status, error=None):
-    """Update execution status"""
+def update_execution_status(execution_id, status, error=None, logs=None):
+    """Update execution status, and persist the node trace when one is supplied.
+
+    ``logs`` is written once at the end of the run rather than appended per
+    node, so a 48-node workflow costs one write instead of ~50. Without it the
+    logs column stayed empty for every execution, which meant a scheduled run
+    that quietly did nothing left no record of which condition stopped it - the
+    trace existed only in the HTTP response of a manual "Run Now".
+
+    Args:
+        execution_id: Row to update.
+        status: "running", "completed" or "failed".
+        error: Failure message, stored only when truthy.
+        logs: Accumulated node trace. ``None`` leaves any existing value alone;
+            an empty list is still written, since "ran and logged nothing" is
+            itself worth recording.
+    """
     try:
         execution = get_execution(execution_id)
         if not execution:
@@ -457,6 +474,8 @@ def update_execution_status(execution_id, status, error=None):
         execution.status = status
         if error:
             execution.error = error
+        if logs is not None:
+            execution.logs = list(logs)
 
         if status == "running" and not execution.started_at:
             execution.started_at = func.now()

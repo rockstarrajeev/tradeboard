@@ -24,7 +24,7 @@ This release spans 90+ commits since v2.0.1.3. The headline feature is the **Sca
 * **MCP technical-indicator research tools** — The MCP server gains indicator-calculation/research tools for use from Claude Desktop / Cursor / Windsurf.
 * **F&O freeze-quantity correctness** — Freeze quantities now honored for **all** F&O exchanges including **CDS and MCX**, and **BFO** freeze quantities supported for SENSEX / BANKEX / SENSEX50.
 * **Performance & startup sweep** — WAL + `synchronous=NORMAL` on every SQLite connection, broker modules warmed at startup with keep-warm pings, order hot-path logs demoted to debug across all 33 brokers, latency percentiles bounded to a 30-day window and cached, and traffic logs purged past their retention window at startup.
-* **Platform version bump** — `2.0.1.3` → `2.0.1.4`. SDK pin (`tradeboard`) `2.0.1` → `2.0.2`.
+* **Platform version bump** — `2.0.1.3` → `2.0.1.4`. SDK pin (`openalgo`) `2.0.1` → `2.0.2`.
 
 ***
 
@@ -124,13 +124,13 @@ A new `database/scalping_db.py` table persists scalping strategy/SL state; it is
 * `c1b0a168` … `5324469d` — Flask→FastAPI migration plan, risk assessment, and a 63-item migration tracker CSV (assessment only; no runtime change).
 * `c1c2923d`, `664cb548`, `4d4e5311` — scalping terminal implementation plan + sandbox order-lifecycle validation.
 * `2677dd8c` — group indicator prompt docs into `docs/prompt/indicators/` (#1529).
-* `ae6f0224` — add the current Tradeboard PRD.
+* `ae6f0224` — add the current OpenAlgo PRD.
 
 ***
 
 **Dependencies**
 
-* `tradeboard` SDK pin: `2.0.1` → **`2.0.2`** (PyPI: <https://pypi.org/project/tradeboard/>).
+* `openalgo` SDK pin: `2.0.1` → **`2.0.2`** (PyPI: <https://pypi.org/project/openalgo/>).
 * `opengreeks` `>=0.2.0` (unchanged).
 
 ***
@@ -155,14 +155,14 @@ A new `database/scalping_db.py` table persists scalping strategy/SL state; it is
 **For existing installs (Native Ubuntu):**
 
 ```bash
-cd /var/python/tradeboard-flask/<deploy-name>/tradeboard
+cd /var/python/openalgo-flask/<deploy-name>/openalgo
 sudo ./install/update.sh
 ```
 
 **For existing installs (Docker):**
 
 ```bash
-cd /opt/tradeboard/<domain>
+cd /opt/openalgo/<domain>
 sudo docker compose pull
 sudo docker compose up -d
 ```
@@ -189,9 +189,9 @@ uv run app.py
 
 **Links**
 
-* **Repository**: <https://github.com/rockstarrajeev/tradeboard>
-* **Documentation**: <https://docs.rajeevupadhyay.com>
-* **Python SDK on PyPI**: <https://pypi.org/project/tradeboard/>
-* **Discord**: <https://www.rajeevupadhyay.com/discord>
-* **YouTube**: <https://www.youtube.com/@tradeboard>
-* **Issue tracker**: <https://github.com/rockstarrajeev/tradeboard/issues>
+* **Repository**: <https://github.com/marketcalls/openalgo>
+* **Documentation**: <https://docs.openalgo.in>
+* **Python SDK on PyPI**: <https://pypi.org/project/openalgo/>
+* **Discord**: <https://www.openalgo.in/discord>
+* **YouTube**: <https://www.youtube.com/@openalgo>
+* **Issue tracker**: <https://github.com/marketcalls/openalgo/issues>

@@ -48,7 +48,7 @@ class PaytmWebSocketAdapter(BaseBrokerWebSocketAdapter):
         # one's socket. Both connect() and _on_close funnel through
         # _start_reconnect, which respects this flag.
         self._reconnecting = False
-        self._reconnect_thread: Optional[threading.Thread] = None
+        self._reconnect_thread: threading.Thread | None = None
         # Interruptible-sleep handle for the retry backoff. disconnect()
         # sets this so we don't keep retrying for up to 60s after the
         # adapter has been asked to shut down.
@@ -67,8 +67,8 @@ class PaytmWebSocketAdapter(BaseBrokerWebSocketAdapter):
         # which drains the queue and sends one JSON-array frame to Paytm.
         # This cuts wire chatter when many symbols are subscribed in quick
         # succession (e.g. a watchlist load).
-        self.subscription_queue: List[dict] = []
-        self.batch_timer: Optional[threading.Timer] = None
+        self.subscription_queue: list[dict] = []
+        self.batch_timer: threading.Timer | None = None
         self.batch_delay = 0.5  # seconds
 
     def initialize(
@@ -171,9 +171,7 @@ class PaytmWebSocketAdapter(BaseBrokerWebSocketAdapter):
             if fresh_token:
                 self.ws_client.public_access_token = fresh_token
             else:
-                self.logger.warning(
-                    "No fresh Paytm feed token found; keeping existing token"
-                )
+                self.logger.warning("No fresh Paytm feed token found; keeping existing token")
         except Exception as e:
             self.logger.warning(f"Failed to re-read fresh Paytm feed token: {e}")
 
@@ -197,9 +195,7 @@ class PaytmWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 return
             self._reconnecting = True
             self._shutdown_event.clear()
-            self._reconnect_thread = threading.Thread(
-                target=self._connect_with_retry, daemon=True
-            )
+            self._reconnect_thread = threading.Thread(target=self._connect_with_retry, daemon=True)
         self._reconnect_thread.start()
 
     def _connect_with_retry(self) -> None:
@@ -250,9 +246,7 @@ class PaytmWebSocketAdapter(BaseBrokerWebSocketAdapter):
                     self.reconnect_delay * (2 ** max(0, self.reconnect_attempts - 1)),
                     self.max_reconnect_delay,
                 )
-                self.logger.info(
-                    f"Paytm WS closed after {duration:.1f}s; reconnecting in {delay}s"
-                )
+                self.logger.info(f"Paytm WS closed after {duration:.1f}s; reconnecting in {delay}s")
                 # Interruptible sleep: disconnect() sets the event so we
                 # don't keep retrying after shutdown.
                 if self._shutdown_event.wait(delay):
@@ -278,9 +272,7 @@ class PaytmWebSocketAdapter(BaseBrokerWebSocketAdapter):
         """
         if self.batch_timer:
             self.batch_timer.cancel()
-        self.batch_timer = threading.Timer(
-            self.batch_delay, self._process_batch_subscriptions
-        )
+        self.batch_timer = threading.Timer(self.batch_delay, self._process_batch_subscriptions)
         self.batch_timer.daemon = True
         self.batch_timer.start()
 
@@ -480,7 +472,7 @@ class PaytmWebSocketAdapter(BaseBrokerWebSocketAdapter):
             )
 
         token = token_info["token"]
-        brexchange = token_info["brexchange"]
+        token_info["brexchange"]
 
         # Generate correlation ID
         correlation_id = f"{symbol}_{exchange}_{mode}"
@@ -525,9 +517,7 @@ class PaytmWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
         # If the ADD was cancelled in-place, nothing was ever on the wire.
         if had_pending_add:
-            self.logger.info(
-                f"Cancelled pending subscribe for {symbol}.{exchange} before flush"
-            )
+            self.logger.info(f"Cancelled pending subscribe for {symbol}.{exchange} before flush")
             return self._create_success_response(
                 f"Unsubscribed from {symbol}.{exchange}",
                 symbol=symbol,

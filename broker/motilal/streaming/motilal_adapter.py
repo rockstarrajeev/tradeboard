@@ -1,7 +1,7 @@
 """
-Motilal Oswal WebSocket adapter for Tradeboard streaming proxy.
+Motilal Oswal WebSocket adapter for OpenAlgo streaming proxy.
 
-This adapter integrates Motilal Oswal's WebSocket client with Tradeboard's
+This adapter integrates Motilal Oswal's WebSocket client with OpenAlgo's
 WebSocket proxy infrastructure to provide standardized market data streaming.
 """
 
@@ -194,9 +194,7 @@ class MotilalWebSocketAdapter(BaseBrokerWebSocketAdapter):
         ):
             self._connect_thread.join(timeout=5)
             if self._connect_thread.is_alive():
-                self.logger.warning(
-                    "Motilal adapter connect thread did not exit within 5s"
-                )
+                self.logger.warning("Motilal adapter connect thread did not exit within 5s")
         self._connect_thread = None
 
         if hasattr(self, "ws_client") and self.ws_client:
@@ -387,7 +385,7 @@ class MotilalWebSocketAdapter(BaseBrokerWebSocketAdapter):
         with self.lock:
             subscriptions_copy = dict(self.subscriptions)
 
-        for correlation_id, sub in subscriptions_copy.items():
+        for _correlation_id, sub in subscriptions_copy.items():
             try:
                 success = self.ws_client.register_scrip(
                     exchange=sub["motilal_exchange"],

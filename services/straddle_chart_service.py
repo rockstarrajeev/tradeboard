@@ -13,21 +13,23 @@ from datetime import datetime, timedelta
 import pandas as pd
 import pytz
 
+from database.token_db_enhanced import fno_search_symbols
 from services.history_service import get_history
 from services.option_greeks_service import parse_option_symbol
-from services.strategy_chart_service import (
-    _cap_last_n_trading_dates,
-    _resolve_trading_window,
-)
 from services.option_symbol_service import (
+    NO_SPOT_EXCHANGES,
     construct_crypto_option_symbol,
     construct_option_symbol,
     find_atm_strike_from_actual,
     get_available_strikes,
     get_option_exchange,
+    resolve_underlying_quote,
 )
-from database.token_db_enhanced import fno_search_symbols
 from services.quotes_service import get_quotes
+from services.strategy_chart_service import (
+    _cap_last_n_trading_dates,
+    _resolve_trading_window,
+)
 from utils.constants import CRYPTO_EXCHANGES, INSTRUMENT_PERPFUT
 from utils.logging import get_logger
 
@@ -119,7 +121,7 @@ def get_straddle_chart_data(
         exchange: Underlying exchange (e.g., "NSE_INDEX", "BSE_INDEX")
         expiry_date: Expiry in DDMMMYY format (e.g., "06FEB26")
         interval: Candle interval (e.g., "1m", "5m")
-        api_key: Tradeboard API key
+        api_key: OpenAlgo API key
         days: Number of days of history (default 5)
 
     Returns:
@@ -139,15 +141,38 @@ def get_straddle_chart_data(
         # CRYPTO: look up the canonical perpetual symbol from cache (e.g. BTC → BTCUSDFUT)
         if exchange.upper() in CRYPTO_EXCHANGES:
             _perp = fno_search_symbols(
-                query=f"{base_symbol}USDFUT", exchange=exchange, instrumenttype=INSTRUMENT_PERPFUT, limit=1
+                query=f"{base_symbol}USDFUT",
+                exchange=exchange,
+                instrumenttype=INSTRUMENT_PERPFUT,
+                limit=1,
             )
             if not _perp:
                 return (
                     False,
-                    {"status": "error", "message": f"No perpetual futures found for {base_symbol} on {exchange}"},
+                    {
+                        "status": "error",
+                        "message": f"No perpetual futures found for {base_symbol} on {exchange}",
+                    },
                     404,
                 )
             underlying_quote_symbol = _perp[0]["symbol"]
+        elif exchange.upper() in NO_SPOT_EXCHANGES:
+            # MCX and the currency segments have no tradable spot: the near-month
+            # future is the pricing reference. Without this the quote is fetched
+            # for a symbol that does not exist and the tool renders empty.
+            _resolved = resolve_underlying_quote(base_symbol, exchange.upper())
+            if _resolved is None:
+                return (
+                    False,
+                    {
+                        "status": "error",
+                        "message": (
+                            f"No unexpired futures found for {base_symbol} on {exchange.upper()}"
+                        ),
+                    },
+                    404,
+                )
+            underlying_quote_symbol, quote_exchange = _resolved
         else:
             underlying_quote_symbol = base_symbol
 
@@ -186,11 +211,19 @@ def get_straddle_chart_data(
 
         df_underlying = pd.DataFrame(resp_u.get("data", []))
         if df_underlying.empty:
-            return False, {"status": "error", "message": "No underlying history data available"}, 404
+            return (
+                False,
+                {"status": "error", "message": "No underlying history data available"},
+                404,
+            )
 
         df_underlying = _convert_timestamp_to_ist(df_underlying)
         if df_underlying is None:
-            return False, {"status": "error", "message": "Failed to parse underlying timestamps"}, 500
+            return (
+                False,
+                {"status": "error", "message": "Failed to parse underlying timestamps"},
+                500,
+            )
 
         # Step 4: For each candle, compute ATM strike
         atm_per_row = []
@@ -202,17 +235,23 @@ def get_straddle_chart_data(
         df_underlying["atm_strike"] = atm_per_row
 
         # Step 5: Collect unique ATM strikes
-        unique_strikes = set(s for s in atm_per_row if s is not None)
+        unique_strikes = {s for s in atm_per_row if s is not None}
         if not unique_strikes:
             return False, {"status": "error", "message": "Could not determine any ATM strikes"}, 400
 
-        logger.debug(f"Straddle chart: {len(unique_strikes)} unique ATM strikes for {base_symbol}: {sorted(unique_strikes)}")
+        logger.debug(
+            f"Straddle chart: {len(unique_strikes)} unique ATM strikes for {base_symbol}: {sorted(unique_strikes)}"
+        )
 
         # Step 6: For each unique strike, fetch CE and PE history
         # Build lookup: {strike: {timestamp: {ce_close, pe_close}}}
         strike_data = {}
 
-        _build_sym = construct_crypto_option_symbol if exchange.upper() in CRYPTO_EXCHANGES else construct_option_symbol
+        _build_sym = (
+            construct_crypto_option_symbol
+            if exchange.upper() in CRYPTO_EXCHANGES
+            else construct_option_symbol
+        )
         for strike in sorted(unique_strikes):
             ce_symbol = _build_sym(base_symbol, expiry_date.upper(), strike, "CE")
             pe_symbol = _build_sym(base_symbol, expiry_date.upper(), strike, "PE")
@@ -295,7 +334,10 @@ def get_straddle_chart_data(
         if not series:
             return (
                 False,
-                {"status": "error", "message": "No straddle data available (option history may be missing)"},
+                {
+                    "status": "error",
+                    "message": "No straddle data available (option history may be missing)",
+                },
                 404,
             )
 

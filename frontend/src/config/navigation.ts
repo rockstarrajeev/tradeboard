@@ -2,7 +2,7 @@ import {
   BarChart3,
   Bell,
   BookOpen,
-
+  CandlestickChart,
   ClipboardList,
   Code2,
   Database,
@@ -30,6 +30,8 @@ export interface NavItem {
   href: string
   label: string
   icon: LucideIcon
+  /** Served by Flask (not a React route): render as a full-page link. */
+  external?: boolean
 }
 
 // Main navigation items shown in desktop navbar
@@ -38,7 +40,7 @@ export const navItems: NavItem[] = [
   { href: '/orderbook', label: 'Orderbook', icon: ClipboardList },
   { href: '/tradebook', label: 'Tradebook', icon: FileText },
   { href: '/positions', label: 'Positions', icon: TrendingUp },
-  { href: '/action-center', label: 'Action Center', icon: Bell },
+  { href: '/trading', label: 'Trading', icon: CandlestickChart },
   { href: '/platforms', label: 'Platforms', icon: Layers },
   { href: '/strategy', label: 'Strategy', icon: Code2 },
   { href: '/logs', label: 'Logs', icon: FileBarChart },
@@ -64,6 +66,7 @@ export const mobileSheetItems = navItems.filter((item) => !bottomNavPaths.includ
 export const profileMenuItems: NavItem[] = [
   { href: '/profile', label: 'Profile', icon: User },
   { href: '/apikey', label: 'API Key', icon: Key },
+  { href: '/action-center', label: 'Action Center', icon: Bell },
   { href: '/master-contract', label: 'Master Contract', icon: FileStack },
   { href: '/telegram', label: 'Telegram Bot', icon: MessageSquare },
   { href: '/whatsapp', label: 'WhatsApp Bot', icon: MessageCircle },
@@ -75,22 +78,24 @@ export const profileMenuItems: NavItem[] = [
   { href: '/historify', label: 'Historify', icon: Database },
   { href: '/search/token', label: 'Search', icon: Search },
   { href: '/sandbox', label: 'Sandbox', icon: FlaskConical },
-  { href: '/sandbox/mypnl', label: 'P\u0026L History', icon: BarChart3 },
-
   { href: '/leverage', label: 'Leverage', icon: Gauge },
   { href: '/admin', label: 'Admin', icon: Settings },
 ]
 
 // External links
 export const externalLinks = {
-  docs: { href: 'https://docs.rajeevupadhyay.com', label: 'Docs', icon: BookOpen },
+  docs: { href: 'https://docs.openalgo.in', label: 'Docs', icon: BookOpen },
 }
 
 // Shared utility to check if a route is active
 // Uses startsWith for routes with nested pages (like /strategy/*)
 export function isActiveRoute(pathname: string, href: string): boolean {
   if (href === '/strategy') {
-    return pathname.startsWith('/strategy')
+    // Match on a path boundary, not a bare prefix. '/strategybuilder' starts
+    // with '/strategy', so a plain startsWith lit up the Strategy tab while
+    // the user was on a Tools page - the breadcrumb said TOOLS and the nav
+    // disagreed.
+    return pathname === '/strategy' || pathname.startsWith('/strategy/')
   }
   return pathname === href
 }

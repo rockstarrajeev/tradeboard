@@ -104,6 +104,7 @@ def track_latency(api_type):
         Returns:
             callable: The wrapped function.
         """
+
         @wraps(f)
         def wrapped(*args, **kwargs):
             """
@@ -147,10 +148,16 @@ def track_latency(api_type):
                 # Start response processing stage
                 tracker.start_stage("broker_response")
 
-                # Get response data
-                if hasattr(response, "json"):
+                # Get response data. A file download (e.g. the portfolio
+                # tearsheet) has a `.json` property but isn't JSON, so it
+                # resolves to None rather than raising.
+                if hasattr(response, "json") and isinstance(response.json, dict):
                     response_data = response.json
-                elif isinstance(response, tuple) and len(response) > 0:
+                elif (
+                    isinstance(response, tuple)
+                    and len(response) > 0
+                    and isinstance(response[0], dict)
+                ):
                     response_data = response[0]
                 else:
                     response_data = {}
@@ -293,6 +300,13 @@ def init_latency_monitoring(app):
         "split_order": "SPLIT",
         "options_order": "OPTIONS",
         "options_multiorder": "OPTIONS_MULTI",
+        # GTT. These were already being wrapped - an unmapped namespace falls
+        # back to its uppercased name - but as PLACE_GTT_ORDER etc, which does
+        # not match the ORDER_TYPES set below, so GTT latency was being purged
+        # after 7 days as though it were a data query.
+        "place_gtt_order": "GTT_PLACE",
+        "modify_gtt_order": "GTT_MODIFY",
+        "cancel_gtt_order": "GTT_CANCEL",
         # Data/Account endpoints (auto-purge after 7 days)
         "quotes": "QUOTES",
         "history": "HISTORY",
@@ -323,18 +337,6 @@ def init_latency_monitoring(app):
     }
 
     # Order types that should be kept forever (not purged)
-    ORDER_TYPES = {
-        "PLACE",
-        "SMART",
-        "MODIFY",
-        "CANCEL",
-        "CLOSE",
-        "CANCEL_ALL",
-        "BASKET",
-        "SPLIT",
-        "OPTIONS",
-        "OPTIONS_MULTI",
-    }
 
     # Wrap all API endpoints with latency tracking
     for namespace in api.namespaces:

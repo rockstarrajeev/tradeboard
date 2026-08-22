@@ -2,7 +2,7 @@
 High-level IIFL Capital market-data feed client.
 
 Sits on top of `iiflcapital_mqtt.IiflMqttClient` and exposes the same
-broker-feed surface that other Tradeboard adapters consume (Zerodha-style):
+broker-feed surface that other OpenAlgo adapters consume (Zerodha-style):
 
     client = IiflcapitalWebSocket(user_session=<jwt>)
     client.on_ticks = lambda ticks: ...
@@ -11,7 +11,7 @@ broker-feed surface that other Tradeboard adapters consume (Zerodha-style):
 
 The IIFL feed publishes a single 188-byte "MWBOCombined" packet per market
 update — it always contains LTP + OHLC + L5 depth + bid/ask totals + timestamp.
-Tradeboard's WebSocket proxy still wants three distinct modes (LTP/Quote/Depth),
+OpenAlgo's WebSocket proxy still wants three distinct modes (LTP/Quote/Depth),
 so we subscribe ONCE per (segment, token) at the MQTT layer and let the
 adapter slice the decoded dict into the right shape for each subscribed mode.
 That is the same trade-off the Zerodha adapter makes with its `full` mode.
@@ -46,7 +46,7 @@ TOPIC_INDEX_FEED = "prod/marketfeed/index/v1/"
 TOPIC_OPEN_INTEREST = "prod/marketfeed/oi/v1/"
 
 # Modes are local to the IIFL client. They DO NOT correspond 1:1 with
-# Tradeboard's mode ints — the adapter layer translates 1/2/3 → "ltp"/"quote"/"full".
+# OpenAlgo's mode ints — the adapter layer translates 1/2/3 → "ltp"/"quote"/"full".
 MODE_LTP = "ltp"
 MODE_QUOTE = "quote"
 MODE_FULL = "full"
@@ -261,9 +261,7 @@ class IiflcapitalWebSocket:
         # when two reconnects fire on the same host within the same microsecond
         # (broker drops the older session with CONNACK rc=2 on collision).
         self.client_id = (
-            "tradeboard"
-            + datetime.now().strftime("%d%m%y%H%M%S%f")
-            + os.urandom(4).hex()
+            "openalgo" + datetime.now().strftime("%d%m%y%H%M%S%f") + os.urandom(4).hex()
         )
         self.username = _decode_jwt_username(user_session)
         self.password = f"OPENID~~{user_session}~"  # bridgePy format
@@ -398,7 +396,7 @@ class IiflcapitalWebSocket:
         Args:
             instruments: list of (segment, token) tuples. Segment is the
                 IIFL brexchange ('NSEEQ', 'NSEFO', 'BSEEQ', ...).
-            mode: "ltp" / "quote" / "full" — affects which Tradeboard modes the
+            mode: "ltp" / "quote" / "full" — affects which OpenAlgo modes the
                 adapter will publish, not which broker topic we hit (the
                 broker only has one packet shape per stream).
             is_index: True for NSE_INDEX/BSE_INDEX symbols; routes to the
@@ -488,9 +486,7 @@ class IiflcapitalWebSocket:
             if not self.is_connected():
                 consecutive_failures += 1
                 if consecutive_failures > 5:
-                    self.logger.error(
-                        "MQTT not connected — abandoning pending subscriptions"
-                    )
+                    self.logger.error("MQTT not connected — abandoning pending subscriptions")
                     with self._lock:
                         self._pending.clear()
                     break
@@ -550,13 +546,13 @@ class IiflcapitalWebSocket:
         """
         try:
             if topic.startswith(self._MW_TOPIC_PREFIX):
-                key = topic[len(self._MW_TOPIC_PREFIX):]
+                key = topic[len(self._MW_TOPIC_PREFIX) :]
                 self._dispatch_feed(key, payload, is_index=False)
             elif topic.startswith(self._IDX_TOPIC_PREFIX):
-                key = topic[len(self._IDX_TOPIC_PREFIX):]
+                key = topic[len(self._IDX_TOPIC_PREFIX) :]
                 self._dispatch_feed(key, payload, is_index=True)
             elif topic.startswith(self._OI_TOPIC_PREFIX):
-                key = topic[len(self._OI_TOPIC_PREFIX):]
+                key = topic[len(self._OI_TOPIC_PREFIX) :]
                 self._dispatch_oi(key, payload)
             else:
                 self.logger.debug(f"Unhandled IIFL topic: {topic}")
@@ -605,7 +601,7 @@ class IiflcapitalWebSocket:
         self._oi_cache[key] = decoded
         # We deliberately do not push an OI-only tick — OI is merged into the
         # next market-feed tick (which is publishing constantly during market
-        # hours). This keeps the Tradeboard proxy's mode set simple.
+        # hours). This keeps the OpenAlgo proxy's mode set simple.
 
     def _on_mqtt_disconnect(self, _exc: Exception | None) -> None:
         was_connected = self.connected
@@ -645,9 +641,7 @@ class IiflcapitalWebSocket:
             self.logger.error(f"Error fetching fresh IIFL user_session: {e}")
             return
         if not fresh:
-            self.logger.warning(
-                "No fresh IIFL user_session available; reusing existing session"
-            )
+            self.logger.warning("No fresh IIFL user_session available; reusing existing session")
             return
         try:
             username = _decode_jwt_username(fresh)
@@ -676,10 +670,8 @@ class IiflcapitalWebSocket:
                 self.running = False
                 return
 
-            delay = min(2 * (1.5 ** self._reconnect_attempts), self.RECONNECT_MAX_DELAY)
-            self.logger.info(
-                f"IIFL reconnect in {delay:.0f}s (attempt {self._reconnect_attempts})"
-            )
+            delay = min(2 * (1.5**self._reconnect_attempts), self.RECONNECT_MAX_DELAY)
+            self.logger.info(f"IIFL reconnect in {delay:.0f}s (attempt {self._reconnect_attempts})")
             if self._stop_event.wait(delay):
                 return
 
@@ -688,11 +680,7 @@ class IiflcapitalWebSocket:
             # connect call; without this guard we would open a new TLS
             # socket the caller is actively trying to tear down — leaking
             # both the FD and the reader/keepalive threads tied to it.
-            if (
-                not self.running
-                or self._stop_event.is_set()
-                or self._fatal_error
-            ):
+            if not self.running or self._stop_event.is_set() or self._fatal_error:
                 return
 
             # Re-read a fresh token before each reconnect so a daily-rolled

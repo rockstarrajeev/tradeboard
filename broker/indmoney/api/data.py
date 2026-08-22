@@ -1,13 +1,12 @@
 import json
-import os
 import threading
 import time
 from datetime import datetime, timedelta
 
-import httpx
 import pandas as pd
 
 from broker.indmoney.api.baseurl import get_url
+from broker.indmoney.api.rate_limiter import rate_limited_request
 from database.token_db import get_token
 from utils.httpx_client import get_httpx_client
 from utils.logging import get_logger
@@ -20,8 +19,8 @@ logger = get_logger(__name__)
 # server won't price). We isolate the offending code(s) via bisection and cache
 # them here so subsequent quote calls skip them and stay a single fast batch.
 # Cached codes are re-tested after a TTL in case they become quotable again.
-_BAD_SCRIP_CODES = {}          # scrip_code -> monotonic() time it was marked bad
-_BAD_SCRIP_TTL = 300.0         # seconds before a bad code is retried
+_BAD_SCRIP_CODES = {}  # scrip_code -> monotonic() time it was marked bad
+_BAD_SCRIP_TTL = 300.0  # seconds before a bad code is retried
 _bad_scrip_lock = threading.Lock()
 
 
@@ -48,43 +47,6 @@ def _mark_bad(scrip_code):
             if now - ts > _BAD_SCRIP_TTL:
                 _BAD_SCRIP_CODES.pop(code, None)
 
-# 429 (rate-limit) retry configuration. IndStocks enforces per-category rate
-# limits (Data/Quote 5/s) and returns 429 on breach (docs 03-conventions /
-# 14-errors), so requests retry with backoff.
-_MAX_RETRIES = 3
-_RATE_LIMIT_BASE_DELAY = 1.0  # seconds; doubled each attempt (1s, 2s, 4s)
-
-
-def request_with_retry(client, method, url, **kwargs):
-    """
-    Perform an httpx request, retrying HTTP 429 with exponential backoff
-    (honouring Retry-After when present). Sets ``.status`` for compatibility
-    with the existing codebase.
-    """
-    response = None
-    for attempt in range(_MAX_RETRIES):
-        response = client.request(method.upper(), url, **kwargs)
-        if response.status_code == 429 and attempt < _MAX_RETRIES - 1:
-            retry_after = response.headers.get("Retry-After")
-            try:
-                delay = (
-                    min(float(retry_after), 30.0)
-                    if retry_after
-                    else _RATE_LIMIT_BASE_DELAY * (2 ** attempt)
-                )
-            except (TypeError, ValueError):
-                delay = _RATE_LIMIT_BASE_DELAY * (2 ** attempt)
-            logger.warning(
-                f"Rate limit hit (429) on {url}, retrying in {delay:.1f}s "
-                f"(attempt {attempt + 1}/{_MAX_RETRIES})"
-            )
-            time.sleep(delay)
-            continue
-        break
-    if response is not None:
-        response.status = response.status_code
-    return response
-
 
 def get_api_response(endpoint, auth, method="GET", params=None):
     AUTH_TOKEN = auth
@@ -95,12 +57,6 @@ def get_api_response(endpoint, auth, method="GET", params=None):
     # Get the shared httpx client with connection pooling
     client = get_httpx_client()
 
-    # Log token info for debugging (mask the actual token)
-    token_preview = (
-        AUTH_TOKEN[:20] + "..." + AUTH_TOKEN[-10:] if len(AUTH_TOKEN) > 30 else AUTH_TOKEN
-    )
-    logger.debug(f"Using auth token: {token_preview}")
-
     headers = {
         "Authorization": AUTH_TOKEN,
         "Content-Type": "application/json",
@@ -109,9 +65,9 @@ def get_api_response(endpoint, auth, method="GET", params=None):
 
     url = get_url(endpoint)
 
+    # Never log `headers` - it carries the Authorization token.
     logger.debug(f"Making request to {url}")
     logger.debug(f"Method: {method}")
-    logger.debug(f"Headers: {headers}")
     logger.debug(f"Params: {params}")
     # Build query string for debugging
     if params:
@@ -123,11 +79,11 @@ def get_api_response(endpoint, auth, method="GET", params=None):
     try:
         # request_with_retry handles HTTP 429 with backoff and sets .status
         if method == "GET":
-            res = request_with_retry(client, "GET", url, headers=headers, params=params)
+            res = rate_limited_request(client, "GET", url, headers=headers, params=params)
         elif method == "POST":
-            res = request_with_retry(client, "POST", url, headers=headers, json=params)
+            res = rate_limited_request(client, "POST", url, headers=headers, json=params)
         else:
-            res = request_with_retry(client, method, url, headers=headers, params=params)
+            res = rate_limited_request(client, method, url, headers=headers, params=params)
 
         logger.debug(f"Request completed. Status code: {res.status_code}")
         logger.info(f"Actual request URL: {res.url}")
@@ -259,12 +215,10 @@ class BrokerData:
         """Initialize Indmoney data handler with authentication token"""
         self.auth_token = auth_token
         # Map common timeframe format to Indmoney intervals
+        # INDstocks no longer offers any sub-minute interval - the documented
+        # set starts at 1minute (docs 07-historical-data). Advertising second
+        # granularity here only produced requests the server rejects.
         self.timeframe_map = {
-            # Seconds (max 1 day range)
-            "1s": "1second",
-            "5s": "5second",
-            "10s": "10second",
-            "15s": "15second",
             # Minutes (max 7 days range for 1-30m)
             "1m": "1minute",
             "2m": "2minute",
@@ -317,6 +271,32 @@ class BrokerData:
         )
 
         return scrip_code
+
+    @staticmethod
+    def _extract_market_depth(container, scrip_code):
+        """
+        Pull the {aggregate, depth} object out of a `market_depth` value.
+
+        The docs show it flat (``data.<scrip>.market_depth.depth``) but the live
+        API has been observed with an extra scrip-code level
+        (``data.<scrip>.market_depth.<scrip>.depth``). Accept either, so neither
+        shape silently yields an empty book.
+        """
+        if not isinstance(container, dict):
+            return {}
+        # Extra scrip-keyed level.
+        nested = container.get(scrip_code)
+        if isinstance(nested, dict) and ("depth" in nested or "aggregate" in nested):
+            return nested
+        # Documented flat shape.
+        if "depth" in container or "aggregate" in container:
+            return container
+        # Single unknown key wrapping the real object.
+        if len(container) == 1:
+            only = next(iter(container.values()))
+            if isinstance(only, dict) and ("depth" in only or "aggregate" in only):
+                return only
+        return {}
 
     def _clean_number(self, value, default=0):
         """Clean comma-separated number strings and convert to appropriate type"""
@@ -387,8 +367,9 @@ class BrokerData:
                     }
 
                     # Try to extract bid/ask from market depth if available in full response
-                    market_depth_container = full_data.get("market_depth", {})
-                    market_depth = market_depth_container.get(scrip_code, {})
+                    market_depth = self._extract_market_depth(
+                        full_data.get("market_depth"), scrip_code
+                    )
                     depth_levels = market_depth.get("depth", [])
 
                     if depth_levels and len(depth_levels) > 0:
@@ -428,9 +409,7 @@ class BrokerData:
                 )
                 depth_raw = depth_response.get("data", {}).get(scrip_code, {})
 
-                # Handle the extra nesting level in market depth
-                market_depth_container = depth_raw.get("market_depth", {})
-                market_depth = market_depth_container.get(scrip_code, {})
+                market_depth = self._extract_market_depth(depth_raw.get("market_depth"), scrip_code)
                 depth_levels = market_depth.get("depth", [])
 
                 if depth_levels and len(depth_levels) > 0:
@@ -489,7 +468,6 @@ class BrokerData:
         """
         try:
             BATCH_SIZE = 500  # Indmoney API batch size limit
-            RATE_LIMIT_DELAY = 0.3  # Delay in seconds between batch API calls
 
             # If symbols exceed batch size, process in batches
             if len(symbols) > BATCH_SIZE:
@@ -507,9 +485,7 @@ class BrokerData:
                     batch_results = self._process_multiquotes_batch(batch)
                     all_results.extend(batch_results)
 
-                    # Rate limit delay between batches
-                    if i + BATCH_SIZE < len(symbols):
-                        time.sleep(RATE_LIMIT_DELAY)
+                    # Pacing is handled centrally by rate_limiter (quote bucket).
 
                 logger.info(
                     f"Successfully processed {len(all_results)} quotes in {(len(symbols) + BATCH_SIZE - 1) // BATCH_SIZE} batches"
@@ -608,9 +584,7 @@ class BrokerData:
                 symbol_map[scrip_code] = {"symbol": symbol, "exchange": exchange}
             except Exception as e:
                 logger.warning(f"Skipping symbol {symbol} on {exchange}: {str(e)}")
-                skipped_symbols.append(
-                    {"symbol": symbol, "exchange": exchange, "error": str(e)}
-                )
+                skipped_symbols.append({"symbol": symbol, "exchange": exchange, "error": str(e)})
 
         # Return skipped symbols if no valid symbols
         if not scrip_codes:
@@ -620,7 +594,9 @@ class BrokerData:
         # Fetch quotes, tolerating poison codes that would otherwise 400 the
         # whole batch. Returns {scrip_code: raw_quote} for codes with data.
         quotes_data = self._fetch_full_quotes_map(scrip_codes)
-        logger.debug(f"Multiquotes returned data for {len(quotes_data)} of {len(scrip_codes)} codes")
+        logger.debug(
+            f"Multiquotes returned data for {len(quotes_data)} of {len(scrip_codes)} codes"
+        )
 
         succeeded = 0
         for scrip_code, original in symbol_map.items():
@@ -640,14 +616,14 @@ class BrokerData:
                             "open": self._clean_number(quote.get("day_open", 0)),
                             "high": self._clean_number(quote.get("day_high", 0)),
                             "low": self._clean_number(quote.get("day_low", 0)),
-                            "ltp": self._clean_number(
-                                quote.get("live_price", quote.get("ltp", 0))
-                            ),
+                            "ltp": self._clean_number(quote.get("live_price", quote.get("ltp", 0))),
                             "prev_close": self._clean_number(
                                 quote.get("prev_close", quote.get("close", 0))
                             ),
                             "volume": self._clean_number(quote.get("volume", 0)),
-                            "oi": self._clean_number(quote.get("oi", quote.get("open_interest", 0))),
+                            "oi": self._clean_number(
+                                quote.get("oi", quote.get("open_interest", 0))
+                            ),
                         },
                     }
                 )
@@ -754,10 +730,10 @@ class BrokerData:
                         "totalsellqty": 0,
                     }
 
-                # Process market depth - handle the extra nesting level
-                market_depth_container = depth_data.get("market_depth", {})
-                # Indmoney has an extra nesting level with the scrip code
-                market_depth = market_depth_container.get(scrip_code, {})
+                # Process market depth (tolerates both documented and observed shapes)
+                market_depth = self._extract_market_depth(
+                    depth_data.get("market_depth"), scrip_code
+                )
                 depth_levels = market_depth.get("depth", [])
                 aggregate = market_depth.get("aggregate", {})
 
@@ -906,7 +882,7 @@ class BrokerData:
             if not isinstance(end_date, str):
                 end_date = end_date.strftime("%Y-%m-%d")
 
-            # Map Tradeboard intervals to Indmoney intervals using timeframe_map
+            # Map OpenAlgo intervals to Indmoney intervals using timeframe_map
             if interval not in self.timeframe_map:
                 supported = list(self.timeframe_map.keys())
                 raise Exception(
@@ -929,10 +905,6 @@ class BrokerData:
 
             # Check if date range exceeds Indmoney limits
             max_ranges = {
-                "1second": 1,
-                "5second": 1,
-                "10second": 1,
-                "15second": 1,  # 1 day
                 "1minute": 7,
                 "2minute": 7,
                 "3minute": 7,
@@ -958,6 +930,9 @@ class BrokerData:
             all_candles = []
 
             for chunk_start, chunk_end in date_chunks:
+                # Pacing is handled centrally by rate_limiter (data bucket), which
+                # also paces against concurrent callers - a local sleep here would
+                # only compound it.
                 try:
                     chunk_start_ts = self._date_to_timestamp_ms(chunk_start)
                     chunk_end_ts = self._date_to_timestamp_ms(chunk_end, end_of_day=True)
@@ -1002,7 +977,7 @@ class BrokerData:
 
                     logger.debug(f"Received {len(candles_data)} candles for chunk")
 
-                    # Transform Indmoney candle format to Tradeboard format
+                    # Transform Indmoney candle format to OpenAlgo format
                     chunk_candles = []
                     for candle in candles_data:
                         try:
@@ -1116,7 +1091,11 @@ class BrokerData:
         """
         Get list of supported timeframes/intervals for historical data.
 
+        INDstocks offers no sub-minute interval; the documented set starts at
+        1minute (docs 07-historical-data).
+
         Returns:
-            list: List of supported interval strings like ['1s', '5s', '1m', '5m', '15m', '1h', 'D', etc.]
+            list: Supported interval strings - '1m', '2m', '3m', '4m', '5m',
+            '10m', '15m', '30m', '1h', '2h', '3h', '4h', 'D', 'W', 'M'.
         """
         return list(self.timeframe_map.keys())

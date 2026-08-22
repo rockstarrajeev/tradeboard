@@ -20,7 +20,7 @@ def get_algo_id(exchange):
 
 
 def transform_data(data, token_id):
-    """Transform Tradeboard order data to DefinedGe Securities format"""
+    """Transform OpenAlgo order data to DefinedGe Securities format"""
     from database.token_db import get_br_symbol
 
     try:
@@ -29,7 +29,7 @@ def transform_data(data, token_id):
 
         price_type = map_price_type(data["pricetype"])
 
-        # Map Tradeboard fields to DefinedGe fields based on API docs
+        # Map OpenAlgo fields to DefinedGe fields based on API docs
         transformed_data = {
             "tradingsymbol": symbol,
             "exchange": map_exchange(data["exchange"]),
@@ -158,7 +158,7 @@ def transform_modify_order_data(data, token_id):
 
 
 def map_exchange(exchange):
-    """Map Tradeboard exchange to DefinedGe exchange"""
+    """Map OpenAlgo exchange to DefinedGe exchange"""
     exchange_mapping = {
         "NSE": "NSE",
         "BSE": "BSE",
@@ -171,7 +171,7 @@ def map_exchange(exchange):
 
 
 def reverse_map_exchange(exchange):
-    """Map DefinedGe exchange to Tradeboard exchange"""
+    """Map DefinedGe exchange to OpenAlgo exchange"""
     reverse_mapping = {
         "NSE": "NSE",
         "BSE": "BSE",
@@ -184,7 +184,7 @@ def reverse_map_exchange(exchange):
 
 
 def map_product_type(product):
-    """Map Tradeboard product type to DefinedGe product type.
+    """Map OpenAlgo product type to DefinedGe product type.
 
     API supports CNC (equity only), INTRADAY (both), NORMAL (derivatives only).
     """
@@ -197,7 +197,7 @@ def map_product_type(product):
 
 
 def reverse_map_product_type(product):
-    """Map DefinedGe product type to Tradeboard product type"""
+    """Map DefinedGe product type to OpenAlgo product type"""
     reverse_mapping = {
         "INTRADAY": "MIS",
         "CNC": "CNC",
@@ -207,7 +207,7 @@ def reverse_map_product_type(product):
 
 
 def map_price_type(pricetype):
-    """Map Tradeboard price type to DefinedGe price type.
+    """Map OpenAlgo price type to DefinedGe price type.
 
     API supports LIMIT / MARKET / SL-LIMIT / SL-MARKET.
     """
@@ -221,13 +221,13 @@ def map_price_type(pricetype):
 
 
 def map_definedge_price_type(pricetype):
-    """Map Tradeboard price type to DefinedGe API price type (for modify order)"""
+    """Map OpenAlgo price type to DefinedGe API price type (for modify order)"""
     price_mapping = {"MARKET": "MARKET", "LIMIT": "LIMIT", "SL": "SL-LIMIT", "SL-M": "SL-MARKET"}
     return price_mapping.get(pricetype, "LIMIT")
 
 
 def map_product_type_for_modify(product):
-    """Map Tradeboard product type to DefinedGe product type for modify order"""
+    """Map OpenAlgo product type to DefinedGe product type for modify order"""
     product_mapping = {
         "MIS": "INTRADAY",
         "CNC": "CNC",  # DefinedGe modify API expects CNC for equity
@@ -237,7 +237,7 @@ def map_product_type_for_modify(product):
 
 
 def reverse_map_price_type(pricetype):
-    """Map DefinedGe price type to Tradeboard price type"""
+    """Map DefinedGe price type to OpenAlgo price type"""
     reverse_mapping = {
         "MARKET": "MARKET",
         "LIMIT": "LIMIT",
@@ -248,7 +248,7 @@ def reverse_map_price_type(pricetype):
 
 
 def map_order_status(status):
-    """Map DefinedGe order status to Tradeboard status.
+    """Map DefinedGe order status to OpenAlgo status.
 
     API order_status values: CANCELED / COMPLETE / NEW / OPEN / REJECTED / REPLACED
     """
@@ -267,7 +267,7 @@ def map_order_status(status):
 
 
 def transform_order_data(order):
-    """Transform DefinedGe order data to Tradeboard format"""
+    """Transform DefinedGe order data to OpenAlgo format"""
     try:
         transformed_order = {
             "symbol": order.get("tradingsymbol", ""),
@@ -293,7 +293,7 @@ def transform_order_data(order):
 
 
 def transform_position_data(position):
-    """Transform DefinedGe position data to Tradeboard format"""
+    """Transform DefinedGe position data to OpenAlgo format"""
     try:
         transformed_position = {
             "symbol": position.get("tradingsymbol", ""),
@@ -314,7 +314,7 @@ def transform_position_data(position):
 
 
 def transform_holding_data(holding):
-    """Transform DefinedGe holding data to Tradeboard format"""
+    """Transform DefinedGe holding data to OpenAlgo format"""
     try:
         # DefinedGe holdings have multiple trading symbols for different exchanges
         trading_symbols = holding.get("tradingsymbol", [])

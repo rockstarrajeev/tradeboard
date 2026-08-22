@@ -10,11 +10,7 @@ import pathlib
 
 import pytest
 
-_MODULE_PATH = (
-    pathlib.Path(__file__).resolve().parent.parent
-    / "websocket_proxy"
-    / "mode_utils.py"
-)
+_MODULE_PATH = pathlib.Path(__file__).resolve().parent.parent / "websocket_proxy" / "mode_utils.py"
 
 
 def _load_mode_utils():
@@ -87,8 +83,8 @@ def test_normalize_mode_rejects_invalid_inputs(value):
     [
         None,
         1.5,
-        2.0,        # float lookalike — must reject (we only accept int/str)
-        True,       # bool subclass of int — must reject explicitly
+        2.0,  # float lookalike — must reject (we only accept int/str)
+        True,  # bool subclass of int — must reject explicitly
         False,
         ["LTP"],
         {"mode": 1},

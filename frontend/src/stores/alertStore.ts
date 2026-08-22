@@ -128,7 +128,7 @@ export const useAlertStore = create<AlertStore>()(
       },
     }),
     {
-      name: 'tradeboard-alerts',
+      name: 'openalgo-alerts',
       partialize: (state) => ({
         toastsEnabled: state.toastsEnabled,
         soundEnabled: state.soundEnabled,

@@ -1,4 +1,4 @@
-# Mapping Tradeboard API Request https://rajeevupadhyay.com/docs
+# Mapping OpenAlgo API Request https://openalgo.in/docs
 # Mapping Pocketful API Parameters https://api.pocketful.in/docs/
 
 from broker.pocketful.api.data import BrokerData
@@ -11,18 +11,18 @@ logger = get_logger(__name__)
 
 def transform_data(data, client_id=None, auth_token=None):
     """
-    Transforms Tradeboard order format to Pocketful order format.
+    Transforms OpenAlgo order format to Pocketful order format.
     For market orders, fetches quotes and adjusts price using MPP (Market Price Protection):
     - EQ/FUT: Price < 100: 2%, 100-500: 1%, > 500: 0.5%
     - OPT (CE/PE): Price < 10: 5%, 10-100: 3%, 100-500: 2%, > 500: 1%
 
     Args:
-        data: Tradeboard order data dictionary
+        data: OpenAlgo order data dictionary
         client_id: Client ID to use for the order, if available
         auth_token: Authentication token for fetching quotes (passed from order_api)
     """
     # Get broker symbol for the order
-    symbol = get_br_symbol(data["symbol"], data["exchange"])
+    get_br_symbol(data["symbol"], data["exchange"])
 
     # Get the numeric token for the symbol
     token = get_token(data["symbol"], data["exchange"])
@@ -139,14 +139,14 @@ def transform_data(data, client_id=None, auth_token=None):
 
 def transform_modify_order_data(data, client_id=None):
     """
-    Transforms Tradeboard order modification format to Pocketful order format.
+    Transforms OpenAlgo order modification format to Pocketful order format.
 
     Args:
-        data: Tradeboard order data dictionary
+        data: OpenAlgo order data dictionary
         client_id: Client ID to use for the order, if available
     """
     # Get broker symbol for the order
-    symbol = get_br_symbol(data["symbol"], data["exchange"])
+    get_br_symbol(data["symbol"], data["exchange"])
 
     # Get the numeric token for the symbol
     token = get_token(data["symbol"], data["exchange"])
@@ -184,7 +184,7 @@ def transform_modify_order_data(data, client_id=None):
 
 def map_order_type(pricetype):
     """
-    Maps Tradeboard pricetype to Pocketful order type.
+    Maps OpenAlgo pricetype to Pocketful order type.
     """
     order_type_mapping = {
         "MARKET": "MARKET",
@@ -197,7 +197,7 @@ def map_order_type(pricetype):
 
 def map_product_type(product):
     """
-    Maps Tradeboard product type to Pocketful product type.
+    Maps OpenAlgo product type to Pocketful product type.
     """
     product_type_mapping = {"CNC": "CNC", "NRML": "NRML", "MIS": "MIS"}
     return product_type_mapping.get(product.upper(), "MIS")  # Default to MIS if not found
@@ -205,9 +205,9 @@ def map_product_type(product):
 
 def reverse_map_product_type(exchange, product):
     """
-    Reverse maps the broker product type to the Tradeboard product type, considering the exchange.
+    Reverse maps the broker product type to the OpenAlgo product type, considering the exchange.
     """
-    # Exchange to Tradeboard product type mapping for 'D'
+    # Exchange to OpenAlgo product type mapping for 'D'
     exchange_mapping = {
         "CNC": "CNC",
         "NRML": "NRML",

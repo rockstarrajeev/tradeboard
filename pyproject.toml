@@ -1,7 +1,7 @@
 [project]
 requires-python = ">=3.12"
 name = "tradeboardUI"
-version = "2.0.1.5"
+version = "2.0.1.9"
 description = "Broker-agnostic open-source trading automation"
 dependencies = [
   "aniso8601==9.0.1",
@@ -153,6 +153,7 @@ dependencies = [
   "opengreeks>=0.2.0",
   "eventlet",
   "gunicorn>=25.0,<26",
+  "openstatz>=0.4.1",
 ]
 
 [build-system]
@@ -172,6 +173,9 @@ exclude = [
     "db",
     "log",
     "strategies",
+    "scripts",
+    "examples",
+    "*_pb2.py",
 ]
 
 [tool.ruff.lint]
@@ -189,6 +193,11 @@ ignore = [
     "B008",   # function call in default argument
     "E402",   # module level import not at top of file
     "F401",   # imported but unused (sometimes intentional)
+    "UP035",  # typing alias deprecations
+    "B904",   # raise from in except
+    "B007",   # unused loop variables
+    "F402",   # import shadowed by loop variable
+    "E741",   # ambiguous variable name
 ]
 
 [tool.ruff.lint.isort]

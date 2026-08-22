@@ -11,7 +11,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router'
 import { chartinkApi } from '@/api/chartink'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -130,7 +130,7 @@ export default function ChartinkIndex() {
           <AlertDescription>
             Chartink cannot send alerts to localhost. Use <strong>ngrok</strong>,{' '}
             <strong>Cloudflare Tunnel</strong>, <strong>VS Code Dev Tunnel</strong>, or a{' '}
-            <strong>custom domain</strong> to expose your Tradeboard instance to the internet. Update{' '}
+            <strong>custom domain</strong> to expose your OpenAlgo instance to the internet. Update{' '}
             <code>HOST_SERVER</code> in your <code>.env</code> file with your external URL.
           </AlertDescription>
         </Alert>

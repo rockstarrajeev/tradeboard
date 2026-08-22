@@ -1,4 +1,4 @@
-# Mapping Tradeboard API Request https://rajeevupadhyay.com/docs
+# Mapping OpenAlgo API Request https://openalgo.in/docs
 # IBulls does not provide Margin Calculator API
 
 from utils.logging import get_logger
@@ -8,12 +8,12 @@ logger = get_logger(__name__)
 
 def transform_margin_positions(positions):
     """
-    Transform Tradeboard margin position format to broker format.
+    Transform OpenAlgo margin position format to broker format.
 
     Note: IBulls does not provide a margin calculator API.
 
     Args:
-        positions: List of positions in Tradeboard format
+        positions: List of positions in OpenAlgo format
 
     Raises:
         NotImplementedError: IBulls does not support margin calculator API
@@ -23,7 +23,7 @@ def transform_margin_positions(positions):
 
 def parse_margin_response(response_data):
     """
-    Parse broker margin calculator response to Tradeboard standard format.
+    Parse broker margin calculator response to OpenAlgo standard format.
 
     Note: IBulls does not provide a margin calculator API.
 

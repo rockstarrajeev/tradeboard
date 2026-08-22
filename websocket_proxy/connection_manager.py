@@ -145,7 +145,7 @@ class SharedZmqPublisher:
             self.socket.connect(endpoint)
             self.zmq_port = zmq_port
             self._connected = True
-            self.logger.info(f"Shared ZMQ publisher connected to {endpoint}")
+            self.logger.debug(f"Shared ZMQ publisher connected to {endpoint}")
             return zmq_port
 
     def publish(self, topic: str, data: dict):
@@ -364,7 +364,11 @@ class ConnectionPool:
         }
 
     def initialize(
-        self, broker_name: str = None, user_id: str = None, auth_data: dict = None, force: bool = False
+        self,
+        broker_name: str = None,
+        user_id: str = None,
+        auth_data: dict = None,
+        force: bool = False,
     ) -> dict:
         """
         Initialize the connection pool with the first adapter.
@@ -385,7 +389,9 @@ class ConnectionPool:
         with self.lock:
             # If forcing re-initialization, clean up existing adapters first (inside lock to prevent race conditions)
             if force and self.initialized:
-                self.logger.info(f"Force re-initializing pool for {self.broker_name} with fresh credentials")
+                self.logger.info(
+                    f"Force re-initializing pool for {self.broker_name} with fresh credentials"
+                )
                 # Disconnect existing adapters
                 for adapter in self.adapters:
                     try:
@@ -413,9 +419,8 @@ class ConnectionPool:
                 # Handle both response formats from adapters:
                 # - {"success": False, "error": "..."} (ConnectionPool format)
                 # - {"status": "error", "code": "...", "message": "..."} (Adapter format)
-                is_error = (
-                    (result and result.get("success") == False) or
-                    (result and result.get("status") == "error")
+                is_error = (result and not result.get("success")) or (
+                    result and result.get("status") == "error"
                 )
                 if is_error:
                     error_msg = result.get("message", result.get("error", "Initialization failed"))
@@ -503,9 +508,7 @@ class ConnectionPool:
         self.connected = True
 
         if prior_subs:
-            self.logger.info(
-                f"Restoring {len(prior_subs)} subscription(s) after auth refresh"
-            )
+            self.logger.info(f"Restoring {len(prior_subs)} subscription(s) after auth refresh")
             restored = 0
             for symbol, exchange, mode, depth in prior_subs:
                 try:
@@ -518,16 +521,12 @@ class ConnectionPool:
                             f"{sub_result.get('message')}"
                         )
                 except Exception as e:
-                    self.logger.warning(
-                        f"Error restoring {symbol}.{exchange} mode={mode}: {e}"
-                    )
+                    self.logger.warning(f"Error restoring {symbol}.{exchange} mode={mode}: {e}")
             self.logger.info(
                 f"Restored {restored}/{len(prior_subs)} subscriptions after auth refresh"
             )
 
-        self.logger.info(
-            f"Auth recovery succeeded for {self.broker_name} (user={self.user_id})"
-        )
+        self.logger.info(f"Auth recovery succeeded for {self.broker_name} (user={self.user_id})")
         return True
 
     def connect(self) -> dict:
@@ -551,9 +550,8 @@ class ConnectionPool:
                     # Handle both response formats from adapters:
                     # - {"success": False, "error": "..."} (ConnectionPool format)
                     # - {"status": "error", "code": "...", "message": "..."} (Adapter format)
-                    is_error = (
-                        (result and result.get("success") == False) or
-                        (result and result.get("status") == "error")
+                    is_error = (result and not result.get("success")) or (
+                        result and result.get("status") == "error"
                     )
                     if is_error:
                         error_msg = result.get("message", result.get("error", "Connection failed"))
@@ -566,7 +564,10 @@ class ConnectionPool:
                             self._recovering = True
                             try:
                                 if self._attempt_auth_recovery(error_msg):
-                                    return {"success": True, "message": "Connected after auth refresh"}
+                                    return {
+                                        "success": True,
+                                        "message": "Connected after auth refresh",
+                                    }
                             finally:
                                 self._recovering = False
                         self.logger.error(f"Adapter connection failed: {error_msg}")

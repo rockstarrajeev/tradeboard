@@ -131,7 +131,7 @@ def plot_oi_side_by_side(df, atm_strike, underlying_ltp, expiry):
 
     fig = go.Figure()
 
-    strikes = df["strike"].tolist()
+    df["strike"].tolist()
 
     # CE OI - Green bars
     fig.add_trace(
@@ -139,13 +139,13 @@ def plot_oi_side_by_side(df, atm_strike, underlying_ltp, expiry):
             x=df["strike"].astype(str),
             y=df["ce_oi_lots"],
             name="Call OI",
-            marker=dict(
-                color="rgba(34, 197, 94, 0.9)",  # Green
-                line=dict(color="rgba(22, 163, 74, 1)", width=1),
-            ),
+            marker={
+                "color": "rgba(34, 197, 94, 0.9)",  # Green
+                "line": {"color": "rgba(22, 163, 74, 1)", "width": 1},
+            },
             text=[format_num(x) for x in df["ce_oi_lots"]],
             textposition="outside",
-            textfont=dict(size=9, color="rgba(22, 163, 74, 1)"),
+            textfont={"size": 9, "color": "rgba(22, 163, 74, 1)"},
             customdata=np.column_stack(
                 [
                     df["ce_oi_lots"],
@@ -171,13 +171,13 @@ def plot_oi_side_by_side(df, atm_strike, underlying_ltp, expiry):
             x=df["strike"].astype(str),
             y=df["pe_oi_lots"],
             name="Put OI",
-            marker=dict(
-                color="rgba(239, 68, 68, 0.9)",  # Red
-                line=dict(color="rgba(220, 38, 38, 1)", width=1),
-            ),
+            marker={
+                "color": "rgba(239, 68, 68, 0.9)",  # Red
+                "line": {"color": "rgba(220, 38, 38, 1)", "width": 1},
+            },
             text=[format_num(x) for x in df["pe_oi_lots"]],
             textposition="outside",
-            textfont=dict(size=9, color="rgba(220, 38, 38, 1)"),
+            textfont={"size": 9, "color": "rgba(220, 38, 38, 1)"},
             customdata=np.column_stack(
                 [
                     df["ce_oi_lots"],
@@ -213,7 +213,7 @@ def plot_oi_side_by_side(df, atm_strike, underlying_ltp, expiry):
             y1=1,
             xref="x",
             yref="paper",
-            line=dict(color="rgba(100, 100, 100, 0.7)", width=2, dash="dash"),
+            line={"color": "rgba(100, 100, 100, 0.7)", "width": 2, "dash": "dash"},
         )
 
         # ATM annotation
@@ -224,7 +224,7 @@ def plot_oi_side_by_side(df, atm_strike, underlying_ltp, expiry):
             yref="paper",
             text=f"ATM: {atm_strike}",
             showarrow=False,
-            font=dict(size=11, color="black", family="Arial Black"),
+            font={"size": 11, "color": "black", "family": "Arial Black"},
             bgcolor="rgba(255,255,255,0.8)",
             bordercolor="gray",
             borderwidth=1,
@@ -247,32 +247,32 @@ def plot_oi_side_by_side(df, atm_strike, underlying_ltp, expiry):
 
     # Layout - WHITE BACKGROUND
     fig.update_layout(
-        title=dict(
-            text=f"NIFTY {expiry} - current",
-            x=0.5,
-            font=dict(size=18, color="black", family="Arial"),
-        ),
-        xaxis=dict(
-            title="Strike Price",
-            type="category",
-            tickangle=-45,
-            tickfont=dict(size=9, color="black"),
-            showgrid=True,
-            gridcolor="rgba(200, 200, 200, 0.5)",
-            showline=True,
-            linecolor="black",
-            linewidth=1,
-        ),
-        yaxis=dict(
-            title=dict(text="Open Interest (Lots)", font=dict(color="black")),
-            showgrid=True,
-            gridcolor="rgba(200, 200, 200, 0.5)",
-            tickformat=",d",
-            tickfont=dict(color="black"),
-            showline=True,
-            linecolor="black",
-            linewidth=1,
-        ),
+        title={
+            "text": f"NIFTY {expiry} - current",
+            "x": 0.5,
+            "font": {"size": 18, "color": "black", "family": "Arial"},
+        },
+        xaxis={
+            "title": "Strike Price",
+            "type": "category",
+            "tickangle": -45,
+            "tickfont": {"size": 9, "color": "black"},
+            "showgrid": True,
+            "gridcolor": "rgba(200, 200, 200, 0.5)",
+            "showline": True,
+            "linecolor": "black",
+            "linewidth": 1,
+        },
+        yaxis={
+            "title": {"text": "Open Interest (Lots)", "font": {"color": "black"}},
+            "showgrid": True,
+            "gridcolor": "rgba(200, 200, 200, 0.5)",
+            "tickformat": ",d",
+            "tickfont": {"color": "black"},
+            "showline": True,
+            "linecolor": "black",
+            "linewidth": 1,
+        },
         # WHITE BACKGROUND
         template="plotly_white",
         plot_bgcolor="white",
@@ -283,49 +283,49 @@ def plot_oi_side_by_side(df, atm_strike, underlying_ltp, expiry):
         bargap=0.15,
         bargroupgap=0.05,
         hovermode="x unified",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=-0.2,
-            xanchor="center",
-            x=0.5,
-            font=dict(color="black"),
-        ),
-        margin=dict(l=80, r=100, t=80, b=100),
+        legend={
+            "orientation": "h",
+            "yanchor": "bottom",
+            "y": -0.2,
+            "xanchor": "center",
+            "x": 0.5,
+            "font": {"color": "black"},
+        },
+        margin={"l": 80, "r": 100, "t": 80, "b": 100},
         annotations=[
             # Timestamp
-            dict(
-                text=f"{current_time}",
-                xref="paper",
-                yref="paper",
-                x=1,
-                y=1.06,
-                showarrow=False,
-                font=dict(size=11, color="gray"),
-                bgcolor="rgba(240,240,240,0.8)",
-                borderpad=4,
-            ),
+            {
+                "text": f"{current_time}",
+                "xref": "paper",
+                "yref": "paper",
+                "x": 1,
+                "y": 1.06,
+                "showarrow": False,
+                "font": {"size": 11, "color": "gray"},
+                "bgcolor": "rgba(240,240,240,0.8)",
+                "borderpad": 4,
+            },
             # PCR on right side
-            dict(
-                text=f"PCR: {pcr:.2f}",
-                xref="paper",
-                yref="paper",
-                x=1.04,
-                y=0.5,
-                showarrow=False,
-                font=dict(size=12, color="black", family="Arial Black"),
-                textangle=-90,
-            ),
+            {
+                "text": f"PCR: {pcr:.2f}",
+                "xref": "paper",
+                "yref": "paper",
+                "x": 1.04,
+                "y": 0.5,
+                "showarrow": False,
+                "font": {"size": 12, "color": "black", "family": "Arial Black"},
+                "textangle": -90,
+            },
             # Max OI info at bottom
-            dict(
-                text=f"Max CE OI: {max_ce_strike} ({format_num(max_ce_oi)}) | Max PE OI: {max_pe_strike} ({format_num(max_pe_oi)})",
-                xref="paper",
-                yref="paper",
-                x=0.5,
-                y=-0.18,
-                showarrow=False,
-                font=dict(size=10, color="gray"),
-            ),
+            {
+                "text": f"Max CE OI: {max_ce_strike} ({format_num(max_ce_oi)}) | Max PE OI: {max_pe_strike} ({format_num(max_pe_oi)})",
+                "xref": "paper",
+                "yref": "paper",
+                "x": 0.5,
+                "y": -0.18,
+                "showarrow": False,
+                "font": {"size": 10, "color": "gray"},
+            },
         ],
     )
 

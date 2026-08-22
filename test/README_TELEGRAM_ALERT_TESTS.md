@@ -2,12 +2,12 @@
 
 This folder contains test scripts for the Telegram Alert API.
 
-## ⚠️ Important Note
+## Important Note
 
-**Username Clarification**: The `username` parameter in the API refers to your **Tradeboard login username** (the username you use to login to the Tradeboard application), NOT your Telegram username (@handle).
+**Username Clarification**: The `username` parameter in the API refers to your **OpenAlgo login username** (the username you use to login to the OpenAlgo application), NOT your Telegram username (@handle).
 
-- ✅ **Correct**: Use `"rajandran"` (your Tradeboard login username)
-- ❌ **Wrong**: Use `"@rajandranr"` (your Telegram username)
+- **Correct**: Use `"rajandran"` (your OpenAlgo login username)
+- **Wrong**: Use `"@rajandranr"` (your Telegram username)
 
 ## Test Files
 
@@ -15,12 +15,12 @@ This folder contains test scripts for the Telegram Alert API.
 
 ## Prerequisites
 
-1. **Tradeboard must be running**
-   - Start Tradeboard application
+1. **OpenAlgo must be running**
+   - Start OpenAlgo application
    - Ensure it's accessible at `http://127.0.0.1:5000`
 
 2. **Telegram Bot Must Be Running**
-   - Go to Tradeboard Telegram settings (`/telegram`)
+   - Go to OpenAlgo Telegram settings (`/telegram`)
    - Configure your bot token (get from @BotFather on Telegram)
    - Click "Start Bot"
    - Verify bot status shows "Running"
@@ -29,13 +29,13 @@ This folder contains test scripts for the Telegram Alert API.
    - Open your Telegram bot chat
    - Send `/link your_api_key http://127.0.0.1:5000`
    - Verify linking successful with `/status` command
-   - Username must match your Tradeboard account username
+   - Username must match your OpenAlgo account username
 
 4. **API Key and Username**
-   - Get your API key from Tradeboard settings
+   - Get your API key from OpenAlgo settings
    - Replace `"your_api_key_here"` in the test files with your actual API key
-   - Replace `"your_username_here"` with your **Tradeboard login username** (the username you use to login to Tradeboard app)
-   - **IMPORTANT**: Use Tradeboard username, NOT your Telegram username (@handle)
+   - Replace `"your_username_here"` with your **OpenAlgo login username** (the username you use to login to OpenAlgo app)
+   - **IMPORTANT**: Use OpenAlgo username, NOT your Telegram username (@handle)
 
 ## How to Run Tests
 
@@ -43,7 +43,7 @@ This folder contains test scripts for the Telegram Alert API.
 
 ```bash
 # Navigate to test directory
-cd D:/tradeboard-sandbox-test/tradeboard/test
+cd D:/openalgo-sandbox-test/openalgo/test
 
 # Run Telegram Alert API tests
 python test_telegram_alert_api.py
@@ -53,7 +53,7 @@ python test_telegram_alert_api.py
 
 ```bash
 # Navigate to project root
-cd D:/tradeboard-sandbox-test/tradeboard
+cd D:/openalgo-sandbox-test/openalgo
 
 # Run Telegram Alert API tests
 python test/test_telegram_alert_api.py
@@ -63,7 +63,7 @@ python test/test_telegram_alert_api.py
 
 ```bash
 # From project root
-cd D:/tradeboard-sandbox-test/tradeboard
+cd D:/openalgo-sandbox-test/openalgo
 
 # Run tests with uv
 uv run python test/test_telegram_alert_api.py
@@ -77,10 +77,10 @@ Edit the test file to configure:
 # Configuration section at the top of the file
 BASE_URL = "http://127.0.0.1:5000"  # Change if using different host/port
 API_KEY = "your_api_key_here"        # Replace with your actual API key
-USERNAME = "your_username_here"      # Replace with your Tradeboard login username (NOT @telegram_handle)
+USERNAME = "your_username_here"      # Replace with your OpenAlgo login username (NOT @telegram_handle)
 ```
 
-**IMPORTANT**: `USERNAME` should be your Tradeboard login username (e.g., "rajandran"), NOT your Telegram username (e.g., "@rajandranr").
+**IMPORTANT**: `USERNAME` should be your OpenAlgo login username (e.g., "rajandran"), NOT your Telegram username (e.g., "@rajandranr").
 
 ## Test Coverage
 
@@ -142,7 +142,7 @@ ConnectionError: Failed to send notification
 ```
 
 **Solution**:
-1. Go to Tradeboard Telegram settings (`/telegram`)
+1. Go to OpenAlgo Telegram settings (`/telegram`)
 2. Click "Start Bot"
 3. Wait for status to show "Running"
 4. Retry the test
@@ -160,9 +160,9 @@ ConnectionError: Failed to send notification
 1. Open your Telegram bot chat
 2. Send `/link your_api_key http://127.0.0.1:5000`
 3. Verify with `/status` command
-4. **Ensure you're using Tradeboard login username, NOT Telegram username**
-   - ✅ Correct: `"rajandran"` (Tradeboard login)
-   - ❌ Wrong: `"@rajandranr"` (Telegram handle)
+4. **Ensure you're using OpenAlgo login username, NOT Telegram username**
+   - Correct: `"rajandran"` (OpenAlgo login)
+   - Wrong: `"@rajandranr"` (Telegram handle)
 5. Ensure username in test matches exactly (case-sensitive)
 
 ### Invalid API Key Error
@@ -175,7 +175,7 @@ ConnectionError: Failed to send notification
 ```
 
 **Solution**:
-1. Go to Tradeboard settings
+1. Go to OpenAlgo settings
 2. Copy your API key
 3. Replace in test file: `API_KEY = "your_actual_api_key"`
 
@@ -189,9 +189,9 @@ ConnectionError: Failed to send notification
 5. Network issues - check internet connectivity
 
 **Solution**:
-1. Check bot status in Tradeboard dashboard
+1. Check bot status in OpenAlgo dashboard
 2. Verify username with `/status` in Telegram bot
-3. Check Tradeboard logs for errors
+3. Check OpenAlgo logs for errors
 4. Test with `/menu` command in Telegram to verify bot responds
 
 ### Module Import Errors
@@ -221,14 +221,14 @@ uv pip install requests
 ### Emojis (Copy-Paste Ready)
 
 ```
-📈 📉 📊 Charts/Trends
-💰 💵 💸 Money
-✅ ❌ ⚠️ Status
-🚨 🔔 🎯 Alerts
-🔴 🟢 🟡 Indicators
-📱 💻 🖥️ Devices
-⏰ 🕐 ⏱️ Time
-🏆 🎉 ✨ Success
+Charts/Trends
+Money
+Status
+Alerts
+Indicators
+Devices
+Time
+Success
 ```
 
 ### Line Breaks
@@ -269,7 +269,7 @@ def send_alert(message, priority=5):
 order_response = place_order(...)
 if order_response['status'] == 'success':
     send_alert(
-        f"✅ Order placed: {symbol} {action} {quantity}",
+        f"Order placed: {symbol} {action} {quantity}",
         priority=7
     )
 ```
@@ -285,7 +285,7 @@ def monitor_price(symbol, target_price):
 
         if current_price >= target_price:
             send_alert(
-                f"🎯 Target reached!\n{symbol}: ₹{current_price}",
+                f"Target reached!\n{symbol}: ₹{current_price}",
                 priority=9
             )
             break
@@ -299,7 +299,7 @@ def monitor_price(symbol, target_price):
 def send_daily_summary():
     stats = get_daily_stats()
 
-    message = f"""📊 Daily Summary
+    message = f"""Daily Summary
 ─────────────────────
 Trades: {stats['total_trades']}
 Win Rate: {stats['win_rate']}%
@@ -328,8 +328,8 @@ P&L: ₹{stats['net_pnl']:,.2f}
 ## Support
 
 For issues or questions:
-- Check bot status in Tradeboard Telegram dashboard
+- Check bot status in OpenAlgo Telegram dashboard
 - Verify user linking with `/status` in Telegram
-- Review Tradeboard logs for detailed error messages
+- Review OpenAlgo logs for detailed error messages
 - Test bot responsiveness with `/menu` command
 - Ensure API key is valid and active

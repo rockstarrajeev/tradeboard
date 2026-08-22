@@ -15,6 +15,7 @@ def _escape_like(term: str) -> str:
     """Escape LIKE wildcard characters to prevent unintended broad matching."""
     return term.replace("%", r"\%").replace("_", r"\_")
 
+
 DATABASE_URL = os.getenv("DATABASE_URL")
 # Conditionally create engine based on DB type
 if DATABASE_URL and "sqlite" in DATABASE_URL:
@@ -285,13 +286,21 @@ def fno_search_symbols_db(
         return []
 
 
-def get_distinct_expiries(exchange: str = None, underlying: str = None) -> list[str]:
+def get_distinct_expiries(
+    exchange: str = None, underlying: str = None, instrumenttype: str = None
+) -> list[str]:
     """
     Get distinct expiry dates for FNO symbols.
 
     Args:
         exchange (str, optional): Exchange to filter by (NFO, BFO, MCX, CDS)
         underlying (str, optional): Underlying symbol name (e.g., "NIFTY")
+        instrumenttype (str, optional): "options" for CE/PE only, "futures" for
+            FUT only. Unset returns every expiry, which is right for a symbol
+            browser and wrong for an option chain: on MCX the two calendars
+            differ - GOLDM futures expire 05-AUG while its options expire
+            28-AUG - so a mixed list offers an options expiry that has no
+            strikes behind it.
 
     Returns:
         List[str]: List of distinct expiry dates sorted chronologically
@@ -307,7 +316,28 @@ def get_distinct_expiries(exchange: str = None, underlying: str = None) -> list[
             query = query.filter(SymToken.exchange == exchange)
 
         if underlying:
-            query = query.filter(SymToken.name.ilike(underlying.strip().upper()))
+            u_str = underlying.strip().upper()
+            from sqlalchemy import or_
+
+            query = query.filter(
+                or_(
+                    SymToken.name.ilike(u_str),
+                    SymToken.name.ilike(f"{u_str}%"),
+                    SymToken.symbol.ilike(f"{u_str}%"),
+                    SymToken.symbol.ilike(f"%-{u_str}-%"),
+                    SymToken.symbol.ilike(f"C-{u_str}-%"),
+                    SymToken.symbol.ilike(f"P-{u_str}-%"),
+                    SymToken.brsymbol.ilike(f"C-{u_str}-%"),
+                    SymToken.brsymbol.ilike(f"P-{u_str}-%"),
+                )
+            )
+
+        if instrumenttype:
+            wanted = instrumenttype.strip().lower()
+            if wanted in ("options", "option"):
+                query = query.filter(SymToken.instrumenttype.in_(["CE", "PE"]))
+            elif wanted in ("futures", "future", "fut"):
+                query = query.filter(SymToken.instrumenttype == "FUT")
 
         # Only get non-null expiries
         query = query.filter(SymToken.expiry.isnot(None))

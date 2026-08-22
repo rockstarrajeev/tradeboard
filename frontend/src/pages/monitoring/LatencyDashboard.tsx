@@ -1,6 +1,6 @@
 import { ArrowLeft, CheckCircle, Download, Gauge, RefreshCw, XCircle, Zap } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 import { webClient } from '@/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -579,7 +579,7 @@ export default function LatencyDashboard() {
                     <div>
                       <span className="font-semibold text-sm">Platform Processing</span>
                       <Badge variant="outline" className="ml-2 text-xs">
-                        Tradeboard
+                        OpenAlgo
                       </Badge>
                       <p className="text-xs text-muted-foreground mt-1">
                         Authentication, validation & logging

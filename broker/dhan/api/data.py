@@ -44,9 +44,7 @@ def _apply_rate_limit(category="data"):
 
     # Sleep outside the lock to avoid blocking other threads
     if sleep_time > 0:
-        logger.debug(
-            f"Rate limiting ({category}): sleeping {sleep_time:.2f}s before Dhan API call"
-        )
+        logger.debug(f"Rate limiting ({category}): sleeping {sleep_time:.2f}s before Dhan API call")
         time.sleep(sleep_time)
 
 
@@ -157,7 +155,7 @@ class BrokerData:
 
     def _convert_to_dhan_request(self, symbol, exchange):
         """Convert symbol and exchange to Dhan format"""
-        br_symbol = get_br_symbol(symbol, exchange)
+        get_br_symbol(symbol, exchange)
         # Extract security ID and determine exchange segment
         # This needs to be implemented based on your symbol mapping logic
         security_id = get_token(symbol, exchange)  # This should be mapped to Dhan's security ID
@@ -610,7 +608,9 @@ class BrokerData:
                                             "low": float(lows[i]) if lows[i] else 0,
                                             "close": float(closes[i]) if closes[i] else 0,
                                             "volume": int(float(volumes[i])) if volumes[i] else 0,
-                                            "oi": int(float(openinterest[i])) if openinterest[i] else 0,
+                                            "oi": int(float(openinterest[i]))
+                                            if openinterest[i]
+                                            else 0,
                                         }
                                     )
 

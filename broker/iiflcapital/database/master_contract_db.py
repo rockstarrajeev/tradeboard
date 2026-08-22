@@ -210,9 +210,7 @@ def _download_segment(client, segment, url, file_path):
                 )
                 time.sleep(delay)
             else:
-                logger.error(
-                    f"Download {segment} failed after {_DOWNLOAD_ATTEMPTS} attempts: {e}"
-                )
+                logger.error(f"Download {segment} failed after {_DOWNLOAD_ATTEMPTS} attempts: {e}")
 
     raise RuntimeError(f"Failed to download {segment} from {url}: {last_error}")
 
@@ -266,7 +264,7 @@ def format_expiry(expiry_str):
 
 
 def format_strike(strike_val):
-    """Format strike price for Tradeboard symbol. Integer if whole number, else decimal."""
+    """Format strike price for OpenAlgo symbol. Integer if whole number, else decimal."""
     try:
         strike = float(strike_val)
     except (TypeError, ValueError):
@@ -386,12 +384,12 @@ def _process_derivatives_csv(path, segment, exchange):
     # Parse strike
     df["_strike"] = pd.to_numeric(df[COL_STRIKE], errors="coerce").fillna(0.0)
 
-    # Determine Tradeboard instrument type from Option Type column
+    # Determine OpenAlgo instrument type from Option Type column
     # XX = FUT, CE = CE, PE = PE
     option_type = df[COL_OPTION_TYPE].str.strip().str.upper()
     df["_instrumenttype"] = option_type.map({"XX": "FUT", "CE": "CE", "PE": "PE"})
 
-    # Build Tradeboard symbols
+    # Build OpenAlgo symbols
     underlying = df[COL_UNDERLYING].str.strip()
 
     # Futures: {underlying}{DDMMMYY}FUT
@@ -401,19 +399,13 @@ def _process_derivatives_csv(path, segment, exchange):
     # Options CE: {underlying}{DDMMMYY}{strike}{CE}
     ce_mask = df["_instrumenttype"] == "CE"
     df.loc[ce_mask, "_symbol"] = (
-        underlying
-        + df["_compact_expiry"]
-        + df.loc[ce_mask, "_strike"].apply(format_strike)
-        + "CE"
+        underlying + df["_compact_expiry"] + df.loc[ce_mask, "_strike"].apply(format_strike) + "CE"
     )
 
     # Options PE: {underlying}{DDMMMYY}{strike}{PE}
     pe_mask = df["_instrumenttype"] == "PE"
     df.loc[pe_mask, "_symbol"] = (
-        underlying
-        + df["_compact_expiry"]
-        + df.loc[pe_mask, "_strike"].apply(format_strike)
-        + "PE"
+        underlying + df["_compact_expiry"] + df.loc[pe_mask, "_strike"].apply(format_strike) + "PE"
     )
 
     token_df = pd.DataFrame()
@@ -448,18 +440,13 @@ def process_iiflcapital_indices_csv(path):
         logger.warning("Empty CSV for INDICES segment")
         return pd.DataFrame()
 
-    # Determine Tradeboard exchange from CSV Exchange column
+    # Determine OpenAlgo exchange from CSV Exchange column
     # NSEEQ entries → NSE_INDEX, BSEEQ entries → BSE_INDEX
     csv_exchange = df[COL_EXCHANGE].str.strip().str.upper()
     df["_exchange"] = csv_exchange.map({"NSEEQ": "NSE_INDEX", "BSEEQ": "BSE_INDEX"})
 
     # Normalize symbol: uppercase, remove spaces
-    df["_symbol"] = (
-        df[COL_NAME]
-        .str.strip()
-        .str.upper()
-        .str.replace(" ", "", regex=False)
-    )
+    df["_symbol"] = df[COL_NAME].str.strip().str.upper().str.replace(" ", "", regex=False)
 
     # Apply NSE index name mappings
     nse_mask = df["_exchange"] == "NSE_INDEX"
@@ -495,9 +482,7 @@ def master_contract_download():
     # Use an absolute path under the repo root rather than a CWD-relative "tmp"
     # so master-contract downloads land in a predictable location regardless
     # of how the process was launched.
-    output_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "tmp"
-    )
+    output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "tmp")
     output_path = os.path.normpath(output_path)
     os.makedirs(output_path, exist_ok=True)
     try:
@@ -547,20 +532,13 @@ def master_contract_download():
 
     except Exception as e:
         logger.error(f"Error in master contract download: {e}")
-        return socketio.emit(
-            "master_contract_download", {"status": "error", "message": str(e)}
-        )
+        return socketio.emit("master_contract_download", {"status": "error", "message": str(e)})
 
 
 def search_symbols(symbol, exchange):
     # Escape LIKE wildcards so caller-supplied % / _ can't broaden the match
     # (or trigger CPU-bound full-table scans).
-    escaped = (
-        str(symbol or "")
-        .replace("\\", "\\\\")
-        .replace("%", "\\%")
-        .replace("_", "\\_")
-    )
+    escaped = str(symbol or "").replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
     return SymToken.query.filter(
         SymToken.symbol.like(f"%{escaped}%", escape="\\"),
         SymToken.exchange == exchange,

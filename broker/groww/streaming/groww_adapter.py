@@ -26,7 +26,7 @@ class _GrowwMarketCache:
 
     Groww splits market data across two NATS topics: an LTP topic that
     carries `ltp/open/high/low/close/volume/ltt`, and a Depth topic that
-    carries `buy[]/sell[]` book levels. Every other broker in Tradeboard
+    carries `buy[]/sell[]` book levels. Every other broker in OpenAlgo
     delivers a unified payload on every depth tick, so the rest of the
     pipeline (proxy, frontend) implicitly assumes a Depth-mode subscriber
     sees LTP for free.
@@ -416,7 +416,9 @@ class GrowwWebSocketAdapter(BaseBrokerWebSocketAdapter):
         groww_exchange, segment = GrowwExchangeMapper.get_exchange_segment(exchange)
 
         if exchange in ["NFO", "BFO"]:
-            self.logger.debug(f"F&O Subscription: {symbol}, exchange={exchange}->{groww_exchange}, segment={segment}, token={token}")
+            self.logger.debug(
+                f"F&O Subscription: {symbol}, exchange={exchange}->{groww_exchange}, segment={segment}, token={token}"
+            )
 
         # Generate unique correlation ID
         correlation_id = f"{symbol}_{exchange}_{mode}"
@@ -527,9 +529,7 @@ class GrowwWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 self._process_batch_subscriptions()
 
             mode_name = {1: "LTP", 2: "Quote", 3: "Depth"}.get(mode, str(mode))
-            self.logger.info(
-                f"Queued subscription for {symbol}.{exchange} in {mode_name} mode"
-            )
+            self.logger.info(f"Queued subscription for {symbol}.{exchange} in {mode_name} mode")
 
         mode_name = {1: "LTP", 2: "Quote", 3: "Depth"}.get(mode, str(mode))
         return self._create_success_response(
@@ -602,13 +602,9 @@ class GrowwWebSocketAdapter(BaseBrokerWebSocketAdapter):
         if shadow_sub_key is not None and self.connected and self.ws_client:
             try:
                 self.ws_client.unsubscribe(shadow_sub_key)
-                self.logger.debug(
-                    f"Unsubscribed shadow LTP for {symbol}.{exchange}"
-                )
+                self.logger.debug(f"Unsubscribed shadow LTP for {symbol}.{exchange}")
             except Exception as e:
-                self.logger.error(
-                    f"Error unsubscribing shadow LTP for {symbol}.{exchange}: {e}"
-                )
+                self.logger.error(f"Error unsubscribing shadow LTP for {symbol}.{exchange}: {e}")
 
         # Clear the cache entry — only if no other sub still uses this token.
         if sub_info_for_cache:
@@ -696,11 +692,11 @@ class GrowwWebSocketAdapter(BaseBrokerWebSocketAdapter):
                         "type": item["sub_type"],
                         # Broker-side exchange (NSE/BSE) — used by topic gen.
                         "exchange": item["groww_exchange"],
-                        # Tradeboard-facing exchange (NFO/BFO/NSE_INDEX/...) —
+                        # OpenAlgo-facing exchange (NFO/BFO/NSE_INDEX/...) —
                         # used by the WS dispatcher to set data["exchange"]
                         # so the adapter's match loop sees the same string
                         # the user subscribed with.
-                        "tradeboard_exchange": item["exchange"],
+                        "openalgo_exchange": item["exchange"],
                         "segment": item["segment"],
                         "token": item["token"],
                         "symbol": item["symbol"],
@@ -715,13 +711,11 @@ class GrowwWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 self.logger.info(f"Batch subscribing {len(batch_specs)} symbols")
                 sub_keys = self.ws_client.subscribe_batch(batch_specs)
 
-                for item, sub_key in zip(queue, sub_keys):
+                for item, sub_key in zip(queue, sub_keys, strict=False):
                     self.subscription_keys[item["correlation_id"]] = sub_key
 
                     if item["exchange"] in ["NFO", "BFO"]:
-                        self.logger.debug(
-                            f"F&O subscription key created: {sub_key}"
-                        )
+                        self.logger.debug(f"F&O subscription key created: {sub_key}")
             except Exception as e:
                 self.logger.error(f"Batch subscription failed: {e}", exc_info=True)
 
@@ -743,7 +737,7 @@ class GrowwWebSocketAdapter(BaseBrokerWebSocketAdapter):
             spec = {
                 "type": sub_type,
                 "exchange": sub_info["groww_exchange"],
-                "tradeboard_exchange": sub_info["exchange"],
+                "openalgo_exchange": sub_info["exchange"],
                 "segment": sub_info["segment"],
                 "token": sub_info["token"],
                 "symbol": sub_info["symbol"],
@@ -761,12 +755,10 @@ class GrowwWebSocketAdapter(BaseBrokerWebSocketAdapter):
             return
 
         try:
-            self.logger.info(
-                f"Reconnect: batch resubscribing {len(batch_specs)} symbols"
-            )
+            self.logger.info(f"Reconnect: batch resubscribing {len(batch_specs)} symbols")
             with self.batch_lock:
                 sub_keys = self.ws_client.subscribe_batch(batch_specs)
-                for cid, sub_key in zip(correlation_ids, sub_keys):
+                for cid, sub_key in zip(correlation_ids, sub_keys, strict=False):
                     self.subscription_keys[cid] = sub_key
                 self._last_batch_flush_at = time.time()
         except Exception as e:
@@ -835,7 +827,7 @@ class GrowwWebSocketAdapter(BaseBrokerWebSocketAdapter):
                             f"Checking {cid}: symbol={sub.get('symbol')}, exchange={sub.get('exchange')}, groww_exchange={sub.get('groww_exchange')}, mode={sub.get('mode')}"
                         )
 
-                        # For index subscriptions, the Tradeboard exchange is NSE_INDEX/BSE_INDEX but Groww sends NSE/BSE
+                        # For index subscriptions, the OpenAlgo exchange is NSE_INDEX/BSE_INDEX but Groww sends NSE/BSE
                         is_index_match = (
                             (mode == "index" or mode == "index_depth")
                             and (

@@ -38,7 +38,9 @@ def get_user_id_from_apikey(api_key: str) -> str | None:
 
 
 def sandbox_place_order(
-    order_data: dict[str, Any], api_key: str, original_data: dict[str, Any],
+    order_data: dict[str, Any],
+    api_key: str,
+    original_data: dict[str, Any],
     prefetched_quote: dict[str, Any] | None = None,
 ) -> tuple[bool, dict[str, Any], int]:
     """
@@ -49,7 +51,7 @@ def sandbox_place_order(
 
     Args:
         order_data: Validated order data
-        api_key: Tradeboard API key
+        api_key: OpenAlgo API key
         original_data: Original request data for logging
         prefetched_quote: Pre-fetched quote from multiquotes batch call (optional).
             When provided, skips per-order REST API quote fetch.
@@ -671,7 +673,7 @@ def sandbox_get_pnl_symbols(
     Returns unrealized P&L, today's realized P&L, and total P&L for today per symbol.
 
     Args:
-        api_key: Tradeboard API key
+        api_key: OpenAlgo API key
         original_data: Original request data
 
     Returns:
@@ -733,3 +735,65 @@ def sandbox_get_pnl_symbols(
             },
             500,
         )
+
+
+def sandbox_place_gtt_order(
+    gtt_data: dict[str, Any], api_key: str, last_price: float = 0
+) -> tuple[bool, dict[str, Any], int]:
+    """Place a GTT in sandbox mode.
+
+    Args:
+        gtt_data: Validated flat GTT payload.
+        api_key: OpenAlgo API key, resolved to the sandbox user.
+        last_price: LTP snapshot at placement, echoed back for broker parity.
+    """
+    user_id = get_user_id_from_apikey(api_key)
+    if not user_id:
+        return False, {"status": "error", "message": "Invalid API key", "mode": "analyze"}, 403
+
+    from sandbox.gtt_manager import GTTManager
+
+    return GTTManager(user_id).place_gtt(gtt_data, last_price)
+
+
+def sandbox_modify_gtt_order(
+    trigger_id: str, gtt_data: dict[str, Any], api_key: str
+) -> tuple[bool, dict[str, Any], int]:
+    """Modify an active sandbox GTT."""
+    user_id = get_user_id_from_apikey(api_key)
+    if not user_id:
+        return False, {"status": "error", "message": "Invalid API key", "mode": "analyze"}, 403
+
+    from sandbox.gtt_manager import GTTManager
+
+    return GTTManager(user_id).modify_gtt(trigger_id, gtt_data)
+
+
+def sandbox_cancel_gtt_order(trigger_id: str, api_key: str) -> tuple[bool, dict[str, Any], int]:
+    """Cancel an active sandbox GTT and release its margin."""
+    user_id = get_user_id_from_apikey(api_key)
+    if not user_id:
+        return False, {"status": "error", "message": "Invalid API key", "mode": "analyze"}, 403
+
+    from sandbox.gtt_manager import GTTManager
+
+    return GTTManager(user_id).cancel_gtt(trigger_id)
+
+
+def sandbox_gtt_orderbook(
+    api_key: str, status_filter: str | None = "active"
+) -> tuple[bool, dict[str, Any], int]:
+    """List the sandbox user's GTTs, active-only by default.
+
+    The default is repeated here rather than left to the manager because this
+    function passes the value on explicitly: defaulting to None would override
+    the manager's own default and put cancelled and expired triggers back in
+    the orderbook. Pass status_filter=None deliberately for full history.
+    """
+    user_id = get_user_id_from_apikey(api_key)
+    if not user_id:
+        return False, {"status": "error", "message": "Invalid API key", "mode": "analyze"}, 403
+
+    from sandbox.gtt_manager import GTTManager
+
+    return GTTManager(user_id).list_gtts(status_filter)

@@ -31,13 +31,13 @@ def migrate_settings_table():
     """Add missing security columns to the settings table if they don't exist"""
 
     # Get database URL from environment
-    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///db/tradeboard.db")
+    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///db/openalgo.db")
 
     # Adjust path for SQLite if relative (since we're in upgrade folder)
     if DATABASE_URL.startswith("sqlite:///") and not DATABASE_URL.startswith("sqlite:////"):
         # Extract the relative path
         db_path = DATABASE_URL.replace("sqlite:///", "")
-        # Make it relative to parent directory (tradeboard root)
+        # Make it relative to parent directory (openalgo root)
         parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         full_db_path = os.path.join(parent_dir, db_path)
         DATABASE_URL = f"sqlite:///{full_db_path}"
@@ -82,37 +82,37 @@ def migrate_settings_table():
                         )
                         conn.execute(alter_sql)
                         conn.commit()
-                        logger.info(f"✅ Added column: {column_name}")
+                        logger.info(f"Added column: {column_name}")
                         columns_added += 1
                     except Exception as col_error:
                         # Column might already exist in some edge cases
                         logger.warning(f"Could not add column {column_name}: {col_error}")
                 else:
-                    logger.info(f"✓ Column already exists: {column_name}")
+                    logger.info(f"Column already exists: {column_name}")
                     columns_existing += 1
 
-        logger.info("\n📊 Migration Summary:")
+        logger.info("\n Migration Summary:")
         logger.info(f"   - Columns added: {columns_added}")
         logger.info(f"   - Columns already existing: {columns_existing}")
         logger.info(f"   - Total security columns: {len(security_columns)}")
 
         if columns_added > 0:
-            logger.info("\n✅ Settings table migration completed successfully!")
+            logger.info("\n Settings table migration completed successfully!")
             logger.info("   New security columns have been added to your database.")
         else:
-            logger.info("\n✅ No migration needed - all security columns already exist!")
+            logger.info("\n No migration needed - all security columns already exist!")
 
         return True
 
     except Exception as e:
-        logger.error(f"❌ Error during migration: {e}")
+        logger.error(f"Error during migration: {e}")
         return False
 
 
 def main():
     """Main function to run the migration"""
     logger.info("=" * 60)
-    logger.info("Tradeboard Security Columns Migration Script")
+    logger.info("OpenAlgo Security Columns Migration Script")
     logger.info("=" * 60)
     logger.info("This script adds missing security columns to the settings table")
     logger.info("to fix the 'no such column: settings.security_404_threshold' error")
@@ -123,14 +123,14 @@ def main():
     logger.info("-" * 60)
     if success:
         logger.info("Migration process completed!")
-        logger.info("\n📌 Next Steps:")
-        logger.info("   1. Restart your Tradeboard application")
+        logger.info("\n Next Steps:")
+        logger.info("   1. Restart your OpenAlgo application")
         logger.info("   2. The /security endpoint should now work properly")
         logger.info("   3. You can access security settings at: http://127.0.0.1:5000/security")
         return 0
     else:
         logger.error("Migration failed! Please check the error messages above.")
-        logger.error("\n📌 Troubleshooting:")
+        logger.error("\n Troubleshooting:")
         logger.error("   1. Ensure the database file exists and is accessible")
         logger.error("   2. Check that you have write permissions to the database")
         logger.error("   3. Verify your DATABASE_URL in the .env file")

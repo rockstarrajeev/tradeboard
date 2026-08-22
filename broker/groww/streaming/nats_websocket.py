@@ -113,7 +113,9 @@ class GrowwNATSWebSocket:
                 jwt=self.socket_token, nkey=nkey, sig=sig
             )
 
-            logger.debug(f"CONNECT: JWT len={len(self.socket_token) if self.socket_token else 0}, nkey={bool(nkey)}, sig={bool(sig)}")
+            logger.debug(
+                f"CONNECT: JWT len={len(self.socket_token) if self.socket_token else 0}, nkey={bool(nkey)}, sig={bool(sig)}"
+            )
 
             self.ws.send(connect_cmd)
             logger.info(f"Sent NATS CONNECT with{'out' if not sig else ''} signature")
@@ -179,9 +181,7 @@ class GrowwNATSWebSocket:
                 self.auth_token = fresh
                 logger.info("Refreshed Groww auth token before reconnect")
             else:
-                logger.warning(
-                    "No fresh Groww auth token available; reusing existing token"
-                )
+                logger.warning("No fresh Groww auth token available; reusing existing token")
         except Exception as e:
             logger.error(f"Error refreshing Groww auth token: {e}")
 
@@ -421,7 +421,9 @@ class GrowwNATSWebSocket:
 
                 # Log all per-message details at debug level
                 if "MSG" in msg_text:
-                    logger.debug(f"Market data message received: {msg_size} bytes, preview: {msg_text[:80]}")
+                    logger.debug(
+                        f"Market data message received: {msg_size} bytes, preview: {msg_text[:80]}"
+                    )
                 else:
                     if msg_text.startswith("INFO"):
                         logger.info(f"Received INFO message: {msg_size} bytes")
@@ -529,7 +531,9 @@ class GrowwNATSWebSocket:
             payload = msg.get("payload", b"")
             sid = msg.get("sid")
 
-            logger.debug(f"Market Data MSG: Subject={subject}, SID={sid}, Payload={len(payload)} bytes")
+            logger.debug(
+                f"Market Data MSG: Subject={subject}, SID={sid}, Payload={len(payload)} bytes"
+            )
 
             # Ensure payload is bytes
             if isinstance(payload, str):
@@ -725,17 +729,17 @@ class GrowwNATSWebSocket:
             # an existing/future real LTP sub, otherwise the SID stored in
             # nats_sids[sub_key] gets overwritten and the older SID leaks.
             sub_key = spec.get("sub_key")
-            # Tradeboard-facing exchange (NFO/BFO/NSE_INDEX/...) for dispatch
+            # OpenAlgo-facing exchange (NFO/BFO/NSE_INDEX/...) for dispatch
             # back to the adapter; falls back to the broker-side `exchange`
             # arg (NSE/BSE) when not provided. The topic generator still
             # needs the broker-side exchange — see groww_exchange below.
-            tradeboard_exchange = spec.get("tradeboard_exchange") or exchange
+            openalgo_exchange = spec.get("openalgo_exchange") or exchange
             if sub_type == "depth":
                 if not sub_key:
                     sub_key = f"depth_{exchange}_{segment}_{token}"
                 self.subscriptions[sub_key] = {
                     "symbol": symbol if symbol else f"{token}",
-                    "exchange": tradeboard_exchange,
+                    "exchange": openalgo_exchange,
                     "groww_exchange": exchange,
                     "segment": segment,
                     "exchange_token": token,
@@ -748,7 +752,7 @@ class GrowwNATSWebSocket:
                     sub_key = f"ltp_{exchange}_{segment}_{token}"
                 self.subscriptions[sub_key] = {
                     "symbol": symbol if symbol else f"{token}",
-                    "exchange": tradeboard_exchange,
+                    "exchange": openalgo_exchange,
                     "groww_exchange": exchange,
                     "segment": segment,
                     "exchange_token": token,
@@ -779,7 +783,7 @@ class GrowwNATSWebSocket:
                 # Prefer the broker-side exchange for topic generation; fall
                 # back to `exchange` for callers that don't provide it
                 # separately (legacy paths). sub_info["exchange"] is now the
-                # Tradeboard exchange used for dispatch, not the Groww one.
+                # OpenAlgo exchange used for dispatch, not the Groww one.
                 topic = self.nats_protocol.format_topic_for_groww(
                     exchange=sub_info.get("groww_exchange") or sub_info.get("exchange", ""),
                     segment=sub_info.get("segment", ""),
@@ -827,7 +831,9 @@ class GrowwNATSWebSocket:
         sub_key = f"ltp_{exchange}_{segment}_{token}"
 
         if "BSE" in exchange.upper():
-            logger.debug(f"BSE LTP Subscription: exchange={exchange}, segment={segment}, token={token}, symbol={symbol}")
+            logger.debug(
+                f"BSE LTP Subscription: exchange={exchange}, segment={segment}, token={token}, symbol={symbol}"
+            )
 
         # Determine mode based on whether it's an index
         # IMPORTANT: Only treat as index if exchange contains 'INDEX'
@@ -865,7 +871,9 @@ class GrowwNATSWebSocket:
                 logger.debug(f"BSE subscription sent for {symbol}, key: {sub_key}")
 
             if segment.upper() == "FNO":
-                logger.debug(f"F&O LTP subscription sent for {symbol}, exchange={exchange}, segment={segment}")
+                logger.debug(
+                    f"F&O LTP subscription sent for {symbol}, exchange={exchange}, segment={segment}"
+                )
 
         return sub_key
 
@@ -898,7 +906,9 @@ class GrowwNATSWebSocket:
         sub_key = f"depth_{exchange}_{segment}_{token}"
 
         if "BSE" in exchange.upper():
-            logger.debug(f"BSE DEPTH Subscription: exchange={exchange}, segment={segment}, token={token}, symbol={symbol}")
+            logger.debug(
+                f"BSE DEPTH Subscription: exchange={exchange}, segment={segment}, token={token}, symbol={symbol}"
+            )
 
         # Store subscription info - CRITICAL FIX: Add numeric mode for depth
         self.subscriptions[sub_key] = {
@@ -919,7 +929,9 @@ class GrowwNATSWebSocket:
                 logger.debug(f"BSE DEPTH subscription sent for {symbol}, key: {sub_key}")
 
             if segment.upper() == "FNO":
-                logger.debug(f"F&O DEPTH subscription sent for {symbol}, exchange={exchange}, segment={segment}")
+                logger.debug(
+                    f"F&O DEPTH subscription sent for {symbol}, exchange={exchange}, segment={segment}"
+                )
 
         return sub_key
 

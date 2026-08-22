@@ -15,7 +15,7 @@ from database.telegram_db import create_or_update_telegram_user, get_telegram_us
 from services.telegram_bot_service import telegram_bot_service
 
 
-async def test_chart_generation():
+async def run_chart_generation():
     """Test chart generation directly"""
     # Mock telegram user ID
     telegram_id = 123456789
@@ -69,4 +69,4 @@ async def test_chart_generation():
 
 
 if __name__ == "__main__":
-    asyncio.run(test_chart_generation())
+    asyncio.run(run_chart_generation())

@@ -35,13 +35,13 @@ def map_order_data(order_data):
             exchange = order.get("exchange", "")
             symbol = order.get("tradingsymbol", "")
 
-            # Convert broker symbol to Tradeboard format
+            # Convert broker symbol to OpenAlgo format
             if symbol and exchange:
                 oa_symbol = get_oa_symbol(brsymbol=symbol, exchange=exchange)
                 if oa_symbol:
                     order["tradingsymbol"] = oa_symbol
 
-                    # Map product types to Tradeboard constants following Angel pattern
+                    # Map product types to OpenAlgo constants following Angel pattern
                     if (order["exchange"] == "NSE" or order["exchange"] == "BSE") and order.get(
                         "product_type"
                     ) == "NORMAL":
@@ -88,10 +88,19 @@ def calculate_order_statistics(order_data):
 
             # Count orders based on their status
             # API order_status values: CANCELED / COMPLETE / NEW / OPEN / REJECTED / REPLACED
+            # SL/SL-M orders additionally rest in TRIGGER PENDING until the trigger
+            # fires - they are still live at the exchange, so count them as open.
             status = order.get("order_status", "").upper()
             if status in ["COMPLETE", "EXECUTED"]:
                 total_completed_orders += 1
-            elif status in ["OPEN", "NEW", "REPLACED", "PENDING"]:
+            elif status in [
+                "OPEN",
+                "NEW",
+                "REPLACED",
+                "PENDING",
+                "TRIGGER PENDING",
+                "TRIGGER_PENDING",
+            ]:
                 total_open_orders += 1
             elif status in ["REJECTED", "CANCELED", "CANCELLED"]:
                 total_rejected_orders += 1
@@ -108,7 +117,7 @@ def calculate_order_statistics(order_data):
 
 def transform_order_data(orders):
     """
-    Transform DefinedGe order data to Tradeboard format.
+    Transform DefinedGe order data to OpenAlgo format.
 
     Parameters:
     - orders: List of order dictionaries from DefinedGe API
@@ -127,23 +136,31 @@ def transform_order_data(orders):
             logger.warning(f"Expected a dict, but found a {type(order)}. Skipping this item.")
             continue
 
-        # Map DefinedGe order status to Tradeboard format
+        # Map DefinedGe order status to OpenAlgo format
         # API order_status values: CANCELED / COMPLETE / NEW / OPEN / REJECTED / REPLACED
         status = order.get("order_status", "").upper()
         if status in ["COMPLETE", "EXECUTED"]:
             order_status = "complete"
         elif status in ["REJECTED"]:
             order_status = "rejected"
-        elif status in ["TRIGGER PENDING", "TRIGGER_PENDING"]:
-            order_status = "trigger pending"
-        elif status in ["OPEN", "NEW", "REPLACED", "PENDING"]:
+        elif status in [
+            "OPEN",
+            "NEW",
+            "REPLACED",
+            "PENDING",
+            "TRIGGER PENDING",
+            "TRIGGER_PENDING",
+        ]:
+            # TRIGGER PENDING is an SL/SL-M order resting at the exchange waiting
+            # for its trigger. It is still cancellable and modifiable, so report it
+            # as "open" - the order book only exposes Cancel/Modify for "open".
             order_status = "open"
         elif status in ["CANCELED", "CANCELLED"]:
             order_status = "cancelled"
         else:
             order_status = status.lower()
 
-        # Map API price types (LIMIT/MARKET/SL-LIMIT/SL-MARKET) to Tradeboard constants
+        # Map API price types (LIMIT/MARKET/SL-LIMIT/SL-MARKET) to OpenAlgo constants
         price_type_map = {"SL-LIMIT": "SL", "SL-MARKET": "SL-M"}
         price_type = order.get("price_type", "")
 
@@ -195,7 +212,7 @@ def map_trade_data(trade_data):
             exchange = trade.get("exchange", "")
             symbol = trade.get("tradingsymbol", "")
 
-            # Convert broker symbol to Tradeboard format
+            # Convert broker symbol to OpenAlgo format
             if symbol and exchange:
                 oa_symbol = get_oa_symbol(brsymbol=symbol, exchange=exchange)
                 if oa_symbol:
@@ -205,7 +222,7 @@ def map_trade_data(trade_data):
                         f"Symbol {symbol} on exchange {exchange} not found. Keeping original."
                     )
 
-            # Map product types to Tradeboard constants (following Tradeboard order constants)
+            # Map product types to OpenAlgo constants (following OpenAlgo order constants)
             product_type = trade.get("product_type", "")
             if product_type == "INTRADAY":
                 trade["product_type"] = "MIS"
@@ -222,13 +239,13 @@ def map_trade_data(trade_data):
 
 def transform_tradebook_data(tradebook_data):
     """
-    Transform DefinedGe tradebook data to Tradeboard format.
+    Transform DefinedGe tradebook data to OpenAlgo format.
 
     Parameters:
     - tradebook_data: List of trade dictionaries from DefinedGe API
 
     Returns:
-    - List of transformed trade dictionaries matching Tradeboard format
+    - List of transformed trade dictionaries matching OpenAlgo format
     """
     transformed_data = []
 
@@ -252,7 +269,7 @@ def transform_tradebook_data(tradebook_data):
         # Get timestamp - Definedge provides fill_time for executed trades
         timestamp = trade.get("fill_time", trade.get("exchange_time", ""))
 
-        # Map product type to Tradeboard format
+        # Map product type to OpenAlgo format
         product_type = trade.get("product_type", "")
         if product_type == "INTRADAY":
             product_type = "MIS"
@@ -267,7 +284,7 @@ def transform_tradebook_data(tradebook_data):
         transformed_trade = {
             "symbol": trade.get("tradingsymbol", ""),
             "exchange": trade.get("exchange", ""),
-            "product": product_type,  # Mapped to Tradeboard constants
+            "product": product_type,  # Mapped to OpenAlgo constants
             "action": trade.get("order_type", "").upper(),  # BUY/SELL
             "quantity": quantity,
             "average_price": round(fill_price, 2),  # Using fill_price as average_price
@@ -310,7 +327,7 @@ def map_position_data(position_data):
             exchange = position.get("exchange", "")
             symbol = position.get("tradingsymbol", "")
 
-            # Convert broker symbol to Tradeboard format
+            # Convert broker symbol to OpenAlgo format
             if symbol and exchange:
                 oa_symbol = get_oa_symbol(brsymbol=symbol, exchange=exchange)
                 if oa_symbol:
@@ -320,7 +337,7 @@ def map_position_data(position_data):
                         f"Symbol {symbol} on exchange {exchange} not found. Keeping original."
                     )
 
-            # Map product types to Tradeboard constants
+            # Map product types to OpenAlgo constants
             product_type = position.get("product_type", "")
             if product_type == "INTRADAY":
                 position["product_type"] = "MIS"
@@ -337,7 +354,7 @@ def map_position_data(position_data):
 
 def transform_positions_data(positions_data):
     """
-    Transform DefinedGe positions data to Tradeboard format.
+    Transform DefinedGe positions data to OpenAlgo format.
     Following Angel's pattern for consistency.
     """
     transformed_data = []
@@ -413,7 +430,7 @@ def map_portfolio_data(portfolio_data):
             holding["exchange"] = exchange
             holding["symbol"] = symbol
 
-            # Convert broker symbol to Tradeboard format
+            # Convert broker symbol to OpenAlgo format
             if symbol and exchange:
                 oa_symbol = get_oa_symbol(brsymbol=symbol, exchange=exchange)
                 if oa_symbol:
@@ -484,7 +501,7 @@ def calculate_portfolio_statistics(holdings_data):
 
 def transform_holdings_data(holdings_data):
     """
-    Transform DefinedGe holdings data to Tradeboard format.
+    Transform DefinedGe holdings data to OpenAlgo format.
     Following Angel's pattern for consistency.
     """
     transformed_data = []
@@ -514,13 +531,12 @@ def transform_holdings_data(holdings_data):
         exchange = holding.get("exchange", "")
 
         # Calculate investment value
-        investment_value = total_qty * avg_buy_price
+        total_qty * avg_buy_price
 
         # For current value, we need LTP - since Definedge doesn't provide it in holdings,
         # we'll need to get it from market data or use a placeholder
         # For now, calculate P&L as 0 since we don't have real-time price
         # This should be updated with actual market prices in production
-        current_value = investment_value  # Placeholder - should be total_qty * ltp
         pnl = 0.0  # Placeholder - should be current_value - investment_value
         pnl_percent = 0.0  # Placeholder
 

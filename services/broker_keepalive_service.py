@@ -145,7 +145,7 @@ def _keepalive_loop():
                 if broker:
                     if base_url is None and broker not in unresolved:
                         unresolved.add(broker)
-                        logger.info(
+                        logger.debug(
                             f"Connection keep-warm idle: broker '{broker}' has no "
                             f"api/baseurl.py with {' or '.join(_URL_ATTRS)}"
                         )
@@ -181,11 +181,9 @@ def start_broker_keepalive():
     with _thread_lock:
         if _thread is not None and _thread.is_alive():
             return
-        _thread = threading.Thread(
-            target=_keepalive_loop, daemon=True, name="broker-keepalive"
-        )
+        _thread = threading.Thread(target=_keepalive_loop, daemon=True, name="broker-keepalive")
         _thread.start()
-        logger.info(
+        logger.debug(
             f"Broker connection keep-warm started: every {_PING_INTERVAL}s, "
             f"window {_WINDOW} IST Mon-Fri"
         )

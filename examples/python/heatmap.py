@@ -118,8 +118,8 @@ fig.update_traces(
 
 fig.update_layout(
     title="🔥 NIFTY 50 Sorted Heatmap (%)",
-    xaxis=dict(type="category", title=""),
-    yaxis=dict(type="category", autorange="reversed", title=""),
+    xaxis={"type": "category", "title": ""},
+    yaxis={"type": "category", "autorange": "reversed", "title": ""},
     template="plotly_dark",
     height=600,
 )

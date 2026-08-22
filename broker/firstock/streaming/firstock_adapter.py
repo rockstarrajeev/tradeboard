@@ -35,8 +35,12 @@ class FirstockWebSocketAdapter(BaseBrokerWebSocketAdapter):
         self.broker_name = "firstock"
         self.running = False
         self.lock = threading.Lock()
-        # Snapshot management for value retention (similar to Shoonya implementation)
-        self.market_snapshots = {}  # {token: snapshot_data} - retains previous values
+        # Snapshot management for value retention (similar to Shoonya implementation).
+        # Keyed by scrip ("NFO:65872"), not by the bare token: Firstock tokens are
+        # unique only within an exchange segment and the live master carries
+        # thousands of cross-exchange duplicates (NSE/CDS, BSE_INDEX/NSE, BSE/MCX),
+        # which a token-keyed snapshot merged into one slot - see #1732
+        self.market_snapshots = {}  # {scrip: snapshot_data} - retains previous values
         self.ws_subscription_refs = {}  # Reference counting for WebSocket subscriptions
 
     def initialize(
@@ -85,10 +89,10 @@ class FirstockWebSocketAdapter(BaseBrokerWebSocketAdapter):
                     f"Using Firstock user ID '{self.firstock_user_id}' from BROKER_API_KEY"
                 )
             else:
-                # Fallback to Tradeboard user ID if BROKER_API_KEY not set
+                # Fallback to OpenAlgo user ID if BROKER_API_KEY not set
                 self.firstock_user_id = user_id
                 self.logger.warning(
-                    f"BROKER_API_KEY not found in environment. Using Tradeboard user ID '{user_id}' which may fail authentication"
+                    f"BROKER_API_KEY not found in environment. Using OpenAlgo user ID '{user_id}' which may fail authentication"
                 )
 
         else:
@@ -119,10 +123,10 @@ class FirstockWebSocketAdapter(BaseBrokerWebSocketAdapter):
                         f"Using Firstock user ID '{self.firstock_user_id}' from BROKER_API_KEY"
                     )
                 else:
-                    # Fallback to Tradeboard user ID if BROKER_API_KEY not set
+                    # Fallback to OpenAlgo user ID if BROKER_API_KEY not set
                     self.firstock_user_id = user_id
                     self.logger.warning(
-                        f"BROKER_API_KEY not found in environment. Using Tradeboard user ID '{user_id}' which may fail authentication"
+                        f"BROKER_API_KEY not found in environment. Using OpenAlgo user ID '{user_id}' which may fail authentication"
                     )
 
         # Create FirstockWebSocket instance
@@ -345,6 +349,15 @@ class FirstockWebSocketAdapter(BaseBrokerWebSocketAdapter):
             # Remove the subscription
             del self.subscriptions[correlation_id]
 
+            # Drop the retained snapshot once nothing is subscribed to this scrip.
+            # Keyed on scrip, not token: a token still subscribed on another
+            # exchange segment must keep its own snapshot slot intact (#1732)
+            if not any(
+                sub["subscription_token"] == subscription_token
+                for sub in self.subscriptions.values()
+            ):
+                self.market_snapshots.pop(subscription_token, None)
+
             # Only unsubscribe from WebSocket if this was the last subscription
             if is_last and self._should_ws_unsubscribe(subscription_token, mode):
                 # Unsubscribe if connected
@@ -379,7 +392,7 @@ class FirstockWebSocketAdapter(BaseBrokerWebSocketAdapter):
             # Group subscriptions by unique token and mode
             unique_subscriptions = {}
 
-            for correlation_id, sub in self.subscriptions.items():
+            for _correlation_id, sub in self.subscriptions.items():
                 subscription_key = f"{sub['subscription_token']}_{sub['mode']}"
 
                 if subscription_key not in unique_subscriptions:
@@ -514,13 +527,19 @@ class FirstockWebSocketAdapter(BaseBrokerWebSocketAdapter):
         except Exception as e:
             self.logger.error(f"Error processing data: {e}", exc_info=True)
 
-    def _update_market_snapshot(self, token: str, data: dict[str, Any]) -> dict[str, Any]:
+    def _update_market_snapshot(self, scrip: str, data: dict[str, Any]) -> dict[str, Any]:
         """
         Update market snapshot for value retention.
         Only updates non-zero/non-invalid values to retain previous valid data.
+
+        Keyed by scrip (``"NFO:65872"``), never by the bare token: Firstock tokens
+        are unique only within an exchange segment, and the live master carries
+        thousands of cross-exchange duplicates (NSE/CDS, BSE_INDEX/NSE, BSE/MCX).
+        A token-keyed snapshot merged two different instruments into one slot, so
+        one symbol's retained values bled into the other's feed (#1732).
         """
         # Get existing snapshot or create empty one
-        snapshot = self.market_snapshots.get(token, {})
+        snapshot = self.market_snapshots.get(scrip, {})
 
         # Fields to merge (only if not invalid/zero)
         merge_fields = [
@@ -597,7 +616,7 @@ class FirstockWebSocketAdapter(BaseBrokerWebSocketAdapter):
             new_sell_depth = self._filter_depth_data(data.get("best_sell", []))
 
             self.logger.debug(
-                f"Token {token} depth analysis - buy entries: {len(new_buy_depth)}, sell entries: {len(new_sell_depth)}"
+                f"Scrip {scrip} depth analysis - buy entries: {len(new_buy_depth)}, sell entries: {len(new_sell_depth)}"
             )
 
             # Only update depth if we have valid new data, otherwise retain previous snapshot
@@ -605,33 +624,33 @@ class FirstockWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 snapshot["best_buy"] = new_buy_depth
                 updated_fields.append("best_buy")
                 self.logger.debug(
-                    f"Token {token} updated buy depth with {len(new_buy_depth)} valid entries"
+                    f"Scrip {scrip} updated buy depth with {len(new_buy_depth)} valid entries"
                 )
             elif "best_buy" not in snapshot:  # No previous data, initialize empty
                 snapshot["best_buy"] = []
             else:
                 self.logger.debug(
-                    f"Token {token} retaining previous buy depth ({len(snapshot.get('best_buy', []))} entries)"
+                    f"Scrip {scrip} retaining previous buy depth ({len(snapshot.get('best_buy', []))} entries)"
                 )
 
             if new_sell_depth:  # Has valid sell data
                 snapshot["best_sell"] = new_sell_depth
                 updated_fields.append("best_sell")
                 self.logger.debug(
-                    f"Token {token} updated sell depth with {len(new_sell_depth)} valid entries"
+                    f"Scrip {scrip} updated sell depth with {len(new_sell_depth)} valid entries"
                 )
             elif "best_sell" not in snapshot:  # No previous data, initialize empty
                 snapshot["best_sell"] = []
             else:
                 self.logger.debug(
-                    f"Token {token} retaining previous sell depth ({len(snapshot.get('best_sell', []))} entries)"
+                    f"Scrip {scrip} retaining previous sell depth ({len(snapshot.get('best_sell', []))} entries)"
                 )
 
         # Update stored snapshot
-        self.market_snapshots[token] = snapshot
+        self.market_snapshots[scrip] = snapshot
 
         if updated_fields:
-            self.logger.debug(f"Updated snapshot fields for token {token}: {updated_fields}")
+            self.logger.debug(f"Updated snapshot fields for scrip {scrip}: {updated_fields}")
 
         return snapshot
 
@@ -680,8 +699,12 @@ class FirstockWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 self.logger.debug(f"Available subscriptions: {list(self.subscriptions.keys())}")
                 return
 
-            # Update snapshot with current data (retains previous values for invalid/zero fields)
-            processed_data = self._update_market_snapshot(token, data)
+            # Update snapshot with current data (retains previous values for
+            # invalid/zero fields). Keyed on the full scrip so a token shared
+            # across exchange segments does not merge two instruments (#1732)
+            processed_data = self._update_market_snapshot(
+                matching_subscriptions[0]["subscription_token"], data
+            )
 
             # Publish data for each subscribed mode
             for subscription in matching_subscriptions:

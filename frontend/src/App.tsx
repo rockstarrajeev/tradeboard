@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
 import { Providers } from '@/app/providers'
 import { AuthSync } from '@/components/auth/AuthSync'
 import { FullWidthLayout } from '@/components/layout/FullWidthLayout'
@@ -11,6 +11,11 @@ import { useBrokerStore } from '@/stores/brokerStore'
 // Lazy load all pages for code splitting
 // Public pages
 const Home = lazy(() => import('@/pages/Home'))
+const PortfolioBacktester = lazy(() => import('@/pages/PortfolioBacktester'))
+const PortfolioBacktesterResults = lazy(() => import('@/pages/PortfolioBacktesterResults'))
+const SipBacktester = lazy(() => import('@/pages/SipBacktester'))
+const SipBacktesterResults = lazy(() => import('@/pages/SipBacktesterResults'))
+const PortfolioAnalyzer = lazy(() => import('@/pages/PortfolioAnalyzer'))
 const Faq = lazy(() => import('@/pages/Faq'))
 const Setup = lazy(() => import('@/pages/Setup'))
 const Login = lazy(() => import('@/pages/Login'))
@@ -50,8 +55,10 @@ const SandboxPnL = lazy(() => import('@/pages/SandboxPnL'))
 const CalendarLedger = lazy(() => import('@/pages/CalendarLedger'))
 const Analyzer = lazy(() => import('@/pages/Analyzer'))
 const WebSocketTest = lazy(() => import('@/pages/WebSocketTest'))
+const WebSocketOrder = lazy(() => import('@/pages/WebSocketOrder'))
 const ChartTest = lazy(() => import('@/pages/ChartTest'))
 const Playground = lazy(() => import('@/pages/Playground'))
+const Trading = lazy(() => import('@/pages/Trading'))
 const Historify = lazy(() => import('@/pages/Historify'))
 const HistorifyCharts = lazy(() => import('@/pages/HistorifyCharts'))
 
@@ -190,12 +197,27 @@ function App() {
                 {/* Phase 4: Charts & Webhook Configuration */}
                 <Route path="/platforms" element={<Platforms />} />
                 <Route path="/tradingview" element={<TradingView />} />
+                <Route path="/portfolio-backtester" element={<PortfolioBacktester />} />
+                <Route
+                  path="/portfolio-backtester/results"
+                  element={<PortfolioBacktesterResults />}
+                />
+                {/* The page moved: /portfolio was ambiguous next to the
+                    analyzer. Redirect rather than 404 an existing bookmark. */}
+                <Route
+                  path="/portfolio"
+                  element={<Navigate to="/portfolio-backtester" replace />}
+                />
+                <Route path="/sip-backtester" element={<SipBacktester />} />
+                <Route path="/sip-backtester/results" element={<SipBacktesterResults />} />
+                <Route path="/portfolio-analyzer" element={<PortfolioAnalyzer />} />
                 <Route path="/gocharting" element={<GoCharting />} />
                 <Route path="/pnl-tracker" element={<PnLTracker />} />
                 {/* Phase 4: Sandbox & Analyzer */}
                 <Route path="/sandbox" element={<Sandbox />} />
                 <Route path="/sandbox/mypnl" element={<SandboxPnL />} />
                 <Route path="/sandbox/calendar" element={<CalendarLedger />} />
+                <Route path="/calendar-ledger" element={<CalendarLedger />} />
                 <Route path="/analyzer" element={<Analyzer />} />
                 <Route path="/tools" element={<Tools />} />
                 <Route path="/scalping" element={<Scalping />} />
@@ -224,6 +246,7 @@ function App() {
                   element={<Navigate to="/strategybuilder/portfolio" replace />}
                 />
                 <Route path="/websocket/test" element={<WebSocketTest />} />
+                <Route path="/websocket/order" element={<WebSocketOrder />} />
                 <Route path="/chart/test" element={<ChartTest />} />
                 <Route path="/websocket/test/20" element={<WebSocketTest depthLevel={20} />} />
                 <Route path="/websocket/test/30" element={<WebSocketTest depthLevel={30} />} />
@@ -283,6 +306,7 @@ function App() {
               {/* Full-width protected routes */}
               <Route element={<FullWidthLayout />}>
                 <Route path="/playground" element={<Playground />} />
+                <Route path="/trading" element={<Trading />} />
                 <Route path="/historify" element={<Historify />} />
                 <Route path="/historify/charts" element={<HistorifyCharts />} />
                 <Route path="/historify/charts/:symbol" element={<HistorifyCharts />} />

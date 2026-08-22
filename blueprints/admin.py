@@ -384,7 +384,10 @@ def api_holiday_add():
         # Validate special session has open exchanges with timings
         if holiday_type == "SPECIAL_SESSION" and not open_exchanges:
             return jsonify(
-                {"status": "error", "message": "Special session requires at least one exchange with timings"}
+                {
+                    "status": "error",
+                    "message": "Special session requires at least one exchange with timings",
+                }
             ), 400
 
         holiday_date = datetime.strptime(date_str, "%Y-%m-%d").date()
@@ -1235,8 +1238,8 @@ def _runtime_info():
 def _build_info():
     """Platform version, SDK version, git ref, frontend build mtime."""
     info = {
-        "tradeboard_version": None,
-        "tradeboard_sdk_version": None,
+        "openalgo_version": None,
+        "openalgo_sdk_version": None,
         "git_branch": None,
         "git_commit": None,
         "frontend_build_time": None,
@@ -1244,13 +1247,13 @@ def _build_info():
     try:
         from utils.version import get_version
 
-        info["tradeboard_version"] = get_version()
+        info["openalgo_version"] = get_version()
     except Exception:
         pass
     try:
         from importlib import metadata as _metadata
 
-        info["tradeboard_sdk_version"] = _metadata.version("tradeboard")
+        info["openalgo_sdk_version"] = _metadata.version("openalgo")
     except Exception:
         pass
 
@@ -1349,7 +1352,7 @@ def _broker_snapshot():
 def _database_snapshot():
     """File presence/size/mtime for each known DB. No live queries."""
     db_files = [
-        ("tradeboard", "db/openalgo.db"),
+        ("openalgo", "db/openalgo.db"),
         ("logs", "db/logs.db"),
         ("latency", "db/latency.db"),
         ("health", "db/health.db"),
@@ -1496,7 +1499,7 @@ def _check_loopback_http():
     import time
     import urllib.request
 
-    # FLASK_PORT is the canonical Tradeboard var; PORT is the Docker/Railway
+    # FLASK_PORT is the canonical OpenAlgo var; PORT is the Docker/Railway
     # convention (gunicorn binds to ${PORT:-5000} in start.sh).
     port = os.getenv("FLASK_PORT") or os.getenv("PORT") or "5000"
     targets = [f"http://127.0.0.1:{port}/"]
@@ -1667,9 +1670,13 @@ def _render_report(payload, errors_summary, errors_recent, fmt):
     h2 = "## " if is_md else ""
 
     lines = []
-    lines.append(f"{h1}Tradeboard System Report")
+    lines.append(f"{h1}OpenAlgo System Report")
     lines.append("")
-    lines.append(_md_kv("Generated", datetime.now().strftime("%Y-%m-%d %H:%M:%S")) if is_md else f"Generated: {datetime.now()}")
+    lines.append(
+        _md_kv("Generated", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        if is_md
+        else f"Generated: {datetime.now()}"
+    )
     lines.append("")
 
     mode = payload.get("mode") or {}
@@ -1713,18 +1720,23 @@ def _render_report(payload, errors_summary, errors_recent, fmt):
     lines.append(_md_kv("Memory used (%)", hw.get("memory_percent")))
     if hw.get("disk_log"):
         lines.append(
-            _md_kv("Disk log", f"{hw['disk_log']['free_gb']} GB free of {hw['disk_log']['total_gb']} GB")
+            _md_kv(
+                "Disk log",
+                f"{hw['disk_log']['free_gb']} GB free of {hw['disk_log']['total_gb']} GB",
+            )
         )
     if hw.get("disk_db"):
         lines.append(
-            _md_kv("Disk db", f"{hw['disk_db']['free_gb']} GB free of {hw['disk_db']['total_gb']} GB")
+            _md_kv(
+                "Disk db", f"{hw['disk_db']['free_gb']} GB free of {hw['disk_db']['total_gb']} GB"
+            )
         )
     lines.append("")
 
     build = payload.get("build") or {}
     lines.append(f"{h2}Build")
-    lines.append(_md_kv("Tradeboard", build.get("tradeboard_version")))
-    lines.append(_md_kv("Tradeboard SDK", build.get("tradeboard_sdk_version")))
+    lines.append(_md_kv("OpenAlgo", build.get("openalgo_version")))
+    lines.append(_md_kv("OpenAlgo SDK", build.get("openalgo_sdk_version")))
     lines.append(_md_kv("Git branch", build.get("git_branch")))
     lines.append(_md_kv("Git commit", build.get("git_commit")))
     lines.append(_md_kv("Frontend build", build.get("frontend_build_time")))
@@ -1756,7 +1768,9 @@ def _render_report(payload, errors_summary, errors_recent, fmt):
     lines.append(f"{h2}Brokers")
     lines.append(_md_kv("Active broker", brokers.get("active_broker")))
     lines.append(_md_kv("User logged in", brokers.get("user_logged_in")))
-    lines.append(_md_kv("Configured", ", ".join(brokers.get("configured_brokers") or []) or "_none_"))
+    lines.append(
+        _md_kv("Configured", ", ".join(brokers.get("configured_brokers") or []) or "_none_")
+    )
     lines.append("")
 
     dbs = payload.get("databases") or []
@@ -1793,7 +1807,11 @@ def _render_report(payload, errors_summary, errors_recent, fmt):
             lvl = entry.get("level", "?")
             mod = entry.get("module", "?")
             msg = _strip_ansi(entry.get("message", ""))[:500]
-            lines.append(f"{bullet}`{ts}` **{lvl}** in `{mod}`: {msg}" if is_md else f"  - [{ts}] {lvl} in {mod}: {msg}")
+            lines.append(
+                f"{bullet}`{ts}` **{lvl}** in `{mod}`: {msg}"
+                if is_md
+                else f"  - [{ts}] {lvl} in {mod}: {msg}"
+            )
         lines.append("")
 
     body = "\n".join(lines)
@@ -1852,7 +1870,7 @@ def api_system_report():
             recent = recent[-50:]
 
         body = _render_report(payload, errors_summary, recent, fmt)
-        filename = f"tradeboard-system-report-{datetime.now().strftime('%Y%m%d-%H%M%S')}.{fmt}"
+        filename = f"openalgo-system-report-{datetime.now().strftime('%Y%m%d-%H%M%S')}.{fmt}"
         mimetype = "text/markdown" if fmt == "md" else "text/plain"
 
         from flask import Response
@@ -1996,9 +2014,7 @@ def api_oauth_client_approve(client_id):
             f"[OAuth admin] approved client_id={client_id} "
             f"by user={request.headers.get('X-Forwarded-User') or 'session'}"
         )
-        return jsonify(
-            {"status": "success", "client": _serialize_oauth_client(client)}
-        )
+        return jsonify({"status": "success", "client": _serialize_oauth_client(client)})
     except Exception as e:
         logger.exception(f"Error approving OAuth client: {e}")
         return jsonify({"status": "error", "message": "Failed to approve."}), 500
@@ -2036,8 +2052,7 @@ def api_oauth_client_revoke(client_id):
 
         revoked_count = revoke_client(client_id, "admin_revoke")
         logger.warning(
-            f"[OAuth admin] REVOKE client_id={client_id} "
-            f"({revoked_count} tokens) by session"
+            f"[OAuth admin] REVOKE client_id={client_id} ({revoked_count} tokens) by session"
         )
         return jsonify(
             {
@@ -2113,8 +2128,17 @@ def api_mcp_audit():
         # whitelist stops it from leaking through this endpoint
         # (security review finding M-3).
         _AUDIT_KEYS = frozenset(
-            {"ts", "jti", "client_id", "tool", "scope", "params_hash",
-             "duration_ms", "outcome", "request_ip"}
+            {
+                "ts",
+                "jti",
+                "client_id",
+                "tool",
+                "scope",
+                "params_hash",
+                "duration_ms",
+                "outcome",
+                "request_ip",
+            }
         )
 
         def _sanitize_audit(entry: dict) -> dict:
@@ -2178,7 +2202,7 @@ def api_mcp_kill_switch():
         return jsonify(
             {
                 "status": "error",
-                "message": "Kill switch requires confirm=\"REVOKE_ALL_MCP_TOKENS\".",
+                "message": 'Kill switch requires confirm="REVOKE_ALL_MCP_TOKENS".',
             }
         ), 400
 
@@ -2200,7 +2224,7 @@ def api_mcp_kill_switch():
 # posture from /admin/remote-mcp without SSH'ing into the server.
 #
 # IMPORTANT: changes are written to the .env file but require a service
-# restart (sudo systemctl restart tradeboard) before they take effect —
+# restart (sudo systemctl restart openalgo) before they take effect —
 # MCP_HTTP_ENABLED is checked at app boot to register Flask blueprints,
 # and the per-request flags are read via os.getenv() at module level.
 # The PUT endpoint surfaces this clearly via restart_required=true.
@@ -2327,7 +2351,10 @@ def api_mcp_settings_put():
         public_url = public_url.strip().rstrip("/")
         if public_url and not re.match(r"^https://[A-Za-z0-9.\-]+(:\d+)?(/.*)?$", public_url):
             return jsonify(
-                {"status": "error", "message": "public_url must be HTTPS (e.g. https://yourdomain.com)."}
+                {
+                    "status": "error",
+                    "message": "public_url must be HTTPS (e.g. https://yourdomain.com).",
+                }
             ), 400
 
     # Pre-flight: enabling MCP must not produce a config that refuses to boot.
@@ -2343,7 +2370,9 @@ def api_mcp_settings_put():
                     ),
                 }
             ), 400
-        effective_url = public_url if public_url is not None else (os.getenv("MCP_PUBLIC_URL") or "").strip()
+        effective_url = (
+            public_url if public_url is not None else (os.getenv("MCP_PUBLIC_URL") or "").strip()
+        )
         if not effective_url:
             return jsonify(
                 {
@@ -2358,18 +2387,20 @@ def api_mcp_settings_put():
     env_path = _resolve_env_path()
     if not env_path.exists():
         logger.error(f"[MCP admin] .env not found at {env_path}")
-        return jsonify(
-            {"status": "error", "message": f".env not found at {env_path}"}
-        ), 500
+        return jsonify({"status": "error", "message": f".env not found at {env_path}"}), 500
 
     try:
         if "http_enabled" in data:
-            _set_env_value(env_path, "MCP_HTTP_ENABLED", "True" if data["http_enabled"] else "False")
+            _set_env_value(
+                env_path, "MCP_HTTP_ENABLED", "True" if data["http_enabled"] else "False"
+            )
         if public_url is not None:
             _set_env_value(env_path, "MCP_PUBLIC_URL", public_url)
         if "require_approval" in data:
             _set_env_value(
-                env_path, "MCP_OAUTH_REQUIRE_APPROVAL", "True" if data["require_approval"] else "False"
+                env_path,
+                "MCP_OAUTH_REQUIRE_APPROVAL",
+                "True" if data["require_approval"] else "False",
             )
         if "write_scope_enabled" in data:
             _set_env_value(
@@ -2391,7 +2422,7 @@ def api_mcp_settings_put():
         {
             "status": "success",
             "restart_required": True,
-            "restart_command": "sudo systemctl restart tradeboard",
+            "restart_command": "sudo systemctl restart openalgo",
             "settings_pending": _mcp_settings_payload(),  # what's in .env now
         }
     )

@@ -4,7 +4,7 @@ TradeSmart-specific mapping utilities for the WebSocket adapter
 
 
 class TradeSmartExchangeMapper:
-    """Maps between Tradeboard exchange names and TradeSmart (Noren) exchange codes."""
+    """Maps between OpenAlgo exchange names and TradeSmart (Noren) exchange codes."""
 
     EXCHANGE_MAP = {
         "NSE": "NSE",

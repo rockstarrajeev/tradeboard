@@ -113,7 +113,13 @@ export default defineConfig({
           if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) {
             return 'react-vendor'
           }
-          if (id.includes('tanstack/react-query')) return 'tanstack'
+          if (id.includes('@tanstack/react-query')) return 'tanstack'
+          if (id.includes('@radix-ui')) return 'radix-vendor'
+          if (id.includes('lucide-react')) return 'icons-vendor'
+          if (id.includes('@codemirror') || id.includes('@uiw')) return 'codemirror-vendor'
+          if (id.includes('@xyflow')) return 'xyflow-vendor'
+          if (id.includes('plotly.js-dist-min')) return 'plotly-vendor'
+          if (id.includes('lightweight-charts') || id.includes('openalgo-charts')) return 'charts-vendor'
         },
       },
     },

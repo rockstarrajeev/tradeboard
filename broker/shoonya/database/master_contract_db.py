@@ -55,8 +55,43 @@ def delete_symtoken_table():
     db_session.commit()
 
 
+def drop_incomplete_rows(df, exchange, required=("brsymbol", "name")):
+    """Drops rows that are missing the fields needed to build an OpenAlgo symbol.
+
+    Shoonya's symbol files carry placeholder rows that have a Token but blank
+    Symbol/TradingSymbol/Expiry columns (NFO_symbols.txt currently ships ~18 of
+    them at the top of the file). Left in place they reach the bulk insert as
+    NaN and trip the NOT NULL constraint on symtoken.brsymbol, which rolls back
+    the whole exchange rather than just the offending rows.
+
+    Args:
+        df: DataFrame with columns already renamed to the schema names.
+        exchange: Exchange name, used for logging only.
+        required: Columns that must be present and non-null.
+
+    Returns:
+        DataFrame containing only the usable rows.
+    """
+    subset = [column for column in required if column in df.columns]
+    if not subset:
+        return df
+
+    cleaned = df.dropna(subset=subset)
+    dropped = len(df) - len(cleaned)
+    if dropped:
+        logger.warning(
+            f"Skipping {dropped} incomplete {exchange} rows with blank {'/'.join(subset)}"
+        )
+    return cleaned.copy()
+
+
 def copy_from_dataframe(df):
     logger.info("Performing Bulk Insert")
+
+    # Final guard: symbol and brsymbol are NOT NULL, and one bad row aborts the
+    # entire transaction for that exchange. Never let one reach the insert.
+    df = df.dropna(subset=["symbol", "brsymbol"])
+
     # Convert DataFrame to a list of dictionaries
     data_dict = df.to_dict(orient="records")
 
@@ -137,7 +172,7 @@ def download_and_unzip_shoonya_data(output_path):
 
 def process_shoonya_nse_data(output_path):
     """
-    Processes the shoonya NSE data (NSE_symbols.txt) to generate Tradeboard symbols.
+    Processes the shoonya NSE data (NSE_symbols.txt) to generate OpenAlgo symbols.
     Separates EQ, BE symbols, and Index symbols.
     """
     logger.info("Processing shoonya NSE Data")
@@ -160,22 +195,25 @@ def process_shoonya_nse_data(output_path):
     # Rename columns to match your schema
     df.columns = ["exchange", "token", "lotsize", "name", "brsymbol", "instrumenttype", "tick_size"]
 
+    # Drop placeholder rows before any string transform runs on a NaN
+    df = drop_incomplete_rows(df, "NSE")
+
     # Add missing columns to ensure DataFrame matches the database structure
     df["symbol"] = df["brsymbol"]  # Initialize 'symbol' with 'brsymbol'
 
-    # Apply transformation for Tradeboard symbols
-    def get_tradeboard_symbol(broker_symbol):
+    # Apply transformation for OpenAlgo symbols
+    def get_openalgo_symbol(broker_symbol):
         # Separate by hyphen and apply logic for EQ and BE
         if "-EQ" in broker_symbol:
             return broker_symbol.replace("-EQ", "")
         elif "-BE" in broker_symbol:
             return broker_symbol.replace("-BE", "")
         else:
-            # For other symbols (including index), Tradeboard symbol remains the same as broker symbol
+            # For other symbols (including index), OpenAlgo symbol remains the same as broker symbol
             return broker_symbol
 
     # Update the 'symbol' column
-    df["symbol"] = df["brsymbol"].apply(get_tradeboard_symbol)
+    df["symbol"] = df["brsymbol"].apply(get_openalgo_symbol)
 
     # Define Exchange: 'NSE' for EQ and BE, 'NSE_INDEX' for indexes
     df["exchange"] = df.apply(
@@ -225,18 +263,20 @@ def process_shoonya_nse_data(output_path):
     )
 
     # Explicit overrides for NSE_INDEX symbols that don't follow simple concatenation
-    df_filtered.loc[nse_idx_mask, "symbol"] = df_filtered.loc[nse_idx_mask, "symbol"].replace({
-        # Major Indices
-        "NIFTY50": "NIFTY",
-        "NIFTYINDEX": "NIFTY",
-        "NIFTYBANK": "BANKNIFTY",
-        "NIFTYFIN": "FINNIFTY",
-        "NIFTYFINSERVICE": "FINNIFTY",
-        "NIFTYFINANCIALSERVICES": "FINNIFTY",
-        "NIFTYNEXT50": "NIFTYNXT50",
-        "NIFTYMIDSELECT": "MIDCPNIFTY",
-        "NIFTYMIDCAPSELECT": "MIDCPNIFTY",
-    })
+    df_filtered.loc[nse_idx_mask, "symbol"] = df_filtered.loc[nse_idx_mask, "symbol"].replace(
+        {
+            # Major Indices
+            "NIFTY50": "NIFTY",
+            "NIFTYINDEX": "NIFTY",
+            "NIFTYBANK": "BANKNIFTY",
+            "NIFTYFIN": "FINNIFTY",
+            "NIFTYFINSERVICE": "FINNIFTY",
+            "NIFTYFINANCIALSERVICES": "FINNIFTY",
+            "NIFTYNEXT50": "NIFTYNXT50",
+            "NIFTYMIDSELECT": "MIDCPNIFTY",
+            "NIFTYMIDCAPSELECT": "MIDCPNIFTY",
+        }
+    )
 
     # Return the processed DataFrame
     return df_filtered
@@ -244,7 +284,7 @@ def process_shoonya_nse_data(output_path):
 
 def process_shoonya_nfo_data(output_path):
     """
-    Processes the shoonya NFO data (NFO_symbols.txt) to generate Tradeboard symbols.
+    Processes the shoonya NFO data (NFO_symbols.txt) to generate OpenAlgo symbols.
     Handles both futures and options formatting.
     """
     logger.info("Processing shoonya NFO Data")
@@ -280,6 +320,10 @@ def process_shoonya_nfo_data(output_path):
         "strike",
         "tick_size",
     ]
+
+    # Drop placeholder rows (blank Symbol/TradingSymbol) before they reach the
+    # insert as NaN and roll back the whole NFO transaction
+    df = drop_incomplete_rows(df, "NFO")
 
     # Add missing columns to ensure DataFrame matches the database structure
     df["expiry"] = df["expiry"].fillna("")  # Fill expiry with empty strings if missing
@@ -362,7 +406,7 @@ def process_shoonya_nfo_data(output_path):
 
 def process_shoonya_cds_data(output_path):
     """
-    Processes the shoonya CDS data (CDS_symbols.txt) to generate Tradeboard symbols.
+    Processes the shoonya CDS data (CDS_symbols.txt) to generate OpenAlgo symbols.
     Handles both futures and options formatting.
     """
     logger.info("Processing shoonya CDS Data")
@@ -406,6 +450,9 @@ def process_shoonya_cds_data(output_path):
     df = df[
         df["token"] > 100
     ]  # Filter out CDS tokens with less than 100 digits to avioid dummy entries or index values that are not actual CDS tokens
+
+    # Drop placeholder rows before any string transform runs on a NaN
+    df = drop_incomplete_rows(df, "CDS")
 
     # Add missing columns to ensure DataFrame matches the database structure
     df["expiry"] = df["expiry"].fillna("")  # Fill expiry with empty strings if missing
@@ -495,7 +542,7 @@ def process_shoonya_cds_data(output_path):
 
 def process_shoonya_mcx_data(output_path):
     """
-    Processes the shoonya MCX data (MCX_symbols.txt) to generate Tradeboard symbols.
+    Processes the shoonya MCX data (MCX_symbols.txt) to generate OpenAlgo symbols.
     Handles both futures and options formatting.
     """
     logger.info("Processing shoonya MCX Data")
@@ -533,6 +580,9 @@ def process_shoonya_mcx_data(output_path):
         "strike",
         "tick_size",
     ]
+
+    # Drop placeholder rows before any string transform runs on a NaN
+    df = drop_incomplete_rows(df, "MCX")
 
     # Add missing columns to ensure DataFrame matches the database structure
     df["expiry"] = df["expiry"].fillna("")  # Fill expiry with empty strings if missing
@@ -622,7 +672,7 @@ def process_shoonya_mcx_data(output_path):
 
 def process_shoonya_bse_data(output_path):
     """
-    Processes the shoonya BSE data (BSE_symbols.txt) to generate Tradeboard symbols.
+    Processes the shoonya BSE data (BSE_symbols.txt) to generate OpenAlgo symbols.
     Maps all instrument types to 'EQ' and manually adds missing BSE index symbols.
     """
     logger.info("Processing shoonya BSE Data")
@@ -645,15 +695,18 @@ def process_shoonya_bse_data(output_path):
     # Rename columns to match your schema
     df.columns = ["exchange", "token", "lotsize", "name", "brsymbol", "instrumenttype", "tick_size"]
 
+    # Drop placeholder rows before any string transform runs on a NaN
+    df = drop_incomplete_rows(df, "BSE")
+
     # Add missing columns to ensure DataFrame matches the database structure
     df["symbol"] = df["brsymbol"]  # Initialize 'symbol' with 'brsymbol'
 
-    # Apply transformation for Tradeboard symbols (no special logic needed here)
-    def get_tradeboard_symbol(broker_symbol):
+    # Apply transformation for OpenAlgo symbols (no special logic needed here)
+    def get_openalgo_symbol(broker_symbol):
         return broker_symbol
 
     # Update the 'symbol' column
-    df["symbol"] = df["brsymbol"].apply(get_tradeboard_symbol)
+    df["symbol"] = df["brsymbol"].apply(get_openalgo_symbol)
 
     # Set Exchange: 'BSE' for all rows initially
     df["exchange"] = "BSE"
@@ -741,7 +794,7 @@ def process_shoonya_bse_data(output_path):
 
 def process_shoonya_bfo_data(output_path):
     """
-    Processes the shoonya BFO data (BFO_symbols.txt) to generate Tradeboard symbols and correctly extract the name column.
+    Processes the shoonya BFO data (BFO_symbols.txt) to generate OpenAlgo symbols and correctly extract the name column.
     Handles both futures and options formatting, ensuring strike prices are handled as either float or integer.
     """
     logger.info("Processing shoonya BFO Data")
@@ -781,6 +834,11 @@ def process_shoonya_bfo_data(output_path):
         "strike",
         "tick_size",
     ]
+
+    # BFO re-derives 'name' from the trading symbol, so only brsymbol is required.
+    # extract_name/extract_instrument_type would raise TypeError on a NaN and
+    # abort the entire master contract download.
+    df = drop_incomplete_rows(df, "BFO", required=("brsymbol",))
 
     # Add missing columns to ensure DataFrame matches the database structure
     df["expiry"] = df["expiry"].fillna("")  # Fill expiry with empty strings if missing

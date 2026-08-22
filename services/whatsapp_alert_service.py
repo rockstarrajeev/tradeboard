@@ -145,9 +145,7 @@ class WhatsAppAlertService:
                     lines.append("All orders rejected")
                 elif failed_count > 0:
                     lines.append("Partial fill")
-                    first_fail = next(
-                        (r for r in results if r.get("status") != "success"), None
-                    )
+                    first_fail = next((r for r in results if r.get("status") != "success"), None)
                     if first_fail and first_fail.get("message"):
                         lines.append(f"Reason: {first_fail['message']}")
 
@@ -298,7 +296,7 @@ class WhatsAppAlertService:
         """Format the order/position/batch event and dispatch a self-send
         WhatsApp alert to the paired device's owner.
 
-        Single-user Tradeboard: every order placed via this instance is by the
+        Single-user OpenAlgo: every order placed via this instance is by the
         operator who paired the WhatsApp device. We confirm that by matching
         the order's api_key→username against `whatsapp_config.owner_username`
         captured at pair time, then fire a self-send through wars's single-
@@ -346,9 +344,7 @@ class WhatsAppAlertService:
                 # `to=None` triggers wars's single-arg send() → owner. We
                 # don't need own_jid (wars 0.1.3 doesn't expose it anyway).
                 alert_executor.submit(self.send_alert_sync, "", message)
-                logger.info(
-                    f"WhatsApp alert queued for owner user={username} type={order_type}"
-                )
+                logger.info(f"WhatsApp alert queued for owner user={username} type={order_type}")
 
             # Legacy fan-out for explicit multi-recipient deployments.
             # Empty in the standard single-user setup.
@@ -377,9 +373,7 @@ class WhatsAppAlertService:
             users = get_all_whatsapp_users(filters)
             for user in users:
                 if user.get("notifications_enabled"):
-                    alert_executor.submit(
-                        self.send_alert_sync, user["whatsapp_jid"], message
-                    )
+                    alert_executor.submit(self.send_alert_sync, user["whatsapp_jid"], message)
                     queued += 1
                 else:
                     skipped += 1

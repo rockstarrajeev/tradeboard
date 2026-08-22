@@ -284,11 +284,11 @@ class BrokerData:
             return False
 
     def _format_quote(self, quote_data: dict, symbol: str, exchange: str) -> dict:
-        """Format quote data from Tradejini to Tradeboard standard format"""
+        """Format quote data from Tradejini to OpenAlgo standard format"""
         try:
             logger.debug(f"Formatting quote data for {symbol}")
 
-            # Extract values with defaults - matching Tradeboard format
+            # Extract values with defaults - matching OpenAlgo format
             ltp = float(quote_data.get("ltp", 0))
             open_price = float(quote_data.get("open", 0))
             high = float(quote_data.get("high", 0))
@@ -301,7 +301,7 @@ class BrokerData:
             bid = float(quote_data.get("bidPrice", 0))
             ask = float(quote_data.get("askPrice", 0))
 
-            # Format the quote to match Tradeboard response exactly
+            # Format the quote to match OpenAlgo response exactly
             formatted_quote = {
                 "ask": ask,
                 "bid": bid,
@@ -319,7 +319,7 @@ class BrokerData:
 
         except Exception as e:
             logger.error(f"Error formatting quote data: {str(e)}", exc_info=True)
-            # Return minimal valid quote data in Tradeboard format
+            # Return minimal valid quote data in OpenAlgo format
             return {
                 "ask": 0.0,
                 "bid": 0.0,
@@ -435,7 +435,7 @@ class BrokerData:
                     else:
                         logger.debug("Last quote: None")
 
-            # If no data received, return default quote in Tradeboard format
+            # If no data received, return default quote in OpenAlgo format
             logger.warning(f"No quote data received for {symbol} after {max_retries} attempts")
             logger.debug(f"Final L1 cache keys: {list(self.ws.L1_dict.keys())}")
 
@@ -485,7 +485,6 @@ class BrokerData:
             # Tradejini WebSocket can handle up to 3000 instruments
             # Using batch size of 100 for practical response times
             BATCH_SIZE = 100
-            WAIT_TIME_PER_SYMBOL = 0.1  # 100ms per symbol for data arrival
 
             if len(symbols) > BATCH_SIZE:
                 logger.debug(f"Processing {len(symbols)} symbols in batches of {BATCH_SIZE}")
@@ -562,7 +561,12 @@ class BrokerData:
             symbol_keys.append(symbol_key)
 
             # Store mapping for response processing
-            symbol_map[symbol_key] = {"symbol": symbol, "exchange": exchange, "ws_exchange": ws_exchange, "token": token}
+            symbol_map[symbol_key] = {
+                "symbol": symbol,
+                "exchange": exchange,
+                "ws_exchange": ws_exchange,
+                "token": token,
+            }
 
         if not symbol_keys:
             logger.warning("No valid symbols to fetch quotes for")
@@ -717,7 +721,7 @@ class BrokerData:
                 pass
 
     def _format_depth(self, depth_data: dict, symbol: str, exchange: str) -> dict:
-        """Format depth data from Tradejini to Tradeboard standard format"""
+        """Format depth data from Tradejini to OpenAlgo standard format"""
         try:
             logger.debug(f"Formatting depth data for {symbol}")
 
@@ -725,7 +729,7 @@ class BrokerData:
             bids_raw = depth_data.get("bid", [])
             asks_raw = depth_data.get("ask", [])
 
-            # Format bids (buy orders) - Tradeboard format (no 'orders' field)
+            # Format bids (buy orders) - OpenAlgo format (no 'orders' field)
             bids = []
             for bid in bids_raw[:5]:  # Top 5 levels
                 bids.append(
@@ -736,7 +740,7 @@ class BrokerData:
             while len(bids) < 5:
                 bids.append({"price": 0, "quantity": 0})
 
-            # Format asks (sell orders) - Tradeboard format (no 'orders' field)
+            # Format asks (sell orders) - OpenAlgo format (no 'orders' field)
             asks = []
             for ask in asks_raw[:5]:  # Top 5 levels
                 asks.append(
@@ -761,7 +765,7 @@ class BrokerData:
             prev_close = float(depth_data.get("close", 0))
             volume = int(depth_data.get("vol", 0))
 
-            # Format exactly like Tradeboard sample
+            # Format exactly like OpenAlgo sample
             formatted_depth = {
                 "asks": asks,
                 "bids": bids,
@@ -785,7 +789,7 @@ class BrokerData:
             return self._get_default_depth()
 
     def _get_default_depth(self) -> dict:
-        """Return default depth structure in Tradeboard format"""
+        """Return default depth structure in OpenAlgo format"""
         return {
             "asks": [{"price": 0, "quantity": 0} for _ in range(5)],
             "bids": [{"price": 0, "quantity": 0} for _ in range(5)],
@@ -905,7 +909,7 @@ class BrokerData:
             # Reset index to include datetime as a column
             df = df.reset_index()
 
-            # Convert to Tradeboard format with timestamp in seconds
+            # Convert to OpenAlgo format with timestamp in seconds
             result_data = []
             for _, row in df.iterrows():
                 result_data.append(

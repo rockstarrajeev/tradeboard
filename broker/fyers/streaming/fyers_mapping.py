@@ -1,6 +1,6 @@
 """
 Fyers Data Mapping
-Maps Fyers HSM data to Tradeboard format for compatibility
+Maps Fyers HSM data to OpenAlgo format for compatibility
 """
 
 import logging
@@ -13,22 +13,22 @@ logger = logging.getLogger(__name__)
 
 class FyersDataMapper:
     """
-    Maps Fyers HSM WebSocket data to Tradeboard format
+    Maps Fyers HSM WebSocket data to OpenAlgo format
     """
 
     def __init__(self):
         """Initialize the data mapper"""
         pass
 
-    def map_to_tradeboard_ltp(self, fyers_data: dict[str, Any]) -> dict[str, Any] | None:
+    def map_to_openalgo_ltp(self, fyers_data: dict[str, Any]) -> dict[str, Any] | None:
         """
-        Map Fyers data to Tradeboard LTP format
+        Map Fyers data to OpenAlgo LTP format
 
         Args:
             fyers_data: Raw data from Fyers HSM WebSocket
 
         Returns:
-            Tradeboard LTP format dict or None if mapping fails
+            OpenAlgo LTP format dict or None if mapping fails
         """
         try:
             if not fyers_data or "ltp" not in fyers_data:
@@ -58,8 +58,13 @@ class FyersDataMapper:
 
             # Apply segment-specific conversion
             segment_divisor = 1
-            if exchange in ["BSE", "MCX", "NSE", "NFO"]:
-                segment_divisor = 100  # These exchanges send prices in paisa/paise format
+            if exchange in ["BSE", "MCX", "NSE", "NFO", "CDS", "BCD"]:
+                # These exchanges send prices in paisa/paise format. CDS/BCD
+                # were missing here: currency ticks passed through 100x too
+                # large, and the sandbox WS fill path booked USDINR at 9654.75
+                # instead of 96.5475 (caught by live QA on 2026-07-23; the
+                # REST-quote fill path masked it because REST returns rupees).
+                segment_divisor = 100
 
             # Convert to actual price
             if multiplier > 0:
@@ -68,8 +73,8 @@ class FyersDataMapper:
             # Round to precision
             ltp = round(ltp, precision)
 
-            # Map to Tradeboard LTP format
-            tradeboard_data = {
+            # Map to OpenAlgo LTP format
+            openalgo_data = {
                 "symbol": f"{exchange}:{symbol_name}",
                 "exchange": exchange,
                 "token": fyers_data.get("exchange_token", ""),
@@ -78,21 +83,21 @@ class FyersDataMapper:
                 "data_type": "LTP",
             }
 
-            return tradeboard_data
+            return openalgo_data
 
         except Exception as e:
             logger.debug(f"Error mapping LTP data: {e}")
             return None
 
-    def map_to_tradeboard_quote(self, fyers_data: dict[str, Any]) -> dict[str, Any] | None:
+    def map_to_openalgo_quote(self, fyers_data: dict[str, Any]) -> dict[str, Any] | None:
         """
-        Map Fyers data to Tradeboard Quote format
+        Map Fyers data to OpenAlgo Quote format
 
         Args:
             fyers_data: Raw data from Fyers HSM WebSocket
 
         Returns:
-            Tradeboard Quote format dict or None if mapping fails
+            OpenAlgo Quote format dict or None if mapping fails
         """
         try:
             if not fyers_data:
@@ -125,8 +130,10 @@ class FyersDataMapper:
 
             # Apply segment-specific conversion
             segment_divisor = 1
-            if not is_index and exchange in ["BSE", "MCX", "NSE", "NFO"]:
-                segment_divisor = 100  # These exchanges send prices in paisa/paise format
+            if not is_index and exchange in ["BSE", "MCX", "NSE", "NFO", "CDS", "BCD"]:
+                # CDS/BCD included: currency feed is paise-scaled like the
+                # others (verified empirically -- see LTP mapping above).
+                segment_divisor = 100
 
             def convert_price(value):
                 if not value or multiplier <= 0:
@@ -134,8 +141,8 @@ class FyersDataMapper:
                 # Apply multiplier and segment conversion
                 return round(value / multiplier / segment_divisor, precision)
 
-            # Map to Tradeboard Quote format
-            tradeboard_data = {
+            # Map to OpenAlgo Quote format
+            openalgo_data = {
                 "symbol": f"{exchange}:{symbol_name}",
                 "exchange": exchange,
                 "token": fyers_data.get("exchange_token", ""),
@@ -164,21 +171,21 @@ class FyersDataMapper:
                 "data_type": "Quote",
             }
 
-            return tradeboard_data
+            return openalgo_data
 
         except Exception as e:
             logger.debug(f"Error mapping Quote data: {e}")
             return None
 
-    def map_to_tradeboard_depth(self, fyers_data: dict[str, Any]) -> dict[str, Any] | None:
+    def map_to_openalgo_depth(self, fyers_data: dict[str, Any]) -> dict[str, Any] | None:
         """
-        Map Fyers depth data to Tradeboard Depth format
+        Map Fyers depth data to OpenAlgo Depth format
 
         Args:
             fyers_data: Raw depth data from Fyers HSM WebSocket
 
         Returns:
-            Tradeboard Depth format dict or None if mapping fails
+            OpenAlgo Depth format dict or None if mapping fails
         """
         try:
             if not fyers_data or fyers_data.get("type") != "dp":
@@ -203,14 +210,11 @@ class FyersDataMapper:
 
             # Apply segment-specific conversion based on exchange
             segment_divisor = 1
-            if exchange == "BSE":
-                segment_divisor = 100  # BSE prices are in paisa
-            elif exchange == "MCX":
-                segment_divisor = 100  # MCX also needs division by 100
-            elif exchange == "NSE":
-                segment_divisor = 100  # NSE prices also in paisa format
-            elif exchange == "NFO":
-                segment_divisor = 100  # NFO prices also in paisa format
+            if exchange in ("BSE", "MCX", "NSE", "NFO", "CDS", "BCD"):
+                # All paise-scaled segments, including currency (CDS/BCD --
+                # previously missing, which let 100x-scaled depth prices
+                # through to the sandbox fill path).
+                segment_divisor = 100
 
             def convert_price(value):
                 if value and multiplier > 0:
@@ -255,8 +259,8 @@ class FyersDataMapper:
             if buy_levels and sell_levels:
                 ltp = (buy_levels[0]["price"] + sell_levels[0]["price"]) / 2
 
-            # Map to Tradeboard Depth format (matching other brokers)
-            tradeboard_data = {
+            # Map to OpenAlgo Depth format (matching other brokers)
+            openalgo_data = {
                 "symbol": f"{exchange}:{symbol_name}",
                 "exchange": exchange,
                 "token": fyers_data.get("exchange_token", ""),
@@ -266,26 +270,26 @@ class FyersDataMapper:
                 "data_type": "Depth",
             }
 
-            return tradeboard_data
+            return openalgo_data
 
         except Exception as e:
             logger.debug(f"Error mapping Depth data: {e}")
             return None
 
-    def map_tbt_depth_to_tradeboard(
+    def map_tbt_depth_to_openalgo(
         self, ticker: str, tbt_depth: dict[str, Any], symbol: str, exchange: str
     ) -> dict[str, Any] | None:
         """
-        Map Fyers TBT 50-level depth data to Tradeboard Depth format
+        Map Fyers TBT 50-level depth data to OpenAlgo Depth format
 
         Args:
             ticker: Original Fyers ticker (e.g., 'NSE:RELIANCE-EQ')
             tbt_depth: Depth data from TBT WebSocket
-            symbol: Tradeboard symbol name
-            exchange: Tradeboard exchange name
+            symbol: OpenAlgo symbol name
+            exchange: OpenAlgo exchange name
 
         Returns:
-            Tradeboard Depth format dict or None if mapping fails
+            OpenAlgo Depth format dict or None if mapping fails
         """
         try:
             if not tbt_depth:
@@ -307,8 +311,8 @@ class FyersDataMapper:
                 elif best_ask > 0:
                     ltp = best_ask
 
-            # Map to Tradeboard Depth format
-            tradeboard_data = {
+            # Map to OpenAlgo Depth format
+            openalgo_data = {
                 "symbol": symbol,
                 "exchange": exchange,
                 "token": ticker,
@@ -323,7 +327,7 @@ class FyersDataMapper:
                 "is_50_depth": True,
             }
 
-            return tradeboard_data
+            return openalgo_data
 
         except Exception as e:
             logger.debug(f"Error mapping TBT Depth data: {e}")
@@ -331,14 +335,14 @@ class FyersDataMapper:
 
     def map_index_to_synthetic_depth(self, fyers_data: dict[str, Any]) -> dict[str, Any] | None:
         """
-        Map Fyers index data to synthetic Tradeboard Depth format
+        Map Fyers index data to synthetic OpenAlgo Depth format
         Since indices don't have real depth, create synthetic depth from quote data
 
         Args:
             fyers_data: Raw index data from Fyers HSM WebSocket
 
         Returns:
-            Tradeboard Depth format dict or None if mapping fails
+            OpenAlgo Depth format dict or None if mapping fails
         """
         try:
             if not fyers_data or fyers_data.get("type") != "if":
@@ -407,8 +411,8 @@ class FyersDataMapper:
                     }
                 )
 
-            # Map to Tradeboard Depth format
-            tradeboard_data = {
+            # Map to OpenAlgo Depth format
+            openalgo_data = {
                 "symbol": f"{exchange}:{symbol_name}",
                 "exchange": exchange,
                 "token": fyers_data.get("exchange_token", ""),
@@ -418,7 +422,7 @@ class FyersDataMapper:
                 "data_type": "Depth",
             }
 
-            return tradeboard_data
+            return openalgo_data
 
         except Exception as e:
             logger.debug(f"Error mapping Index to synthetic Depth data: {e}")
@@ -428,14 +432,14 @@ class FyersDataMapper:
         self, fyers_data: dict[str, Any], requested_type: str = "Quote"
     ) -> dict[str, Any] | None:
         """
-        Map Fyers data to appropriate Tradeboard format based on requested type
+        Map Fyers data to appropriate OpenAlgo format based on requested type
 
         Args:
             fyers_data: Raw data from Fyers HSM WebSocket
             requested_type: Requested data type ("LTP", "Quote", or "Depth")
 
         Returns:
-            Mapped Tradeboard data or None if mapping fails
+            Mapped OpenAlgo data or None if mapping fails
         """
         if not fyers_data:
             return None
@@ -444,29 +448,29 @@ class FyersDataMapper:
         fyers_type = fyers_data.get("type", "sf")
 
         if requested_type == "LTP":
-            return self.map_to_tradeboard_ltp(fyers_data)
+            return self.map_to_openalgo_ltp(fyers_data)
         elif requested_type == "Quote":
-            return self.map_to_tradeboard_quote(fyers_data)
+            return self.map_to_openalgo_quote(fyers_data)
         elif requested_type == "Depth" and fyers_type == "dp":
-            return self.map_to_tradeboard_depth(fyers_data)
+            return self.map_to_openalgo_depth(fyers_data)
         elif requested_type == "Depth" and fyers_type == "if":
             # Index depth request - create synthetic depth from index data
             return self.map_index_to_synthetic_depth(fyers_data)
         elif fyers_type == "sf":
             # Default to Quote for symbol feed
-            return self.map_to_tradeboard_quote(fyers_data)
+            return self.map_to_openalgo_quote(fyers_data)
         elif fyers_type == "if":
             # Index data - treat as Quote
-            return self.map_to_tradeboard_quote(fyers_data)
+            return self.map_to_openalgo_quote(fyers_data)
         elif fyers_type == "dp":
             # Depth data
-            return self.map_to_tradeboard_depth(fyers_data)
+            return self.map_to_openalgo_depth(fyers_data)
 
         return None
 
     def extract_symbol_info(self, symbol: str) -> dict[str, str]:
         """
-        Extract exchange and symbol from Tradeboard format
+        Extract exchange and symbol from OpenAlgo format
 
         Args:
             symbol: Symbol in format "EXCHANGE:SYMBOL" or just "SYMBOL"

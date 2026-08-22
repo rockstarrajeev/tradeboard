@@ -31,6 +31,7 @@ const allBrokers = [
   { id: 'motilal', name: 'Motilal Oswal', authType: 'totp' },
   { id: 'fyers', name: 'Fyers', authType: 'oauth' },
   { id: 'groww', name: 'Groww', authType: 'totp' },
+  { id: 'hdfcsky', name: 'HDFC Sky', authType: 'oauth' },
   { id: 'ibulls', name: 'Ibulls', authType: 'totp' },
   { id: 'iifl', name: 'IIFL', authType: 'totp' },
   { id: 'iiflcapital', name: 'IIFL Capital', authType: 'oauth' },
@@ -194,6 +195,12 @@ export default function BrokerSelect() {
         loginUrl = `https://app.arrow.trade/app/login?appID=${broker_api_key}`
         break
 
+      case 'hdfcsky':
+        // HDFC Sky hosted login (credentials + 2FA + consent); redirects back
+        // to the app's registered callback with a request token.
+        loginUrl = `https://developer.hdfcsky.com/oapi/v1/login?api_key=${broker_api_key}`
+        break
+
       case 'paytm':
         loginUrl = `https://login.paytmmoney.com/merchant-login?apiKey=${broker_api_key}&state={default}`
         break
@@ -234,7 +241,7 @@ export default function BrokerSelect() {
           <Card className="w-full max-w-md shadow-xl order-1 lg:order-2">
             <CardHeader className="text-center">
               <div className="flex justify-center mb-4">
-                <img src="/logo.png" alt="Tradeboard" className="h-20 w-20" />
+                <img src="/logo.png" alt="OpenAlgo" className="h-20 w-20" />
               </div>
               <CardTitle className="text-2xl">Connect Your Trading Account</CardTitle>
               <CardDescription>
@@ -307,7 +314,7 @@ export default function BrokerSelect() {
               Connect Your <span className="text-primary">Broker</span>
             </h1>
             <p className="text-lg lg:text-xl mb-8 text-muted-foreground">
-              Link your trading account to start executing trades through Tradeboard's algorithmic
+              Link your trading account to start executing trades through OpenAlgo's algorithmic
               trading platform.
             </p>
 
@@ -319,7 +326,7 @@ export default function BrokerSelect() {
 
             <div className="flex justify-center lg:justify-start gap-4">
               <Button variant="outline" asChild>
-                <a href="https://docs.rajeevupadhyay.com" target="_blank" rel="noopener noreferrer">
+                <a href="https://docs.openalgo.in" target="_blank" rel="noopener noreferrer">
                   <BookOpen className="mr-2 h-4 w-4" />
                   Documentation
                 </a>

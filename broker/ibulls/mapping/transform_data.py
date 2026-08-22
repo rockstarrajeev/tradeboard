@@ -1,4 +1,4 @@
-# Mapping Tradeboard API Request https://rajeevupadhyay.com/docs
+# Mapping OpenAlgo API Request https://openalgo.in/docs
 # Mapping ibullssecurities Broking Parameters https://symphonyfintech.com/xts-trading-front-end-api/
 
 from flask import session
@@ -18,7 +18,7 @@ def transform_data(data, token):
     - BUY: Uses bid price + 0.1%
     - SELL: Uses ask price + 0.1%
     """
-    symbol = get_br_symbol(data["symbol"], data["exchange"])
+    get_br_symbol(data["symbol"], data["exchange"])
 
     # Check if market order and convert to limit order with adjusted price
     order_type = map_order_type(data["pricetype"])
@@ -85,7 +85,7 @@ def transform_data(data, token):
         "orderQuantity": data["quantity"],
         "limitPrice": price,
         "stopPrice": data.get("trigger_price", "0"),
-        "orderUniqueIdentifier": "tradeboard",
+        "orderUniqueIdentifier": "openalgo",
     }
     logger.info(f"transformed data: {transformed}")
     return transformed
@@ -101,7 +101,7 @@ def transform_modify_order_data(data, token):
         "modifiedLimitPrice": data["price"],
         "modifiedStopPrice": data.get("trigger_price", "0"),
         "modifiedTimeInForce": "DAY",
-        "orderUniqueIdentifier": "tradeboard",
+        "orderUniqueIdentifier": "openalgo",
     }
 
 
@@ -148,9 +148,9 @@ def map_product_type(product):
 
 def reverse_map_product_type(exchange, product):
     """
-    Reverse maps the broker product type to the Tradeboard product type, considering the exchange.
+    Reverse maps the broker product type to the OpenAlgo product type, considering the exchange.
     """
-    # Exchange to Tradeboard product type mapping for 'D'
+    # Exchange to OpenAlgo product type mapping for 'D'
     exchange_mapping = {
         "CNC": "CNC",
         "NRML": "NRML",

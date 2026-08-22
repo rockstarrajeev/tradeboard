@@ -98,7 +98,7 @@ class ArrowWebSocket:
         # Subscription state.
         self.subscribed_tokens: set[int] = set()
         self.mode_map: dict[int, str] = {}  # token -> arrow mode
-        self.token_exchange_map: dict[int, str] = {}  # token -> Tradeboard exchange
+        self.token_exchange_map: dict[int, str] = {}  # token -> OpenAlgo exchange
         self.pending_subscriptions: deque = deque()
         self._subscription_thread: threading.Thread | None = None
 

@@ -1,5 +1,5 @@
 """
-Fixed Dhan WebSocket adapter for Tradeboard.
+Fixed Dhan WebSocket adapter for OpenAlgo.
 Implements the broker-specific WebSocket adapter for Dhan with proper mode mapping.
 """
 
@@ -21,7 +21,7 @@ from database.auth_db import get_auth_token
 from database.token_db import get_token
 from websocket_proxy.base_adapter import BaseBrokerWebSocketAdapter
 
-from .dhan_mapping import get_dhan_exchange, get_tradeboard_exchange
+from .dhan_mapping import get_dhan_exchange, get_openalgo_exchange
 
 # Import the WebSocket client
 from .dhan_websocket import DhanWebSocket
@@ -41,7 +41,7 @@ def _get_dhan_client_id() -> str | None:
 class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
     """
     Dhan-specific implementation of the WebSocket adapter.
-    Implements Tradeboard WebSocket proxy interface with proper mode mapping.
+    Implements OpenAlgo WebSocket proxy interface with proper mode mapping.
     """
 
     # No fallback token mappings - using database lookups only
@@ -80,9 +80,9 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
         self.batch_timer: threading.Timer | None = None
         self.batch_delay = 0.5
 
-        # Extended mode mapping to handle all possible Tradeboard modes
+        # Extended mode mapping to handle all possible OpenAlgo modes
         self.mode_map = {
-            # Standard Tradeboard modes
+            # Standard OpenAlgo modes
             1: DhanWebSocket.MODE_LTP,  # LTP -> "ltp"
             2: DhanWebSocket.MODE_QUOTE,  # Quote -> "marketdata"
             3: DhanWebSocket.MODE_FULL,  # Map mode 8 to FULL
@@ -204,9 +204,7 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
         """
         if self.batch_timer:
             self.batch_timer.cancel()
-        self.batch_timer = threading.Timer(
-            self.batch_delay, self._process_batch_subscriptions
-        )
+        self.batch_timer = threading.Timer(self.batch_delay, self._process_batch_subscriptions)
         self.batch_timer.daemon = True
         self.batch_timer.start()
 
@@ -225,9 +223,7 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
             ws_client = self.ws_client
 
         if not ws_client:
-            self.logger.warning(
-                f"Dropping batch of {len(pending)} subscriptions — ws_client gone"
-            )
+            self.logger.warning(f"Dropping batch of {len(pending)} subscriptions — ws_client gone")
             return
 
         # Group by (mode, exchange_code) — Dhan's subscribe_tokens accepts
@@ -249,9 +245,7 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
                     f"(exchange_code={exch_code})"
                 )
             except Exception as e:
-                self.logger.error(
-                    f"Batch subscribe failed for mode {mode}: {e}"
-                )
+                self.logger.error(f"Batch subscribe failed for mode {mode}: {e}")
 
     def disconnect(self):
         """
@@ -402,30 +396,30 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
             except (ValueError, TypeError):
                 self.logger.warning(f"DEBUG: Could not convert mode {mode} to int, using as is")
 
-            # Map Tradeboard mode to Dhan mode with explicit handling of all possible modes
+            # Map OpenAlgo mode to Dhan mode with explicit handling of all possible modes
             if mode == 1:
                 # Standard LTP mode
                 dhan_mode = DhanWebSocket.MODE_LTP
-                self.logger.info(f"Mapped Tradeboard mode {mode} (LTP) to Dhan mode '{dhan_mode}'")
+                self.logger.info(f"Mapped OpenAlgo mode {mode} (LTP) to Dhan mode '{dhan_mode}'")
             elif mode == 2:
                 # Standard QUOTE mode
                 dhan_mode = DhanWebSocket.MODE_QUOTE
-                self.logger.info(f"Mapped Tradeboard mode {mode} (QUOTE) to Dhan mode '{dhan_mode}'")
+                self.logger.info(f"Mapped OpenAlgo mode {mode} (QUOTE) to Dhan mode '{dhan_mode}'")
             elif mode == 3:
                 # Standard DEPTH mode
                 dhan_mode = DhanWebSocket.MODE_FULL
-                self.logger.info(f"Mapped Tradeboard mode {mode} (DEPTH) to Dhan mode '{dhan_mode}'")
+                self.logger.info(f"Mapped OpenAlgo mode {mode} (DEPTH) to Dhan mode '{dhan_mode}'")
             else:
                 # All other modes (4-8) map to FULL/DEPTH
                 dhan_mode = DhanWebSocket.MODE_FULL
                 self.logger.info(
-                    f"Mapped Tradeboard mode {mode} (DEPTH/FULL) to Dhan mode '{dhan_mode}'"
+                    f"Mapped OpenAlgo mode {mode} (DEPTH/FULL) to Dhan mode '{dhan_mode}'"
                 )
 
             # Add symbol to subscription tracking
             with self.lock:
                 self.subscribed_symbols[symbol] = {
-                    "exchange": exchange,  # Store original Tradeboard exchange
+                    "exchange": exchange,  # Store original OpenAlgo exchange
                     "dhan_exchange": dhan_exchange,  # Store Dhan exchange
                     "token": actual_token,
                     "mode": mode,
@@ -435,12 +429,10 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 self.token_to_symbol[str(actual_token)] = (symbol, exchange)
                 self.token_to_symbol[int(actual_token)] = (symbol, exchange)
 
-                self.logger.info(
-                    f"📝 Stored token mapping: {actual_token} -> ({symbol}, {exchange})"
-                )
-                self.logger.info(f"📝 Current token_to_symbol: {self.token_to_symbol}")
+                self.logger.info(f"Stored token mapping: {actual_token} -> ({symbol}, {exchange})")
+                self.logger.info(f"Current token_to_symbol: {self.token_to_symbol}")
 
-            # Map Tradeboard exchange to Dhan exchange code
+            # Map OpenAlgo exchange to Dhan exchange code
             exchange_code = 1  # Default to NSE_EQ
             if exchange == "NSE":
                 exchange_code = 1  # NSE_EQ
@@ -466,12 +458,12 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
             # Subscribe to token with Dhan WebSocket, passing exchange code
             self.logger.info(
-                f"🚀 Subscribing to {dhan_exchange}:{symbol} with token {actual_token} in mode '{dhan_mode}' using exchange code {exchange_code}"
+                f"Subscribing to {dhan_exchange}:{symbol} with token {actual_token} in mode '{dhan_mode}' using exchange code {exchange_code}"
             )
 
             # Check if WebSocket client is properly initialized and connected
             if not self.ws_client:
-                self.logger.error("❌ WebSocket client is None!")
+                self.logger.error("WebSocket client is None!")
                 return {"status": "error", "message": "WebSocket client not initialized"}
 
             # Check connection status
@@ -480,7 +472,7 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
             if not is_connected:
                 self.logger.warning(
-                    "⚠️ WebSocket client may not be connected, but attempting subscription anyway"
+                    "WebSocket client may not be connected, but attempting subscription anyway"
                 )
                 # Don't fail here - let the subscription attempt proceed
 
@@ -595,7 +587,7 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
             # Group tokens by mode for bulk subscription
             mode_tokens = {}
 
-            for symbol, data in self.subscribed_symbols.items():
+            for _symbol, data in self.subscribed_symbols.items():
                 token = data["token"]
                 mode = data["mode"]
 
@@ -618,7 +610,7 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
         """
         Callback handler for WebSocket connection event.
         """
-        self.logger.info("🟢 WebSocket connected callback triggered")
+        self.logger.info("WebSocket connected callback triggered")
         self.connected = True
 
     def _on_disconnect(self):
@@ -626,7 +618,7 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
         Callback handler for WebSocket disconnection event.
         Attempts to reconnect if needed.
         """
-        self.logger.warning("🔴 WebSocket disconnected callback triggered")
+        self.logger.warning("WebSocket disconnected callback triggered")
         self.connected = False
 
         # Attempt to reconnect if we're still running
@@ -644,7 +636,7 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
         Args:
             error: Error object or message from WebSocket
         """
-        self.logger.error(f"🚨 WebSocket error callback triggered: {error}")
+        self.logger.error(f"WebSocket error callback triggered: {error}")
 
         # Attempt to reconnect on error if still running
         if self.running and self.ws_client:
@@ -664,7 +656,7 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 self.logger.warning("No ticks received in _on_ticks callback")
                 return
 
-            self.logger.info(f"🎯 Received {len(ticks)} ticks from Dhan WebSocket")
+            self.logger.info(f"Received {len(ticks)} ticks from Dhan WebSocket")
 
             # Debug: Log raw tick data
             for i, tick in enumerate(ticks):
@@ -696,7 +688,7 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
                         token_keys = list(self.token_to_symbol.keys())
                         token_types = [(k, type(k).__name__) for k in token_keys]
                         self.logger.warning(
-                            f"❌ TOKEN MAPPING FAILURE: Received token {token} (type: {type(token).__name__}) not found"
+                            f"TOKEN MAPPING FAILURE: Received token {token} (type: {type(token).__name__}) not found"
                         )
                         self.logger.warning(f"Available tokens: {token_types}")
 
@@ -705,7 +697,7 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
                             try:
                                 if int(k) == int(token):
                                     self.logger.info(
-                                        f"✅ Found match using int conversion: {k} -> {v}"
+                                        f"Found match using int conversion: {k} -> {v}"
                                     )
                                     symbol_exchange = v
                                     break
@@ -714,7 +706,7 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
                         if not symbol_exchange:
                             self.logger.error(
-                                f"❌ CRITICAL: No symbol found for token {token}, skipping tick"
+                                f"CRITICAL: No symbol found for token {token}, skipping tick"
                             )
                             continue  # Still no match, skip this tick
 
@@ -741,12 +733,12 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 tick["symbol"] = symbol
 
                 # Store Dhan's exchange code
-                dhan_exchange = tick.get("exchange")
+                tick.get("exchange")
 
                 # Get original subscription exchange for topic generation
                 subscription_exchange = exchange
 
-                # Convert to Tradeboard format for data field
+                # Convert to OpenAlgo format for data field
                 data_exchange = self._map_data_exchange(subscription_exchange)
 
                 # Set the data exchange field in the tick
@@ -763,7 +755,7 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 # Map numeric mode to string format
                 mode_str = {1: "LTP", 2: "QUOTE", 3: "DEPTH"}.get(mode, "LTP")
 
-                # Normalize tick format to Tradeboard standard
+                # Normalize tick format to OpenAlgo standard
                 normalized_tick = self._normalize_tick(tick)
 
                 # Set mode based on packet type
@@ -816,7 +808,7 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
         Args:
             symbol: The trading symbol
-            exchange: The exchange code in Tradeboard format
+            exchange: The exchange code in OpenAlgo format
             mode_str: The subscription mode (LTP, QUOTE, DEPTH)
 
         Returns:
@@ -844,7 +836,7 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
     def _normalize_tick(self, tick: dict[str, Any]) -> dict[str, Any]:
         """
-        Normalize Dhan tick data to Tradeboard format.
+        Normalize Dhan tick data to OpenAlgo format.
 
         This method handles OHLC data that may come in different formats:
         - Nested under 'ohlc' dictionary
@@ -861,12 +853,12 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
             # Debug log for troubleshooting
             self.logger.debug(f"Raw tick data: {tick}")
 
-            # Ensure exchange is in Tradeboard format
+            # Ensure exchange is in OpenAlgo format
             exchange = tick.get("exchange")
             if exchange:
-                tradeboard_exchange = get_tradeboard_exchange(exchange)
+                openalgo_exchange = get_openalgo_exchange(exchange)
             else:
-                tradeboard_exchange = exchange
+                openalgo_exchange = exchange
 
             # Safely get numeric values with validation
             def safe_float(value, default=0.0):
@@ -891,7 +883,7 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
             # Create base normalized tick
             normalized = {
                 "symbol": tick.get("symbol"),
-                "exchange": tradeboard_exchange,
+                "exchange": openalgo_exchange,
                 "token": tick.get("token") or tick.get("instrument_token"),
                 "ltt": timestamp,
                 "timestamp": timestamp,
@@ -981,11 +973,11 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
                             normalized["ask_qty"] = sell_levels[0]["quantity"]
 
                         self.logger.info(
-                            f"✅ Depth data added to normalized tick for {normalized.get('symbol')}: {len(buy_levels)} buy, {len(sell_levels)} sell levels"
+                            f"Depth data added to normalized tick for {normalized.get('symbol')}: {len(buy_levels)} buy, {len(sell_levels)} sell levels"
                         )
                     else:
                         self.logger.warning(
-                            f"❌ No valid depth levels found for {normalized.get('symbol')}"
+                            f"No valid depth levels found for {normalized.get('symbol')}"
                         )
 
                 except Exception as e:
@@ -1134,7 +1126,7 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
             # Backup original callbacks
             original_callbacks = {}
-            for mode in [1, 2, 3, 4, 5]:  # Tradeboard modes
+            for mode in [1, 2, 3, 4, 5]:  # OpenAlgo modes
                 if mode in self.callbacks:
                     original_callbacks[mode] = self.callbacks[mode].copy()
                 else:

@@ -40,7 +40,7 @@ export interface EditLegDialogProps {
   underlying: string
   /** F&O exchange (NFO / BFO / MCX / CDS) for the /quotes call. */
   optionExchange: string
-  /** Tradeboard API key for /quotes. */
+  /** OpenAlgo API key for /quotes. */
   apiKey: string
   /** ATM strike from the live chain — used to show moneyness next to the Strike field. */
   atmStrike?: number | null
@@ -48,6 +48,18 @@ export interface EditLegDialogProps {
   strikeStep?: number
   onSave: (updated: StrategyLeg) => void
   onDelete: (id: string) => void
+}
+
+export function invalidateIvWhenContractChanges(
+  original: StrategyLeg,
+  updated: StrategyLeg
+): StrategyLeg {
+  const contractChanged =
+    original.expiry !== updated.expiry ||
+    original.segment !== updated.segment ||
+    original.strike !== updated.strike ||
+    original.optionType !== updated.optionType
+  return contractChanged ? { ...updated, iv: 0 } : updated
 }
 
 export function EditLegDialog({
@@ -173,7 +185,7 @@ export function EditLegDialog({
       updated.strike = strike ?? leg.strike
       updated.optionType = optionType
     }
-    onSave(updated)
+    onSave(invalidateIvWhenContractChanges(leg, updated))
   }
 
   return (

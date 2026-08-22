@@ -74,6 +74,7 @@ def _resolve_fernet_salt() -> bytes:
     # Fallback path. Print once so prod misuse is visible without spamming.
     if not getattr(_resolve_fernet_salt, "_warned", False):
         import sys as _sys
+
         _sys.stderr.write(
             "[auth_db] WARNING: FERNET_SALT not set or invalid; using legacy\n"
             "static salt. Run the app once via app.py so utils/env_check.py\n"
@@ -226,6 +227,7 @@ class ApiKeys(Base):
 
 class ActiveSession(Base):
     """Tracks active login sessions across devices for a user."""
+
     __tablename__ = "active_sessions"
     id = Column(Integer, primary_key=True)
     username = Column(String(255), nullable=False, index=True)
@@ -236,13 +238,12 @@ class ActiveSession(Base):
     login_time = Column(DateTime(timezone=True), default=func.now())
     last_seen = Column(DateTime(timezone=True), default=func.now())
 
-    __table_args__ = (
-        Index("idx_active_sessions_username", "username"),
-    )
+    __table_args__ = (Index("idx_active_sessions_username", "username"),)
 
 
 class LoginAttempt(Base):
     """Records all login attempts (successful and failed) for security auditing."""
+
     __tablename__ = "login_attempts"
     id = Column(Integer, primary_key=True)
     username = Column(String(255), nullable=False)
@@ -264,12 +265,21 @@ class LoginAttempt(Base):
 def _now_ist():
     """Get current time in IST."""
     from datetime import datetime
+
     import pytz
+
     return datetime.now(pytz.timezone("Asia/Kolkata"))
 
 
-def log_login_attempt(username, ip_address=None, device_info=None, status="failed",
-                      login_type="password", broker=None, failure_reason=None):
+def log_login_attempt(
+    username,
+    ip_address=None,
+    device_info=None,
+    status="failed",
+    login_type="password",
+    broker=None,
+    failure_reason=None,
+):
     """Record a login attempt for audit purposes. All records are retained permanently."""
     try:
         attempt = LoginAttempt(
@@ -340,9 +350,11 @@ def register_session(username, session_id, device_info=None, ip_address=None, br
         # Enforce per-user session cap — remove oldest if at limit
         current_count = ActiveSession.query.filter_by(username=username).count()
         if current_count >= MAX_SESSIONS_PER_USER:
-            oldest = ActiveSession.query.filter_by(username=username).order_by(
-                ActiveSession.login_time.asc()
-            ).first()
+            oldest = (
+                ActiveSession.query.filter_by(username=username)
+                .order_by(ActiveSession.login_time.asc())
+                .first()
+            )
             if oldest:
                 db_session.delete(oldest)
 
@@ -378,9 +390,11 @@ def remove_session(session_id):
 def get_active_sessions(username):
     """Get all active sessions for a user."""
     try:
-        sessions = ActiveSession.query.filter_by(username=username).order_by(
-            ActiveSession.last_seen.desc()
-        ).all()
+        sessions = (
+            ActiveSession.query.filter_by(username=username)
+            .order_by(ActiveSession.last_seen.desc())
+            .all()
+        )
         return [
             {
                 "session_id": s.session_id,
@@ -477,9 +491,7 @@ def decrypt_token(encrypted_token):
 
         try:
             payload = (
-                encrypted_token.encode()
-                if isinstance(encrypted_token, str)
-                else encrypted_token
+                encrypted_token.encode() if isinstance(encrypted_token, str) else encrypted_token
             )
             fp = hashlib.blake2s(payload, digest_size=8).hexdigest()
         except Exception:
@@ -516,7 +528,7 @@ def upsert_auth(name, auth_token, broker, feed_token=None, user_id=None, revoke=
     # Decide whether the broker session MATERIALLY changed. A multi-device /
     # multi-session login re-persists the SAME token (the login path resumes an
     # existing valid broker session — see blueprints/auth._try_resume_broker_session),
-    # and Tradeboard is single-user/single-broker per instance, so all devices share
+    # and OpenAlgo is single-user/single-broker per instance, so all devices share
     # ONE server-side broker WebSocket feed. Tearing that feed down on an unchanged
     # token kills the stream for the already-connected device until it refreshes
     # (Shoonya) and, on Finvasia/Noren brokers that allow a single active session,
@@ -588,6 +600,7 @@ def upsert_auth(name, auth_token, broker, feed_token=None, user_id=None, revoke=
     # This notifies WebSocket proxy and other processes to clear their stale caches
     try:
         from database.cache_invalidation import publish_all_cache_invalidation
+
         publish_all_cache_invalidation(name)
         logger.debug(f"Published cache invalidation for user: {name}")
     except Exception as e:
@@ -605,11 +618,30 @@ def upsert_auth(name, auth_token, broker, feed_token=None, user_id=None, revoke=
     # token found" until the process is restarted. See issue #1394.
     try:
         from websocket_proxy.broker_factory import cleanup_pools_for_user
+
         cleanup_pools_for_user(name, broker_name=broker)
     except Exception as e:
         # Don't fail auth on cleanup error — the user can still trade via
         # HTTP endpoints; only the WS layer is affected.
         logger.warning(f"Failed to invalidate WS adapter pool for {name}/{broker}: {e}")
+
+    # Order-update adapter lifecycle (services/order_update_service.py): the
+    # always-on broker order-feed follows the same real-token-change gate as
+    # the teardown above — restart with fresh credentials on change, stop on
+    # revoke, and (by virtue of the early return above) stay untouched on a
+    # multi-session resume.
+    try:
+        from services.order_update_service import (
+            start_order_update_adapter,
+            stop_order_update_adapter,
+        )
+
+        if revoke:
+            stop_order_update_adapter(name)
+        else:
+            start_order_update_adapter(name, broker)
+    except Exception as e:
+        logger.warning(f"Order-update adapter lifecycle failed for {name}/{broker}: {e}")
 
     return auth_obj.id
 
@@ -1042,7 +1074,9 @@ def get_auth_token_broker(provided_api_key, include_feed_token=False):
                 # (e.g., orphaned users with revoked sessions polled by background services)
                 negative_result = (None, None, None) if include_feed_token else (None, None)
                 auth_cache[cache_key] = negative_result
-                logger.warning(f"No valid auth token or broker found for user_id '{user_id}'. Cached negative result.")
+                logger.warning(
+                    f"No valid auth token or broker found for user_id '{user_id}'. Cached negative result."
+                )
                 return negative_result
         except Exception as e:
             logger.exception(f"Error while querying the database for auth token and broker: {e}")

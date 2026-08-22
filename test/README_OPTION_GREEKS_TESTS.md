@@ -8,15 +8,15 @@ This folder contains test scripts for the Option Greeks API.
 
 ## Prerequisites
 
-1. **Install mibian Library** ⚠️ **REQUIRED**
+1. **Install mibian Library** **REQUIRED**
    ```bash
    pip install mibian
    # or with uv
    uv pip install mibian
    ```
 
-2. **Tradeboard must be running**
-   - Start Tradeboard application
+2. **OpenAlgo must be running**
+   - Start OpenAlgo application
    - Ensure it's accessible at `http://127.0.0.1:5000`
 
 3. **Markets Should Be Open**
@@ -25,7 +25,7 @@ This folder contains test scripts for the Option Greeks API.
    - Pre-market/post-market may have stale data
 
 4. **API Key**
-   - Get your API key from Tradeboard settings
+   - Get your API key from OpenAlgo settings
    - Replace `"your_api_key_here"` in the test file
 
 ## How to Run Tests
@@ -34,7 +34,7 @@ This folder contains test scripts for the Option Greeks API.
 
 ```bash
 # Navigate to test directory
-cd D:/tradeboard-sandbox-test/tradeboard/test
+cd D:/openalgo-sandbox-test/openalgo/test
 
 # Run Option Greeks API tests
 python test_option_greeks_api.py
@@ -44,7 +44,7 @@ python test_option_greeks_api.py
 
 ```bash
 # Navigate to project root
-cd D:/tradeboard-sandbox-test/tradeboard
+cd D:/openalgo-sandbox-test/openalgo
 
 # Run Option Greeks API tests
 python test/test_option_greeks_api.py
@@ -54,7 +54,7 @@ python test/test_option_greeks_api.py
 
 ```bash
 # From project root
-cd D:/tradeboard-sandbox-test/tradeboard
+cd D:/openalgo-sandbox-test/openalgo
 
 # Run tests with uv
 uv run python test/test_option_greeks_api.py
@@ -187,7 +187,7 @@ uv pip install mibian
 
 Verify installation:
 ```bash
-python -c "import mibian; print('✓ mibian installed')"
+python -c "import mibian; print('mibian installed')"
 ```
 
 ### Invalid Symbol Format Error
@@ -201,8 +201,8 @@ python -c "import mibian; print('✓ mibian installed')"
 
 **Solution**:
 - Symbol format must be: `SYMBOL[DD][MMM][YY][STRIKE][CE/PE]`
-- ✅ Correct: `NIFTY28NOV2424000CE`
-- ❌ Wrong: `NIFTY24000CE`, `NIFTY-28NOV24-24000-CE`
+- Correct: `NIFTY28NOV2424000CE`
+- Wrong: `NIFTY24000CE`, `NIFTY-28NOV24-24000-CE`
 
 ### Option Expired Error
 
@@ -307,7 +307,7 @@ CRUDEOIL28NOV246500CE
 
 **Default Expiry Time:** 11:30 PM (23:30 IST) - **Expires 8 hours later than NFO/BFO**
 
-**⚠️ Important**: Most MCX commodities expire at different times. Always specify `expiry_time` parameter:
+** Important**: Most MCX commodities expire at different times. Always specify `expiry_time` parameter:
 
 | Commodity          | Expiry Time | Format   |
 | ------------------ | ----------- | -------- |
@@ -337,9 +337,9 @@ Different exchanges have different expiry times, which affects **Days to Expiry 
 **Example on Expiry Day at 2:00 PM:**
 
 ```
-CDS Option:   Expired 1.5 hours ago ❌
-NFO Option:   Expires in 1.5 hours ⏱️  (Theta very high)
-MCX Option:   Expires in 9.5 hours ⏱️  (Still has time value)
+CDS Option:   Expired 1.5 hours ago
+NFO Option:   Expires in 1.5 hours (Theta very high)
+MCX Option:   Expires in 9.5 hours (Still has time value)
 ```
 
 **Key Points:**
@@ -402,7 +402,7 @@ def monitor_theta(symbol, exchange):
         print(f"Weekly Theta: ₹{theta * 7:.2f}")
 
         if days_left < 5:
-            print("⚠️  Warning: High theta decay - consider rolling position")
+            print("Warning: High theta decay - consider rolling position")
 
 # Usage
 monitor_theta("NIFTY28NOV2424000CE", "NFO")
@@ -458,5 +458,5 @@ For issues or questions:
 - Check symbol format matches documented pattern
 - Ensure markets are open for accurate prices
 - Update expiry dates to current/future
-- Review Tradeboard logs for detailed errors
+- Review OpenAlgo logs for detailed errors
 - Compare with broker Greeks to validate accuracy

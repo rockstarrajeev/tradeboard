@@ -5,7 +5,11 @@ import concurrent.futures
 import logging
 import os
 import sys
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Optional
+
+if TYPE_CHECKING:
+    from telegram import Update
+    from telegram.ext import ContextTypes
 
 # Import the original threading module to run the bot in a real OS thread,
 # bypassing eventlet's monkey-patching which causes event loop conflicts.
@@ -23,7 +27,7 @@ from datetime import datetime, timedelta
 
 import httpx
 
-from database.auth_db import get_username_by_apikey, get_broker_name
+from database.auth_db import get_broker_name, get_username_by_apikey
 
 # Database imports
 from database.telegram_db import (
@@ -44,7 +48,7 @@ logger = get_logger(__name__)
 
 
 class TelegramBotService:
-    """Service class for managing Telegram bot operations with Tradeboard SDK integration"""
+    """Service class for managing Telegram bot operations with OpenAlgo SDK integration"""
 
     def __init__(self):
         self.application = None
@@ -54,12 +58,12 @@ class TelegramBotService:
         self.http_client = None  # Will be created in thread
         self.bot_thread = None
         self.bot_loop = None  # Store the bot's event loop
-        self.sdk_clients = {}  # Cache for Tradeboard SDK clients per user
+        self.sdk_clients = {}  # Cache for OpenAlgo SDK clients per user
         self._stop_event = original_threading.Event()  # Thread-safe stop signal
 
-    def _get_sdk_client(self, telegram_id: int) -> tradeboard_api | None:
-        """Get or create Tradeboard SDK client for a user"""
-        from openalgo import api as tradeboard_api
+    def _get_sdk_client(self, telegram_id: int) -> Any | None:
+        """Get or create OpenAlgo SDK client for a user"""
+        from openalgo import api as openalgo_api
 
         try:
             # Check if client already exists
@@ -76,7 +80,7 @@ class TelegramBotService:
             api_key = credentials["api_key"]
 
             # Create SDK client
-            client = tradeboard_api(api_key=api_key, host=host_url)
+            client = openalgo_api(api_key=api_key, host=host_url)
 
             # Cache the client
             self.sdk_clients[telegram_id] = client
@@ -135,7 +139,7 @@ class TelegramBotService:
         """
         import queue as _queue
 
-        result_q: "_queue.Queue[tuple[str, object]]" = _queue.Queue()
+        result_q: _queue.Queue[tuple[str, object]] = _queue.Queue()
 
         def _worker() -> None:
             try:
@@ -144,9 +148,7 @@ class TelegramBotService:
             except BaseException as exc:  # noqa: BLE001 - propagate across thread
                 result_q.put(("err", exc))
 
-        t = original_threading.Thread(
-            target=_worker, daemon=True, name="tradeboard-kaleido-render"
-        )
+        t = original_threading.Thread(target=_worker, daemon=True, name="openalgo-kaleido-render")
         t.start()
         t.join()
 
@@ -261,7 +263,8 @@ class TelegramBotService:
 
             # Add volume bar chart
             colors = [
-                "red" if close < open else "green" for close, open in zip(df["close"], df["open"])
+                "red" if close < open else "green"
+                for close, open in zip(df["close"], df["open"], strict=False)
             ]
 
             fig.add_trace(
@@ -437,7 +440,8 @@ class TelegramBotService:
 
             # Add volume bar chart
             colors = [
-                "red" if close < open else "green" for close, open in zip(df["close"], df["open"])
+                "red" if close < open else "green"
+                for close, open in zip(df["close"], df["open"], strict=False)
             ]
 
             fig.add_trace(
@@ -525,10 +529,12 @@ class TelegramBotService:
 
             await temp_app.shutdown()
 
-            # Update bot config in database
-            update_bot_config(
-                {"bot_token": token, "is_active": False, "bot_username": bot_info.username}
-            )
+            # Persist the token and username only. is_active is owned by
+            # start_bot/stop_bot: writing False here would flip the flag off on
+            # the auto-start path (app.py) purely to have start_bot set it back
+            # a moment later, and a crash in that window would leave the bot
+            # disabled on the next boot.
+            update_bot_config({"bot_token": token, "bot_username": bot_info.username})
 
             return True, f"Bot initialized successfully: @{bot_info.username}"
 
@@ -547,7 +553,9 @@ class TelegramBotService:
             from utils.httpx_client import get_httpx_client
 
             try:
-                response = get_httpx_client().get(f"https://api.telegram.org/bot{token}/getMe", timeout=10)
+                response = get_httpx_client().get(
+                    f"https://api.telegram.org/bot{token}/getMe", timeout=10
+                )
 
                 if response.status_code == 200:
                     data = response.json()
@@ -557,9 +565,9 @@ class TelegramBotService:
 
                         # Store token and update config
                         self.bot_token = token
-                        update_bot_config(
-                            {"bot_token": token, "is_active": False, "bot_username": bot_username}
-                        )
+                        # is_active deliberately not written here — see
+                        # initialize_bot for why.
+                        update_bot_config({"bot_token": token, "bot_username": bot_username})
 
                         logger.info(f"Bot validated: @{bot_username}")
                         return True, f"Bot initialized successfully: @{bot_username}"
@@ -663,7 +671,7 @@ class TelegramBotService:
             try:
                 await context.bot.send_message(
                     chat_id=update.effective_chat.id,
-                    text="⚠️ An error occurred. Please try again later.",
+                    text="An error occurred. Please try again later.",
                 )
             except Exception:
                 pass  # If we can't send the message, just ignore
@@ -873,14 +881,14 @@ class TelegramBotService:
 
         if telegram_user:
             await update.message.reply_text(
-                f"Welcome back, {user.first_name}! 👋\n\n"
+                f"Welcome back, {user.first_name}! \n\n"
                 "Your account is linked. Use /menu to see available options.",
                 parse_mode=ParseMode.MARKDOWN,
             )
         else:
             await update.message.reply_text(
-                f"Welcome to Tradeboard Bot, {user.first_name}! 🚀\n\n"
-                "To get started, link your Tradeboard account:\n"
+                f"Welcome to OpenAlgo Bot, {user.first_name}! \n\n"
+                "To get started, link your OpenAlgo account:\n"
                 "`/link <api_key> <host_url>`\n\n"
                 "Example:\n"
                 "`/link your_api_key_here http://127.0.0.1:5000`\n\n"
@@ -895,10 +903,10 @@ class TelegramBotService:
         from telegram.constants import ParseMode
 
         help_text = """
-📚 *Available Commands:*
+*Available Commands:*
 
 *Account Management:*
-/link `<api_key> <host_url>` - Link your Tradeboard account
+/link `<api_key> <host_url>` - Link your OpenAlgo account
 /unlink - Unlink your account
 /status - Check connection status
 
@@ -946,7 +954,7 @@ class TelegramBotService:
 
         if not context.args or len(context.args) != 2:
             await update.message.reply_text(
-                "❌ Invalid format\n"
+                "Invalid format\n"
                 "Usage: `/link <api_key> <host_url>`\n"
                 "Example: `/link your_api_key http://127.0.0.1:5000`",
                 parse_mode=ParseMode.MARKDOWN,
@@ -958,10 +966,10 @@ class TelegramBotService:
 
         # Validate API key by making a test call
         try:
-            from openalgo import api as tradeboard_api
+            from openalgo import api as openalgo_api
 
             # Create temporary SDK client for validation
-            test_client = tradeboard_api(api_key=api_key, host=host_url)
+            test_client = openalgo_api(api_key=api_key, host=host_url)
 
             # Test with a simple call
             loop = asyncio.get_event_loop()
@@ -969,40 +977,40 @@ class TelegramBotService:
 
             if test_response and test_response.get("status") == "success":
                 # Valid credentials, save them
-                # Get the actual Tradeboard username from the API key
-                tradeboard_username = None
+                # Get the actual OpenAlgo username from the API key
+                openalgo_username = None
                 try:
-                    tradeboard_username = get_username_by_apikey(api_key)
-                    logger.info(f"API key lookup returned: '{tradeboard_username}'")
+                    openalgo_username = get_username_by_apikey(api_key)
+                    logger.info(f"API key lookup returned: '{openalgo_username}'")
                 except Exception as e:
                     logger.exception(f"Error getting username from API key: {e}")
 
                 # If we couldn't get username from API key, try to extract from response
-                if not tradeboard_username and test_response.get("data"):
+                if not openalgo_username and test_response.get("data"):
                     # Some brokers return username in the funds response
                     data = test_response.get("data", {})
                     if isinstance(data, dict):
-                        tradeboard_username = (
+                        openalgo_username = (
                             data.get("username") or data.get("user_id") or data.get("client_id")
                         )
-                        if tradeboard_username:
-                            logger.info(f"Got username from funds response: {tradeboard_username}")
+                        if openalgo_username:
+                            logger.info(f"Got username from funds response: {openalgo_username}")
 
                 # Log for debugging
                 logger.info(
-                    f"Linking Telegram user {user.id} (@{user.username}) with Tradeboard username: '{tradeboard_username}'"
+                    f"Linking Telegram user {user.id} (@{user.username}) with OpenAlgo username: '{openalgo_username}'"
                 )
 
                 # If we still can't get username, DON'T use telegram username with @
                 # Use a proper fallback
-                if not tradeboard_username:
+                if not openalgo_username:
                     # Try to get from session or use telegram ID
-                    tradeboard_username = f"user_{user.id}"
+                    openalgo_username = f"user_{user.id}"
                     logger.warning(
-                        f"Could not get Tradeboard username, using fallback: {tradeboard_username}"
+                        f"Could not get OpenAlgo username, using fallback: {openalgo_username}"
                     )
                 else:
-                    logger.info(f"Successfully retrieved Tradeboard username: {tradeboard_username}")
+                    logger.info(f"Successfully retrieved OpenAlgo username: {openalgo_username}")
 
                 # Determine broker for currency symbol selection
                 broker_name = get_broker_name(api_key) or "default"
@@ -1010,7 +1018,7 @@ class TelegramBotService:
 
                 create_or_update_telegram_user(
                     telegram_id=user.id,
-                    username=tradeboard_username,  # Use the actual Tradeboard username
+                    username=openalgo_username,  # Use the actual OpenAlgo username
                     telegram_username=user.username,
                     first_name=user.first_name,
                     last_name=user.last_name,
@@ -1019,24 +1027,24 @@ class TelegramBotService:
                     broker=broker_name,
                 )
 
-                logger.info(f"Database updated - Username stored as: {tradeboard_username}")
+                logger.info(f"Database updated - Username stored as: {openalgo_username}")
 
                 await update.message.reply_text(
-                    "✅ Account linked successfully!\n"
+                    "Account linked successfully!\n"
                     "You can now use all bot features.\n"
                     "Type /menu to see available options.",
                     parse_mode=ParseMode.MARKDOWN,
                 )
             else:
                 await update.message.reply_text(
-                    "❌ Failed to validate API key.\nPlease check your credentials and try again.",
+                    "Failed to validate API key.\nPlease check your credentials and try again.",
                     parse_mode=ParseMode.MARKDOWN,
                 )
 
         except Exception as e:
             logger.exception(f"Error linking account: {e}")
             await update.message.reply_text(
-                f"❌ Failed to link account.\nError: {str(e)}", parse_mode=ParseMode.MARKDOWN
+                f"Failed to link account.\nError: {str(e)}", parse_mode=ParseMode.MARKDOWN
             )
 
         log_command(user.id, "link", chat_id)
@@ -1053,12 +1061,12 @@ class TelegramBotService:
                 del self.sdk_clients[user.id]
 
             await update.message.reply_text(
-                "✅ Account unlinked successfully.\nYour data has been removed.",
+                "Account unlinked successfully.\nYour data has been removed.",
                 parse_mode=ParseMode.MARKDOWN,
             )
         else:
             await update.message.reply_text(
-                "❌ No linked account found.", parse_mode=ParseMode.MARKDOWN
+                "No linked account found.", parse_mode=ParseMode.MARKDOWN
             )
 
         log_command(user.id, "unlink", update.effective_chat.id)
@@ -1079,18 +1087,18 @@ class TelegramBotService:
                     test_response = await loop.run_in_executor(None, client.funds)
 
                     if test_response and test_response.get("status") == "success":
-                        status = "🟢 Connected"
+                        status = "Connected"
                     else:
-                        status = "🔴 Connection Failed"
+                        status = "Connection Failed"
                 except Exception:
-                    status = "🔴 Connection Failed"
+                    status = "Connection Failed"
             else:
-                status = "🔴 Client Error"
+                status = "Client Error"
 
-            # Get display name (prefer telegram_username, fallback to tradeboard_username)
+            # Get display name (prefer telegram_username, fallback to openalgo_username)
             display_name = (
                 telegram_user.get("telegram_username")
-                or telegram_user.get("tradeboard_username")
+                or telegram_user.get("openalgo_username")
                 or "N/A"
             )
             host_url = telegram_user.get("host_url") or "N/A"
@@ -1106,7 +1114,7 @@ class TelegramBotService:
             )
         else:
             await update.message.reply_text(
-                "❌ No linked account found.\nUse /link to connect your Tradeboard account.",
+                "No linked account found.\nUse /link to connect your OpenAlgo account.",
                 parse_mode=ParseMode.MARKDOWN,
             )
 
@@ -1120,7 +1128,7 @@ class TelegramBotService:
         telegram_user = get_telegram_user(user.id)
 
         if not telegram_user:
-            await update.message.reply_text("❌ Please link your account first using /link")
+            await update.message.reply_text("Please link your account first using /link")
             return
 
         cs = self._cs(telegram_user)
@@ -1128,14 +1136,14 @@ class TelegramBotService:
         # Get orderbook using SDK
         client = self._get_sdk_client(user.id)
         if not client:
-            await update.message.reply_text("❌ Failed to connect to Tradeboard")
+            await update.message.reply_text("Failed to connect to OpenAlgo")
             return
 
         loop = asyncio.get_event_loop()
         response = await loop.run_in_executor(None, client.orderbook)
 
         if not response or response.get("status") != "success":
-            await update.message.reply_text("❌ Failed to fetch orderbook")
+            await update.message.reply_text("Failed to fetch orderbook")
             return
 
         orders = response.get("data", {}).get("orders", [])
@@ -1143,30 +1151,32 @@ class TelegramBotService:
 
         if not orders:
             await update.message.reply_text(
-                "📊 *ORDERBOOK*\n━━━━━━━━━━━━━━━\n\nNo open orders", parse_mode=ParseMode.MARKDOWN
+                "*ORDERBOOK*\n━━━━━━━━━━━━━━━\n\nNo open orders", parse_mode=ParseMode.MARKDOWN
             )
             return
 
-        message = "📊 *ORDERBOOK*\n━━━━━━━━━━━━━━━\n\n"
+        message = "*ORDERBOOK*\n━━━━━━━━━━━━━━━\n\n"
 
         for order in orders[:10]:  # Limit to 10 orders
             status = order.get("order_status", "unknown")
             status_emoji = (
-                "✅"
+                "[OK]"
                 if status == "complete"
-                else "🟡"
+                else "[OPEN]"
                 if status == "open"
-                else "❌"
+                else "[REJECTED]"
                 if status == "rejected"
-                else "⏸️"
+                else "[OTHER]"
             )
-            action_emoji = "📈" if order.get("action") == "BUY" else "📉"
+            action_emoji = "[BUY]" if order.get("action") == "BUY" else "[SELL]"
 
             # Handle price and quantity (might be strings from some brokers)
             try:
                 price = float(order.get("price", 0))
                 price_str = (
-                    "Market" if price == 0 and order.get("pricetype") == "MARKET" else f"{cs}{price}"
+                    "Market"
+                    if price == 0 and order.get("pricetype") == "MARKET"
+                    else f"{cs}{price}"
                 )
             except (ValueError, TypeError):
                 price_str = f"{cs}{order.get('price', 0)}"
@@ -1228,7 +1238,7 @@ class TelegramBotService:
                 total_sell = 0
 
             message += (
-                "📈 *Summary*\n"
+                "*Summary*\n"
                 f"├ Total Orders: {len(orders)}\n"
                 f"├ Open: {total_open}\n"
                 f"├ Completed: {total_completed}\n"
@@ -1248,7 +1258,7 @@ class TelegramBotService:
         telegram_user = get_telegram_user(user.id)
 
         if not telegram_user:
-            await update.message.reply_text("❌ Please link your account first using /link")
+            await update.message.reply_text("Please link your account first using /link")
             return
 
         cs = self._cs(telegram_user)
@@ -1256,31 +1266,31 @@ class TelegramBotService:
         # Get tradebook using SDK
         client = self._get_sdk_client(user.id)
         if not client:
-            await update.message.reply_text("❌ Failed to connect to Tradeboard")
+            await update.message.reply_text("Failed to connect to OpenAlgo")
             return
 
         loop = asyncio.get_event_loop()
         response = await loop.run_in_executor(None, client.tradebook)
 
         if not response or response.get("status") != "success":
-            await update.message.reply_text("❌ Failed to fetch tradebook")
+            await update.message.reply_text("Failed to fetch tradebook")
             return
 
         trades = response.get("data", [])
 
         if not trades:
             await update.message.reply_text(
-                "📈 *TRADEBOOK*\n━━━━━━━━━━━━━━━\n\nNo trades executed today",
+                "*TRADEBOOK*\n━━━━━━━━━━━━━━━\n\nNo trades executed today",
                 parse_mode=ParseMode.MARKDOWN,
             )
             return
 
-        message = "📈 *TRADEBOOK*\n━━━━━━━━━━━━━━━\n\n"
+        message = "*TRADEBOOK*\n━━━━━━━━━━━━━━━\n\n"
         total_buy_value = 0
         total_sell_value = 0
 
         for trade in trades[:10]:  # Limit to 10 trades
-            action_emoji = "📈" if trade.get("action") == "BUY" else "📉"
+            action_emoji = "[BUY]" if trade.get("action") == "BUY" else "[SELL]"
 
             # Handle trade_value (might be string from some brokers)
             try:
@@ -1319,7 +1329,7 @@ class TelegramBotService:
 
         # Add summary
         message += (
-            "📊 *Summary*\n"
+            "*Summary*\n"
             f"├ Total Trades: {len(trades)}\n"
             f"├ Buy Value: {cs}{total_buy_value:,.2f}\n"
             f"└ Sell Value: {cs}{total_sell_value:,.2f}"
@@ -1336,7 +1346,7 @@ class TelegramBotService:
         telegram_user = get_telegram_user(user.id)
 
         if not telegram_user:
-            await update.message.reply_text("❌ Please link your account first using /link")
+            await update.message.reply_text("Please link your account first using /link")
             return
 
         cs = self._cs(telegram_user)
@@ -1344,21 +1354,21 @@ class TelegramBotService:
         # Get positions using SDK
         client = self._get_sdk_client(user.id)
         if not client:
-            await update.message.reply_text("❌ Failed to connect to Tradeboard")
+            await update.message.reply_text("Failed to connect to OpenAlgo")
             return
 
         loop = asyncio.get_event_loop()
         response = await loop.run_in_executor(None, client.positionbook)
 
         if not response or response.get("status") != "success":
-            await update.message.reply_text("❌ Failed to fetch positions")
+            await update.message.reply_text("Failed to fetch positions")
             return
 
         positions = response.get("data", [])
 
         if not positions:
             await update.message.reply_text(
-                "💼 *POSITIONS*\n━━━━━━━━━━━━━━━\n\nNo open positions",
+                "*POSITIONS*\n━━━━━━━━━━━━━━━\n\nNo open positions",
                 parse_mode=ParseMode.MARKDOWN,
             )
             return
@@ -1368,12 +1378,12 @@ class TelegramBotService:
 
         if not active_positions:
             await update.message.reply_text(
-                "💼 *POSITIONS*\n━━━━━━━━━━━━━━━\n\nNo active positions",
+                "*POSITIONS*\n━━━━━━━━━━━━━━━\n\nNo active positions",
                 parse_mode=ParseMode.MARKDOWN,
             )
             return
 
-        message = "💼 *POSITIONS*\n━━━━━━━━━━━━━━━\n\n"
+        message = "*POSITIONS*\n━━━━━━━━━━━━━━━\n\n"
         total_long = 0
         total_short = 0
 
@@ -1391,12 +1401,12 @@ class TelegramBotService:
 
             # Determine position type
             if quantity > 0:
-                position_type = "LONG 📈"
-                position_emoji = "🟢"
+                position_type = "LONG"
+                position_emoji = "[LONG]"
                 total_long += 1
             else:
-                position_type = "SHORT 📉"
-                position_emoji = "🔴"
+                position_type = "SHORT"
+                position_emoji = "[SHORT]"
                 total_short += 1
 
             message += (
@@ -1415,7 +1425,7 @@ class TelegramBotService:
 
         # Add summary
         message += (
-            "📊 *Summary*\n"
+            "*Summary*\n"
             f"├ Active Positions: {len(active_positions)}\n"
             f"├ Long Positions: {total_long}\n"
             f"└ Short Positions: {total_short}"
@@ -1432,7 +1442,7 @@ class TelegramBotService:
         telegram_user = get_telegram_user(user.id)
 
         if not telegram_user:
-            await update.message.reply_text("❌ Please link your account first using /link")
+            await update.message.reply_text("Please link your account first using /link")
             return
 
         cs = self._cs(telegram_user)
@@ -1440,14 +1450,14 @@ class TelegramBotService:
         # Get holdings using SDK
         client = self._get_sdk_client(user.id)
         if not client:
-            await update.message.reply_text("❌ Failed to connect to Tradeboard")
+            await update.message.reply_text("Failed to connect to OpenAlgo")
             return
 
         loop = asyncio.get_event_loop()
         response = await loop.run_in_executor(None, client.holdings)
 
         if not response or response.get("status") != "success":
-            await update.message.reply_text("❌ Failed to fetch holdings")
+            await update.message.reply_text("Failed to fetch holdings")
             return
 
         holdings = response.get("data", {}).get("holdings", [])
@@ -1455,11 +1465,11 @@ class TelegramBotService:
 
         if not holdings:
             await update.message.reply_text(
-                "🏦 *HOLDINGS*\n━━━━━━━━━━━━━━━\n\nNo holdings found", parse_mode=ParseMode.MARKDOWN
+                "*HOLDINGS*\n━━━━━━━━━━━━━━━\n\nNo holdings found", parse_mode=ParseMode.MARKDOWN
             )
             return
 
-        message = "🏦 *HOLDINGS*\n━━━━━━━━━━━━━━━\n\n"
+        message = "*HOLDINGS*\n━━━━━━━━━━━━━━━\n\n"
 
         for holding in holdings[:10]:
             # Handle numeric values that might be strings from some brokers
@@ -1478,7 +1488,7 @@ class TelegramBotService:
             except (ValueError, TypeError):
                 quantity = 0
 
-            pnl_emoji = "🟢" if pnl > 0 else "🔴" if pnl < 0 else "⚪"
+            pnl_emoji = "[+]" if pnl > 0 else "[-]" if pnl < 0 else "[=]"
 
             message += (
                 f"{pnl_emoji} *{holding.get('symbol', 'N/A')}* ({holding.get('exchange', 'N/A')})\n"
@@ -1513,10 +1523,10 @@ class TelegramBotService:
             except (ValueError, TypeError):
                 total_pnl_percent = 0.0
 
-            stats_emoji = "🟢" if total_pnl > 0 else "🔴" if total_pnl < 0 else "⚪"
+            stats_emoji = "[+]" if total_pnl > 0 else "[-]" if total_pnl < 0 else "[=]"
 
             message += (
-                f"📊 *Portfolio Summary*\n"
+                f"*Portfolio Summary*\n"
                 f"├ Current Value: {cs}{total_holding_value:,.2f}\n"
                 f"├ Investment: {cs}{total_inv_value:,.2f}\n"
                 f"└ {stats_emoji} P&L: {cs}{total_pnl:,.2f} ({total_pnl_percent:+.2f}%)"
@@ -1533,7 +1543,7 @@ class TelegramBotService:
         telegram_user = get_telegram_user(user.id)
 
         if not telegram_user:
-            await update.message.reply_text("❌ Please link your account first using /link")
+            await update.message.reply_text("Please link your account first using /link")
             return
 
         cs = self._cs(telegram_user)
@@ -1541,14 +1551,14 @@ class TelegramBotService:
         # Get funds using SDK
         client = self._get_sdk_client(user.id)
         if not client:
-            await update.message.reply_text("❌ Failed to connect to Tradeboard")
+            await update.message.reply_text("Failed to connect to OpenAlgo")
             return
 
         loop = asyncio.get_event_loop()
         response = await loop.run_in_executor(None, client.funds)
 
         if not response or response.get("status") != "success":
-            await update.message.reply_text("❌ Failed to fetch funds")
+            await update.message.reply_text("Failed to fetch funds")
             return
 
         funds = response.get("data", {})
@@ -1570,15 +1580,15 @@ class TelegramBotService:
             utilized = 0.0
 
         message = (
-            "💰 *FUNDS*\n"
+            "*FUNDS*\n"
             "━━━━━━━━━━━━━━━\n\n"
-            f"💵 *Available Cash*\n"
+            f"*Available Cash*\n"
             f"└ {cs}{available:,.2f}\n\n"
-            f"🔒 *Collateral*\n"
+            f"*Collateral*\n"
             f"└ {cs}{collateral:,.2f}\n\n"
-            f"📊 *Utilized Margin*\n"
+            f"*Utilized Margin*\n"
             f"└ {cs}{utilized:,.2f}\n\n"
-            f"💼 *Total Balance*\n"
+            f"*Total Balance*\n"
             f"└ {cs}{(available + collateral):,.2f}"
         )
 
@@ -1593,7 +1603,7 @@ class TelegramBotService:
         telegram_user = get_telegram_user(user.id)
 
         if not telegram_user:
-            await update.message.reply_text("❌ Please link your account first using /link")
+            await update.message.reply_text("Please link your account first using /link")
             return
 
         cs = self._cs(telegram_user)
@@ -1601,14 +1611,14 @@ class TelegramBotService:
         # Get P&L from funds using SDK
         client = self._get_sdk_client(user.id)
         if not client:
-            await update.message.reply_text("❌ Failed to connect to Tradeboard")
+            await update.message.reply_text("Failed to connect to OpenAlgo")
             return
 
         loop = asyncio.get_event_loop()
         response = await loop.run_in_executor(None, client.funds)
 
         if not response or response.get("status") != "success":
-            await update.message.reply_text("❌ Failed to fetch P&L")
+            await update.message.reply_text("Failed to fetch P&L")
             return
 
         message = self._format_pnl_funds(response, cs=cs)
@@ -1624,12 +1634,12 @@ class TelegramBotService:
         telegram_user = get_telegram_user(user.id)
 
         if not telegram_user:
-            await update.message.reply_text("❌ Please link your account first using /link")
+            await update.message.reply_text("Please link your account first using /link")
             return
 
         if not context.args:
             await update.message.reply_text(
-                "❌ Usage: /quote <symbol> [exchange]\n"
+                "Usage: /quote <symbol> [exchange]\n"
                 "Example: /quote RELIANCE\n"
                 "Example: /quote NIFTY NSE_INDEX",
                 parse_mode=ParseMode.MARKDOWN,
@@ -1644,7 +1654,7 @@ class TelegramBotService:
         # Get quote using SDK
         client = self._get_sdk_client(user.id)
         if not client:
-            await update.message.reply_text("❌ Failed to connect to Tradeboard")
+            await update.message.reply_text("Failed to connect to OpenAlgo")
             return
 
         loop = asyncio.get_event_loop()
@@ -1653,7 +1663,7 @@ class TelegramBotService:
         )
 
         if not response or response.get("status") != "success":
-            await update.message.reply_text(f"❌ Failed to fetch quote for {symbol}")
+            await update.message.reply_text(f"Failed to fetch quote for {symbol}")
             return
 
         quote = response.get("data", {})
@@ -1672,7 +1682,7 @@ class TelegramBotService:
         change = ltp - prev_close
         change_pct = (change / prev_close * 100) if prev_close > 0 else 0
 
-        change_emoji = "🟢" if change > 0 else "🔴" if change < 0 else "⚪"
+        change_emoji = "[+]" if change > 0 else "[-]" if change < 0 else "[=]"
 
         # Handle other quote values
         try:
@@ -1696,7 +1706,7 @@ class TelegramBotService:
             volume = 0
 
         message = (
-            f"📊 *{symbol}*\n"
+            f"*{symbol}*\n"
             "━━━━━━━━━━━━━━━\n\n"
             f"{change_emoji} Price: {cs}{ltp:,.2f}\n"
             f"├ Change: {cs}{change:+.2f} ({change_pct:+.2f}%)\n"
@@ -1719,12 +1729,12 @@ class TelegramBotService:
         telegram_user = get_telegram_user(user.id)
 
         if not telegram_user:
-            await update.message.reply_text("❌ Please link your account first using /link")
+            await update.message.reply_text("Please link your account first using /link")
             return
 
         if not context.args:
             await update.message.reply_text(
-                "❌ Usage: /chart <symbol> [exchange] [type] [interval] [days]\n"
+                "Usage: /chart <symbol> [exchange] [type] [interval] [days]\n"
                 "Type: intraday (default), daily, or both\n\n"
                 "Examples:\n"
                 "/chart RELIANCE - 5m intraday chart\n"
@@ -1755,7 +1765,7 @@ class TelegramBotService:
             pass
 
         # Send loading message
-        loading_msg = await update.message.reply_text("📊 Generating charts... Please wait.")
+        loading_msg = await update.message.reply_text("Generating charts... Please wait.")
 
         try:
             charts_generated = []
@@ -1800,7 +1810,7 @@ class TelegramBotService:
                         photo=charts_generated[0].media, caption=charts_generated[0].caption
                     )
             else:
-                await update.message.reply_text(f"❌ Failed to generate charts for {symbol}")
+                await update.message.reply_text(f"Failed to generate charts for {symbol}")
 
         except Exception as e:
             logger.exception(f"Error generating charts: {e}")
@@ -1808,7 +1818,7 @@ class TelegramBotService:
                 await loading_msg.delete()
             except Exception:
                 pass
-            await update.message.reply_text(f"❌ Error generating charts: {str(e)}")
+            await update.message.reply_text(f"Error generating charts: {str(e)}")
 
         log_command(user.id, "chart", update.effective_chat.id)
 
@@ -1821,59 +1831,59 @@ class TelegramBotService:
         telegram_user = get_telegram_user(user.id)
 
         if not telegram_user:
-            await update.message.reply_text("❌ Please link your account first using /link")
+            await update.message.reply_text("Please link your account first using /link")
             return
 
         keyboard = [
             [
-                InlineKeyboardButton("📊 Orderbook", callback_data="orderbook"),
-                InlineKeyboardButton("📈 Tradebook", callback_data="tradebook"),
+                InlineKeyboardButton("Orderbook", callback_data="orderbook"),
+                InlineKeyboardButton("Tradebook", callback_data="tradebook"),
             ],
             [
-                InlineKeyboardButton("💼 Positions", callback_data="positions"),
-                InlineKeyboardButton("🏦 Holdings", callback_data="holdings"),
+                InlineKeyboardButton("Positions", callback_data="positions"),
+                InlineKeyboardButton("Holdings", callback_data="holdings"),
             ],
             [
-                InlineKeyboardButton("💰 Funds", callback_data="funds"),
-                InlineKeyboardButton("💹 P&L", callback_data="pnl"),
+                InlineKeyboardButton("Funds", callback_data="funds"),
+                InlineKeyboardButton("P&L", callback_data="pnl"),
             ],
             [
-                InlineKeyboardButton("🔄 Refresh", callback_data="menu"),
+                InlineKeyboardButton("Refresh", callback_data="menu"),
             ],
         ]
 
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         await update.message.reply_text(
-            "📱 *Tradeboard Trading Menu*\nSelect an option below:",
+            "*OpenAlgo Trading Menu*\nSelect an option below:",
             reply_markup=reply_markup,
             parse_mode=ParseMode.MARKDOWN,
         )
 
         log_command(user.id, "menu", update.effective_chat.id)
 
-    def _format_orderbook(self, response: dict, cs: str = '₹') -> str:
+    def _format_orderbook(self, response: dict, cs: str = "₹") -> str:
         """Format orderbook response into message"""
         if not response or response.get("status") != "success":
-            return "❌ Failed to fetch orderbook"
+            return "Failed to fetch orderbook"
 
         orders = response.get("data", {}).get("orders", [])
         if not orders:
-            return "📊 *ORDERBOOK*\n━━━━━━━━━━━━━━━\n\nNo open orders"
+            return "*ORDERBOOK*\n━━━━━━━━━━━━━━━\n\nNo open orders"
 
-        message = "📊 *ORDERBOOK*\n━━━━━━━━━━━━━━━\n\n"
+        message = "*ORDERBOOK*\n━━━━━━━━━━━━━━━\n\n"
         for order in orders[:10]:
             status = order.get("order_status", "unknown")
             status_emoji = (
-                "✅"
+                "[OK]"
                 if status == "complete"
-                else "🟡"
+                else "[OPEN]"
                 if status == "open"
-                else "❌"
+                else "[REJECTED]"
                 if status == "rejected"
-                else "⏸️"
+                else "[OTHER]"
             )
-            action_emoji = "📈" if order.get("action") == "BUY" else "📉"
+            action_emoji = "[BUY]" if order.get("action") == "BUY" else "[SELL]"
             try:
                 price = float(order.get("price", 0))
                 price_str = "Market" if price == 0 else f"{cs}{price}"
@@ -1892,18 +1902,18 @@ class TelegramBotService:
             message += f"_... and {len(orders) - 10} more orders_"
         return message
 
-    def _format_tradebook(self, response: dict, cs: str = '₹') -> str:
+    def _format_tradebook(self, response: dict, cs: str = "₹") -> str:
         """Format tradebook response into message"""
         if not response or response.get("status") != "success":
-            return "❌ Failed to fetch tradebook"
+            return "Failed to fetch tradebook"
 
         trades = response.get("data", [])
         if not trades:
-            return "📈 *TRADEBOOK*\n━━━━━━━━━━━━━━━\n\nNo trades executed today"
+            return "*TRADEBOOK*\n━━━━━━━━━━━━━━━\n\nNo trades executed today"
 
-        message = "📈 *TRADEBOOK*\n━━━━━━━━━━━━━━━\n\n"
+        message = "*TRADEBOOK*\n━━━━━━━━━━━━━━━\n\n"
         for trade in trades[:10]:
-            action_emoji = "📈" if trade.get("action") == "BUY" else "📉"
+            action_emoji = "[BUY]" if trade.get("action") == "BUY" else "[SELL]"
             try:
                 quantity = int(trade.get("quantity", 0))
             except Exception:
@@ -1922,24 +1932,24 @@ class TelegramBotService:
             message += f"_... and {len(trades) - 10} more trades_"
         return message
 
-    def _format_positions(self, response: dict, cs: str = '₹') -> str:
+    def _format_positions(self, response: dict, cs: str = "₹") -> str:
         """Format positions response into message"""
         if not response or response.get("status") != "success":
-            return "❌ Failed to fetch positions"
+            return "Failed to fetch positions"
 
         positions = response.get("data", [])
         active_positions = [pos for pos in positions if pos.get("quantity", 0) != 0]
         if not active_positions:
-            return "💼 *POSITIONS*\n━━━━━━━━━━━━━━━\n\nNo active positions"
+            return "*POSITIONS*\n━━━━━━━━━━━━━━━\n\nNo active positions"
 
-        message = "💼 *POSITIONS*\n━━━━━━━━━━━━━━━\n\n"
+        message = "*POSITIONS*\n━━━━━━━━━━━━━━━\n\n"
         for pos in active_positions[:10]:
             try:
                 quantity = int(pos.get("quantity", 0))
             except Exception:
                 quantity = 0
-            position_emoji = "🟢" if quantity > 0 else "🔴"
-            position_type = "LONG 📈" if quantity > 0 else "SHORT 📉"
+            position_emoji = "[LONG]" if quantity > 0 else "[SHORT]"
+            position_type = "LONG" if quantity > 0 else "SHORT"
             message += (
                 f"{position_emoji} *{pos.get('symbol', 'N/A')}* ({pos.get('exchange', 'N/A')})\n"
             )
@@ -1949,33 +1959,33 @@ class TelegramBotService:
             message += f"_... and {len(active_positions) - 10} more positions_"
         return message
 
-    def _format_holdings(self, response: dict, cs: str = '₹') -> str:
+    def _format_holdings(self, response: dict, cs: str = "₹") -> str:
         """Format holdings response into message"""
         if not response or response.get("status") != "success":
-            return "❌ Failed to fetch holdings"
+            return "Failed to fetch holdings"
 
         holdings = response.get("data", {}).get("holdings", [])
         if not holdings:
-            return "🏦 *HOLDINGS*\n━━━━━━━━━━━━━━━\n\nNo holdings found"
+            return "*HOLDINGS*\n━━━━━━━━━━━━━━━\n\nNo holdings found"
 
-        message = "🏦 *HOLDINGS*\n━━━━━━━━━━━━━━━\n\n"
+        message = "*HOLDINGS*\n━━━━━━━━━━━━━━━\n\n"
         for holding in holdings[:10]:
             try:
                 pnl = float(holding.get("pnl", 0))
                 pnl_percent = float(holding.get("pnlpercent", 0))
             except Exception:
                 pnl, pnl_percent = 0.0, 0.0
-            pnl_emoji = "🟢" if pnl > 0 else "🔴" if pnl < 0 else "⚪"
+            pnl_emoji = "[+]" if pnl > 0 else "[-]" if pnl < 0 else "[=]"
             message += f"{pnl_emoji} *{holding.get('symbol', 'N/A')}*\n"
             message += f"└ P&L: {cs}{pnl:,.2f} ({pnl_percent:+.2f}%)\n\n"
         if len(holdings) > 10:
             message += f"_... and {len(holdings) - 10} more holdings_"
         return message
 
-    def _format_funds(self, response: dict, cs: str = '₹') -> str:
+    def _format_funds(self, response: dict, cs: str = "₹") -> str:
         """Format funds response into message"""
         if not response or response.get("status") != "success":
-            return "❌ Failed to fetch funds"
+            return "Failed to fetch funds"
 
         funds = response.get("data", {})
         try:
@@ -1986,14 +1996,14 @@ class TelegramBotService:
             available, collateral, utilized = 0.0, 0.0, 0.0
 
         return (
-            "💰 *FUNDS*\n━━━━━━━━━━━━━━━\n\n"
-            f"💵 Available: {cs}{available:,.2f}\n"
-            f"🔒 Collateral: {cs}{collateral:,.2f}\n"
-            f"📊 Utilized: {cs}{utilized:,.2f}\n"
-            f"💼 Total: {cs}{(available + collateral):,.2f}"
+            "*FUNDS*\n━━━━━━━━━━━━━━━\n\n"
+            f"Available: {cs}{available:,.2f}\n"
+            f"Collateral: {cs}{collateral:,.2f}\n"
+            f"Utilized: {cs}{utilized:,.2f}\n"
+            f"Total: {cs}{(available + collateral):,.2f}"
         )
 
-    def _format_pnl_funds(self, response: dict, cs: str = '₹') -> str:
+    def _format_pnl_funds(self, response: dict, cs: str = "₹") -> str:
         """Format P&L from the funds response (realized + unrealized + total).
 
         Shared by the /pnl command and the menu P&L button so both report the
@@ -2001,7 +2011,7 @@ class TelegramBotService:
         button previously summed positionbook day-P&L, which disagreed with /pnl).
         """
         if not response or response.get("status") != "success":
-            return "❌ Failed to fetch P&L"
+            return "Failed to fetch P&L"
 
         funds = response.get("data", {})
 
@@ -2018,12 +2028,12 @@ class TelegramBotService:
 
         total_pnl = realized_pnl + unrealized_pnl
 
-        realized_emoji = "🟢" if realized_pnl > 0 else "🔴" if realized_pnl < 0 else "⚪"
-        unrealized_emoji = "🟢" if unrealized_pnl > 0 else "🔴" if unrealized_pnl < 0 else "⚪"
-        total_emoji = "🟢" if total_pnl > 0 else "🔴" if total_pnl < 0 else "⚪"
+        realized_emoji = "[+]" if realized_pnl > 0 else "[-]" if realized_pnl < 0 else "[=]"
+        unrealized_emoji = "[+]" if unrealized_pnl > 0 else "[-]" if unrealized_pnl < 0 else "[=]"
+        total_emoji = "[+]" if total_pnl > 0 else "[-]" if total_pnl < 0 else "[=]"
 
         return (
-            "💹 *PROFIT & LOSS*\n"
+            "*PROFIT & LOSS*\n"
             "━━━━━━━━━━━━━━━\n\n"
             f"{realized_emoji} *Realized P&L*\n"
             f"└ {cs}{realized_pnl:,.2f}\n\n"
@@ -2042,27 +2052,27 @@ class TelegramBotService:
         telegram_user = get_telegram_user(user.id)
 
         if not telegram_user:
-            await update.message.reply_text("❌ Please link your account first using /link")
+            await update.message.reply_text("Please link your account first using /link")
             return
 
         keyboard = [
             [
-                InlineKeyboardButton("✅ Yes, close all", callback_data="confirm_closeall"),
+                InlineKeyboardButton("Yes, close all", callback_data="confirm_closeall"),
             ],
             [
                 InlineKeyboardButton(
-                    "⚠️ Close all + Stop strategies",
+                    "Close all + Stop strategies",
                     callback_data="confirm_closeall_with_strategies",
                 ),
             ],
             [
-                InlineKeyboardButton("❌ Cancel", callback_data="cancel_action"),
+                InlineKeyboardButton("Cancel", callback_data="cancel_action"),
             ],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         await update.message.reply_text(
-            "⚠️ *Close All Positions*\n"
+            "*Close All Positions*\n"
             "━━━━━━━━━━━━━━━\n\n"
             "This will close ALL open positions across all strategies.\n\n"
             "Choose *Close all + Stop strategies* to also stop every running "
@@ -2082,7 +2092,7 @@ class TelegramBotService:
         telegram_user = get_telegram_user(user.id)
 
         if not telegram_user:
-            await update.message.reply_text("❌ Please link your account first using /link")
+            await update.message.reply_text("Please link your account first using /link")
             return
 
         from blueprints.python_strategy import RUNNING_STRATEGIES, STRATEGY_CONFIGS
@@ -2096,7 +2106,7 @@ class TelegramBotService:
 
         if not running:
             await update.message.reply_text(
-                "ℹ️ *No Python strategies running.*",
+                "ℹ *No Python strategies running.*",
                 parse_mode=ParseMode.MARKDOWN,
             )
             log_command(user.id, "stoppython", update.effective_chat.id)
@@ -2105,19 +2115,15 @@ class TelegramBotService:
         context.user_data["stoppy_list"] = running
 
         keyboard = [
-            [InlineKeyboardButton(f"🐍 {name}", callback_data=f"spy_{idx}")]
+            [InlineKeyboardButton(f"{name}", callback_data=f"spy_{idx}")]
             for idx, (_, name) in enumerate(running)
         ]
-        keyboard.append(
-            [InlineKeyboardButton("🛑 Stop All", callback_data="spy_all")]
-        )
-        keyboard.append(
-            [InlineKeyboardButton("❌ Cancel", callback_data="cancel_action")]
-        )
+        keyboard.append([InlineKeyboardButton("Stop All", callback_data="spy_all")])
+        keyboard.append([InlineKeyboardButton("Cancel", callback_data="cancel_action")])
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         await update.message.reply_text(
-            f"🐍 *Running Python Strategies* ({len(running)})\n"
+            f"*Running Python Strategies* ({len(running)})\n"
             "━━━━━━━━━━━━━━━\n\n"
             "Select a strategy to stop, or *Stop All* to stop every running strategy.",
             reply_markup=reply_markup,
@@ -2134,7 +2140,7 @@ class TelegramBotService:
         telegram_user = get_telegram_user(user.id)
 
         if not telegram_user:
-            await update.message.reply_text("❌ Please link your account first using /link")
+            await update.message.reply_text("Please link your account first using /link")
             return
 
         from database.settings_db import get_analyze_mode
@@ -2142,19 +2148,19 @@ class TelegramBotService:
         loop = asyncio.get_event_loop()
         is_analyze = await loop.run_in_executor(None, get_analyze_mode)
 
-        current = "🔬 Analyze Mode" if is_analyze else "🟢 Live Mode"
+        current = "Analyze Mode" if is_analyze else "Live Mode"
         toggle_label = "Switch to Live" if is_analyze else "Switch to Analyze"
         toggle_data = "mode_live" if is_analyze else "mode_analyze"
 
         keyboard = [
             [
-                InlineKeyboardButton(f"🔄 {toggle_label}", callback_data=toggle_data),
+                InlineKeyboardButton(f"{toggle_label}", callback_data=toggle_data),
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         await update.message.reply_text(
-            f"⚙️ *Trading Mode*\n"
+            f"*Trading Mode*\n"
             f"━━━━━━━━━━━━━━━\n\n"
             f"Current: {current}\n\n"
             f"• *Live Mode* — Orders execute with real broker\n"
@@ -2178,22 +2184,22 @@ class TelegramBotService:
 
         # Handle cancel action
         if callback_data == "cancel_action":
-            await query.edit_message_text("❌ Action cancelled.")
+            await query.edit_message_text("Action cancelled.")
             return
 
         # Handle close all positions confirmation
         if callback_data == "confirm_closeall":
             telegram_user = get_telegram_user(user.id)
             if not telegram_user:
-                await query.edit_message_text("❌ Please link your account first using /link")
+                await query.edit_message_text("Please link your account first using /link")
                 return
 
             client = self._get_sdk_client(user.id)
             if not client:
-                await query.edit_message_text("❌ Failed to connect to Tradeboard")
+                await query.edit_message_text("Failed to connect to OpenAlgo")
                 return
 
-            await query.edit_message_text("⏳ Closing all positions...")
+            await query.edit_message_text("Closing all positions...")
 
             try:
                 loop = asyncio.get_event_loop()
@@ -2203,20 +2209,20 @@ class TelegramBotService:
                     msg = response.get("message", "All positions closed")
                     await context.bot.send_message(
                         chat_id=chat_id,
-                        text=f"✅ *Positions Closed*\n━━━━━━━━━━━━━━━\n\n{msg}",
+                        text=f"*Positions Closed*\n━━━━━━━━━━━━━━━\n\n{msg}",
                         parse_mode=ParseMode.MARKDOWN,
                     )
                 else:
                     error = response.get("message", "Unknown error") if response else "No response"
                     await context.bot.send_message(
                         chat_id=chat_id,
-                        text=f"❌ *Failed to close positions*\n\n{error}",
+                        text=f"*Failed to close positions*\n\n{error}",
                         parse_mode=ParseMode.MARKDOWN,
                     )
             except Exception as e:
                 logger.exception(f"Error in closeall: {e}")
                 await context.bot.send_message(
-                    chat_id=chat_id, text="❌ Error closing positions. Check server logs."
+                    chat_id=chat_id, text="Error closing positions. Check server logs."
                 )
             log_command(user.id, "confirm_closeall", chat_id)
             return
@@ -2225,28 +2231,28 @@ class TelegramBotService:
         if callback_data == "confirm_closeall_with_strategies":
             telegram_user = get_telegram_user(user.id)
             if not telegram_user:
-                await query.edit_message_text("❌ Please link your account first using /link")
+                await query.edit_message_text("Please link your account first using /link")
                 return
 
             client = self._get_sdk_client(user.id)
             if not client:
-                await query.edit_message_text("❌ Failed to connect to Tradeboard")
+                await query.edit_message_text("Failed to connect to OpenAlgo")
                 return
 
-            await query.edit_message_text("⏳ Closing all positions and stopping strategies...")
+            await query.edit_message_text("Closing all positions and stopping strategies...")
 
             close_msg = ""
             try:
                 loop = asyncio.get_event_loop()
                 response = await loop.run_in_executor(None, client.closeposition)
                 if response and response.get("status") == "success":
-                    close_msg = f"✅ {response.get('message', 'All positions closed')}"
+                    close_msg = f"{response.get('message', 'All positions closed')}"
                 else:
                     err = response.get("message", "Unknown error") if response else "No response"
-                    close_msg = f"❌ Failed to close positions: {err}"
+                    close_msg = f"Failed to close positions: {err}"
             except Exception as e:
                 logger.exception(f"Error in confirm_closeall_with_strategies (close): {e}")
-                close_msg = "❌ Error closing positions. Check server logs."
+                close_msg = "Error closing positions. Check server logs."
 
             stop_msg = ""
             try:
@@ -2254,7 +2260,7 @@ class TelegramBotService:
 
                 running_ids = list(RUNNING_STRATEGIES.keys())
                 if not running_ids:
-                    stop_msg = "ℹ️ No Python strategies were running."
+                    stop_msg = "ℹ No Python strategies were running."
                 else:
                     loop = asyncio.get_event_loop()
                     stopped, failed = 0, 0
@@ -2268,12 +2274,12 @@ class TelegramBotService:
                         except Exception:
                             logger.exception(f"Error stopping strategy {sid}")
                             failed += 1
-                    stop_msg = f"🛑 Strategies stopped: {stopped}"
+                    stop_msg = f"Strategies stopped: {stopped}"
                     if failed:
                         stop_msg += f" (failed: {failed})"
             except Exception as e:
                 logger.exception(f"Error in confirm_closeall_with_strategies (stop): {e}")
-                stop_msg = "❌ Error stopping strategies. Check server logs."
+                stop_msg = "Error stopping strategies. Check server logs."
 
             await context.bot.send_message(
                 chat_id=chat_id,
@@ -2288,25 +2294,23 @@ class TelegramBotService:
             try:
                 idx = int(callback_data.removeprefix("spy_"))
             except ValueError:
-                await query.edit_message_text("❌ Invalid selection.")
+                await query.edit_message_text("Invalid selection.")
                 return
 
             stoppy_list = context.user_data.get("stoppy_list", [])
             if idx < 0 or idx >= len(stoppy_list):
-                await query.edit_message_text(
-                    "❌ Selection expired. Please run /stoppython again."
-                )
+                await query.edit_message_text("Selection expired. Please run /stoppython again.")
                 return
 
             sid, name = stoppy_list[idx]
             keyboard = [
                 [
-                    InlineKeyboardButton("✅ Yes, stop", callback_data=f"csy_{idx}"),
-                    InlineKeyboardButton("❌ Cancel", callback_data="cancel_action"),
+                    InlineKeyboardButton("Yes, stop", callback_data=f"csy_{idx}"),
+                    InlineKeyboardButton("Cancel", callback_data="cancel_action"),
                 ]
             ]
             await query.edit_message_text(
-                f"⚠️ *Stop Strategy*\n━━━━━━━━━━━━━━━\n\nStop *{name}*?",
+                f"*Stop Strategy*\n━━━━━━━━━━━━━━━\n\nStop *{name}*?",
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode=ParseMode.MARKDOWN,
             )
@@ -2317,19 +2321,17 @@ class TelegramBotService:
             stoppy_list = context.user_data.get("stoppy_list", [])
             count = len(stoppy_list)
             if count == 0:
-                await query.edit_message_text(
-                    "❌ Selection expired. Please run /stoppython again."
-                )
+                await query.edit_message_text("Selection expired. Please run /stoppython again.")
                 return
 
             keyboard = [
                 [
-                    InlineKeyboardButton("✅ Yes, stop all", callback_data="csy_all"),
-                    InlineKeyboardButton("❌ Cancel", callback_data="cancel_action"),
+                    InlineKeyboardButton("Yes, stop all", callback_data="csy_all"),
+                    InlineKeyboardButton("Cancel", callback_data="cancel_action"),
                 ]
             ]
             await query.edit_message_text(
-                f"⚠️ *Stop All Strategies*\n━━━━━━━━━━━━━━━\n\n"
+                f"*Stop All Strategies*\n━━━━━━━━━━━━━━━\n\n"
                 f"This will stop *{count}* running Python "
                 f"{'strategy' if count == 1 else 'strategies'}.\n\nAre you sure?",
                 reply_markup=InlineKeyboardMarkup(keyboard),
@@ -2342,24 +2344,22 @@ class TelegramBotService:
             try:
                 idx = int(callback_data.removeprefix("csy_"))
             except ValueError:
-                await query.edit_message_text("❌ Invalid selection.")
+                await query.edit_message_text("Invalid selection.")
                 return
 
             stoppy_list = context.user_data.get("stoppy_list", [])
             if idx < 0 or idx >= len(stoppy_list):
-                await query.edit_message_text(
-                    "❌ Selection expired. Please run /stoppython again."
-                )
+                await query.edit_message_text("Selection expired. Please run /stoppython again.")
                 return
 
             sid, name = stoppy_list[idx]
-            await query.edit_message_text(f"⏳ Stopping *{name}*...", parse_mode=ParseMode.MARKDOWN)
+            await query.edit_message_text(f"Stopping *{name}*...", parse_mode=ParseMode.MARKDOWN)
             try:
                 from blueprints.python_strategy import stop_strategy_process
 
                 loop = asyncio.get_event_loop()
                 ok, msg = await loop.run_in_executor(None, stop_strategy_process, sid)
-                emoji = "✅" if ok else "❌"
+                emoji = "[OK]" if ok else "[FAILED]"
                 await context.bot.send_message(
                     chat_id=chat_id,
                     text=f"{emoji} *{name}*\n{msg}",
@@ -2369,7 +2369,7 @@ class TelegramBotService:
                 logger.exception(f"Error stopping strategy {sid}: {e}")
                 await context.bot.send_message(
                     chat_id=chat_id,
-                    text=f"❌ Error stopping *{name}*. Check server logs.",
+                    text=f"Error stopping *{name}*. Check server logs.",
                     parse_mode=ParseMode.MARKDOWN,
                 )
             log_command(user.id, "confirm_stoppython", chat_id)
@@ -2377,14 +2377,14 @@ class TelegramBotService:
 
         # Handle confirmed stop of all strategies
         if callback_data == "csy_all":
-            await query.edit_message_text("⏳ Stopping all running strategies...")
+            await query.edit_message_text("Stopping all running strategies...")
             try:
                 from blueprints.python_strategy import RUNNING_STRATEGIES, stop_strategy_process
 
                 running_ids = list(RUNNING_STRATEGIES.keys())
                 if not running_ids:
                     await context.bot.send_message(
-                        chat_id=chat_id, text="ℹ️ No Python strategies were running."
+                        chat_id=chat_id, text="ℹ No Python strategies were running."
                     )
                 else:
                     loop = asyncio.get_event_loop()
@@ -2399,7 +2399,7 @@ class TelegramBotService:
                         except Exception:
                             logger.exception(f"Error stopping strategy {sid}")
                             failed += 1
-                    summary = f"🛑 *Strategies Stopped*\n━━━━━━━━━━━━━━━\n\nStopped: {stopped}"
+                    summary = f"*Strategies Stopped*\n━━━━━━━━━━━━━━━\n\nStopped: {stopped}"
                     if failed:
                         summary += f"\nFailed: {failed}"
                     await context.bot.send_message(
@@ -2410,7 +2410,7 @@ class TelegramBotService:
             except Exception as e:
                 logger.exception(f"Error in csy_all: {e}")
                 await context.bot.send_message(
-                    chat_id=chat_id, text="❌ Error stopping strategies. Check server logs."
+                    chat_id=chat_id, text="Error stopping strategies. Check server logs."
                 )
             log_command(user.id, "confirm_stoppython_all", chat_id)
             return
@@ -2419,7 +2419,7 @@ class TelegramBotService:
         # Handle mode toggle
         if callback_data in ("mode_live", "mode_analyze"):
             try:
-                from database.settings_db import set_analyze_mode, get_analyze_mode
+                from database.settings_db import get_analyze_mode, set_analyze_mode
 
                 new_mode = callback_data == "mode_analyze"
                 loop = asyncio.get_event_loop()
@@ -2428,18 +2428,19 @@ class TelegramBotService:
                 # Sync mode to frontend via SocketIO
                 try:
                     from extensions import socketio
+
                     socketio.emit("app_mode_changed", {"analyze_mode": new_mode})
                 except Exception:
                     pass
 
-                mode_label = "🔬 Analyze Mode" if new_mode else "🟢 Live Mode"
+                mode_label = "Analyze Mode" if new_mode else "Live Mode"
                 await query.edit_message_text(
-                    f"✅ *Mode Changed*\n━━━━━━━━━━━━━━━\n\nNow in: {mode_label}",
+                    f"*Mode Changed*\n━━━━━━━━━━━━━━━\n\nNow in: {mode_label}",
                     parse_mode=ParseMode.MARKDOWN,
                 )
             except Exception as e:
                 logger.exception(f"Error toggling mode: {e}")
-                await query.edit_message_text("❌ Failed to change mode. Check server logs.")
+                await query.edit_message_text("Failed to change mode. Check server logs.")
             log_command(user.id, callback_data, chat_id)
             return
 
@@ -2447,19 +2448,19 @@ class TelegramBotService:
         if callback_data == "menu":
             keyboard = [
                 [
-                    InlineKeyboardButton("📊 Orderbook", callback_data="orderbook"),
-                    InlineKeyboardButton("📈 Tradebook", callback_data="tradebook"),
+                    InlineKeyboardButton("Orderbook", callback_data="orderbook"),
+                    InlineKeyboardButton("Tradebook", callback_data="tradebook"),
                 ],
                 [
-                    InlineKeyboardButton("💼 Positions", callback_data="positions"),
-                    InlineKeyboardButton("🏦 Holdings", callback_data="holdings"),
+                    InlineKeyboardButton("Positions", callback_data="positions"),
+                    InlineKeyboardButton("Holdings", callback_data="holdings"),
                 ],
                 [
-                    InlineKeyboardButton("💰 Funds", callback_data="funds"),
-                    InlineKeyboardButton("💹 P&L", callback_data="pnl"),
+                    InlineKeyboardButton("Funds", callback_data="funds"),
+                    InlineKeyboardButton("P&L", callback_data="pnl"),
                 ],
                 [
-                    InlineKeyboardButton("🔄 Refresh", callback_data="menu"),
+                    InlineKeyboardButton("Refresh", callback_data="menu"),
                 ],
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
@@ -2468,7 +2469,7 @@ class TelegramBotService:
 
                 timestamp = datetime.now().strftime("%H:%M:%S")
                 await query.edit_message_text(
-                    f"📱 *Tradeboard Trading Menu*\nSelect an option below:\n_Updated: {timestamp}_",
+                    f"*OpenAlgo Trading Menu*\nSelect an option below:\n_Updated: {timestamp}_",
                     reply_markup=reply_markup,
                     parse_mode=ParseMode.MARKDOWN,
                 )
@@ -2481,7 +2482,7 @@ class TelegramBotService:
         telegram_user = get_telegram_user(user.id)
         if not telegram_user:
             await context.bot.send_message(
-                chat_id=chat_id, text="❌ Please link your account first using /link"
+                chat_id=chat_id, text="Please link your account first using /link"
             )
             return
 
@@ -2489,7 +2490,7 @@ class TelegramBotService:
 
         client = self._get_sdk_client(user.id)
         if not client:
-            await context.bot.send_message(chat_id=chat_id, text="❌ Failed to connect to Tradeboard")
+            await context.bot.send_message(chat_id=chat_id, text="Failed to connect to OpenAlgo")
             return
 
         # Map callback data to API calls and formatters
@@ -2515,7 +2516,7 @@ class TelegramBotService:
                 response = await loop.run_in_executor(None, client.funds)
                 message = self._format_pnl_funds(response, cs=cs)
             else:
-                message = "❌ Unknown command"
+                message = "Unknown command"
 
             await context.bot.send_message(
                 chat_id=chat_id, text=message, parse_mode=ParseMode.MARKDOWN
@@ -2525,7 +2526,7 @@ class TelegramBotService:
         except Exception as e:
             logger.exception(f"Error in button callback for {callback_data}: {e}")
             await context.bot.send_message(
-                chat_id=chat_id, text="❌ Failed to fetch data. Please try again."
+                chat_id=chat_id, text="Failed to fetch data. Please try again."
             )
 
     async def send_notification(self, telegram_id: int, message: str) -> bool:
@@ -2564,11 +2565,11 @@ class TelegramBotService:
                         for u in users
                         if u.get("notifications_enabled") == filters["notifications_enabled"]
                     ]
-                if filters.get("tradeboard_username"):
+                if filters.get("openalgo_username"):
                     users = [
                         u
                         for u in users
-                        if u.get("tradeboard_username") == filters["tradeboard_username"]
+                        if u.get("openalgo_username") == filters["openalgo_username"]
                     ]
 
             success_count = 0
@@ -2586,7 +2587,9 @@ class TelegramBotService:
                         # Add small delay to avoid rate limits
                         await asyncio.sleep(0.1)
                 except Exception as e:
-                    logger.exception(f"Failed to send broadcast to {user.get('telegram_id')}: {str(e)}")
+                    logger.exception(
+                        f"Failed to send broadcast to {user.get('telegram_id')}: {str(e)}"
+                    )
                     fail_count += 1
 
             logger.debug(f"Broadcast complete: {success_count} success, {fail_count} failed")
@@ -2601,23 +2604,21 @@ class TelegramBotService:
 telegram_bot_service = TelegramBotService()
 
 
-# Module-level wrapper functions for compatibility
-def get_telegram_bot():
-    """Returns the global TelegramBotService instance."""
+def get_telegram_bot() -> TelegramBotService:
+    """Return the global TelegramBotService singleton instance."""
     return telegram_bot_service
 
 
-def init_bot_sync(token: str, _=None):
-    """Synchronously initializes the global TelegramBotService instance."""
+def init_bot_sync(token: str, webhook_url: str | None = None) -> tuple[bool, str]:
+    """Synchronously initialize the global telegram bot."""
     return telegram_bot_service.initialize_bot_sync(token)
 
 
-def start_bot_sync():
-    """Synchronously starts the global TelegramBotService instance."""
+def start_bot_sync() -> tuple[bool, str]:
+    """Synchronously start the global telegram bot."""
     return telegram_bot_service.start_bot()
 
 
-def stop_bot_sync():
-    """Synchronously stops the global TelegramBotService instance."""
+def stop_bot_sync() -> tuple[bool, str]:
+    """Synchronously stop the global telegram bot."""
     return telegram_bot_service.stop_bot()
-

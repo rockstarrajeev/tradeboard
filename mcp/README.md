@@ -1,6 +1,6 @@
-# Tradeboard MCP Server
+# OpenAlgo MCP Server
 
-This is a Model Context Protocol (MCP) server that provides trading and market data functionality through the Tradeboard platform. It enables AI assistants to execute trades, manage positions, and retrieve market data directly from supported brokers.
+This is a Model Context Protocol (MCP) server that provides trading and market data functionality through the OpenAlgo platform. It enables AI assistants to execute trades, manage positions, and retrieve market data directly from supported brokers.
 
 ## Two transports
 
@@ -15,18 +15,18 @@ documented below.
 
 ## Prerequisites
 
-### 1. Tradeboard Server Setup
+### 1. OpenAlgo Server Setup
 
-Ensure your Tradeboard server is running and properly configured:
+Ensure your OpenAlgo server is running and properly configured:
 
-1. **Start Tradeboard Server**: Your Tradeboard server should be running (e.g., on `http://127.0.0.1:5000`)
+1. **Start OpenAlgo Server**: Your OpenAlgo server should be running (e.g., on `http://127.0.0.1:5000`)
 2. **Verify Connection**: Test that the server is accessible by visiting the web interface.
-3. **Broker Authentication**: Ensure your broker credentials are properly configured in Tradeboard.
+3. **Broker Authentication**: Ensure your broker credentials are properly configured in OpenAlgo.
 
 ### 2. API Key
 
-To get your Tradeboard API key:
-1. Open your Tradeboard web interface (e.g., `http://127.0.0.1:5000`)
+To get your OpenAlgo API key:
+1. Open your OpenAlgo web interface (e.g., `http://127.0.0.1:5000`)
 2. Navigate to **Settings → API Keys**.
 3. Generate or copy your existing API key.
 
@@ -40,10 +40,10 @@ Add the following configuration to your MCP client, replacing the placeholder pa
 ```json
 {
   "mcpServers": {
-    "tradeboard": {
-      "command": "D:\\tradeboard-mcp\\tradeboard\\.venv\\Scripts\\python.exe",
+    "openalgo": {
+      "command": "D:\\openalgo-mcp\\openalgo\\.venv\\Scripts\\python.exe",
       "args": [
-        "D:\\tradeboard-mcp\\tradeboard\\mcp\\mcpserver.py",
+        "D:\\openalgo-mcp\\openalgo\\mcp\\mcpserver.py",
         "YOUR_API_KEY_HERE",
         "http://127.0.0.1:5000"
       ]
@@ -63,10 +63,10 @@ Add the following configuration to your MCP client, replacing the placeholder pa
 ```json
 {
   "mcpServers": {
-    "tradeboard": {
-      "command": "/Users/your_username/tradeboard/.venv/bin/python3",
+    "openalgo": {
+      "command": "/Users/your_username/openalgo/.venv/bin/python3",
       "args": [
-        "/Users/your_username/tradeboard/mcp/mcpserver.py",
+        "/Users/your_username/openalgo/mcp/mcpserver.py",
         "YOUR_API_KEY_HERE",
         "http://127.0.0.1:5000"
       ]
@@ -86,10 +86,10 @@ Add the following configuration to your MCP client, replacing the placeholder pa
 ```json
 {
   "mcpServers": {
-    "tradeboard": {
-      "command": "/home/your_username/tradeboard/.venv/bin/python3",
+    "openalgo": {
+      "command": "/home/your_username/openalgo/.venv/bin/python3",
       "args": [
-        "/home/your_username/tradeboard/mcp/mcpserver.py",
+        "/home/your_username/openalgo/mcp/mcpserver.py",
         "YOUR_API_KEY_HERE",
         "http://127.0.0.1:5000"
       ]
@@ -107,7 +107,7 @@ Add the following configuration to your MCP client, replacing the placeholder pa
 
 **Important**: Replace the paths in the examples above with your actual installation paths:
 
-- **Windows**: Replace `D:\\tradeboard-zerodha\\tradeboard` with your actual Tradeboard installation path
+- **Windows**: Replace `D:\\openalgo-zerodha\\openalgo` with your actual OpenAlgo installation path
 - **macOS/Linux**: Replace `/Users/your_username` or `/home/your_username` with your actual home directory path
 
 To find your Python virtual environment path:
@@ -164,7 +164,7 @@ The MCP server provides the following categories of tools:
 - `get_index_symbols` - Get common index symbols for NSE or BSE
 
 ### Utilities
-- `get_tradeboard_version` - Check Tradeboard version
+- `get_openalgo_version` - Check OpenAlgo version
 - `validate_order_constants` - Display valid order parameters
 - `send_telegram_alert` - Send Telegram notifications
 - `get_holidays` - Get trading holidays for a year (year is optional — defaults to current year)
@@ -207,19 +207,19 @@ Once configured, you can ask your AI assistant to:
 
 ## Security Note
 
-⚠️ **Important**: This server is designed for local use. For production environments, consider implementing additional security measures such as environment variables for sensitive data and restricting network access.
+**Important**: This server is designed for local use. For production environments, consider implementing additional security measures such as environment variables for sensitive data and restricting network access.
 
 ## Troubleshooting
 
-1. **Connection Issues**: Verify Tradeboard server is running on `http://127.0.0.1:5000`
+1. **Connection Issues**: Verify OpenAlgo server is running on `http://127.0.0.1:5000`
 2. **Authentication Errors**: Check your API key is correct and valid
 3. **Permission Errors**: Ensure the Python virtual environment has proper permissions
 4. **Order Failures**: Verify your broker connection and trading permissions
-4. **Order Failures**: Verify broker credentials in Tradeboard are valid and active
+4. **Order Failures**: Verify broker credentials in OpenAlgo are valid and active
 
 ## Support
 
 For issues related to:
-- **Tradeboard Platform**: Visit the Tradeboard documentation
+- **OpenAlgo Platform**: Visit the OpenAlgo documentation
 - **MCP Protocol**: Check the Model Context Protocol specifications
 - **Trading Errors**: Verify your broker connection and trading permissions

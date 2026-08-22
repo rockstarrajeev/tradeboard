@@ -269,7 +269,7 @@ class IPBan(LogBase):
         try:
             # Remove expired bans first
             expired = IPBan.query.filter(
-                IPBan.is_permanent == False, IPBan.expires_at < datetime.utcnow()
+                not IPBan.is_permanent, IPBan.expires_at < datetime.utcnow()
             ).all()
 
             for ban in expired:
@@ -339,16 +339,19 @@ class Error404Tracker(LogBase):
                 tracker.last_error_at = now
 
                 # Auto-ban if enabled and threshold reached (configurable via Security Dashboard)
-                if security_settings.get("auto_ban_enabled", False) and tracker.error_count >= threshold_404:
+                if (
+                    security_settings.get("auto_ban_enabled", False)
+                    and tracker.error_count >= threshold_404
+                ):
                     # Don't ban localhost IPs
-                    if ip_address not in ['127.0.0.1', '::1', 'localhost']:
+                    if ip_address not in ["127.0.0.1", "::1", "localhost"]:
                         # Ban the IP (duration 0 = permanent)
                         IPBan.ban_ip(
                             ip_address=ip_address,
                             reason=f"Exceeded 404 threshold: {tracker.error_count} errors in 24 hours",
                             duration_hours=ban_duration_404,
                             permanent=(ban_duration_404 == 0),
-                            created_by='404_detector'
+                            created_by="404_detector",
                         )
 
                         # Clean up tracker entry
@@ -455,16 +458,19 @@ class InvalidAPIKeyTracker(LogBase):
                 tracker.last_attempt_at = now
 
                 # Auto-ban if enabled and threshold reached (configurable via Security Dashboard)
-                if security_settings.get("auto_ban_enabled", False) and tracker.attempt_count >= threshold_api:
+                if (
+                    security_settings.get("auto_ban_enabled", False)
+                    and tracker.attempt_count >= threshold_api
+                ):
                     # Don't ban localhost IPs but keep tracking
-                    if ip_address not in ['127.0.0.1', '::1', 'localhost']:
+                    if ip_address not in ["127.0.0.1", "::1", "localhost"]:
                         # Ban the IP (duration 0 = permanent)
                         success = IPBan.ban_ip(
                             ip_address=ip_address,
                             reason=f"Exceeded invalid API key threshold: {tracker.attempt_count} attempts in 24 hours",
                             duration_hours=ban_duration_api,
                             permanent=(ban_duration_api == 0),
-                            created_by='api_key_detector'
+                            created_by="api_key_detector",
                         )
 
                         # Only delete tracker if ban was successful
@@ -541,7 +547,7 @@ def purge_old_traffic_logs(days=None):
         )
         logs_session.commit()
         if deleted:
-            logger.info(f"Purged {deleted} traffic log entries older than {days} days")
+            logger.debug(f"Purged {deleted} traffic log entries older than {days} days")
         return deleted
     except Exception as e:
         logger.exception(f"Error purging old traffic logs: {e}")

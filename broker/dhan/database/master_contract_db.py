@@ -244,22 +244,66 @@ def process_dhan_csv(path):
 
     df["symbol"] = df.apply(reformat_symbol, axis=1)
 
-    # Normalize NSE_INDEX symbols: uppercase, remove spaces, only for symbols in Tradeboard docs
+    # Normalize NSE_INDEX symbols: uppercase, remove spaces, only for symbols in OpenAlgo docs
     nse_idx_mask = df["exchange"] == "NSE_INDEX"
     valid_nse_symbols = {
-        "NIFTY", "NIFTYNXT50", "FINNIFTY", "BANKNIFTY", "MIDCPNIFTY", "INDIAVIX",
-        "HANGSENGBEESNAV", "NIFTY100", "NIFTY200", "NIFTY500", "NIFTYALPHA50",
-        "NIFTYAUTO", "NIFTYCOMMODITIES", "NIFTYCONSUMPTION", "NIFTYCPSE",
-        "NIFTYDIVOPPS50", "NIFTYENERGY", "NIFTYFMCG", "NIFTYGROWSECT15",
-        "NIFTYGS10YR", "NIFTYGS10YRCLN", "NIFTYGS1115YR", "NIFTYGS15YRPLUS",
-        "NIFTYGS48YR", "NIFTYGS813YR", "NIFTYGSCOMPSITE", "NIFTYINFRA", "NIFTYIT",
-        "NIFTYMEDIA", "NIFTYMETAL", "NIFTYMIDLIQ15", "NIFTYMIDCAP100",
-        "NIFTYMIDCAP150", "NIFTYMIDCAP50", "NIFTYMIDSML400", "NIFTYMNC",
-        "NIFTYPHARMA", "NIFTYPSE", "NIFTYPSUBANK", "NIFTYPVTBANK", "NIFTYREALTY",
-        "NIFTYSERVSECTOR", "NIFTYSMLCAP100", "NIFTYSMLCAP250", "NIFTYSMLCAP50",
-        "NIFTY100EQLWGT", "NIFTY100LIQ15", "NIFTY100LOWVOL30", "NIFTY100QUALTY30",
-        "NIFTY200QUALTY30", "NIFTY50DIVPOINT", "NIFTY50EQLWGT", "NIFTY50PR1XINV",
-        "NIFTY50PR2XLEV", "NIFTY50TR1XINV", "NIFTY50TR2XLEV", "NIFTY50VALUE20",
+        "NIFTY",
+        "NIFTYNXT50",
+        "FINNIFTY",
+        "BANKNIFTY",
+        "MIDCPNIFTY",
+        "INDIAVIX",
+        "HANGSENGBEESNAV",
+        "NIFTY100",
+        "NIFTY200",
+        "NIFTY500",
+        "NIFTYALPHA50",
+        "NIFTYAUTO",
+        "NIFTYCOMMODITIES",
+        "NIFTYCONSUMPTION",
+        "NIFTYCPSE",
+        "NIFTYDIVOPPS50",
+        "NIFTYENERGY",
+        "NIFTYFMCG",
+        "NIFTYGROWSECT15",
+        "NIFTYGS10YR",
+        "NIFTYGS10YRCLN",
+        "NIFTYGS1115YR",
+        "NIFTYGS15YRPLUS",
+        "NIFTYGS48YR",
+        "NIFTYGS813YR",
+        "NIFTYGSCOMPSITE",
+        "NIFTYINFRA",
+        "NIFTYIT",
+        "NIFTYMEDIA",
+        "NIFTYMETAL",
+        "NIFTYMIDLIQ15",
+        "NIFTYMIDCAP100",
+        "NIFTYMIDCAP150",
+        "NIFTYMIDCAP50",
+        "NIFTYMIDSML400",
+        "NIFTYMNC",
+        "NIFTYPHARMA",
+        "NIFTYPSE",
+        "NIFTYPSUBANK",
+        "NIFTYPVTBANK",
+        "NIFTYREALTY",
+        "NIFTYSERVSECTOR",
+        "NIFTYSMLCAP100",
+        "NIFTYSMLCAP250",
+        "NIFTYSMLCAP50",
+        "NIFTY100EQLWGT",
+        "NIFTY100LIQ15",
+        "NIFTY100LOWVOL30",
+        "NIFTY100QUALTY30",
+        "NIFTY200QUALTY30",
+        "NIFTY50DIVPOINT",
+        "NIFTY50EQLWGT",
+        "NIFTY50PR1XINV",
+        "NIFTY50PR2XLEV",
+        "NIFTY50TR1XINV",
+        "NIFTY50TR2XLEV",
+        "NIFTY50VALUE20",
     }
     original_nse = df.loc[nse_idx_mask, "symbol"].copy()
     df.loc[nse_idx_mask, "symbol"] = (
@@ -281,12 +325,12 @@ def process_dhan_csv(path):
             "NIFTYMID100FREE": "NIFTYMIDCAP100",
         }
     )
-    # Revert symbols not in the Tradeboard standard set
+    # Revert symbols not in the OpenAlgo standard set
     not_valid = ~df.loc[nse_idx_mask, "symbol"].isin(valid_nse_symbols)
     revert_idx = not_valid[not_valid].index
     df.loc[revert_idx, "symbol"] = original_nse.loc[revert_idx]
 
-    # Normalize BSE_INDEX symbols to Tradeboard standard format
+    # Normalize BSE_INDEX symbols to OpenAlgo standard format
     bse_idx_mask = df["exchange"] == "BSE_INDEX"
     bse_index_map = {
         "SENSEX": "SENSEX",
@@ -331,6 +375,63 @@ def process_dhan_csv(path):
         "TELCOM": "BSETELECOM",
     }
     df.loc[bse_idx_mask, "symbol"] = df.loc[bse_idx_mask, "symbol"].replace(bse_index_map)
+
+    # ------------------------------------------------------------------
+    # `name` for derivatives must be the UNDERLYING ROOT, not Dhan's label.
+    #
+    # Every F&O tool matches `name` exactly - the underlying dropdown is
+    # distinct(SymToken.name) and the expiry lookup is
+    # SymToken.name.ilike("NIFTY") (database/symbol.py) - so a wrong value
+    # returns zero rows and the tool renders empty with no error at all
+    # (200 OK, {"expiries": []}). See GitHub issues #1766 and #1769.
+    #
+    # SM_SYMBOL_NAME cannot serve this on NSE/BSE derivatives, in two ways:
+    #   - it is BLANK on 87,659 rows (all OPTIDX/OPTSTK/FUTSTK/FUTIDX/OPTCUR
+    #     that Dhan simply leaves empty), which is what #1769 reported; and
+    #   - where it IS populated it is a contract mnemonic, not the underlying:
+    #     BRITOPT for BRITANNIA, BSXOPT for SENSEX, BKXFUT for BANKEX,
+    #     DRRLFUT for DRREDDY. Filling only the blanks - the fix proposed in
+    #     #1769 - would therefore still leave 32,838 OPTSTK and 5,978 OPTIDX
+    #     rows unmatchable.
+    # Only MCX (OPTFUT/FUTCOM) and part of CDS happen to carry a real
+    # underlying there (SILVER, GOLD, USDINR).
+    #
+    # So derive it for ALL derivative rows from the OpenAlgo symbol we just
+    # built, using the same helper the underlying dropdown itself uses
+    # (fno_search_symbols -> extract_underlying_from_symbol). Deriving both
+    # sides from one function is what guarantees the dropdown offers a value
+    # the expiry lookup can actually match. Running after the index
+    # normalization above also means the renames (NIFTY NEXT 50 ->
+    # NIFTYNXT50) are already applied.
+    #
+    # EQUITY and INDEX rows keep SM_SYMBOL_NAME - there `name` is the company
+    # / index name that powers search-by-name, and the two coincide anyway.
+    from database.token_db_enhanced import extract_underlying_from_symbol
+
+    deriv_mask = df["instrumenttype"].isin(["CE", "PE", "FUT"])
+    if deriv_mask.any():
+        # zip() over the two columns rather than .apply(axis=1): identical
+        # output, ~4.6x faster (4.2s -> 0.9s on the 181k derivative rows), and
+        # this runs on every login.
+        rows = df.loc[deriv_mask]
+        derived = pd.Series(
+            [
+                extract_underlying_from_symbol(s, e)
+                for s, e in zip(rows["symbol"], rows["exchange"], strict=False)
+            ],
+            index=rows.index,
+        )
+        # Fall back to the existing value wherever the symbol could not be
+        # parsed, rather than blanking a row that at least had something.
+        df.loc[deriv_mask, "name"] = derived.where(derived.notna() & (derived != ""), rows["name"])
+
+    missing = df["name"].isna() | (df["name"].astype(str).str.strip() == "")
+    if missing.any():
+        logger.warning(
+            f"Dhan master contract: {int(missing.sum())} rows still have a blank "
+            f"name after derivation "
+            f"(by exchange: {df.loc[missing, 'exchange'].value_counts().to_dict()})"
+        )
 
     # List of columns to remove
     columns_to_remove = [

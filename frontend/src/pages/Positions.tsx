@@ -61,7 +61,7 @@ import type { Position } from '@/types/trading'
 import { showToast } from '@/utils/toast'
 import { EmptyState } from '@/components/ui/empty-state'
 
-const STORAGE_KEY = 'tradeboard_positions_prefs'
+const STORAGE_KEY = 'openalgo_positions_prefs'
 
 type GroupingType = 'none' | 'underlying' | 'underlying_expiry'
 type SortColumn = 0 | 3 | 4 | 6 | 7 | null
@@ -874,10 +874,12 @@ export default function Positions() {
               icon={ChartCandlestick}
               title="No positions match your filters"
               description="Try adjusting or clearing your filters to see results."
-              action={hasActiveFilters ?
-                <Button variant="ghost" size="sm" onClick={clearFilters}>
-                  Clear Filters
-                </Button> : undefined
+              action={
+                hasActiveFilters ? (
+                  <Button variant="ghost" size="sm" onClick={clearFilters}>
+                    Clear Filters
+                  </Button>
+                ) : undefined
               }
             />
           ) : (

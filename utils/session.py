@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 def is_session_expiry_disabled():
     """Check if session expiry is disabled (e.g., for crypto brokers with 24/7 markets).
 
-    Note: Each Tradeboard instance serves a single broker, so this env var is
+    Note: Each OpenAlgo instance serves a single broker, so this env var is
     instance-scoped — it only affects the broker configured for this instance,
     not all brokers globally.  The install script sets it automatically when
     a crypto broker (e.g. deltaexchange) is selected.
@@ -94,14 +94,36 @@ def is_session_valid():
     return True
 
 
-def _todays_rollover_boundary():
+def _todays_rollover_boundary(now_ist=None):
     """Return today's session-expiry boundary (default 03:00 IST) as a
     timezone-aware IST datetime. Mirrors the boundary used by is_session_valid().
+
+    Accepts an existing IST snapshot so a caller that already read the clock
+    compares against the same instant its date was derived from, rather than
+    two reads that could straddle the boundary.
     """
-    now_ist = datetime.now(pytz.timezone("UTC")).astimezone(pytz.timezone("Asia/Kolkata"))
+    if now_ist is None:
+        now_ist = datetime.now(pytz.timezone("UTC")).astimezone(pytz.timezone("Asia/Kolkata"))
     expiry_time = os.getenv("SESSION_EXPIRY_TIME", "03:00")
     hour, minute = map(int, expiry_time.split(":"))
     return now_ist.replace(hour=hour, minute=minute, second=0, microsecond=0)
+
+
+def get_trading_session_date():
+    """Return the current trading session's date as an ISO string (IST).
+
+    A trading session runs from SESSION_EXPIRY_TIME (default 03:00 IST) to the
+    same time next day, matching the broker token rollover. Between midnight
+    and that boundary the session still belongs to the *previous* calendar
+    date, so anything bucketed "per trading day" must use this rather than
+    ``date.today()`` - which is also the server's local date and may not be IST
+    at all on a host outside India.
+    """
+    now_ist = datetime.now(pytz.timezone("UTC")).astimezone(pytz.timezone("Asia/Kolkata"))
+    boundary = _todays_rollover_boundary(now_ist)
+    if now_ist < boundary:
+        return (now_ist - timedelta(days=1)).date().isoformat()
+    return now_ist.date().isoformat()
 
 
 def _has_fresher_session(username, current_session_id=None):
@@ -137,6 +159,19 @@ def _has_fresher_session(username, current_session_id=None):
     except Exception as e:
         logger.warning(f"Error checking for fresher sessions for {username}: {e}")
     return False
+
+
+def has_login_this_trading_session(username) -> bool:
+    """Return True if ``username`` has an active session that authenticated at
+    or after today's rollover boundary (default 03:00 IST).
+
+    Unlike ``is_session_valid()``, this reads only the database and never
+    touches the Flask request-scoped ``session``, so background threads can ask
+    it. Used at boot to decide whether the stored broker token belongs to the
+    current trading session: Indian broker tokens die at the daily rollover, and
+    only a login after that boundary re-establishes one.
+    """
+    return _has_fresher_session(username)
 
 
 def revoke_user_tokens(revoke_db_tokens=True):
@@ -182,6 +217,7 @@ def revoke_user_tokens(revoke_db_tokens=True):
                 if current_sid:
                     try:
                         from database.auth_db import remove_session
+
                         remove_session(current_sid)
                     except Exception as session_error:
                         logger.warning(f"Error removing stale session row: {session_error}")
@@ -191,11 +227,14 @@ def revoke_user_tokens(revoke_db_tokens=True):
             # This notifies WebSocket proxy and other processes to clear their stale caches
             try:
                 from database.cache_invalidation import publish_all_cache_invalidation
+
                 publish_all_cache_invalidation(username)
                 logger.debug(f"Published cache invalidation for user: {username}")
             except Exception as invalidation_error:
                 # Don't fail logout if cache invalidation fails
-                logger.warning(f"Failed to publish cache invalidation for user {username}: {invalidation_error}")
+                logger.warning(
+                    f"Failed to publish cache invalidation for user {username}: {invalidation_error}"
+                )
 
             # Clear symbol cache on logout/session expiry
             try:
@@ -240,6 +279,7 @@ def revoke_user_tokens(revoke_db_tokens=True):
                 # Clear all active sessions for this user (tokens are invalid now)
                 try:
                     from database.auth_db import clear_user_sessions
+
                     clear_user_sessions(username)
                     logger.info(f"Auto-expiry: Cleared active sessions for user: {username}")
                 except Exception as session_error:

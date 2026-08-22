@@ -140,12 +140,20 @@ def process_tradesmart_nse_data(output_path):
 
     df = pd.read_csv(
         file_path,
-        usecols=["Exchange", "Token", "LotSize", "Symbol", "TradingSymbol", "Instrument", "TickSize"],
+        usecols=[
+            "Exchange",
+            "Token",
+            "LotSize",
+            "Symbol",
+            "TradingSymbol",
+            "Instrument",
+            "TickSize",
+        ],
     )
     df.columns = ["exchange", "token", "lotsize", "name", "brsymbol", "instrumenttype", "tick_size"]
     df["symbol"] = df["brsymbol"]
 
-    def get_tradeboard_symbol(broker_symbol):
+    def get_openalgo_symbol(broker_symbol):
         # Strip only the broker series suffix; keep hyphens/ampersands in the base
         # (BAJAJ-AUTO-EQ -> BAJAJ-AUTO, M&M-EQ -> M&M)
         if "-EQ" in broker_symbol:
@@ -154,7 +162,7 @@ def process_tradesmart_nse_data(output_path):
             return broker_symbol.replace("-BE", "")
         return broker_symbol
 
-    df["symbol"] = df["brsymbol"].apply(get_tradeboard_symbol)
+    df["symbol"] = df["brsymbol"].apply(get_openalgo_symbol)
     df["exchange"] = df.apply(
         lambda row: "NSE_INDEX" if row["instrumenttype"] == "INDEX" else "NSE", axis=1
     )
@@ -166,8 +174,17 @@ def process_tradesmart_nse_data(output_path):
     df["tick_size"] = pd.to_numeric(df["tick_size"], errors="coerce") / 100  # paise -> rupees
 
     columns_to_keep = [
-        "symbol", "brsymbol", "name", "exchange", "brexchange", "token",
-        "expiry", "strike", "lotsize", "instrumenttype", "tick_size",
+        "symbol",
+        "brsymbol",
+        "name",
+        "exchange",
+        "brexchange",
+        "token",
+        "expiry",
+        "strike",
+        "lotsize",
+        "instrumenttype",
+        "tick_size",
     ]
     df_filtered = df[columns_to_keep]
 
@@ -178,17 +195,19 @@ def process_tradesmart_nse_data(output_path):
         .str.replace(" ", "", regex=False)
         .str.replace("-", "", regex=False)
     )
-    df_filtered.loc[nse_idx_mask, "symbol"] = df_filtered.loc[nse_idx_mask, "symbol"].replace({
-        "NIFTY50": "NIFTY",
-        "NIFTYINDEX": "NIFTY",
-        "NIFTYBANK": "BANKNIFTY",
-        "NIFTYFIN": "FINNIFTY",
-        "NIFTYFINSERVICE": "FINNIFTY",
-        "NIFTYFINANCIALSERVICES": "FINNIFTY",
-        "NIFTYNEXT50": "NIFTYNXT50",
-        "NIFTYMIDSELECT": "MIDCPNIFTY",
-        "NIFTYMIDCAPSELECT": "MIDCPNIFTY",
-    })
+    df_filtered.loc[nse_idx_mask, "symbol"] = df_filtered.loc[nse_idx_mask, "symbol"].replace(
+        {
+            "NIFTY50": "NIFTY",
+            "NIFTYINDEX": "NIFTY",
+            "NIFTYBANK": "BANKNIFTY",
+            "NIFTYFIN": "FINNIFTY",
+            "NIFTYFINSERVICE": "FINNIFTY",
+            "NIFTYFINANCIALSERVICES": "FINNIFTY",
+            "NIFTYNEXT50": "NIFTYNXT50",
+            "NIFTYMIDSELECT": "MIDCPNIFTY",
+            "NIFTYMIDCAPSELECT": "MIDCPNIFTY",
+        }
+    )
 
     return df_filtered
 
@@ -230,13 +249,29 @@ def process_tradesmart_nfo_data(output_path):
     df = pd.read_csv(
         file_path,
         usecols=[
-            "Exchange", "Token", "LotSize", "Symbol", "TradingSymbol", "Expiry",
-            "Instrument", "OptionType", "StrikePrice", "TickSize",
+            "Exchange",
+            "Token",
+            "LotSize",
+            "Symbol",
+            "TradingSymbol",
+            "Expiry",
+            "Instrument",
+            "OptionType",
+            "StrikePrice",
+            "TickSize",
         ],
     )
     df.columns = [
-        "exchange", "token", "lotsize", "name", "brsymbol", "expiry",
-        "instrumenttype", "optiontype", "strike", "tick_size",
+        "exchange",
+        "token",
+        "lotsize",
+        "name",
+        "brsymbol",
+        "expiry",
+        "instrumenttype",
+        "optiontype",
+        "strike",
+        "tick_size",
     ]
     df["expiry"] = df["expiry"].fillna("")
     df["strike"] = df["strike"].fillna("-1")
@@ -250,8 +285,17 @@ def process_tradesmart_nfo_data(output_path):
     df["brexchange"] = df["exchange"]
 
     columns_to_keep = [
-        "symbol", "brsymbol", "name", "exchange", "brexchange", "token",
-        "expiry", "strike", "lotsize", "instrumenttype", "tick_size",
+        "symbol",
+        "brsymbol",
+        "name",
+        "exchange",
+        "brexchange",
+        "token",
+        "expiry",
+        "strike",
+        "lotsize",
+        "instrumenttype",
+        "tick_size",
     ]
     return df[columns_to_keep]
 
@@ -264,13 +308,33 @@ def process_tradesmart_cds_data(output_path):
     df = pd.read_csv(
         file_path,
         usecols=[
-            "Exchange", "Token", "LotSize", "Precision", "Multiplier", "Symbol",
-            "TradingSymbol", "Expiry", "Instrument", "OptionType", "StrikePrice", "TickSize",
+            "Exchange",
+            "Token",
+            "LotSize",
+            "Precision",
+            "Multiplier",
+            "Symbol",
+            "TradingSymbol",
+            "Expiry",
+            "Instrument",
+            "OptionType",
+            "StrikePrice",
+            "TickSize",
         ],
     )
     df.columns = [
-        "exchange", "token", "lotsize", "precision", "multiplier", "name", "brsymbol",
-        "expiry", "instrumenttype", "optiontype", "strike", "tick_size",
+        "exchange",
+        "token",
+        "lotsize",
+        "precision",
+        "multiplier",
+        "name",
+        "brsymbol",
+        "expiry",
+        "instrumenttype",
+        "optiontype",
+        "strike",
+        "tick_size",
     ]
     df = df[df["token"] > 100]  # drop dummy/index rows
     df["expiry"] = df["expiry"].fillna("")
@@ -280,7 +344,9 @@ def process_tradesmart_cds_data(output_path):
         lambda row: "FUT" if row["optiontype"] == "XX" else row["instrumenttype"], axis=1
     )
     df["instrumenttype"] = df.apply(
-        lambda row: row["optiontype"] if row["instrumenttype"] == "OPTCUR" else row["instrumenttype"],
+        lambda row: row["optiontype"]
+        if row["instrumenttype"] == "OPTCUR"
+        else row["instrumenttype"],
         axis=1,
     )
     df["strike"] = df["strike"].apply(_handle_strike_price)
@@ -289,8 +355,17 @@ def process_tradesmart_cds_data(output_path):
     df["brexchange"] = df["exchange"]
 
     columns_to_keep = [
-        "symbol", "brsymbol", "name", "exchange", "brexchange", "token",
-        "expiry", "strike", "lotsize", "instrumenttype", "tick_size",
+        "symbol",
+        "brsymbol",
+        "name",
+        "exchange",
+        "brexchange",
+        "token",
+        "expiry",
+        "strike",
+        "lotsize",
+        "instrumenttype",
+        "tick_size",
     ]
     return df[columns_to_keep]
 
@@ -303,13 +378,31 @@ def process_tradesmart_mcx_data(output_path):
     df = pd.read_csv(
         file_path,
         usecols=[
-            "Exchange", "Token", "LotSize", "GNGD", "Symbol", "TradingSymbol",
-            "Expiry", "Instrument", "OptionType", "StrikePrice", "TickSize",
+            "Exchange",
+            "Token",
+            "LotSize",
+            "GNGD",
+            "Symbol",
+            "TradingSymbol",
+            "Expiry",
+            "Instrument",
+            "OptionType",
+            "StrikePrice",
+            "TickSize",
         ],
     )
     df.columns = [
-        "exchange", "token", "lotsize", "gngd", "name", "brsymbol", "expiry",
-        "instrumenttype", "optiontype", "strike", "tick_size",
+        "exchange",
+        "token",
+        "lotsize",
+        "gngd",
+        "name",
+        "brsymbol",
+        "expiry",
+        "instrumenttype",
+        "optiontype",
+        "strike",
+        "tick_size",
     ]
     df["expiry"] = df["expiry"].fillna("")
     df["strike"] = df["strike"].fillna("-1")
@@ -318,7 +411,9 @@ def process_tradesmart_mcx_data(output_path):
         lambda row: "FUT" if row["optiontype"] == "XX" else row["instrumenttype"], axis=1
     )
     df["instrumenttype"] = df.apply(
-        lambda row: row["optiontype"] if row["instrumenttype"] == "OPTFUT" else row["instrumenttype"],
+        lambda row: row["optiontype"]
+        if row["instrumenttype"] == "OPTFUT"
+        else row["instrumenttype"],
         axis=1,
     )
     df["strike"] = df["strike"].apply(_handle_strike_price)
@@ -327,8 +422,17 @@ def process_tradesmart_mcx_data(output_path):
     df["brexchange"] = df["exchange"]
 
     columns_to_keep = [
-        "symbol", "brsymbol", "name", "exchange", "brexchange", "token",
-        "expiry", "strike", "lotsize", "instrumenttype", "tick_size",
+        "symbol",
+        "brsymbol",
+        "name",
+        "exchange",
+        "brexchange",
+        "token",
+        "expiry",
+        "strike",
+        "lotsize",
+        "instrumenttype",
+        "tick_size",
     ]
     return df[columns_to_keep]
 
@@ -340,7 +444,15 @@ def process_tradesmart_bse_data(output_path):
 
     df = pd.read_csv(
         file_path,
-        usecols=["Exchange", "Token", "LotSize", "Symbol", "TradingSymbol", "Instrument", "TickSize"],
+        usecols=[
+            "Exchange",
+            "Token",
+            "LotSize",
+            "Symbol",
+            "TradingSymbol",
+            "Instrument",
+            "TickSize",
+        ],
     )
     df.columns = ["exchange", "token", "lotsize", "name", "brsymbol", "instrumenttype", "tick_size"]
     df["symbol"] = df["brsymbol"]
@@ -353,21 +465,46 @@ def process_tradesmart_bse_data(output_path):
     df["tick_size"] = pd.to_numeric(df["tick_size"], errors="coerce") / 100
 
     columns_to_keep = [
-        "symbol", "brsymbol", "name", "exchange", "brexchange", "token",
-        "expiry", "strike", "lotsize", "instrumenttype", "tick_size",
+        "symbol",
+        "brsymbol",
+        "name",
+        "exchange",
+        "brexchange",
+        "token",
+        "expiry",
+        "strike",
+        "lotsize",
+        "instrumenttype",
+        "tick_size",
     ]
     df_filtered = df[columns_to_keep]
 
     bse_index_data = [
         {
-            "symbol": "SENSEX", "brsymbol": "SENSEX", "name": "SENSEX",
-            "exchange": "BSE_INDEX", "brexchange": "BSE_INDEX", "token": "1",
-            "expiry": "", "strike": -1, "lotsize": 1, "instrumenttype": "INDEX", "tick_size": 0.05,
+            "symbol": "SENSEX",
+            "brsymbol": "SENSEX",
+            "name": "SENSEX",
+            "exchange": "BSE_INDEX",
+            "brexchange": "BSE_INDEX",
+            "token": "1",
+            "expiry": "",
+            "strike": -1,
+            "lotsize": 1,
+            "instrumenttype": "INDEX",
+            "tick_size": 0.05,
         },
         {
-            "symbol": "BANKEX", "brsymbol": "BANKEX", "name": "BANKEX",
-            "exchange": "BSE_INDEX", "brexchange": "BSE_INDEX", "token": "12",
-            "expiry": "", "strike": -1, "lotsize": 1, "instrumenttype": "INDEX", "tick_size": 0.05,
+            "symbol": "BANKEX",
+            "brsymbol": "BANKEX",
+            "name": "BANKEX",
+            "exchange": "BSE_INDEX",
+            "brexchange": "BSE_INDEX",
+            "token": "12",
+            "expiry": "",
+            "strike": -1,
+            "lotsize": 1,
+            "instrumenttype": "INDEX",
+            "tick_size": 0.05,
         },
     ]
     bse_index_df = pd.DataFrame(bse_index_data)
@@ -385,8 +522,16 @@ def process_tradesmart_bfo_data(output_path):
         df = pd.read_csv(
             file_path,
             usecols=[
-                "Exchange", "Token", "LotSize", "Symbol", "TradingSymbol", "Expiry",
-                "Instrument", "OptionType", "Strike", "TickSize",
+                "Exchange",
+                "Token",
+                "LotSize",
+                "Symbol",
+                "TradingSymbol",
+                "Expiry",
+                "Instrument",
+                "OptionType",
+                "Strike",
+                "TickSize",
             ],
         )
     except Exception as e:
@@ -395,8 +540,16 @@ def process_tradesmart_bfo_data(output_path):
         df = pd.read_csv(file_path).iloc[:, :10]
 
     df.columns = [
-        "exchange", "token", "lotsize", "name", "brsymbol", "expiry",
-        "instrumenttype", "optiontype", "strike", "tick_size",
+        "exchange",
+        "token",
+        "lotsize",
+        "name",
+        "brsymbol",
+        "expiry",
+        "instrumenttype",
+        "optiontype",
+        "strike",
+        "tick_size",
     ]
     df["expiry"] = df["expiry"].fillna("")
     df["strike"] = df["strike"].fillna("-1")
@@ -439,8 +592,17 @@ def process_tradesmart_bfo_data(output_path):
     df["brexchange"] = df["exchange"]
 
     columns_to_keep = [
-        "symbol", "brsymbol", "name", "exchange", "brexchange", "token",
-        "expiry", "strike", "lotsize", "instrumenttype", "tick_size",
+        "symbol",
+        "brsymbol",
+        "name",
+        "exchange",
+        "brexchange",
+        "token",
+        "expiry",
+        "strike",
+        "lotsize",
+        "instrumenttype",
+        "tick_size",
     ]
     return df[columns_to_keep]
 

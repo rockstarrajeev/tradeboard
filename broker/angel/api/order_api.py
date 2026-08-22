@@ -71,11 +71,16 @@ def get_api_response(endpoint, auth, method="GET", payload="", max_retries=2):
         except json.JSONDecodeError:
             # Rate limit returns plain text like "Access denied because of exceeding access rate"
             if "exceeding access rate" in response.text.lower() and attempt < max_retries:
-                logger.warning(f"Rate limited on {endpoint}, retrying in 1s (attempt {attempt + 1}/{max_retries})")
+                logger.warning(
+                    f"Rate limited on {endpoint}, retrying in 1s (attempt {attempt + 1}/{max_retries})"
+                )
                 time.sleep(1)
                 continue
             logger.error(f"Failed to parse JSON response from {endpoint}: {response.text}")
-            return {"status": "error", "message": f"Invalid JSON response (HTTP {response.status_code})"}
+            return {
+                "status": "error",
+                "message": f"Invalid JSON response (HTTP {response.status_code})",
+            }
 
     return {"status": "error", "message": "Max retries exceeded"}
 
@@ -99,14 +104,14 @@ def get_holdings(auth):
 # --- Per-Symbol Smart Order Lock ---
 # Ensures only one smart order per symbol executes at a time.
 # Others queue and execute sequentially, each getting a fresh position book.
-_symbol_locks = {}          # {symbol_key: threading.Lock}
+_symbol_locks = {}  # {symbol_key: threading.Lock}
 _symbol_locks_lock = threading.Lock()
 
 # --- Position Book Cache ---
 # Caches get_positions() for 1 second. Invalidated after each smart order placement.
-_position_cache = {}        # {auth_token: {"data": ..., "timestamp": ...}}
+_position_cache = {}  # {auth_token: {"data": ..., "timestamp": ...}}
 _position_cache_lock = threading.Lock()
-_POSITION_CACHE_TTL = 1.0   # seconds
+_POSITION_CACHE_TTL = 1.0  # seconds
 
 
 def _get_symbol_lock(symbol, exchange, product):
@@ -141,9 +146,8 @@ def _invalidate_position_cache(auth):
         _position_cache.pop(auth, None)
 
 
-
 def get_open_position(tradingsymbol, exchange, producttype, auth):
-    # Convert Trading Symbol from Tradeboard Format to Broker Format Before Search in OpenPosition
+    # Convert Trading Symbol from OpenAlgo Format to Broker Format Before Search in OpenPosition
     tradingsymbol = get_br_symbol(tradingsymbol, exchange)
     positions_data = _get_cached_positions(auth)
 
@@ -344,7 +348,7 @@ def close_all_positions(current_api_key, auth):
             action = "SELL" if int(position["netqty"]) > 0 else "BUY"
             quantity = abs(int(position["netqty"]))
 
-            # get tradeboard symbol to send to placeorder function
+            # get openalgo symbol to send to placeorder function
             symbol = get_symbol(position["symboltoken"], position["exchange"])
             logger.debug(f"The Symbol is {symbol}")
 
@@ -483,7 +487,7 @@ def cancel_all_orders_api(data, auth):
 
     order_book_response = get_order_book(AUTH_TOKEN)
     # logger.debug(f"{order_book_response}")
-    if order_book_response["status"] != True:
+    if not order_book_response["status"]:
         return [], []  # Return empty lists indicating failure to retrieve the order book
 
     # Filter orders that are in 'open' or 'trigger_pending' state

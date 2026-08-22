@@ -2,7 +2,7 @@
 Scalping Blueprint - Keyboard-driven options scalping terminal.
 
 Serves the symbol/expiry/strike resolution API for the /scalping React page.
-Reuses Tradeboard option services and order constants. Order placement and
+Reuses OpenAlgo option services and order constants. Order placement and
 position management endpoints are added in later phases.
 
 Order constants (docs/prompt/order-constants.md):
@@ -14,12 +14,16 @@ Order constants (docs/prompt/order-constants.md):
 """
 
 import math
+import re
+from datetime import datetime, timedelta
 
+import pytz
 from flask import Blueprint, jsonify, request, session
 
 from database.auth_db import get_api_key_for_tradingview
 from database.settings_db import get_analyze_mode
 from services.expiry_service import get_expiry_dates
+from services.history_service import get_history
 from services.option_chain_service import get_option_chain
 from utils.logging import get_logger
 from utils.session import check_session_validity
@@ -33,6 +37,13 @@ scalping_bp = Blueprint("scalping_bp", __name__, url_prefix="/")
 
 # Strategy tag stamped on every scalping order (shown in order/trade books).
 SCALPING_STRATEGY = "Scalping"
+
+# Chart history: IST timezone + per-interval lookback (trading days). The bar
+# time carries a +5h30m offset so lightweight-charts (which renders UTC) shows
+# IST, and the client's live forming candle aligns with the history bars.
+IST = pytz.timezone("Asia/Kolkata")
+IST_OFFSET_SECONDS = 19800
+CHART_INTERVAL_TRADING_DAYS = {"1m": 1, "5m": 3, "15m": 9}
 
 # Order constants enforced on the order endpoint.
 VALID_ACTIONS = {"BUY", "SELL"}
@@ -107,7 +118,7 @@ def _notify_risk_monitor():
 
 
 def _get_api_key():
-    """Resolve the current user's Tradeboard API key from session."""
+    """Resolve the current user's OpenAlgo API key from session."""
     username = session.get("user")
     if not username:
         return None
@@ -132,6 +143,125 @@ def underlyings():
         for name, cfg in SUPPORTED_UNDERLYINGS.items()
     ]
     return jsonify({"status": "success", "data": data})
+
+
+@scalping_bp.route("/scalping/api/history", methods=["GET"])
+@check_session_validity
+def chart_history():
+    """Return candles for the most recent N trading days at the given interval.
+
+    Powers the scalping charts (candles + volume). ``interval`` is an OpenAlgo
+    interval (1m/5m/15m); the lookback scales 1m->1 day, 5m->3, 15m->9. A
+    generous calendar window is fetched and the latest N IST dates with data are
+    kept (skips weekends/holidays without a calendar lookup). An optional
+    ``date=YYYY-MM-DD`` restricts the fetch to a single day (used by the chart's
+    periodic reconcile). Works for any exchange (options, futures, equity,
+    indices); index symbols simply carry volume 0.
+    """
+    api_key = _get_api_key()
+    if not api_key:
+        return jsonify({"status": "error", "message": "API key not configured"}), 401
+
+    symbol = (request.args.get("symbol", "") or "").strip().upper()[:50]
+    exchange = (request.args.get("exchange", "") or "").strip().upper()[:20]
+    if not symbol or not exchange:
+        return jsonify({"status": "error", "message": "symbol and exchange are required"}), 400
+
+    interval = (request.args.get("interval", "1m") or "1m").strip()
+    if interval not in CHART_INTERVAL_TRADING_DAYS:
+        interval = "1m"
+
+    date_param = (request.args.get("date", "") or "").strip()
+    if re.match(r"^\d{4}-\d{2}-\d{2}$", date_param):
+        start_date = date_param
+        end_date = date_param
+        keep_days = 1
+    else:
+        keep_days = CHART_INTERVAL_TRADING_DAYS[interval]
+        today = datetime.now(IST).date()
+        start_date = (today - timedelta(days=keep_days * 2 + 5)).strftime("%Y-%m-%d")
+        end_date = today.strftime("%Y-%m-%d")
+
+    try:
+        success, response, status_code = get_history(
+            symbol=symbol,
+            exchange=exchange,
+            interval=interval,
+            start_date=start_date,
+            end_date=end_date,
+            api_key=api_key,
+        )
+    except Exception as e:
+        logger.exception(f"scalping chart history error for {symbol}.{exchange}: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+    if not success:
+        message = response.get("message") if isinstance(response, dict) else str(response)
+        return jsonify(
+            {"status": "error", "message": message or "History fetch failed"}
+        ), status_code
+
+    rows = response.get("data", []) if isinstance(response, dict) else []
+    by_date: dict[str, list] = {}
+    for r in rows:
+        ts = r.get("timestamp")
+        if ts is None:
+            continue
+        try:
+            ts = int(float(ts))
+        except (TypeError, ValueError):
+            continue
+        ist_dt = datetime.fromtimestamp(ts, tz=pytz.utc).astimezone(IST)
+        by_date.setdefault(ist_dt.strftime("%Y-%m-%d"), []).append((ts, r))
+
+    if not by_date:
+        return jsonify(
+            {
+                "status": "success",
+                "symbol": symbol,
+                "exchange": exchange,
+                "interval": interval,
+                "date": None,
+                "candles": [],
+            }
+        ), 200
+
+    selected_dates = sorted(by_date.keys())[-keep_days:]
+    latest_date = selected_dates[-1]
+    day_rows: list = []
+    for dkey in selected_dates:
+        day_rows.extend(by_date[dkey])
+    day_rows.sort(key=lambda x: x[0])
+
+    candles = []
+    for ts, r in day_rows:
+        # 5m/15m timestamps are already minute-aligned, so the minute floor is a
+        # no-op for them; it only normalizes 1m bars.
+        bar_time = ((ts + IST_OFFSET_SECONDS) // 60) * 60
+        try:
+            candles.append(
+                {
+                    "time": bar_time,
+                    "open": float(r.get("open", 0)),
+                    "high": float(r.get("high", 0)),
+                    "low": float(r.get("low", 0)),
+                    "close": float(r.get("close", 0)),
+                    "volume": float(r.get("volume", 0) or 0),
+                }
+            )
+        except (TypeError, ValueError):
+            continue
+
+    return jsonify(
+        {
+            "status": "success",
+            "symbol": symbol,
+            "exchange": exchange,
+            "interval": interval,
+            "date": latest_date,
+            "candles": candles,
+        }
+    ), 200
 
 
 @scalping_bp.route("/scalping/api/all_underlyings", methods=["GET"])
@@ -227,7 +357,11 @@ def _mcx_cds_option_chain(underlying, exchange, expiry_ddmmmyy, strike_count, ap
     )
     futs = sorted(futs, key=lambda r: _parse_expiry(r.expiry))
     if not futs:
-        return False, {"status": "error", "message": f"No futures for {underlying} on {exchange}"}, 400
+        return (
+            False,
+            {"status": "error", "message": f"No futures for {underlying} on {exchange}"},
+            400,
+        )
     fut_symbol = futs[0].symbol
     ok, qresp, _qc = get_quotes(symbol=fut_symbol, exchange=exchange, api_key=api_key)
     ltp = float((qresp.get("data") or {}).get("ltp") or 0) if ok and isinstance(qresp, dict) else 0
@@ -326,6 +460,11 @@ def strikes():
             {"status": "error", "message": "API key not configured. Generate one at /apikey"}
         ), 401
 
+    # The scalping ladder only needs the strike list + ATM + symbols (it streams live
+    # prices over the WebSocket feed), so default to a structure-only build that skips
+    # the slow per-strike broker multiquote. Pass ?quotes=true to include live quotes.
+    with_quotes = request.args.get("quotes", "false").strip().lower() == "true"
+
     if exchange in ("NFO", "BFO"):
         success, response, status_code = get_option_chain(
             underlying=underlying,
@@ -333,6 +472,7 @@ def strikes():
             expiry_date=expiry_date,
             strike_count=strike_count,
             api_key=api_key,
+            with_quotes=with_quotes,
         )
         if isinstance(response, dict):
             response["fo_exchange"] = exchange
@@ -435,7 +575,9 @@ def _resolve_session_auth():
     api_key = get_api_key_for_tradingview(username)
     if not api_key:
         return (
-            None, None, None,
+            None,
+            None,
+            None,
             {"status": "error", "message": "API key required. Generate one at /apikey"},
             401,
         )
@@ -507,7 +649,9 @@ def order():
     if action not in VALID_ACTIONS:
         return jsonify({"status": "error", "message": f"Invalid action: {action}"}), 400
     if product not in _allowed_products(exchange):
-        return jsonify({"status": "error", "message": f"Invalid product for {exchange}: {product}"}), 400
+        return jsonify(
+            {"status": "error", "message": f"Invalid product for {exchange}: {product}"}
+        ), 400
     if quantity <= 0:
         return jsonify({"status": "error", "message": "quantity must be positive"}), 400
     if quantity > MAX_ORDER_QUANTITY:
@@ -545,8 +689,25 @@ def order():
         "quantity": quantity,
     }
 
+    # Pass the client-supplied LTP (from the live WebSocket feed) through as a prefetched
+    # quote. In analyze/sandbox mode the sandbox engine uses it instead of fetching its own
+    # per-order quote (which retries with sleeps and stalls placement). Ignored in live mode.
+    prefetched_quote = None
+    ltp_raw = data.get("ltp")
+    if ltp_raw is not None:
+        try:
+            ltp_val = float(ltp_raw)
+            if ltp_val > 0:
+                prefetched_quote = {"ltp": ltp_val}
+        except (TypeError, ValueError):
+            prefetched_quote = None
+
     success, response, status_code = place_order(
-        order_data=order_data, api_key=api_key, auth_token=auth_token, broker=broker
+        order_data=order_data,
+        api_key=api_key,
+        auth_token=auth_token,
+        broker=broker,
+        prefetched_quote=prefetched_quote,
     )
     # Record this instrument in the scalping list so Close-All / the position book
     # stay scoped to the scalping strategy (broker positions carry no strategy tag).
@@ -581,7 +742,10 @@ def _reducing_exit(symbol, exchange, product, action, quantity, auth_token, brok
         if quantity % lotsize != 0:
             return (
                 False,
-                {"status": "error", "message": f"quantity must be a whole number of lots ({lotsize})"},
+                {
+                    "status": "error",
+                    "message": f"quantity must be a whole number of lots ({lotsize})",
+                },
                 400,
             )
 
@@ -626,9 +790,7 @@ def _reducing_exit(symbol, exchange, product, action, quantity, auth_token, brok
         "product": product,
         "quantity": quantity,
     }
-    return place_order(
-        order_data=order_data, api_key=api_key, auth_token=auth_token, broker=broker
-    )
+    return place_order(order_data=order_data, api_key=api_key, auth_token=auth_token, broker=broker)
 
 
 @scalping_bp.route("/scalping/api/close_leg", methods=["POST"])
@@ -653,7 +815,9 @@ def close_leg():
     if action not in VALID_ACTIONS:
         return jsonify({"status": "error", "message": f"Invalid action: {action}"}), 400
     if product not in _allowed_products(exchange):
-        return jsonify({"status": "error", "message": f"Invalid product for {exchange}: {product}"}), 400
+        return jsonify(
+            {"status": "error", "message": f"Invalid product for {exchange}: {product}"}
+        ), 400
     if quantity <= 0:
         return jsonify({"status": "error", "message": "quantity must be positive"}), 400
     if quantity > MAX_ORDER_QUANTITY:
@@ -686,7 +850,9 @@ def close_all():
 
     tracked = get_tracked_symbols(mode=_current_mode())
     if not tracked:
-        return jsonify({"status": "success", "message": "No scalping positions to close", "results": []})
+        return jsonify(
+            {"status": "success", "message": "No scalping positions to close", "results": []}
+        )
 
     from services.positionbook_service import get_positionbook
 
@@ -714,8 +880,14 @@ def close_all():
             continue  # flat — nothing to close (kept in the list for realized P&L)
         exit_action = "SELL" if netqty > 0 else "BUY"
         ok2, resp2, _c = _reducing_exit(
-            t["symbol"], t["exchange"], t["product"], exit_action, abs(netqty),
-            auth_token, broker, api_key,
+            t["symbol"],
+            t["exchange"],
+            t["product"],
+            exit_action,
+            abs(netqty),
+            auth_token,
+            broker,
+            api_key,
         )
         results.append(
             {
@@ -728,7 +900,11 @@ def close_all():
             closed += 1
 
     return jsonify(
-        {"status": "success", "message": f"Closed {closed} scalping position(s)", "results": results}
+        {
+            "status": "success",
+            "message": f"Closed {closed} scalping position(s)",
+            "results": results,
+        }
     )
 
 
@@ -788,7 +964,11 @@ def upsert_sl():
 
     # Product must be valid FOR THIS EXCHANGE (e.g. reject CNC on NFO/BFO/MCX/CDS) so
     # we never persist an SL leg the freeze-safe exit can't actually place.
-    if not symbol or exchange not in VALID_LEG_EXCHANGES or product not in _allowed_products(exchange):
+    if (
+        not symbol
+        or exchange not in VALID_LEG_EXCHANGES
+        or product not in _allowed_products(exchange)
+    ):
         return jsonify({"status": "error", "message": "Invalid symbol/exchange/product"}), 400
 
     # Validate the side and coerce/range-check numeric fields so the browser SL
@@ -812,8 +992,15 @@ def upsert_sl():
         "side": side,
         "quantity": quantity,
     }
-    for field in ("entry_price", "initial_sl", "trailing_step", "highest_price",
-                  "lowest_price", "current_sl", "target"):
+    for field in (
+        "entry_price",
+        "initial_sl",
+        "trailing_step",
+        "highest_price",
+        "lowest_price",
+        "current_sl",
+        "target",
+    ):
         if data.get(field) is not None:
             try:
                 val = float(data[field])

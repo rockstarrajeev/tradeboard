@@ -57,12 +57,21 @@ HOLIDAY_TYPES = ["TRADING_HOLIDAY", "SETTLEMENT_HOLIDAY", "SPECIAL_SESSION"]
 DEFAULT_MARKET_TIMINGS = {
     "NSE": {"start_offset": 33300000, "end_offset": 55800000},  # 09:15 - 15:30
     "BSE": {"start_offset": 33300000, "end_offset": 55800000},  # 09:15 - 15:30
-    "NFO": {"start_offset": 33300000, "end_offset": 55800000},  # 09:15 - 15:30
-    "BFO": {"start_offset": 33300000, "end_offset": 55800000},  # 09:15 - 15:30
+    # F&O runs past the cash close. SEBI's Closing Auction Session (circular
+    # HO/47/11/11(3)2025-MRD-POD2/I/2765/2026, effective 2026-08-03) applies to
+    # the equity cash segment only: cash pauses continuous trading at 15:15 and
+    # its close is derived by auction, while the derivatives segment keeps
+    # trading to roughly 15:40. Cutting NFO/BFO off at 15:30 would make the last
+    # ten minutes of live F&O invisible to anything driven by these timings.
+    "NFO": {"start_offset": 33300000, "end_offset": 56400000},  # 09:15 - 15:40
+    "BFO": {"start_offset": 33300000, "end_offset": 56400000},  # 09:15 - 15:40
     "CDS": {"start_offset": 32400000, "end_offset": 61200000},  # 09:00 - 17:00
     "BCD": {"start_offset": 32400000, "end_offset": 61200000},  # 09:00 - 17:00
     "MCX": {"start_offset": 32400000, "end_offset": 86100000},  # 09:00 - 23:55
-    "NCO": {"start_offset": 32400000, "end_offset": 86100000},  # 09:00 - 23:55 (NSE Commodities mirrors MCX)
+    "NCO": {
+        "start_offset": 32400000,
+        "end_offset": 86100000,
+    },  # 09:00 - 23:55 (NSE Commodities mirrors MCX)
     "CRYPTO": {"start_offset": 0, "end_offset": 86399000},  # 00:00 - 23:59:59 (24/7)
 }
 
@@ -711,7 +720,7 @@ def get_market_timings_for_date(query_date: date) -> list[dict[str, Any]]:
         return []
 
 
-def get_special_session(query_date: date, exchange: str) -> Optional[Dict[str, Any]]:
+def get_special_session(query_date: date, exchange: str) -> dict[str, Any] | None:
     """
     Return the SPECIAL_SESSION window for (date, exchange) if one exists and
     the exchange is marked open. Returns None otherwise.
@@ -765,9 +774,7 @@ def get_special_session(query_date: date, exchange: str) -> Optional[Dict[str, A
         return None
 
 
-def get_holiday_exchange_window(
-    query_date: date, exchange: str
-) -> Optional[Dict[str, Any]]:
+def get_holiday_exchange_window(query_date: date, exchange: str) -> dict[str, Any] | None:
     """
     Return the open-window for (date, exchange) when a TRADING_HOLIDAY row
     explicitly leaves this exchange open with custom timings (e.g., MCX
@@ -820,9 +827,7 @@ def get_holiday_exchange_window(
         return None
 
 
-def get_effective_session_window(
-    query_date: date, exchange: str
-) -> Optional[Dict[str, Any]]:
+def get_effective_session_window(query_date: date, exchange: str) -> dict[str, Any] | None:
     """
     Single source of truth for "what is the trading window for <exchange> on
     <date>?".
@@ -1019,6 +1024,46 @@ def ensure_market_calendar_tables_exists():
     check_and_update_holidays()
     # Seed market timings if not present
     seed_market_timings()
+    migrate_fo_close_for_cas()
+
+
+#: Exchanges whose close moved with the Closing Auction Session, and the value
+#: they held before it. Only a row still carrying the old close is updated, so
+#: an admin who has set their own timing is not overwritten.
+CAS_CLOSE_MIGRATION = {
+    "NFO": {"old_end": 55800000, "new_end": 56400000},
+    "BFO": {"old_end": 55800000, "new_end": 56400000},
+}
+
+
+def migrate_fo_close_for_cas():
+    """Move the NFO/BFO close from 15:30 to 15:40 on existing installs.
+
+    seed_market_timings only runs when the table is empty, so every existing
+    installation would keep the pre-CAS close indefinitely. Guarded on the old
+    value: a row an admin has already customised is left alone rather than
+    being reset to a default they did not ask for.
+    """
+    try:
+        changed = 0
+        for exchange, spec in CAS_CLOSE_MIGRATION.items():
+            row = MarketTiming.query.filter_by(exchange_code=exchange).first()
+            if row is None or int(row.end_offset or 0) != spec["old_end"]:
+                continue
+            row.end_offset = spec["new_end"]
+            hours = spec["new_end"] // 3600000
+            mins = (spec["new_end"] % 3600000) // 60000
+            row.end_time = f"{hours:02d}:{mins:02d}"
+            changed += 1
+        if changed:
+            db_session.commit()
+            logger.info(
+                f"Market Calendar DB: moved the close to 15:40 for {changed} "
+                "F&O exchange(s) following SEBI's Closing Auction Session"
+            )
+    except Exception as e:
+        db_session.rollback()
+        logger.exception(f"Market Calendar DB: could not migrate the F&O close: {e}")
 
 
 def seed_market_timings():
@@ -1303,7 +1348,9 @@ def get_market_hours_status() -> dict[str, Any]:
 
             exchanges_status[exch] = {
                 "is_open": is_open,
-                "is_special": bool(window and window.get("is_special")) if exch not in CRYPTO_EXCHANGES else False,
+                "is_special": bool(window and window.get("is_special"))
+                if exch not in CRYPTO_EXCHANGES
+                else False,
                 "start_time": start_label,
                 "end_time": end_label,
                 "start_offset": start_offset,

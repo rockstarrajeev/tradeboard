@@ -211,8 +211,14 @@ def get_freeze_qty_for_option(option_symbol: str, exchange: str) -> int:
     # Try to match known index symbols first. Longest-prefix-first so e.g. NIFTYNXT50
     # is not shadowed by NIFTY, and SENSEX50 is not shadowed by SENSEX.
     index_symbols = [
-        "BANKNIFTY", "FINNIFTY", "MIDCPNIFTY", "NIFTYNXT50", "NIFTY",
-        "SENSEX50", "BANKEX", "SENSEX",
+        "BANKNIFTY",
+        "FINNIFTY",
+        "MIDCPNIFTY",
+        "NIFTYNXT50",
+        "NIFTY",
+        "SENSEX50",
+        "BANKEX",
+        "SENSEX",
     ]
     for idx_sym in index_symbols:
         if option_symbol.upper().startswith(idx_sym):

@@ -14,7 +14,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 class SimpleFeed:
-    """A simplified wrapper around the Tradeboard WebSocket client for LTP data"""
+    """A simplified wrapper around the OpenAlgo WebSocket client for LTP data"""
 
     def __init__(self, host: str = "localhost", port: int = 8765, api_key: str | None = None):
         """
@@ -306,7 +306,7 @@ if __name__ == "__main__":
 
     load_dotenv()
 
-    print("Tradeboard Simple LTP Feed Test")
+    print("OpenAlgo Simple LTP Feed Test")
 
     api_key = os.getenv("API_KEY")
     if not api_key:
@@ -339,7 +339,7 @@ if __name__ == "__main__":
     # Live data can also be continuously polled using this method
     print("\nReceiving market data for 10 seconds...")
     poll_count = 1
-    for i in range(10):
+    for _i in range(10):
         # Get LTP data and print in formatted JSON
         ltp_data = feed.get_ltp()
         print(f"Poll {poll_count}:")

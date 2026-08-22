@@ -31,14 +31,14 @@ def get_margin_data(auth_token):
 
     if margin_data.get("status") == "Success":
         equity_limit = margin_data.get("equityLimit", {})
-        commodity_limit = margin_data.get("commodityLimit", {})
+        margin_data.get("commodityLimit", {})
 
         # Use equity segment as the primary margin source
         # Samco reports the same fund pool under both equity and commodity segments
         equity_available = float(equity_limit.get("netAvailableMargin", 0) or 0)
         equity_used = float(equity_limit.get("marginUsed", 0) or 0)
 
-        # Map Samco fields to Tradeboard standard format
+        # Map Samco fields to OpenAlgo standard format
         filtered_data = {
             "availablecash": f"{equity_available:.2f}",
             "collateral": "{:.2f}".format(

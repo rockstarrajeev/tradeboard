@@ -9,7 +9,7 @@ import {
   X,
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -36,8 +36,6 @@ interface DayData {
 }
 
 type ViewMode = 'monthly' | 'annual'
-
-
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -82,7 +80,11 @@ interface MonthSummary {
   worstDay: number
 }
 
-function computeMonthSummary(year: number, month: number, ledgerData: Map<string, DayData>): MonthSummary {
+function computeMonthSummary(
+  year: number,
+  month: number,
+  ledgerData: Map<string, DayData>
+): MonthSummary {
   let totalPnl = 0
   let tradingDays = 0
   let winDays = 0
@@ -324,7 +326,9 @@ function TradeDrawer({ dateStr, ledgerData, onClose, formatCurrency }: TradeDraw
               <p className="text-sm text-slate-400 uppercase tracking-widest font-bold">
                 Trade Log
               </p>
-              <h2 className="text-base font-semibold mt-1 leading-tight text-white">{formattedDate}</h2>
+              <h2 className="text-base font-semibold mt-1 leading-tight text-white">
+                {formattedDate}
+              </h2>
             </div>
             <button
               id="drawer-close-btn"
@@ -342,9 +346,7 @@ function TradeDrawer({ dateStr, ledgerData, onClose, formatCurrency }: TradeDraw
             <span
               className={cn(
                 'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold',
-                day.pnl >= 0
-                  ? 'bg-green-500/20 text-green-400'
-                  : 'bg-red-500/20 text-red-400'
+                day.pnl >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
               )}
             >
               {day.pnl >= 0 ? (
@@ -364,35 +366,37 @@ function TradeDrawer({ dateStr, ledgerData, onClose, formatCurrency }: TradeDraw
 
         {/* Trade list */}
         <div className="px-4 py-3 space-y-2">
-          {[...day.trades].sort((a, b) => (a.time || '').localeCompare(b.time || '')).map((trade) => (
-            <div
-              key={trade.id}
-              className={cn(
-                'rounded-lg border p-3 transition-colors',
-                trade.action === 'BUY'
-                  ? 'border-blue-900/50 bg-blue-950/30'
-                  : 'border-amber-900/50 bg-amber-950/30'
-              )}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-sm truncate text-slate-200">{trade.symbol}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge
-                      variant={trade.action === 'BUY' ? 'default' : 'destructive'}
-                      className="text-[10px] h-4 px-1.5"
-                    >
-                      {trade.action}
-                    </Badge>
-                    <span className="text-xs text-slate-400">
-                      {trade.qty} × {formatCurrency(trade.price)}
-                    </span>
-                    <span className="text-xs text-slate-500">{trade.time}</span>
+          {[...day.trades]
+            .sort((a, b) => (a.time || '').localeCompare(b.time || ''))
+            .map((trade) => (
+              <div
+                key={trade.id}
+                className={cn(
+                  'rounded-lg border p-3 transition-colors',
+                  trade.action === 'BUY'
+                    ? 'border-blue-900/50 bg-blue-950/30'
+                    : 'border-amber-900/50 bg-amber-950/30'
+                )}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm truncate text-slate-200">{trade.symbol}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge
+                        variant={trade.action === 'BUY' ? 'default' : 'destructive'}
+                        className="text-[10px] h-4 px-1.5"
+                      >
+                        {trade.action}
+                      </Badge>
+                      <span className="text-xs text-slate-400">
+                        {trade.qty} × {formatCurrency(trade.price)}
+                      </span>
+                      <span className="text-xs text-slate-500">{trade.time}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
     </>
@@ -413,7 +417,10 @@ function MonthlyView({ year, month, onSelectDay, formatCurrency, ledgerData }: M
   const todayStr = new Date().toISOString().slice(0, 10)
   const firstDow = getFirstDayOfWeek(year, month)
   const daysInMonth = getDaysInMonth(year, month)
-  const summary = useMemo(() => computeMonthSummary(year, month, ledgerData), [year, month, ledgerData])
+  const summary = useMemo(
+    () => computeMonthSummary(year, month, ledgerData),
+    [year, month, ledgerData]
+  )
 
   // Build cell grid: empty prefix cells + day cells
   const cells: Array<{ dayNum: number; dateStr: string } | null> = [
@@ -737,7 +744,7 @@ export default function CalendarLedger({ embedded = false }: { embedded?: boolea
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth() + 1)
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
-  
+
   const [ledgerData, setLedgerData] = useState<Map<string, DayData>>(new Map())
   const [loading, setLoading] = useState(true)
 
@@ -748,7 +755,7 @@ export default function CalendarLedger({ embedded = false }: { embedded?: boolea
       .then((res) => {
         if (res.status === 'success') {
           const newMap = new Map<string, DayData>()
-          
+
           // 1. Populate map with daily snapshots
           res.daily_pnls.forEach((dp: any) => {
             newMap.set(dp.date, {
@@ -759,7 +766,7 @@ export default function CalendarLedger({ embedded = false }: { embedded?: boolea
               isLive: !!dp.is_live,
             })
           })
-          
+
           // 2. Associate trades with respective days
           res.trades.forEach((t: any) => {
             const dayEntry = newMap.get(t.date) || {
@@ -768,7 +775,7 @@ export default function CalendarLedger({ embedded = false }: { embedded?: boolea
               tradeCount: 0,
               trades: [] as TradeEntry[],
             }
-            
+
             dayEntry.trades.push({
               id: t.id,
               symbol: t.symbol,
@@ -780,7 +787,7 @@ export default function CalendarLedger({ embedded = false }: { embedded?: boolea
             dayEntry.tradeCount = dayEntry.trades.length
             newMap.set(t.date, dayEntry)
           })
-          
+
           setLedgerData(newMap)
         }
       })

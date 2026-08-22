@@ -160,27 +160,30 @@ export default function GoCharting() {
     setShowResults(false)
   }
 
-  const generateJson = useCallback((showError = true) => {
-    if (!symbol || !exchange) {
-      if (showError) {
-        showToast.error('Please select a symbol and exchange', 'system')
+  const generateJson = useCallback(
+    (showError = true) => {
+      if (!symbol || !exchange) {
+        if (showError) {
+          showToast.error('Please select a symbol and exchange', 'system')
+        }
+        return
       }
-      return
-    }
 
-    const json = {
-      apikey: apiKey || 'YOUR_API_KEY',
-      strategy: 'GoCharting Alert',
-      symbol: symbol,
-      exchange: exchange,
-      action: action,
-      product: product,
-      pricetype: 'MARKET',
-      quantity: quantity,
-    }
+      const json = {
+        apikey: apiKey || 'YOUR_API_KEY',
+        strategy: 'GoCharting Alert',
+        symbol: symbol,
+        exchange: exchange,
+        action: action,
+        product: product,
+        pricetype: 'MARKET',
+        quantity: quantity,
+      }
 
-    setGeneratedJson(JSON.stringify(json, null, 2))
-  }, [symbol, exchange, apiKey, action, product, quantity])
+      setGeneratedJson(JSON.stringify(json, null, 2))
+    },
+    [symbol, exchange, apiKey, action, product, quantity]
+  )
 
   // Auto-generate JSON when values change
   useEffect(() => {
@@ -214,7 +217,7 @@ export default function GoCharting() {
             <strong>Webhook URL not accessible!</strong> GoCharting cannot send alerts to localhost.
             Use <strong>ngrok</strong>, <strong>Cloudflare Tunnel</strong>,{' '}
             <strong>VS Code Dev Tunnel</strong>, or a <strong>custom domain</strong> to expose your
-            Tradeboard instance to the internet. Update <code>HOST_SERVER</code> in your{' '}
+            OpenAlgo instance to the internet. Update <code>HOST_SERVER</code> in your{' '}
             <code>.env</code> file with your external URL.
           </AlertDescription>
         </Alert>
@@ -431,7 +434,7 @@ export default function GoCharting() {
                 </Button>
                 <Button asChild variant="default" size="sm">
                   <a
-                    href="https://docs.rajeevupadhyay.com/trading-platform/gocharting"
+                    href="https://docs.openalgo.in/trading-platform/gocharting"
                     target="_blank"
                     rel="noopener noreferrer"
                   >

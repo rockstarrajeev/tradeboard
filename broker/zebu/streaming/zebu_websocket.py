@@ -20,7 +20,7 @@ class ZebuWebSocket:
     # Connection constants
     # Try different URL patterns based on other Noren brokers:
     # - Shoonya: wss://api.shoonya.com/NorenWSTP/
-    # - Flattrade: wss://piconnect.flattrade.in/PiConnectWSTp/
+    # - Flattrade: wss://piconnect.flattrade.in/PiConnectWSAPI/
     # - AliceBlue: wss://ws1.aliceblueonline.com/NorenWS/
     # - DefinEdge: wss://trade.definedgesecurities.com/NorenWSTRTP/
     WS_URL = "wss://go.mynt.in/NorenWSAPI/"  # Zebu OAuth WebSocket endpoint
@@ -221,9 +221,7 @@ class ZebuWebSocket:
         debug_msg = auth_msg.copy()
         token_val = debug_msg.get("accesstoken", "")
         if token_val:
-            debug_msg["accesstoken"] = (
-                token_val[:10] + "..." if len(token_val) > 10 else "***"
-            )
+            debug_msg["accesstoken"] = token_val[:10] + "..." if len(token_val) > 10 else "***"
         self.logger.info(f"Sending auth message: {debug_msg}")
 
         try:

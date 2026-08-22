@@ -104,7 +104,13 @@ class AliceblueWebSocketAdapter(BaseBrokerWebSocketAdapter):
             if auth_data:
                 api_key = auth_data.get("api_key")
                 session_id = auth_data.get("session_id")
-                self.logger.info(f"Using auth_data: api_key={api_key}, session_id={session_id}")
+                # Never log api_key or session_id: session_id is the JWT the
+                # susertoken is derived from, so printing it hands over the
+                # WebSocket credential to anyone reading the console or a
+                # pasted log. Presence only.
+                self.logger.info(
+                    f"Using auth_data: api_key=[REDACTED], session_id present={bool(session_id)}"
+                )
                 # For WebSocket auth, client_id should be the BROKER_API_KEY (user_id from credentials)
                 self.client_id = api_key  # This should be the BROKER_API_KEY value like '1412368'
                 # Store session_id (JWT) for WebSocket authentication
@@ -115,8 +121,14 @@ class AliceblueWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 # Fetch authentication tokens from database
                 auth_token = get_auth_token(user_id, bypass_cache=True)
                 feed_token = get_feed_token(user_id)
-                self.logger.info(f"From database: auth_token=[REDACTED], feed_token={feed_token}")
-                self.logger.info(f"feed_token type: {type(feed_token)}, value: {repr(feed_token)}")
+                # Feed tokens are credentials too - CLAUDE.md lists them
+                # alongside API keys and auth tokens as never-log. Report
+                # presence and type, which is what the debugging below needs.
+                self.logger.info(
+                    f"From database: auth_token=[REDACTED], "
+                    f"feed_token=[REDACTED] (present={bool(feed_token)}, "
+                    f"type={type(feed_token).__name__})"
+                )
 
                 if not auth_token:
                     self.logger.error(f"No authentication tokens found for user {user_id}")
@@ -302,9 +314,7 @@ class AliceblueWebSocketAdapter(BaseBrokerWebSocketAdapter):
             # fixed sleep — returns immediately on success and gives a clean
             # timeout signal on failure.
             if not self._auth_event.wait(timeout=10):
-                self.logger.warning(
-                    "Timed out waiting for AliceBlue auth confirmation"
-                )
+                self.logger.warning("Timed out waiting for AliceBlue auth confirmation")
                 return False
 
             return bool(self.ws_client.sock and self.ws_client.sock.connected)
@@ -328,11 +338,13 @@ class AliceblueWebSocketAdapter(BaseBrokerWebSocketAdapter):
             # Second SHA256 hash of the first hash
             susertoken = hashlib.sha256(sha256_encryption1.encode("utf-8")).hexdigest()
 
-            self.logger.info("Generating susertoken from session_id (JWT)")
-            self.logger.info(f"Session ID (first 50 chars): {self.session_id[:50]}...")
-            self.logger.info(f"Session ID length: {len(self.session_id)}")
-            self.logger.info(f"First SHA256: {sha256_encryption1}")
-            self.logger.info(f"Final susertoken: {susertoken}")
+            # susertoken IS the WebSocket credential and the intermediate hash
+            # is one SHA-256 away from it, so neither is logged - nor any slice
+            # of the source JWT. Length alone is enough to tell "empty/truncated
+            # session" apart from "auth rejected" when debugging.
+            self.logger.info(
+                f"Generated susertoken from session_id (JWT length {len(self.session_id)})"
+            )
 
             auth_msg = {
                 "susertoken": susertoken,
@@ -523,7 +535,7 @@ class AliceblueWebSocketAdapter(BaseBrokerWebSocketAdapter):
             if not self.ws_client or not self.ws_client.sock or not self.ws_client.sock.connected:
                 self.logger.info("AliceBlue WebSocket not connected - attempting to reconnect...")
                 reconnect_result = self.connect()
-                if reconnect_result and reconnect_result.get("success") == False:
+                if reconnect_result and not reconnect_result.get("success"):
                     self.logger.error("Failed to reconnect to AliceBlue WebSocket")
                     return self._create_error_response(
                         "RECONNECT_FAILED", "Failed to reconnect to WebSocket"
@@ -533,9 +545,7 @@ class AliceblueWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 # returned via a different path (e.g. running flag) make sure
                 # auth has actually settled.
                 if not self._auth_event.wait(timeout=5):
-                    self.logger.warning(
-                        "Auth handshake did not complete in time after reconnect"
-                    )
+                    self.logger.warning("Auth handshake did not complete in time after reconnect")
                     return self._create_error_response(
                         "RECONNECT_TIMEOUT", "Auth handshake timeout after reconnect"
                     )
@@ -587,8 +597,8 @@ class AliceblueWebSocketAdapter(BaseBrokerWebSocketAdapter):
                         "token": token,
                         "mode": mode,  # Store the highest mode subscribed
                         "depth_level": depth_level,
-                        "original_symbol": symbol,  # Store original Tradeboard symbol for lookup
-                        "original_exchange": exchange,  # Store original Tradeboard exchange
+                        "original_symbol": symbol,  # Store original OpenAlgo symbol for lookup
+                        "original_exchange": exchange,  # Store original OpenAlgo exchange
                         "all_modes": self.subscriptions.get(sub_key, {}).get("all_modes", set())
                         | {mode},  # Track all subscribed modes
                     }
@@ -900,9 +910,8 @@ class AliceblueWebSocketAdapter(BaseBrokerWebSocketAdapter):
                     # Add message type
                     parsed_data["message_type"] = "dk"
                     # Store symbol info from dk message
-                    token = data.get("tk", "")
-                    exchange = data.get("e", "")
-                    symbol_key = f"{exchange}|{token}"
+                    data.get("tk", "")
+                    data.get("e", "")
                     if "ts" in data:
                         # Extract and clean symbol name
                         raw_symbol = data["ts"]
@@ -1047,9 +1056,7 @@ class AliceblueWebSocketAdapter(BaseBrokerWebSocketAdapter):
                     f"Resubscribed {len(unique_keys)} tokens with feed type '{feed_type}'"
                 )
             except Exception as e:
-                self.logger.error(
-                    f"Error resubscribing batch for feed type '{feed_type}': {e}"
-                )
+                self.logger.error(f"Error resubscribing batch for feed type '{feed_type}': {e}")
 
     def is_connected(self) -> bool:
         """Check if WebSocket is connected"""
@@ -1143,7 +1150,7 @@ class AliceblueWebSocketAdapter(BaseBrokerWebSocketAdapter):
             # Find the original subscription to get the correct exchange and symbol
             # This is important because the client subscribes with NSE_INDEX for NIFTY
             # but the data comes with NSE exchange
-            # Also, for NFO/BFO symbols, AliceBlue returns broker symbols but we need Tradeboard symbols
+            # Also, for NFO/BFO symbols, AliceBlue returns broker symbols but we need OpenAlgo symbols
             sub_key = symbol_key  # Use the same key as created above
             self.logger.debug(f"Looking for subscription with key: {sub_key}")
             original_exchange = exchange  # Default to mapped exchange

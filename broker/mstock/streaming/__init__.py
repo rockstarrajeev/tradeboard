@@ -2,7 +2,7 @@
 mstock WebSocket Streaming Module
 
 This module provides WebSocket streaming capabilities for mstock broker,
-following the Tradeboard adapter pattern.
+following the OpenAlgo adapter pattern.
 """
 
 from .mstock_adapter import MstockWebSocketAdapter

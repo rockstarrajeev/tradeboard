@@ -143,7 +143,7 @@ def get_scrip_data(scrip_group):
         for line in lines[1:]:
             values = line.strip().split(",")
             if len(values) == len(headers):
-                data.append(dict(zip(headers, values)))
+                data.append(dict(zip(headers, values, strict=False)))
 
         logger.info(f"Processed {len(data)} records for {scrip_group}")
         return data
@@ -209,7 +209,7 @@ def process_scrip_data(scrip_data, group_info):
         for line in lines[1:]:
             values = line.strip().split(",")
             if len(values) == len(headers):
-                scrip_data.append(dict(zip(headers, values)))
+                scrip_data.append(dict(zip(headers, values, strict=False)))
 
     # Get group name and format
     group_name = group_info.get("name", "")
@@ -224,7 +224,7 @@ def process_scrip_data(scrip_data, group_info):
                 if len(parts) >= 3:
                     raw_exchange = parts[-1]  # Last part is exchange (NSE/BSE)
 
-                    # Map exchange for Tradeboard format
+                    # Map exchange for OpenAlgo format
                     exchange_map = {"NSE": "NSE_INDEX", "BSE": "BSE_INDEX"}
 
                     record = {
@@ -294,10 +294,10 @@ def process_scrip_data(scrip_data, group_info):
                             expiry_dt = datetime.strptime(expiry_date, "%Y-%m-%d")
                             expiry_formatted = expiry_dt.strftime("%d%b%y").upper()
                             expiry_db = expiry_dt.strftime("%d-%b-%y").upper()
-                            tradeboard_symbol = f"{base_symbol}{expiry_formatted}FUT"
+                            openalgo_symbol = f"{base_symbol}{expiry_formatted}FUT"
 
                             record = {
-                                "symbol": tradeboard_symbol,
+                                "symbol": openalgo_symbol,
                                 "brsymbol": item["id"],
                                 "name": item.get("desc", item["dispName"]),
                                 "exchange": exchange,
@@ -336,12 +336,12 @@ def process_scrip_data(scrip_data, group_info):
                                 if strike_price.is_integer()
                                 else str(strike_price)
                             )
-                            tradeboard_symbol = (
+                            openalgo_symbol = (
                                 f"{base_symbol}{expiry_formatted}{strike_str}{option_type}"
                             )
 
                             record = {
-                                "symbol": tradeboard_symbol,
+                                "symbol": openalgo_symbol,
                                 "brsymbol": item["id"],
                                 "name": item.get("desc", item["dispName"]),
                                 "exchange": exchange,
@@ -369,7 +369,7 @@ def process_scrip_data(scrip_data, group_info):
     if df.empty:
         return df
 
-    # --- NSE Index Symbol Normalization (Tradejini symbol → Tradeboard format) ---
+    # --- NSE Index Symbol Normalization (Tradejini symbol → OpenAlgo format) ---
     # Listed symbols are mapped explicitly; unlisted symbols get basic cleanup
     # (uppercase, spaces removed) to preserve them without breaking format.
     nse_idx_mask = df["exchange"] == "NSE_INDEX"
@@ -418,7 +418,7 @@ def process_scrip_data(scrip_data, group_info):
     fallback_nse = original_nse.str.upper().str.replace(" ", "", regex=False)
     df.loc[nse_idx_mask, "symbol"] = mapped_nse.fillna(fallback_nse)
 
-    # --- BSE Index Symbol Normalization (Tradejini symbol → Tradeboard format) ---
+    # --- BSE Index Symbol Normalization (Tradejini symbol → OpenAlgo format) ---
     # Applied only to BSE_INDEX rows to avoid conflicts with equity symbols
     bse_idx_mask = df["exchange"] == "BSE_INDEX"
     bse_index_map = {

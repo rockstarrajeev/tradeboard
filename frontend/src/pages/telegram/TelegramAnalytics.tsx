@@ -1,6 +1,6 @@
 import { ArrowLeft, BarChart3, Bell, MessageSquare, TrendingUp, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 import { webClient } from '@/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -248,7 +248,7 @@ export default function TelegramAnalytics() {
               <TableHeader>
                 <TableRow>
                   <TableHead>User</TableHead>
-                  <TableHead>Tradeboard Account</TableHead>
+                  <TableHead>OpenAlgo Account</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Joined</TableHead>
                   <TableHead>Last Active</TableHead>
@@ -274,8 +274,8 @@ export default function TelegramAnalytics() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {user.tradeboard_username ? (
-                          <Badge variant="outline">{user.tradeboard_username}</Badge>
+                        {user.openalgo_username ? (
+                          <Badge variant="outline">{user.openalgo_username}</Badge>
                         ) : (
                           <span className="text-muted-foreground">-</span>
                         )}

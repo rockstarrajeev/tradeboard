@@ -5,7 +5,7 @@ import threading
 import time as time_module
 import uuid
 from collections import deque
-from datetime import datetime, time
+from datetime import datetime
 from time import time
 
 import pytz
@@ -90,7 +90,9 @@ def process_orders():
 
                 try:
                     response = requests.post(
-                        f"{BASE_URL}/api/v1/placesmartorder", json=smart_order["payload"]
+                        f"{BASE_URL}/api/v1/placesmartorder",
+                        json=smart_order["payload"],
+                        timeout=30,
                     )
                     if response.ok:
                         logger.info(
@@ -126,7 +128,9 @@ def process_orders():
 
                     try:
                         response = requests.post(
-                            f"{BASE_URL}/api/v1/placeorder", json=regular_order["payload"]
+                            f"{BASE_URL}/api/v1/placeorder",
+                            json=regular_order["payload"],
+                            timeout=30,
                         )
                         if response.ok:
                             logger.info(
@@ -862,7 +866,7 @@ def webhook(webhook_id):
 
         # Get symbols and trigger prices
         symbols = data.get("stocks", "").split(",")
-        trigger_prices = data.get("trigger_prices", "").split(",")
+        data.get("trigger_prices", "").split(",")
 
         if not symbols:
             logger.error("No symbols received in webhook")

@@ -72,12 +72,16 @@ def copy_from_dataframe(df):
     try:
         if filtered_data_dict:
             total = len(filtered_data_dict)
-            logger.info(f"Inserting {total} new records into the database in batches of {BATCH_SIZE}")
+            logger.info(
+                f"Inserting {total} new records into the database in batches of {BATCH_SIZE}"
+            )
             for i in range(0, total, BATCH_SIZE):
                 batch = filtered_data_dict[i : i + BATCH_SIZE]
                 db_session.bulk_insert_mappings(SymToken, batch)
                 db_session.flush()
-                logger.info(f"Inserted batch {i // BATCH_SIZE + 1} ({min(i + BATCH_SIZE, total)}/{total} records)")
+                logger.info(
+                    f"Inserted batch {i // BATCH_SIZE + 1} ({min(i + BATCH_SIZE, total)}/{total} records)"
+                )
             db_session.commit()
             logger.info(f"Bulk insert completed successfully with {total} new records.")
         else:
@@ -88,19 +92,19 @@ def copy_from_dataframe(df):
         raise
 
 
-# Functions for symbol format conversion between Tradeboard and Groww formats
-def format_tradeboard_to_groww_symbol(symbol, exchange):
+# Functions for symbol format conversion between OpenAlgo and Groww formats
+def format_openalgo_to_groww_symbol(symbol, exchange):
     """
-    Convert Tradeboard symbol format to Groww symbol format
+    Convert OpenAlgo symbol format to Groww symbol format
 
     Args:
-        symbol (str): Symbol in Tradeboard format (e.g., AARTIIND29MAY25630CE)
+        symbol (str): Symbol in OpenAlgo format (e.g., AARTIIND29MAY25630CE)
         exchange (str): Exchange code (NSE, BSE, NFO, etc.)
 
     Returns:
         str: Symbol in Groww format (e.g., "AARTIIND 29MAY25 630 CE")
     """
-    logger.info(f"Converting symbol from Tradeboard to Groww format: {{symbol}}, {exchange}")
+    logger.info(f"Converting symbol from OpenAlgo to Groww format: {{symbol}}, {exchange}")
 
     # If it's already in the right format or invalid, return as is
     if not symbol or len(symbol) < 6:
@@ -175,7 +179,7 @@ def format_tradeboard_to_groww_symbol(symbol, exchange):
             for month in months:
                 if month in remaining:
                     # Find month position
-                    month_pos = remaining.find(month)
+                    remaining.find(month)
 
                     # Try to extract day (1-2 digits before month)
                     day_match = re.search(r"(\d{1,2})" + month, remaining)
@@ -222,18 +226,18 @@ def format_tradeboard_to_groww_symbol(symbol, exchange):
     return symbol
 
 
-def format_groww_to_tradeboard_symbol(groww_symbol, exchange):
+def format_groww_to_openalgo_symbol(groww_symbol, exchange):
     """
-    Convert Groww symbol format to Tradeboard symbol format
+    Convert Groww symbol format to OpenAlgo symbol format
 
     Args:
         groww_symbol (str): Symbol in Groww format (e.g., "AARTIIND 29MAY25 630 CE")
         exchange (str): Exchange code (NSE, BSE, NFO, etc.)
 
     Returns:
-        str: Symbol in Tradeboard format (e.g., "AARTIIND29MAY25630CE")
+        str: Symbol in OpenAlgo format (e.g., "AARTIIND29MAY25630CE")
     """
-    logger.info(f"Converting symbol from Groww to Tradeboard format: {{groww_symbol}}, {exchange}")
+    logger.info(f"Converting symbol from Groww to OpenAlgo format: {{groww_symbol}}, {exchange}")
 
     if not groww_symbol:
         return groww_symbol
@@ -243,7 +247,7 @@ def format_groww_to_tradeboard_symbol(groww_symbol, exchange):
         # Remove any extra whitespace and convert to uppercase
         clean_symbol = groww_symbol.strip().upper()
 
-        # If already in Tradeboard format (no spaces), return as is
+        # If already in OpenAlgo format (no spaces), return as is
         if " " not in clean_symbol:
             return clean_symbol
 
@@ -259,11 +263,11 @@ def format_groww_to_tradeboard_symbol(groww_symbol, exchange):
             strike_price = parts[2]  # Strike price as string
             option_type = parts[3]  # CE or PE
 
-            # Combine into Tradeboard format: [BaseSymbol][ExpirationDate][StrikePrice][OptionType]
+            # Combine into OpenAlgo format: [BaseSymbol][ExpirationDate][StrikePrice][OptionType]
             # Example: AARTIIND29MAY25630CE
-            tradeboard_symbol = f"{base_symbol}{date_str}{strike_price}{option_type}"
-            logger.info(f"Converted to Tradeboard format: {tradeboard_symbol}")
-            return tradeboard_symbol
+            openalgo_symbol = f"{base_symbol}{date_str}{strike_price}{option_type}"
+            logger.info(f"Converted to OpenAlgo format: {openalgo_symbol}")
+            return openalgo_symbol
 
         # For futures
         elif len(parts) >= 3 and parts[-1] == "FUT":
@@ -271,11 +275,11 @@ def format_groww_to_tradeboard_symbol(groww_symbol, exchange):
             base_symbol = parts[0]
             date_str = parts[1]  # Format: DDMMMYY (e.g., 29MAY25)
 
-            # Combine into Tradeboard format: [BaseSymbol][ExpirationDate]FUT
+            # Combine into OpenAlgo format: [BaseSymbol][ExpirationDate]FUT
             # Example: NIFTY29MAY25FUT
-            tradeboard_symbol = f"{base_symbol}{date_str}FUT"
-            logger.info(f"Converted to Tradeboard format: {tradeboard_symbol}")
-            return tradeboard_symbol
+            openalgo_symbol = f"{base_symbol}{date_str}FUT"
+            logger.info(f"Converted to OpenAlgo format: {openalgo_symbol}")
+            return openalgo_symbol
 
         # Handle case where option type might be missing
         elif len(parts) == 3:
@@ -310,11 +314,11 @@ def format_groww_to_tradeboard_symbol(groww_symbol, exchange):
                     option_type = "CE"
 
                     # Combine into standard format
-                    tradeboard_symbol = f"{base_symbol}{date_str}{strike_price}{option_type}"
+                    openalgo_symbol = f"{base_symbol}{date_str}{strike_price}{option_type}"
                     logger.info(
-                        f"Converted to Tradeboard format (assumed {{option_type}}): {tradeboard_symbol}"
+                        f"Converted to OpenAlgo format (assumed {{option_type}}): {openalgo_symbol}"
                     )
-                    return tradeboard_symbol
+                    return openalgo_symbol
                 except ValueError:
                     # Third part is not a number, might not be an option
                     pass
@@ -332,7 +336,7 @@ def find_symbol_by_token(token, exchange):
         exchange (str): Exchange code
 
     Returns:
-        str: Symbol in Tradeboard format, or None if not found
+        str: Symbol in OpenAlgo format, or None if not found
     """
     result = db_session.query(SymToken).filter_by(token=token, exchange=exchange).first()
     if result:
@@ -345,7 +349,7 @@ def find_token_by_symbol(symbol, exchange):
     Find token in DB by symbol and exchange
 
     Args:
-        symbol (str): Symbol in either Tradeboard or Groww format
+        symbol (str): Symbol in either OpenAlgo or Groww format
         exchange (str): Exchange code
 
     Returns:
@@ -358,19 +362,19 @@ def find_token_by_symbol(symbol, exchange):
 
     # If not found and it's an NFO symbol, try with formatted version
     if exchange == "NFO":
-        # Try with Tradeboard format if it was in Groww format
-        tradeboard_symbol = format_groww_to_tradeboard_symbol(symbol, exchange)
-        if tradeboard_symbol != symbol:
+        # Try with OpenAlgo format if it was in Groww format
+        openalgo_symbol = format_groww_to_openalgo_symbol(symbol, exchange)
+        if openalgo_symbol != symbol:
             result = (
                 db_session.query(SymToken)
-                .filter_by(symbol=tradeboard_symbol, exchange=exchange)
+                .filter_by(symbol=openalgo_symbol, exchange=exchange)
                 .first()
             )
             if result:
                 return result.token
 
-        # Try with Groww format if it was in Tradeboard format
-        groww_symbol = format_tradeboard_to_groww_symbol(symbol, exchange)
+        # Try with Groww format if it was in OpenAlgo format
+        groww_symbol = format_openalgo_to_groww_symbol(symbol, exchange)
         if groww_symbol != symbol:
             result = (
                 db_session.query(SymToken).filter_by(symbol=groww_symbol, exchange=exchange).first()
@@ -439,9 +443,7 @@ def download_groww_instrument_data(output_path):
         original_headers = [h.strip() for h in lines[0].strip().split(",")]
         missing = required_columns - set(original_headers)
         if missing:
-            raise ValueError(
-                f"Groww instrument CSV is missing expected columns: {sorted(missing)}"
-            )
+            raise ValueError(f"Groww instrument CSV is missing expected columns: {sorted(missing)}")
 
         # Write directly to file, preserving Groww's header
         with open(file_path, "w", encoding="utf-8") as f:
@@ -457,7 +459,7 @@ def reformat_symbol(row):
     # Use trading symbol as base instead of name
     symbol = row["trading_symbol"]
     instrument_type = row["instrument_type"]
-    expiry = row["expiry_date"].replace("/", "").upper()
+    row["expiry_date"].replace("/", "").upper()
 
     # For equity and index instruments, use the symbol as is
     if instrument_type in ["EQ", "IDX"]:
@@ -582,9 +584,9 @@ def process_groww_data(path):
         # Add a symbol column based on trading_symbol
         df_mapped["symbol"] = df["trading_symbol"]
 
-        # Replace specific index symbols with standardized Tradeboard names
-        # Mapping Groww index symbols -> Tradeboard standard symbols
-        # (from symbol_Tradeboard.md documentation)
+        # Replace specific index symbols with standardized OpenAlgo names
+        # Mapping Groww index symbols -> OpenAlgo standard symbols
+        # (from symbol_Openalgo.md documentation)
         symbol_replacements = {
             # NSE Index symbols
             "NIFTYJR": "NIFTYNXT50",
@@ -631,7 +633,9 @@ def process_groww_data(path):
         expiry_parsed = pd.to_datetime(df_mapped["expiry"], errors="coerce")
         valid_expiry = expiry_parsed.notna()
         if valid_expiry.any():
-            df_mapped.loc[valid_expiry, "expiry"] = expiry_parsed[valid_expiry].dt.strftime("%d-%b-%y").str.upper()
+            df_mapped.loc[valid_expiry, "expiry"] = (
+                expiry_parsed[valid_expiry].dt.strftime("%d-%b-%y").str.upper()
+            )
         df_mapped["expiry"] = df_mapped["expiry"].fillna("")
 
         # Map instrument types directly from Groww's data
@@ -714,12 +718,16 @@ def process_groww_data(path):
 
         if fno_data_mask.any():
             # Parse expiry dates for FNO rows and format as DDMMMYY
-            fno_expiry = pd.to_datetime(df_mapped.loc[fno_data_mask, "expiry"], format="%d-%b-%y", errors="coerce")
+            fno_expiry = pd.to_datetime(
+                df_mapped.loc[fno_data_mask, "expiry"], format="%d-%b-%y", errors="coerce"
+            )
             expiry_str = fno_expiry.dt.strftime("%d%b%y").str.upper()
 
             # Use underlying symbol where available, else trading_symbol
             underlying = df_mapped.loc[fno_data_mask, "underlying"]
-            base_symbol = underlying.where(underlying.notna() & (underlying != ""), df_mapped.loc[fno_data_mask, "symbol"])
+            base_symbol = underlying.where(
+                underlying.notna() & (underlying != ""), df_mapped.loc[fno_data_mask, "symbol"]
+            )
 
             # Strike as string: preserve decimals (e.g. 287.5 for 2.5-rupee
             # interval stocks like BANKBARODA, ADANIPOWER); collapse only
@@ -727,6 +735,7 @@ def process_groww_data(path):
             def _format_strike(v):
                 f = float(v)
                 return str(int(f)) if f == int(f) else str(f)
+
             strike_str = df_mapped.loc[fno_data_mask, "strike"].fillna(0).apply(_format_strike)
 
             # Get instrument type from original df
@@ -740,14 +749,18 @@ def process_groww_data(path):
                 )
 
             # Build symbols for CE options
-            ce_mask = fno_data_mask & (orig_inst_type.reindex(df_mapped.index, fill_value="") == "CE")
+            ce_mask = fno_data_mask & (
+                orig_inst_type.reindex(df_mapped.index, fill_value="") == "CE"
+            )
             if ce_mask.any():
                 df_mapped.loc[ce_mask, "symbol"] = (
                     base_symbol[ce_mask] + expiry_str[ce_mask] + strike_str[ce_mask] + "CE"
                 )
 
             # Build symbols for PE options
-            pe_mask = fno_data_mask & (orig_inst_type.reindex(df_mapped.index, fill_value="") == "PE")
+            pe_mask = fno_data_mask & (
+                orig_inst_type.reindex(df_mapped.index, fill_value="") == "PE"
+            )
             if pe_mask.any():
                 df_mapped.loc[pe_mask, "symbol"] = (
                     base_symbol[pe_mask] + expiry_str[pe_mask] + strike_str[pe_mask] + "PE"
@@ -831,15 +844,17 @@ def master_contract_download():
         )
         token_df["tick_size"] = pd.to_numeric(token_df["tick_size"], errors="coerce").fillna(0.05)
 
-        # Step 5: Add Tradeboard symbols where needed (vectorized - remove spaces from brsymbol)
-        # For NFO options with spaces in brsymbol, the Tradeboard format is just the symbol without spaces
+        # Step 5: Add OpenAlgo symbols where needed (vectorized - remove spaces from brsymbol)
+        # For NFO options with spaces in brsymbol, the OpenAlgo format is just the symbol without spaces
         nfo_space_mask = (
             (token_df["exchange"] == "NFO")
             & (token_df["instrumenttype"].isin(["CE", "PE"]))
             & (token_df["brsymbol"].str.contains(" ", na=False))
         )
         if nfo_space_mask.any():
-            token_df.loc[nfo_space_mask, "symbol"] = token_df.loc[nfo_space_mask, "brsymbol"].str.replace(" ", "", regex=False)
+            token_df.loc[nfo_space_mask, "symbol"] = token_df.loc[
+                nfo_space_mask, "brsymbol"
+            ].str.replace(" ", "", regex=False)
 
         # Step 5b: Enforce the NOT NULL symbol/brsymbol invariant before insert.
         # Groww's CSV occasionally ships a row with a blank trading_symbol (e.g.

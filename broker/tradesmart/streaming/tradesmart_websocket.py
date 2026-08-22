@@ -285,7 +285,9 @@ class TradeSmartWebSocket:
             self.MSG_TYPE_DEPTH_UNSUB, scrip_list, "depth unsubscription"
         )
 
-    def _send_subscription_message(self, msg_type: str, scrip_list: str, operation_name: str) -> bool:
+    def _send_subscription_message(
+        self, msg_type: str, scrip_list: str, operation_name: str
+    ) -> bool:
         return self._send_message({"t": msg_type, "k": scrip_list}, operation_name)
 
     def _send_message(self, message_dict: dict[str, Any], operation_name: str) -> bool:

@@ -76,7 +76,7 @@ class ScalpingSLState(Base):
 class ScalpingTrackedSymbol(Base):
     """Instruments the scalping terminal has traded (its 'scalping list').
 
-    Broker positions carry no Tradeboard strategy tag, so the terminal records every
+    Broker positions carry no OpenAlgo strategy tag, so the terminal records every
     (symbol, exchange, product) it trades here. This is how Close-All / the position
     book are scoped to the scalping strategy instead of the whole account.
     """
@@ -141,7 +141,9 @@ def _migrate_mode_unique(model, table_name: str):
     # Read all rows into memory FIRST — survives even a catastrophic failure below.
     try:
         with engine.connect() as conn:
-            rows = [dict(r._mapping) for r in conn.execute(text(f"SELECT {collist} FROM {table_name}"))]
+            rows = [
+                dict(r._mapping) for r in conn.execute(text(f"SELECT {collist} FROM {table_name}"))
+            ]
     except Exception as e:
         logger.exception(f"Error reading {table_name} before mode migration: {e}")
         return
@@ -171,8 +173,11 @@ def _migrate_mode_unique(model, table_name: str):
                     existing = conn.execute(text(f"SELECT COUNT(*) FROM {table_name}")).scalar()
                     if not existing:
                         conn.execute(model.__table__.insert(), rows)
-                        logger.warning("Scalping DB: %s restored %d rows after failed migration",
-                                       table_name, len(rows))
+                        logger.warning(
+                            "Scalping DB: %s restored %d rows after failed migration",
+                            table_name,
+                            len(rows),
+                        )
         except Exception as re:
             logger.exception(f"Recovery for {table_name} failed: {re}")
 
@@ -197,8 +202,10 @@ def _migrate_add_columns():
                 # Existing rows default to 'analyze' (conservative: the live
                 # monitor will not auto-act on pre-existing/ambiguous SLs).
                 conn.execute(
-                    text("ALTER TABLE scalping_sl_state ADD COLUMN mode VARCHAR(10) "
-                         "NOT NULL DEFAULT 'analyze'")
+                    text(
+                        "ALTER TABLE scalping_sl_state ADD COLUMN mode VARCHAR(10) "
+                        "NOT NULL DEFAULT 'analyze'"
+                    )
                 )
                 logger.info("Scalping DB: added mode column to scalping_sl_state")
 
@@ -207,8 +214,10 @@ def _migrate_add_columns():
             if "mode" not in tracked_cols:
                 with engine.begin() as conn:
                     conn.execute(
-                        text("ALTER TABLE scalping_tracked_symbol ADD COLUMN mode VARCHAR(10) "
-                             "NOT NULL DEFAULT 'analyze'")
+                        text(
+                            "ALTER TABLE scalping_tracked_symbol ADD COLUMN mode VARCHAR(10) "
+                            "NOT NULL DEFAULT 'analyze'"
+                        )
                     )
                 logger.info("Scalping DB: added mode column to scalping_tracked_symbol")
     except Exception as e:
@@ -329,9 +338,7 @@ def track_symbol(symbol: str, exchange: str, product: str, mode: str = "analyze"
         )
         if exists is None:
             db_session.add(
-                ScalpingTrackedSymbol(
-                    symbol=symbol, exchange=exchange, product=product, mode=mode
-                )
+                ScalpingTrackedSymbol(symbol=symbol, exchange=exchange, product=product, mode=mode)
             )
             db_session.commit()
         return True

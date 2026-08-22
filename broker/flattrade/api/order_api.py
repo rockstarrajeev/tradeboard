@@ -1,10 +1,11 @@
 import json
 import os
-
-import httpx
 import threading
 import time
 
+import httpx
+
+from broker.flattrade.mapping.order_data import normalize_order_status
 from broker.flattrade.mapping.transform_data import (
     map_product_type,
     reverse_map_product_type,
@@ -74,14 +75,14 @@ def get_holdings(auth):
 # --- Per-Symbol Smart Order Lock ---
 # Ensures only one smart order per symbol executes at a time.
 # Others queue and execute sequentially, each getting a fresh position book.
-_symbol_locks = {}          # {symbol_key: threading.Lock}
+_symbol_locks = {}  # {symbol_key: threading.Lock}
 _symbol_locks_lock = threading.Lock()
 
 # --- Position Book Cache ---
 # Caches get_positions() for 1 second. Invalidated after each smart order placement.
-_position_cache = {}        # {auth_token: {"data": ..., "timestamp": ...}}
+_position_cache = {}  # {auth_token: {"data": ..., "timestamp": ...}}
 _position_cache_lock = threading.Lock()
-_POSITION_CACHE_TTL = 1.0   # seconds
+_POSITION_CACHE_TTL = 1.0  # seconds
 
 
 def _get_symbol_lock(symbol, exchange, product):
@@ -116,9 +117,8 @@ def _invalidate_position_cache(auth):
         _position_cache.pop(auth, None)
 
 
-
 def get_open_position(tradingsymbol, exchange, producttype, auth):
-    # Convert Trading Symbol from Tradeboard Format to Broker Format Before Search in OpenPosition
+    # Convert Trading Symbol from OpenAlgo Format to Broker Format Before Search in OpenPosition
     tradingsymbol = get_br_symbol(tradingsymbol, exchange)
     positions_data = _get_cached_positions(auth)
 
@@ -288,7 +288,7 @@ def close_all_positions(current_api_key, auth):
             action = "SELL" if int(position["netqty"]) > 0 else "BUY"
             quantity = abs(int(position["netqty"]))
 
-            # get tradeboard symbol to send to placeorder function
+            # get openalgo symbol to send to placeorder function
             symbol = get_symbol(position["token"], position["exch"])
             logger.debug(f"The Symbol is {symbol}")
 
@@ -396,9 +396,11 @@ def cancel_all_orders_api(data, auth):
     if order_book_response is None:
         return [], []  # Return empty lists indicating failure to retrieve the order book
 
-    # Filter orders that are in 'open' or 'trigger_pending' state
+    # Filter orders still working at the exchange (OPEN / PENDING / TRIGGER_PENDING)
     orders_to_cancel = [
-        order for order in order_book_response if order["status"] in ["OPEN", "TRIGGER_PENDING"]
+        order
+        for order in order_book_response
+        if normalize_order_status(order.get("status")) == "open"
     ]
     # logger.debug(f"{orders_to_cancel}")
     canceled_orders = []

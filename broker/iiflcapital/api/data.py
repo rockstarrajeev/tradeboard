@@ -1,9 +1,16 @@
 import json
+import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 import pandas as pd
 
+from broker.iiflcapital.api.rate_limiter import (
+    MAX_RETRIES,
+    apply_rate_limit,
+    is_rate_limited,
+    retry_delay_from_headers,
+)
 from broker.iiflcapital.baseurl import BASE_URL
 from broker.iiflcapital.streaming.iiflcapital_mapping import supports_open_interest
 from database.token_db import get_brexchange, get_token
@@ -136,9 +143,7 @@ def _looks_like_market_row(value: Any) -> bool:
 def _extract_row_error(row: dict) -> str | None:
     status = str(_first(row, ("status", "Status"), "")).lower()
     if status in ("error", "failed", "failure", "false", "ko"):
-        return str(
-            _first(row, ("message", "error", "description", "emsg"), "Request failed")
-        )
+        return str(_first(row, ("message", "error", "description", "emsg"), "Request failed"))
     return None
 
 
@@ -442,13 +447,28 @@ class BrokerData:
             "M": "monthly",
         }
 
-    def _post(self, endpoint: str, payload: Any) -> Any:
+    def _post(self, endpoint: str, payload: Any, _retry_count: int = 0) -> Any:
+        """
+        POST to an IIFL Capital data endpoint through the shared connection pool.
+
+        This is the single choke point every data.py HTTP call goes through
+        (get_quotes, get_multiquotes, get_depth, get_history, and the OI
+        fetches used by option-chain/OI-tracker/GEX tools), so pacing it with
+        apply_rate_limit() paces all of them -- including the up-to-32-way
+        concurrent fanout in _fetch_openinterest_map -- against IIFL's
+        documented per-category caps (see broker.iiflcapital.api.rate_limiter).
+        On a rate-limit rejection (HTTP 429, detected primarily; a generic
+        retry-hint message as fallback) this retries with backoff instead of
+        surfacing the failure immediately.
+        """
         client = get_httpx_client()
         headers = {
             "Authorization": f"Bearer {self.auth_token}",
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
+
+        apply_rate_limit()
 
         response = client.post(f"{BASE_URL}{endpoint}", headers=headers, json=payload)
         try:
@@ -462,12 +482,20 @@ class BrokerData:
 
         if not _is_success(response.status_code, data):
             message = (
-                data.get("message")
-                if isinstance(data, dict)
-                else None
-            ) or (
-                data.get("error") if isinstance(data, dict) else None
-            ) or f"Request failed with HTTP {response.status_code}"
+                (data.get("message") if isinstance(data, dict) else None)
+                or (data.get("error") if isinstance(data, dict) else None)
+                or f"Request failed with HTTP {response.status_code}"
+            )
+
+            if is_rate_limited(response.status_code, message) and _retry_count < MAX_RETRIES:
+                delay = retry_delay_from_headers(response.headers, _retry_count)
+                logger.warning(
+                    f"IIFL Capital data API rate limited on {endpoint}. Retrying in "
+                    f"{delay:.2f}s (attempt {_retry_count + 1}/{MAX_RETRIES})"
+                )
+                time.sleep(delay)
+                return self._post(endpoint, payload, _retry_count + 1)
+
             raise Exception(message)
 
         return data
@@ -645,7 +673,9 @@ class BrokerData:
             original_exchange_key = f"{original['exchange'].upper()}:{instrument['instrumentId']}"
 
             if use_identity_lookup:
-                row = rows_by_identity.get(identity_key) or rows_by_identity.get(original_exchange_key)
+                row = rows_by_identity.get(identity_key) or rows_by_identity.get(
+                    original_exchange_key
+                )
             else:
                 row = parsed_rows[idx] if idx < len(parsed_rows) else None
 
@@ -749,7 +779,9 @@ class BrokerData:
             "totalsellqty": total_sell_qty,
         }
 
-    def get_history(self, symbol: str, exchange: str, interval: str, start_date: str, end_date: str):
+    def get_history(
+        self, symbol: str, exchange: str, interval: str, start_date: str, end_date: str
+    ):
         broker_interval = self.timeframe_map.get(interval)
         if not broker_interval:
             raise Exception(f"Unsupported timeframe: {interval}")

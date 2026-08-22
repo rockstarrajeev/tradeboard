@@ -35,7 +35,7 @@ class BrokerData:
         logger.warning("Kotak Neo does not support historical data intervals")
 
     def _get_kotak_exchange(self, exchange):
-        """Map Tradeboard exchange to Kotak exchange segment"""
+        """Map OpenAlgo exchange to Kotak exchange segment"""
         exchange_map = {
             "NSE": "nse_cm",
             "BSE": "bse_cm",
@@ -49,7 +49,7 @@ class BrokerData:
         return exchange_map.get(exchange)
 
     def _get_index_symbol_candidates(self, symbol):
-        """Return candidate Neo API neoSymbol names for an Tradeboard index symbol.
+        """Return candidate Neo API neoSymbol names for an OpenAlgo index symbol.
 
         Kotak Neo's /quotes/neosymbol endpoint expects an exact name match. The
         canonical name differs per index and is not always derivable from the
@@ -168,9 +168,7 @@ class BrokerData:
                 # For indices, map to correct Neo API format and use static exchange mapping
                 kotak_exchange = self._get_kotak_exchange(exchange)
                 candidates = self._get_index_symbol_candidates(symbol)
-                logger.info(
-                    f"QUOTES API - Index candidates for {symbol}: {candidates}"
-                )
+                logger.info(f"QUOTES API - Index candidates for {symbol}: {candidates}")
                 response, query = self._query_index_with_candidates(
                     kotak_exchange, candidates, "all"
                 )
@@ -278,9 +276,7 @@ class BrokerData:
                 # For indices, map to correct Neo API format and use static exchange mapping
                 kotak_exchange = self._get_kotak_exchange(exchange)
                 candidates = self._get_index_symbol_candidates(symbol)
-                logger.debug(
-                    f"DEPTH API - Index candidates for {symbol}: {candidates}"
-                )
+                logger.debug(f"DEPTH API - Index candidates for {symbol}: {candidates}")
                 response, query = self._query_index_with_candidates(
                     kotak_exchange, candidates, "depth"
                 )

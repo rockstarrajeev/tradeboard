@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Tradeboard Master Migration Script
+OpenAlgo Master Migration Script
 
 This script runs ALL migrations in the correct order.
 Each migration is idempotent - it skips if already applied.
@@ -54,6 +54,7 @@ MIGRATIONS = [
     ("migrate_sandbox.py", "Sandbox Mode"),
     ("migrate_order_mode.py", "Order Mode & Action Center"),
     ("migrate_sandbox_pnl.py", "Sandbox Day-wise PnL Tracking"),
+    ("migrate_sandbox_trigger_pending.py", "Sandbox Trigger-Pending Order Status"),
     ("migrate_gtt.py", "GTT Order Support"),
     # Performance migrations
     ("migrate_indexes.py", "Database Performance Indexes"),
@@ -69,6 +70,7 @@ MIGRATIONS = [
     ("migrate_samco_auth.py", "Samco 2FA Authentication"),
     ("migrate_zerodha_new_exchanges.py", "Zerodha NCO/GLOBAL_INDEX & GIFTNIFTY Cleanup"),
     ("add_totp_purpose_flags.py", "Per-Purpose 2FA Flags (login/MCP/reset)"),
+    ("migrate_gtt_sandbox.py", "Sandbox GTT Support & CAS F&O Close (15:40)"),
 ]
 
 
@@ -109,7 +111,7 @@ def main():
     print()
     print("#" * 60)
     print("#" + " " * 58 + "#")
-    print("#" + "       Tradeboard Master Migration Script".center(58) + "#")
+    print("#" + "       OpenAlgo Master Migration Script".center(58) + "#")
     print("#" + " " * 58 + "#")
     print("#" * 60)
     print()

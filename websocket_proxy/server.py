@@ -22,6 +22,8 @@ from .base_adapter import BaseBrokerWebSocketAdapter
 from .broker_factory import create_broker_adapter
 from .mode_utils import (
     MODE_BY_UPPER_LABEL as _MODE_BY_UPPER_LABEL,
+)
+from .mode_utils import (
     normalize_mode,
     normalize_mode_or_none,
 )
@@ -55,7 +57,7 @@ class WebSocketProxy:
                 f"WebSocket port {port} is already in use on {host}.\n"
                 f"This port is required for SDK compatibility (see strategies/ltp_example.py).\n"
                 f"Please:\n"
-                f"1. Stop any other Tradeboard instances running on port {port}\n"
+                f"1. Stop any other OpenAlgo instances running on port {port}\n"
                 f"2. Kill any processes using port {port}: lsof -ti:{port} | xargs kill -9\n"
                 f"3. Or wait for the port to be released\n"
                 f"Cannot start WebSocket server with port switching as it would break SDK clients."
@@ -74,6 +76,11 @@ class WebSocketProxy:
         # Maps (symbol, exchange, mode) -> set of client_ids
         # This eliminates the need for nested loops in zmq_listener
         self.subscription_index: dict[tuple[str, str, int], set[int]] = defaultdict(set)
+
+        # Order-update subscribers: user_id -> set of client_ids that sent
+        # {"action": "subscribe_orders"}. Account-scoped (no symbol/mode),
+        # unlike market-data subscriptions above.
+        self.order_subscribers: dict[str, set[int]] = defaultdict(set)
 
         # PERFORMANCE OPTIMIZATION 2: Message throttling to avoid excessive updates
         # Maps (symbol, exchange, mode) -> last message timestamp
@@ -100,7 +107,7 @@ class WebSocketProxy:
         self.MODE_MAP = dict(_MODE_BY_UPPER_LABEL)
 
         # RESOURCE MONITORING: Track metrics for health checks
-        self._stats_lock = aio.Lock() if hasattr(aio, 'Lock') else None
+        self._stats_lock = aio.Lock() if hasattr(aio, "Lock") else None
         self._messages_processed = 0
         self._last_cleanup_time = time.time()
         self._cleanup_interval = 300  # Clean stale entries every 5 minutes
@@ -139,7 +146,7 @@ class WebSocketProxy:
             loop = aio.get_running_loop()
 
             # Create the ZMQ listener task
-            zmq_task = loop.create_task(self.zmq_listener())
+            loop.create_task(self.zmq_listener())
 
             # Start WebSocket server
             stop = aio.Future()  # Used to stop the server
@@ -396,13 +403,16 @@ class WebSocketProxy:
         try:
             # Get base adapter stats if available
             from .base_adapter import BaseBrokerWebSocketAdapter
+
             adapter_stats = BaseBrokerWebSocketAdapter.get_resource_stats()
         except Exception:
             adapter_stats = {}
 
         # Calculate subscription index stats
         total_subscriptions = len(self.subscription_index)
-        total_client_subscriptions = sum(len(clients) for clients in self.subscription_index.values())
+        total_client_subscriptions = sum(
+            len(clients) for clients in self.subscription_index.values()
+        )
         throttle_entries = len(self.last_message_time)
 
         return {
@@ -419,8 +429,7 @@ class WebSocketProxy:
                 "unique_symbols": total_subscriptions,
                 "total_client_subscriptions": total_client_subscriptions,
                 "per_client_counts": {
-                    str(client_id): len(subs)
-                    for client_id, subs in self.subscriptions.items()
+                    str(client_id): len(subs) for client_id, subs in self.subscriptions.items()
                 },
             },
             "broker_adapters": {
@@ -453,7 +462,8 @@ class WebSocketProxy:
 
         # Find and remove stale entries
         stale_keys = [
-            key for key, timestamp in self.last_message_time.items()
+            key
+            for key, timestamp in self.last_message_time.items()
             if current_time - timestamp > self._throttle_entry_max_age
         ]
 
@@ -668,6 +678,12 @@ class WebSocketProxy:
         if client_id in self.user_mapping:
             user_id = self.user_mapping[client_id]
 
+            # Clean up order-update subscription
+            if user_id in self.order_subscribers:
+                self.order_subscribers[user_id].discard(client_id)
+                if not self.order_subscribers[user_id]:
+                    del self.order_subscribers[user_id]
+
             # Check if this was the last client for this user
             is_last_client = True
             for other_client_id, other_user_id in self.user_mapping.items():
@@ -723,6 +739,10 @@ class WebSocketProxy:
                 await self.subscribe_client(client_id, data)
             elif action in ["unsubscribe", "unsubscribe_all"]:
                 await self.unsubscribe_client(client_id, data)
+            elif action == "subscribe_orders":
+                await self.subscribe_orders_client(client_id, data)
+            elif action == "unsubscribe_orders":
+                await self.unsubscribe_orders_client(client_id, data)
             elif action == "get_broker_info":
                 await self.get_broker_info(client_id)
             elif action == "get_supported_brokers":
@@ -894,19 +914,24 @@ class WebSocketProxy:
                 initialization_result = adapter.initialize(broker_name, user_id)
                 if initialization_result and initialization_result.get("status") == "error":
                     error_msg = initialization_result.get(
-                        "message", initialization_result.get("error", "Failed to initialize broker adapter")
+                        "message",
+                        initialization_result.get("error", "Failed to initialize broker adapter"),
                     )
 
                     # Check if this is an auth error (403/401) - retry with fresh token
                     # This handles the stale cache issue described in GitHub issue #765
                     if adapter.is_auth_error(error_msg):
-                        logger.warning(f"Auth error during initialization for user {user_id}, retrying with fresh token")
+                        logger.warning(
+                            f"Auth error during initialization for user {user_id}, retrying with fresh token"
+                        )
                         adapter.clear_auth_cache_for_user(user_id)
 
                         # Retry initialization with fresh credentials
                         initialization_result = adapter.initialize(broker_name, user_id)
                         if initialization_result and initialization_result.get("status") == "error":
-                            error_msg = initialization_result.get("message", "Failed to initialize after retry")
+                            error_msg = initialization_result.get(
+                                "message", "Failed to initialize after retry"
+                            )
                             await self.send_error(client_id, "BROKER_INIT_ERROR", error_msg)
                             return
                     else:
@@ -918,25 +943,28 @@ class WebSocketProxy:
                 # Handle both response formats:
                 # - Adapter format: {"status": "error", "code": "...", "message": "..."}
                 # - ConnectionPool format: {"success": False, "error": "..."}
-                is_error = (
-                    (connect_result and connect_result.get("status") == "error") or
-                    (connect_result and connect_result.get("success") == False)
+                is_error = (connect_result and connect_result.get("status") == "error") or (
+                    connect_result and not connect_result.get("success")
                 )
                 if is_error:
-                    error_msg = connect_result.get("message", connect_result.get("error", "Failed to connect to broker"))
+                    error_msg = connect_result.get(
+                        "message", connect_result.get("error", "Failed to connect to broker")
+                    )
                     error_code = connect_result.get("code", "")
 
                     # Always retry connection failures with fresh token (issue #765)
                     # Connection failures after re-login are almost always due to stale cached tokens
                     # The upstox_client logs "401 Unauthorized" but returns generic "CONNECTION_FAILED"
                     should_retry = (
-                        adapter.is_auth_error(error_msg) or
-                        error_code in ("CONNECTION_FAILED", "CONNECTION_ERROR") or
-                        "failed to connect" in error_msg.lower()
+                        adapter.is_auth_error(error_msg)
+                        or error_code in ("CONNECTION_FAILED", "CONNECTION_ERROR")
+                        or "failed to connect" in error_msg.lower()
                     )
 
                     if should_retry:
-                        logger.warning(f"Connection failed for user {user_id}, retrying with fresh token (error: {error_msg}, code: {error_code})")
+                        logger.warning(
+                            f"Connection failed for user {user_id}, retrying with fresh token (error: {error_msg}, code: {error_code})"
+                        )
 
                         # Clear stale cache in WebSocket process (issue #765)
                         self._clear_auth_cache_for_user(user_id)
@@ -953,12 +981,15 @@ class WebSocketProxy:
                             init_retry_result = adapter.initialize(broker_name, user_id)
                         # Handle both response formats
                         init_is_error = (
-                            (init_retry_result and init_retry_result.get("status") == "error") or
-                            (init_retry_result and init_retry_result.get("success") == False)
-                        )
+                            init_retry_result and init_retry_result.get("status") == "error"
+                        ) or (init_retry_result and not init_retry_result.get("success"))
                         if init_is_error:
-                            error_msg = init_retry_result.get("message", init_retry_result.get("error", "Failed to re-initialize"))
-                            logger.error(f"Re-initialization failed for user {user_id}: {error_msg}")
+                            error_msg = init_retry_result.get(
+                                "message", init_retry_result.get("error", "Failed to re-initialize")
+                            )
+                            logger.error(
+                                f"Re-initialization failed for user {user_id}: {error_msg}"
+                            )
                             await self.send_error(client_id, "BROKER_INIT_ERROR", error_msg)
                             return
 
@@ -967,12 +998,16 @@ class WebSocketProxy:
                         connect_result = adapter.connect()
                         # Handle both response formats
                         connect_is_error = (
-                            (connect_result and connect_result.get("status") == "error") or
-                            (connect_result and connect_result.get("success") == False)
-                        )
+                            connect_result and connect_result.get("status") == "error"
+                        ) or (connect_result and not connect_result.get("success"))
                         if connect_is_error:
-                            error_msg = connect_result.get("message", connect_result.get("error", "Failed to connect after retry"))
-                            logger.error(f"Retry connection also failed for user {user_id}: {error_msg}")
+                            error_msg = connect_result.get(
+                                "message",
+                                connect_result.get("error", "Failed to connect after retry"),
+                            )
+                            logger.error(
+                                f"Retry connection also failed for user {user_id}: {error_msg}"
+                            )
                             await self.send_error(client_id, "BROKER_CONNECTION_ERROR", error_msg)
                             return
 
@@ -1003,36 +1038,55 @@ class WebSocketProxy:
                         adapter = create_broker_adapter(broker_name)
                         if adapter:
                             # Clear cache on the new adapter as well
-                            if hasattr(adapter, 'clear_auth_cache_for_user'):
+                            if hasattr(adapter, "clear_auth_cache_for_user"):
                                 adapter.clear_auth_cache_for_user(user_id)
 
                             initialization_result = adapter.initialize(broker_name, user_id)
                             # Handle both response formats
                             init_is_error = (
-                                (initialization_result and initialization_result.get("status") == "error") or
-                                (initialization_result and initialization_result.get("success") == False)
+                                initialization_result
+                                and initialization_result.get("status") == "error"
+                            ) or (
+                                initialization_result and not initialization_result.get("success")
                             )
                             if not init_is_error:
                                 connect_result = adapter.connect()
                                 # Handle both response formats
                                 connect_is_error = (
-                                    (connect_result and connect_result.get("status") == "error") or
-                                    (connect_result and connect_result.get("success") == False)
-                                )
+                                    connect_result and connect_result.get("status") == "error"
+                                ) or (connect_result and not connect_result.get("success"))
                                 if not connect_is_error:
                                     self.broker_adapters[user_id] = adapter
-                                    logger.info(f"Successfully connected {broker_name} adapter for user {user_id} after retry")
+                                    logger.info(
+                                        f"Successfully connected {broker_name} adapter for user {user_id} after retry"
+                                    )
                                     # Fall through to success response
                                 else:
-                                    error_msg = connect_result.get("message", connect_result.get("error", "Failed to connect after retry"))
-                                    await self.send_error(client_id, "BROKER_CONNECTION_ERROR", error_msg)
+                                    error_msg = connect_result.get(
+                                        "message",
+                                        connect_result.get(
+                                            "error", "Failed to connect after retry"
+                                        ),
+                                    )
+                                    await self.send_error(
+                                        client_id, "BROKER_CONNECTION_ERROR", error_msg
+                                    )
                                     return
                             else:
-                                error_msg = initialization_result.get("message", initialization_result.get("error", "Failed to initialize after retry"))
+                                error_msg = initialization_result.get(
+                                    "message",
+                                    initialization_result.get(
+                                        "error", "Failed to initialize after retry"
+                                    ),
+                                )
                                 await self.send_error(client_id, "BROKER_INIT_ERROR", error_msg)
                                 return
                         else:
-                            await self.send_error(client_id, "BROKER_ERROR", f"Failed to create adapter for {broker_name}")
+                            await self.send_error(
+                                client_id,
+                                "BROKER_ERROR",
+                                f"Failed to create adapter for {broker_name}",
+                            )
                             return
                     except Exception as retry_error:
                         logger.exception(f"Retry also failed for {broker_name}: {retry_error}")
@@ -1484,6 +1538,66 @@ class WebSocketProxy:
             unsub_response["request_id"] = request_id
         await self.send_message(client_id, unsub_response)
 
+    async def subscribe_orders_client(self, client_id, data):
+        """
+        Subscribe a client to real-time order updates for their account.
+
+        Account-scoped (no symbol/exchange/mode) — every order-status change
+        for the authenticated user's broker session is delivered, sourced
+        from the order.update event bus topic (broker postback/order-WS
+        adapters or the sandbox engine) via subscribers/wsproxy_subscriber.py.
+
+        Args:
+            client_id: ID of the client
+            data: Subscription data (optional request_id)
+        """
+        if client_id not in self.user_mapping:
+            await self.send_error(client_id, "NOT_AUTHENTICATED", "You must authenticate first")
+            return
+
+        user_id = self.user_mapping[client_id]
+        request_id = data.get("request_id")
+
+        self.order_subscribers[user_id].add(client_id)
+
+        response = {
+            "type": "subscribe_orders",
+            "status": "success",
+            "message": "Subscribed to order updates",
+        }
+        if request_id is not None:
+            response["request_id"] = request_id
+        await self.send_message(client_id, response)
+
+    async def unsubscribe_orders_client(self, client_id, data):
+        """
+        Unsubscribe a client from real-time order updates.
+
+        Args:
+            client_id: ID of the client
+            data: Unsubscription data (optional request_id)
+        """
+        if client_id not in self.user_mapping:
+            await self.send_error(client_id, "NOT_AUTHENTICATED", "You must authenticate first")
+            return
+
+        user_id = self.user_mapping[client_id]
+        request_id = data.get("request_id")
+
+        if user_id in self.order_subscribers:
+            self.order_subscribers[user_id].discard(client_id)
+            if not self.order_subscribers[user_id]:
+                del self.order_subscribers[user_id]
+
+        response = {
+            "type": "unsubscribe_orders",
+            "status": "success",
+            "message": "Unsubscribed from order updates",
+        }
+        if request_id is not None:
+            response["request_id"] = request_id
+        await self.send_message(client_id, response)
+
     async def send_message(self, client_id, message):
         """
         Send a message to a client
@@ -1584,7 +1698,9 @@ class WebSocketProxy:
                     del self.broker_adapters[user_id]
                     logger.info(f"Disconnected stale broker adapter for user {user_id}")
                 except Exception as adapter_error:
-                    logger.warning(f"Error disconnecting adapter for user {user_id}: {adapter_error}")
+                    logger.warning(
+                        f"Error disconnecting adapter for user {user_id}: {adapter_error}"
+                    )
 
             # broker_adapters only tracks the wrapper currently attached to a
             # client. The global connection-pool registry may still contain an
@@ -1599,14 +1715,42 @@ class WebSocketProxy:
                         f"Disconnected {removed_pools} cached connection pool(s) for user {user_id}"
                     )
             except Exception as pool_error:
-                logger.warning(
-                    f"Error cleaning connection pools for user {user_id}: {pool_error}"
-                )
+                logger.warning(f"Error cleaning connection pools for user {user_id}: {pool_error}")
 
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse cache invalidation message: {e}")
         except Exception as e:
             logger.exception(f"Error processing cache invalidation: {e}")
+
+    async def _handle_order_update(self, data_str: str):
+        """
+        Relay an order-update message (published by
+        subscribers/wsproxy_subscriber.py onto the "{BROKER}_{USER_ID}_orders"
+        / "ANALYZE_{USER_ID}_orders" ZMQ topics) to every WS client that sent
+        {"action": "subscribe_orders"} for that user.
+
+        Args:
+            data_str: JSON string — the payload built in
+                subscribers/wsproxy_subscriber.py::on_order_update, already
+                shaped as the client-facing {"type": "order_update", ...} message.
+        """
+        message = json.loads(data_str)
+        user_id = message.get("user_id")
+        if not user_id:
+            logger.warning("Order update message missing user_id")
+            return
+
+        client_ids = self.order_subscribers.get(user_id)
+        if not client_ids:
+            return  # no WS clients currently subscribed for this user
+
+        send_tasks = [
+            self.send_message(client_id, message)
+            for client_id in list(client_ids)
+            if client_id in self.clients
+        ]
+        if send_tasks:
+            await aio.gather(*send_tasks, return_exceptions=True)
 
     def _is_auth_error_exception(self, error_message: str) -> bool:
         """
@@ -1690,7 +1834,9 @@ class WebSocketProxy:
         Also handles cache invalidation messages from Flask process for cross-process
         cache synchronization (see GitHub issue #765).
         """
-        logger.debug("Starting OPTIMIZED ZeroMQ listener with subscription indexing and cache invalidation support")
+        logger.debug(
+            "Starting OPTIMIZED ZeroMQ listener with subscription indexing and cache invalidation support"
+        )
 
         while self.running:
             try:
@@ -1728,10 +1874,22 @@ class WebSocketProxy:
                         logger.exception(f"Error handling cache invalidation: {e}")
                     continue  # Skip market data processing for cache messages
 
-                # Skip private account-level event topics (orders, positions, margins).
+                # Order-update relay: published by subscribers/wsproxy_subscriber.py
+                # (topic "{BROKER}_{USER_ID}_orders" or "ANALYZE_{USER_ID}_orders").
+                # user_id comes from the JSON payload, not topic-string parsing —
+                # usernames may contain underscores, same reasoning as the
+                # CACHE_INVALIDATE_* handling below.
+                if topic_str.endswith("_orders"):
+                    try:
+                        await self._handle_order_update(data_str)
+                    except Exception as e:
+                        logger.exception(f"Error handling order update: {e}")
+                    continue
+
+                # Skip other private account-level event topics (positions, margins).
                 # These are published by broker adapters on the shared ZMQ socket but
                 # do not follow the BROKER_EXCHANGE_SYMBOL_MODE market-data format.
-                if topic_str.endswith(("_orders", "_positions", "_margins")):
+                if topic_str.endswith(("_positions", "_margins")):
                     logger.debug(f"Skipping private event topic: {topic_str}")
                     continue
 
@@ -1765,7 +1923,10 @@ class WebSocketProxy:
                     ("MCX", "INDEX"),
                     ("GLOBAL", "INDEX"),
                 )
-                if len(remaining) >= 2 and (remaining[0], remaining[1]) in _MULTI_SEGMENT_EXCHANGE_PREFIXES:
+                if (
+                    len(remaining) >= 2
+                    and (remaining[0], remaining[1]) in _MULTI_SEGMENT_EXCHANGE_PREFIXES
+                ):
                     exchange = f"{remaining[0]}_{remaining[1]}"
                     symbol = "_".join(remaining[2:])
                 else:

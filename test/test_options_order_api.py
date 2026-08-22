@@ -8,17 +8,17 @@ Works in both:
 - Live Mode: Places real orders with the broker
 - Analyze Mode (Sandbox): Places sandbox orders for testing
 
-Make sure the Tradeboard application is running before executing this script.
+Make sure the OpenAlgo application is running before executing this script.
 
 Usage:
-    cd D:/tradeboard-sandbox-test/tradeboard/test
+    cd D:/openalgo-sandbox-test/openalgo/test
     python test_options_order_api.py
 """
 
 import os
 import sys
 
-# Add parent directory to path so we can import from tradeboard modules if needed
+# Add parent directory to path so we can import from openalgo modules if needed
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import json
@@ -261,16 +261,16 @@ def test_iron_condor_legs():
             data = response.json()
 
             if data.get("status") == "success":
-                print(f"✓ Order ID: {data.get('orderid')}")
+                print(f"Order ID: {data.get('orderid')}")
                 print(f"  Symbol: {data.get('symbol')}")
                 print(f"  Exchange: {data.get('exchange')}")
                 if "mode" in data:
                     print(f"  Mode: {data.get('mode')}")
             else:
-                print(f"✗ Error: {data.get('message')}")
+                print(f"Error: {data.get('message')}")
 
         except Exception as e:
-            print(f"✗ Exception: {e}")
+            print(f"Exception: {e}")
 
 
 def test_validation_error():
@@ -310,7 +310,7 @@ def test_validation_error():
 
 if __name__ == "__main__":
     print("\n" + "=" * 60)
-    print("Tradeboard Options Order API Test Suite")
+    print("OpenAlgo Options Order API Test Suite")
     print("=" * 60)
     print(f"\nBase URL: {BASE_URL}")
     print(f"API Key: {API_KEY[:10]}..." if len(API_KEY) > 10 else f"API Key: {API_KEY}")

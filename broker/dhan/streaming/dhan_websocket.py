@@ -65,7 +65,7 @@ class DhanWebSocket:
             client_id: Dhan client ID
             access_token: Access token for authentication
             is_20_depth: If True, connects to 20-level depth endpoint
-            user_id: Tradeboard user id, used to re-read a fresh access token from
+            user_id: OpenAlgo user id, used to re-read a fresh access token from
                 the database on reconnect (tokens roll over daily at ~3 AM IST)
         """
         self.client_id = client_id
@@ -396,9 +396,7 @@ class DhanWebSocket:
         for mode, instruments in by_mode.items():
             request_code = self.REQUEST_CODES.get(f"SUBSCRIBE_{mode}")
             if request_code is None:
-                self.logger.warning(
-                    f"Skipping resubscribe for unknown mode {mode}"
-                )
+                self.logger.warning(f"Skipping resubscribe for unknown mode {mode}")
                 continue
 
             for i in range(0, len(instruments), max_batch_size):
@@ -415,9 +413,7 @@ class DhanWebSocket:
                             f"Resubscribed batch of {len(batch)} instruments in {mode} mode"
                         )
                 except Exception as e:
-                    self.logger.error(
-                        f"Error resubscribing batch in {mode}: {e}", exc_info=True
-                    )
+                    self.logger.error(f"Error resubscribing batch in {mode}: {e}", exc_info=True)
 
     def _start_health_check(self):
         """Start the data-stall watchdog thread (issue #1372).
@@ -428,9 +424,7 @@ class DhanWebSocket:
         """
         if self._health_check_thread and self._health_check_thread.is_alive():
             return
-        self._health_check_thread = threading.Thread(
-            target=self._health_check_loop, daemon=True
-        )
+        self._health_check_thread = threading.Thread(target=self._health_check_loop, daemon=True)
         self._health_check_thread.start()
 
     def _health_check_loop(self):
@@ -454,9 +448,7 @@ class DhanWebSocket:
                     try:
                         self.ws.close()
                     except Exception as e:
-                        self.logger.warning(
-                            f"Error closing WebSocket during stall reconnect: {e}"
-                        )
+                        self.logger.warning(f"Error closing WebSocket during stall reconnect: {e}")
                 break
 
     def _on_error(self, ws, error):
@@ -481,11 +473,11 @@ class DhanWebSocket:
         """Check if a WebSocket error is fatal (non-recoverable)"""
         error_lower = error_str.lower()
         fatal_indicators = [
-            "429",                          # HTTP 429 Too Many Requests
-            "too many requests",            # Rate limited / subscription expired
-            "client id is blocked",         # IP/client blocked by Dhan
-            "subscription",                 # Subscription related errors
-            "plan",                         # Plan/subscription expired
+            "429",  # HTTP 429 Too Many Requests
+            "too many requests",  # Rate limited / subscription expired
+            "client id is blocked",  # IP/client blocked by Dhan
+            "subscription",  # Subscription related errors
+            "plan",  # Plan/subscription expired
         ]
         return any(indicator in error_lower for indicator in fatal_indicators)
 
@@ -493,7 +485,11 @@ class DhanWebSocket:
         """Get a user-friendly message for fatal WebSocket errors"""
         error_lower = error_str.lower()
 
-        if "429" in error_lower or "too many requests" in error_lower or "client id is blocked" in error_lower:
+        if (
+            "429" in error_lower
+            or "too many requests" in error_lower
+            or "client id is blocked" in error_lower
+        ):
             return (
                 "Dhan WebSocket connection blocked (HTTP 429 - Too Many Requests). "
                 "This usually means your Dhan data subscription has expired or is inactive. "
@@ -847,11 +843,11 @@ class DhanWebSocket:
     def __del__(self):
         """Destructor to ensure resources are cleaned up"""
         try:
-            if hasattr(self, 'running') and self.running:
+            if hasattr(self, "running") and self.running:
                 self.running = False
                 self.connected = False
                 # Try to close WebSocket if still open
-                if hasattr(self, 'ws') and self.ws:
+                if hasattr(self, "ws") and self.ws:
                     try:
                         self.ws.close()
                     except Exception:

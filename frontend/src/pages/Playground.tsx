@@ -24,7 +24,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router'
 import { authApi } from '@/api/auth'
 import { LogoutConfirmDialog } from '@/components/auth/LogoutConfirmDialog'
 import { WebSocketTesterPanel } from '@/components/playground/WebSocketTesterPanel'
@@ -623,8 +623,8 @@ export default function Playground() {
             <Menu className="h-4 w-4" />
           </Button>
           <div className="flex items-center gap-2 px-2">
-            <img src="/images/android-chrome-192x192.png" alt="Tradeboard" className="w-6 h-6" />
-            <span className="font-semibold text-sm">tradeboard</span>
+            <img src="/images/android-chrome-192x192.png" alt="OpenAlgo" className="w-6 h-6" />
+            <span className="font-semibold text-sm">openalgo</span>
           </div>
         </div>
 
@@ -784,7 +784,7 @@ export default function Playground() {
               ))}
               <DropdownMenuItem asChild>
                 <a
-                  href="https://docs.rajeevupadhyay.com"
+                  href="https://docs.openalgo.in"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"
@@ -1172,7 +1172,7 @@ export default function Playground() {
                 <div className="flex-1 flex flex-col items-center justify-center text-center bg-background">
                   <img
                     src="/images/android-chrome-192x192.png"
-                    alt="Tradeboard"
+                    alt="OpenAlgo"
                     className="w-16 h-16 mb-4"
                   />
                   <h2 className="text-lg font-semibold text-foreground/80 mb-2">

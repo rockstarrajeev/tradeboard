@@ -208,7 +208,7 @@ def download_csv_fyers_data(output_path: str) -> tuple[bool, list[str], str | No
 
 def reformat_symbol_detail(s):
     parts = s.split()  # Split the string into parts
-    # Reorder and format the parts to match the Tradeboard standard symbol format
+    # Reorder and format the parts to match the OpenAlgo standard symbol format
     # Input format: "Name DD Mon YY Strike" (e.g., "NIFTY 02 Mar 26 30600")
     # Output format: Name + DD + MMM + YY + Strike (e.g., "NIFTY02MAR2630600")
     # This matches the DDMMMYY convention used by all other brokers
@@ -261,7 +261,7 @@ def process_fyers_nse_csv(path):
         .str.replace(" ", "", regex=False)
         .str.replace("-", "", regex=False)
     )
-    # Override specific symbols where normalized name differs from Tradeboard standard
+    # Override specific symbols where normalized name differs from OpenAlgo standard
     df_filtered.loc[nse_idx_mask, "symbol"] = df_filtered.loc[nse_idx_mask, "symbol"].replace(
         {"NIFTYMID50": "NIFTYMIDCAP50"}
     )
@@ -330,7 +330,7 @@ def process_fyers_bse_csv(path):
 
     df_filtered.loc[:, "symbol"] = df_filtered["Underlying symbol"]
 
-    # Normalize BSE_INDEX symbols to Tradeboard standard format
+    # Normalize BSE_INDEX symbols to OpenAlgo standard format
     bse_idx_mask = df_filtered["exchange"] == "BSE_INDEX"
     bse_index_map = {
         "SENSEX": "SENSEX",
@@ -498,7 +498,7 @@ def process_fyers_cds_json(path):
     # Convert dict-of-dicts to DataFrame
     df = pd.DataFrame(list(data.values()))
 
-    # Map JSON fields to Tradeboard schema
+    # Map JSON fields to OpenAlgo schema
     df["token"] = df["fyToken"]
     df["name"] = df["symbolDetails"]
 
@@ -519,12 +519,10 @@ def process_fyers_cds_json(path):
         lambda x: reformat_symbol_detail(x) if pd.notnull(x) else x
     )
     df.loc[df["optType"] == "CE", "symbol"] = (
-        df["symDetails"].apply(lambda x: reformat_symbol_detail(x) if pd.notnull(x) else x)
-        + "CE"
+        df["symDetails"].apply(lambda x: reformat_symbol_detail(x) if pd.notnull(x) else x) + "CE"
     )
     df.loc[df["optType"] == "PE", "symbol"] = (
-        df["symDetails"].apply(lambda x: reformat_symbol_detail(x) if pd.notnull(x) else x)
-        + "PE"
+        df["symDetails"].apply(lambda x: reformat_symbol_detail(x) if pd.notnull(x) else x) + "PE"
     )
 
     # Keep only the columns needed for the database schema
@@ -632,7 +630,7 @@ def process_fyers_mcx_json(path):
     # Convert dict-of-dicts to DataFrame
     df = pd.DataFrame(list(data.values()))
 
-    # Map JSON fields to Tradeboard schema
+    # Map JSON fields to OpenAlgo schema
     df["token"] = df["fyToken"]
     df["name"] = df["symbolDetails"]
 
@@ -653,12 +651,10 @@ def process_fyers_mcx_json(path):
         lambda x: reformat_symbol_detail(x) if pd.notnull(x) else x
     )
     df.loc[df["optType"] == "CE", "symbol"] = (
-        df["symDetails"].apply(lambda x: reformat_symbol_detail(x) if pd.notnull(x) else x)
-        + "CE"
+        df["symDetails"].apply(lambda x: reformat_symbol_detail(x) if pd.notnull(x) else x) + "CE"
     )
     df.loc[df["optType"] == "PE", "symbol"] = (
-        df["symDetails"].apply(lambda x: reformat_symbol_detail(x) if pd.notnull(x) else x)
-        + "PE"
+        df["symDetails"].apply(lambda x: reformat_symbol_detail(x) if pd.notnull(x) else x) + "PE"
     )
 
     # Keep only the columns needed for the database schema

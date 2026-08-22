@@ -37,13 +37,13 @@ The fix flips the topology to strict fan-in: the proxy SUB is the sole binder, a
 
 **Multi-session login audit — deep dive (#1591)**
 
-Tradeboard is single-user/single-broker per instance, but the same user can be logged in from up to `MAX_SESSIONS_PER_USER` (5) devices at once, all sharing **one** server-side broker WebSocket feed. Three bugs in that sharing surfaced together:
+OpenAlgo is single-user/single-broker per instance, but the same user can be logged in from up to `MAX_SESSIONS_PER_USER` (5) devices at once, all sharing **one** server-side broker WebSocket feed. Three bugs in that sharing surfaced together:
 
 * `3aadeb33` — A second device's login resumes the existing broker session and re-persists the *same* token via `upsert_auth()`, which unconditionally published a ZMQ `CACHE_INVALIDATE_ALL` (disconnecting the shared adapter + pool) and ran `cleanup_pools_for_user()` — tearing down the feed the first device was actively streaming from. Symptoms: Shoonya ticks stopped until a page refresh; Flattrade's single-active-session Noren backend dropped the token entirely ("broker session expired"). The fix gates that teardown on an *actual* token/feed-token/broker/revoke-flag change (comparing decrypted plaintext, since Fernet ciphertext is non-deterministic) — an unchanged session now just clears cheap in-process caches and returns early.
 * `350f0733` — The daily ~3 AM IST rollover path revoked the shared broker token based only on the *current* cookie's `login_time`. A device left idle overnight would, on its first request after rollover, blindly revoke a token another device had already re-established that morning — kicking the fresh device and collaterally killing API-key/webhook access. The guard now checks `active_sessions` for a session authenticated at/after today's rollover boundary before revoking; if one exists, only the stale device's own session row is dropped.
 * `fcf1f4ee` — `update_session_last_seen` existed but was never called, so `active_sessions.last_seen` stayed frozen at login time — the active-session list couldn't distinguish a live device from one whose browser was closed. A throttled heartbeat (once per device per 30s) is now wired into the SPA's `/session-status` poll.
 
-Together these mean multiple devices genuinely stream and stay authenticated concurrently, which is the deployment model Tradeboard already assumed but didn't fully enforce.
+Together these mean multiple devices genuinely stream and stay authenticated concurrently, which is the deployment model OpenAlgo already assumed but didn't fully enforce.
 
 ***
 
@@ -99,7 +99,7 @@ Together these mean multiple devices genuinely stream and stay authenticated con
 * `SQLAlchemy` 2.0.49 → 2.0.51, `uvicorn` 0.44.0 → 0.49.0, `requests` 2.33.1 → 2.34.2
 * `kaleido` + `choreographer` → 1.3.0 (matched pair; fixes Plotly→PNG rendering broken since kaleido 1.2.0, used by Telegram chart commands, #1578)
 * Broad low-risk patch/minor sweep: `certifi`, `click`, `plotly` 6.8.0, `pytest` 9.1.1, `python-telegram-bot` 22.8, `tzdata`, `duckdb`, `orjson`, and others
-* `tradeboard` SDK pin unchanged at `2.0.2` (PyPI: <https://pypi.org/project/tradeboard/>)
+* `openalgo` SDK pin unchanged at `2.0.2` (PyPI: <https://pypi.org/project/openalgo/>)
 
 ***
 
@@ -120,14 +120,14 @@ Together these mean multiple devices genuinely stream and stay authenticated con
 **For existing installs (Native Ubuntu):**
 
 ```bash
-cd /var/python/tradeboard-flask/<deploy-name>/tradeboard
+cd /var/python/openalgo-flask/<deploy-name>/openalgo
 sudo ./install/update.sh
 ```
 
 **For existing installs (Docker):**
 
 ```bash
-cd /opt/tradeboard/<domain>
+cd /opt/openalgo/<domain>
 sudo docker compose pull
 sudo docker compose up -d
 ```
@@ -155,9 +155,9 @@ uv run app.py
 
 **Links**
 
-* **Repository**: <https://github.com/rockstarrajeev/tradeboard>
-* **Documentation**: <https://docs.rajeevupadhyay.com>
-* **Python SDK on PyPI**: <https://pypi.org/project/tradeboard/>
-* **Discord**: <https://www.rajeevupadhyay.com/discord>
-* **YouTube**: <https://www.youtube.com/@tradeboard>
-* **Issue tracker**: <https://github.com/rockstarrajeev/tradeboard/issues>
+* **Repository**: <https://github.com/marketcalls/openalgo>
+* **Documentation**: <https://docs.openalgo.in>
+* **Python SDK on PyPI**: <https://pypi.org/project/openalgo/>
+* **Discord**: <https://www.openalgo.in/discord>
+* **YouTube**: <https://www.youtube.com/@openalgo>
+* **Issue tracker**: <https://github.com/marketcalls/openalgo/issues>

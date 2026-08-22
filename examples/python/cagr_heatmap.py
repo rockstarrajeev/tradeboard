@@ -205,8 +205,8 @@ def create_heatmap(df, period, label):
 
     fig.update_layout(
         title=f"NIFTY 50 {label} Heatmap (%)",
-        xaxis=dict(showticklabels=False, title=""),
-        yaxis=dict(showticklabels=False, autorange="reversed", title=""),
+        xaxis={"showticklabels": False, "title": ""},
+        yaxis={"showticklabels": False, "autorange": "reversed", "title": ""},
         template="plotly_dark",
         height=600,
         width=1200,

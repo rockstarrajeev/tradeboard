@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Cross-platform CSRF Protection Test Suite for Tradeboard
+Cross-platform CSRF Protection Test Suite for OpenAlgo
 
 This script tests CSRF protection functionality across different platforms (Ubuntu, Windows, macOS)
 and validates that the environment-based configuration works correctly.
@@ -37,7 +37,7 @@ class CSRFTester:
         """Log test results"""
         result = {"test": test_name, "passed": passed, "details": details}
         self.results["tests"].append(result)
-        status = "✓ PASS" if passed else "✗ FAIL"
+        status = "PASS" if passed else "FAIL"
         print(f"{status}: {test_name}")
         if details:
             print(f"  Details: {details}")
@@ -185,7 +185,6 @@ class CSRFTester:
         if path_valid:
             with open(env_path, "rb") as f:
                 content = f.read()
-                has_crlf = b"\r\n" in content
                 has_lf = b"\n" in content
 
                 if current_platform == "Windows":
@@ -198,7 +197,7 @@ class CSRFTester:
     def run_all_tests(self):
         """Run all CSRF tests"""
         print(f"\n{'=' * 60}")
-        print("Tradeboard CSRF Protection Test Suite")
+        print("OpenAlgo CSRF Protection Test Suite")
         print(f"Platform: {platform.system()} {platform.release()}")
         print(f"Python: {platform.python_version()}")
         print(f"{'=' * 60}")

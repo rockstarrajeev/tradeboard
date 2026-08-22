@@ -1,11 +1,13 @@
 import json
 import os
 import sys
-from typing import Any, Dict, List, Optional
+from datetime import date, timedelta
+from typing import Any
 
 import httpx
+import pandas as pd
 from mcp.server.fastmcp import FastMCP
-from openalgo import api
+from openalgo import api, ta
 
 # Two boot paths share this module:
 #
@@ -16,14 +18,14 @@ from openalgo import api
 # 2. HTTP / SSE — blueprints/mcp_http.py imports this module to access the
 #    `mcp` FastMCP instance (and every @mcp.tool decorated function), then
 #    calls init_for_http(api_key, host) once per process to wire the SDK
-#    client. The Flask app sets TRADEBOARD_MCP_HTTP_BOOT=1 *before* importing
+#    client. The Flask app sets OPENALGO_MCP_HTTP_BOOT=1 *before* importing
 #    so the argv check is bypassed.
 #
 # The branching is at module scope rather than inside a function so the
 # FastMCP `mcp = FastMCP(...)` instance and every `@mcp.tool` decorator
 # remain top-level (FastMCP relies on import-time registration).
 
-if os.environ.get("TRADEBOARD_MCP_HTTP_BOOT") == "1":
+if os.environ.get("OPENALGO_MCP_HTTP_BOOT") == "1":
     # HTTP transport — Flask sets the env var before import. The SDK
     # client is wired by init_for_http() right after import. Stdio
     # users never hit this branch.
@@ -42,7 +44,7 @@ else:
     api_key = sys.argv[1]
     host = sys.argv[2]
 
-    # Initialize Tradeboard client with provided arguments
+    # Initialize OpenAlgo client with provided arguments
     client = api(api_key=api_key, host=host)
 
 
@@ -50,7 +52,7 @@ def init_for_http(api_key_value: str, host_value: str) -> None:
     """Wire the SDK client when running under the HTTP transport.
 
     Called once from blueprints/mcp_http.py after the Flask app has
-    determined the admin's API key and the local Tradeboard loopback URL.
+    determined the admin's API key and the local OpenAlgo loopback URL.
     Idempotent — safe to call repeatedly with the same values; later
     calls overwrite the global so a restarted broker session can rotate
     the underlying SDK client without restarting Gunicorn.
@@ -60,49 +62,117 @@ def init_for_http(api_key_value: str, host_value: str) -> None:
     host = host_value
     client = api(api_key=api_key_value, host=host_value)
 
+
 # Default strategy name for all order-related calls originating from the MCP server.
-# Surfaced in Tradeboard logs and analyzer views so MCP-driven trades are identifiable.
+# Surfaced in OpenAlgo logs and analyzer views so MCP-driven trades are identifiable.
 MCP_STRATEGY = "python mcp"
 
-# Tradeboard standardized index symbols (NSE_INDEX / BSE_INDEX) — rolled out across all brokers.
-# Source: https://docs.rajeevupadhyay.com/symbol-format
+# OpenAlgo standardized index symbols (NSE_INDEX / BSE_INDEX) — rolled out across all brokers.
+# Source: https://docs.openalgo.in/symbol-format
 NSE_INDEX_SYMBOLS = [
-    "NIFTY", "NIFTYNXT50", "FINNIFTY", "BANKNIFTY", "MIDCPNIFTY", "INDIAVIX",
+    "NIFTY",
+    "NIFTYNXT50",
+    "FINNIFTY",
+    "BANKNIFTY",
+    "MIDCPNIFTY",
+    "INDIAVIX",
     "HANGSENGBEESNAV",
-    "NIFTY100", "NIFTY200", "NIFTY500",
-    "NIFTYALPHA50", "NIFTYAUTO", "NIFTYCOMMODITIES", "NIFTYCONSUMPTION",
-    "NIFTYCPSE", "NIFTYDIVOPPS50", "NIFTYENERGY", "NIFTYFMCG",
+    "NIFTY100",
+    "NIFTY200",
+    "NIFTY500",
+    "NIFTYALPHA50",
+    "NIFTYAUTO",
+    "NIFTYCOMMODITIES",
+    "NIFTYCONSUMPTION",
+    "NIFTYCPSE",
+    "NIFTYDIVOPPS50",
+    "NIFTYENERGY",
+    "NIFTYFMCG",
     "NIFTYGROWSECT15",
-    "NIFTYGS10YR", "NIFTYGS10YRCLN", "NIFTYGS1115YR", "NIFTYGS15YRPLUS",
-    "NIFTYGS48YR", "NIFTYGS813YR", "NIFTYGSCOMPSITE",
-    "NIFTYINFRA", "NIFTYIT", "NIFTYMEDIA", "NIFTYMETAL",
-    "NIFTYMIDLIQ15", "NIFTYMIDCAP100", "NIFTYMIDCAP150", "NIFTYMIDCAP50",
-    "NIFTYMIDSML400", "NIFTYMNC", "NIFTYPHARMA", "NIFTYPSE", "NIFTYPSUBANK",
-    "NIFTYPVTBANK", "NIFTYREALTY", "NIFTYSERVSECTOR",
-    "NIFTYSMLCAP100", "NIFTYSMLCAP250", "NIFTYSMLCAP50",
-    "NIFTY100EQLWGT", "NIFTY100LIQ15", "NIFTY100LOWVOL30",
-    "NIFTY100QUALTY30", "NIFTY200QUALTY30",
-    "NIFTY50DIVPOINT", "NIFTY50EQLWGT",
-    "NIFTY50PR1XINV", "NIFTY50PR2XLEV", "NIFTY50TR1XINV", "NIFTY50TR2XLEV",
+    "NIFTYGS10YR",
+    "NIFTYGS10YRCLN",
+    "NIFTYGS1115YR",
+    "NIFTYGS15YRPLUS",
+    "NIFTYGS48YR",
+    "NIFTYGS813YR",
+    "NIFTYGSCOMPSITE",
+    "NIFTYINFRA",
+    "NIFTYIT",
+    "NIFTYMEDIA",
+    "NIFTYMETAL",
+    "NIFTYMIDLIQ15",
+    "NIFTYMIDCAP100",
+    "NIFTYMIDCAP150",
+    "NIFTYMIDCAP50",
+    "NIFTYMIDSML400",
+    "NIFTYMNC",
+    "NIFTYPHARMA",
+    "NIFTYPSE",
+    "NIFTYPSUBANK",
+    "NIFTYPVTBANK",
+    "NIFTYREALTY",
+    "NIFTYSERVSECTOR",
+    "NIFTYSMLCAP100",
+    "NIFTYSMLCAP250",
+    "NIFTYSMLCAP50",
+    "NIFTY100EQLWGT",
+    "NIFTY100LIQ15",
+    "NIFTY100LOWVOL30",
+    "NIFTY100QUALTY30",
+    "NIFTY200QUALTY30",
+    "NIFTY50DIVPOINT",
+    "NIFTY50EQLWGT",
+    "NIFTY50PR1XINV",
+    "NIFTY50PR2XLEV",
+    "NIFTY50TR1XINV",
+    "NIFTY50TR2XLEV",
     "NIFTY50VALUE20",
 ]
 BSE_INDEX_SYMBOLS = [
-    "SENSEX", "BANKEX", "SENSEX50",
-    "BSE100", "BSE150MIDCAPINDEX", "BSE200", "BSE250LARGEMIDCAPINDEX",
-    "BSE400MIDSMALLCAPINDEX", "BSE500",
-    "BSEAUTO", "BSECAPITALGOODS", "BSECARBONEX", "BSECONSUMERDURABLES",
-    "BSECPSE", "BSEDOLLEX100", "BSEDOLLEX200", "BSEDOLLEX30",
-    "BSEENERGY", "BSEFASTMOVINGCONSUMERGOODS", "BSEFINANCIALSERVICES",
-    "BSEGREENEX", "BSEHEALTHCARE", "BSEINDIAINFRASTRUCTUREINDEX",
-    "BSEINDUSTRIALS", "BSEINFORMATIONTECHNOLOGY", "BSEIPO",
-    "BSELARGECAP", "BSEMETAL", "BSEMIDCAP", "BSEMIDCAPSELECTINDEX",
-    "BSEOIL&GAS", "BSEPOWER", "BSEPSU", "BSEREALTY", "BSESENSEXNEXT50",
-    "BSESMALLCAP", "BSESMALLCAPSELECTINDEX", "BSESMEIPO",
-    "BSETECK", "BSETELECOM",
+    "SENSEX",
+    "BANKEX",
+    "SENSEX50",
+    "BSE100",
+    "BSE150MIDCAPINDEX",
+    "BSE200",
+    "BSE250LARGEMIDCAPINDEX",
+    "BSE400MIDSMALLCAPINDEX",
+    "BSE500",
+    "BSEAUTO",
+    "BSECAPITALGOODS",
+    "BSECARBONEX",
+    "BSECONSUMERDURABLES",
+    "BSECPSE",
+    "BSEDOLLEX100",
+    "BSEDOLLEX200",
+    "BSEDOLLEX30",
+    "BSEENERGY",
+    "BSEFASTMOVINGCONSUMERGOODS",
+    "BSEFINANCIALSERVICES",
+    "BSEGREENEX",
+    "BSEHEALTHCARE",
+    "BSEINDIAINFRASTRUCTUREINDEX",
+    "BSEINDUSTRIALS",
+    "BSEINFORMATIONTECHNOLOGY",
+    "BSEIPO",
+    "BSELARGECAP",
+    "BSEMETAL",
+    "BSEMIDCAP",
+    "BSEMIDCAPSELECTINDEX",
+    "BSEOIL&GAS",
+    "BSEPOWER",
+    "BSEPSU",
+    "BSEREALTY",
+    "BSESENSEXNEXT50",
+    "BSESMALLCAP",
+    "BSESMALLCAPSELECTINDEX",
+    "BSESMEIPO",
+    "BSETECK",
+    "BSETELECOM",
 ]
 
 # Create MCP server
-mcp = FastMCP("tradeboard")
+mcp = FastMCP("openalgo")
 
 
 def _to_json(payload: Any) -> str:
@@ -115,6 +185,7 @@ def _to_json(payload: Any) -> str:
             default=str,
         )
     return json.dumps(payload, indent=2, default=str)
+
 
 # ORDER MANAGEMENT TOOLS
 
@@ -828,7 +899,7 @@ def get_historical_data(
                     (default 20) most-recent bars are returned (or `lookback_days` if given).
         end_date: End date (YYYY-MM-DD). Optional — defaults to today.
         source: 'api' (default) fetches from broker API. 'db' fetches from the local
-                Tradeboard Historify DuckDB store (1m/D stored, other intervals computed via SQL).
+                OpenAlgo Historify DuckDB store (1m/D stored, other intervals computed via SQL).
         bars: Number of most-recent bars to return (default 20). The window is fetched
               server-side; only the last `bars` rows are sent back to keep the payload small.
               Increase only if you explicitly need more rows.
@@ -926,10 +997,10 @@ def get_symbol_info(symbol: str, exchange: str = "NSE", instrument_type: str = N
 @mcp.tool()
 def get_index_symbols(exchange: str = "NSE") -> str:
     """
-    Get the Tradeboard-standardized index symbols for NSE or BSE.
+    Get the OpenAlgo-standardized index symbols for NSE or BSE.
 
     These are the common index names rolled out across all supported brokers via the
-    Tradeboard symbol standardization. Use exchange code 'NSE_INDEX' / 'BSE_INDEX' when
+    OpenAlgo symbol standardization. Use exchange code 'NSE_INDEX' / 'BSE_INDEX' when
     placing orders or fetching quotes for these symbols.
 
     Args:
@@ -1103,12 +1174,12 @@ def get_option_greeks(
 
 
 @mcp.tool()
-def get_tradeboard_version() -> str:
-    """Get the Tradeboard library version."""
+def get_openalgo_version() -> str:
+    """Get the OpenAlgo library version."""
     try:
         import openalgo
 
-        return f"Tradeboard version: {openalgo.__version__}"
+        return f"OpenAlgo version: {openalgo.__version__}"
     except Exception as e:
         return f"Error getting version: {str(e)}"
 
@@ -1150,7 +1221,7 @@ def send_telegram_alert(username: str, message: str, priority: int = 5) -> str:
     Send a Telegram alert notification.
 
     Args:
-        username: Tradeboard login ID/username
+        username: OpenAlgo login ID/username
         message: Alert message to send
         priority: Notification priority (1-10, default 5). Higher values may be used
                   by the bot for emphasis/sorting depending on configuration.
@@ -1222,7 +1293,7 @@ def check_holiday(date: str, exchange: str | None = None) -> str:
     """
     Check if a specific date is a market holiday for an exchange.
 
-    This calls the /api/v1/checkholiday endpoint directly (not yet in the tradeboard SDK).
+    This calls the /api/v1/checkholiday endpoint directly (not yet in the openalgo SDK).
     Use this for fast pre-trade "is the market open?" checks.
 
     Args:
@@ -1345,7 +1416,7 @@ def analyzer_toggle(mode: bool) -> str:
 
 
 # ============================================================
-# RESEARCH TOOLS — TECHNICAL INDICATORS (tradeboard.ta)
+# RESEARCH TOOLS — TECHNICAL INDICATORS (openalgo.ta)
 # ============================================================
 # These tools fetch OHLCV history via the SDK (client.history) and
 # compute indicators with `from openalgo import ta`. They are SDK-only
@@ -1355,12 +1426,42 @@ def analyzer_toggle(mode: bool) -> str:
 # Volume) rather than a single Close series. Used to auto-pick inputs
 # in calculate_indicator() when the caller does not pass `inputs`.
 _HLC_INDICATORS = {
-    "atr", "natr", "true_range", "adx", "adxr", "dmi", "dx", "supertrend",
-    "stochastic", "stochf", "cci", "williams_r", "keltner", "donchian",
-    "aroon", "aroon_oscillator", "psar", "ichimoku", "pivot_points",
-    "ultimate_oscillator", "uo_oscillator", "chandelier_exit", "starc",
-    "elderray", "ckstop", "fractals", "rwi", "alligator", "gator_oscillator",
-    "bop", "rvi", "fisher", "avgprice", "medprice", "midprice", "typprice",
+    "atr",
+    "natr",
+    "true_range",
+    "adx",
+    "adxr",
+    "dmi",
+    "dx",
+    "supertrend",
+    "stochastic",
+    "stochf",
+    "cci",
+    "williams_r",
+    "keltner",
+    "donchian",
+    "aroon",
+    "aroon_oscillator",
+    "psar",
+    "ichimoku",
+    "pivot_points",
+    "ultimate_oscillator",
+    "uo_oscillator",
+    "chandelier_exit",
+    "starc",
+    "elderray",
+    "ckstop",
+    "fractals",
+    "rwi",
+    "alligator",
+    "gator_oscillator",
+    "bop",
+    "rvi",
+    "fisher",
+    "avgprice",
+    "medprice",
+    "midprice",
+    "typprice",
     "wclprice",
 }
 _HLCV_INDICATORS = {"mfi", "cmf", "adl", "emv", "klingervolumeoscillator"}
@@ -1377,7 +1478,7 @@ def _history_df(
     """Fetch OHLCV history as a timestamp-indexed DataFrame. Raises on failure.
 
     source: 'api' (default) fetches from the broker API; 'db' fetches from the local
-    Tradeboard Historify DuckDB store (1m/D stored, other intervals computed via SQL,
+    OpenAlgo Historify DuckDB store (1m/D stored, other intervals computed via SQL,
     enabling custom intervals like 2m/4m/W/M/Q for research).
     """
     df = client.history(
@@ -1399,9 +1500,23 @@ def _history_df(
 # Approx bars per trading day per interval (NSE ~6h15m session). Used only to size
 # the calendar window when fetching by bar-count, so it can be a rough estimate.
 _BARS_PER_DAY = {
-    "1m": 375, "3m": 125, "5m": 75, "10m": 38, "15m": 25, "30m": 13,
-    "1h": 7, "60m": 7, "2h": 4, "3h": 3, "4h": 2,
-    "d": 1, "day": 1, "w": 0.2, "week": 0.2, "m": 0.05, "month": 0.05,
+    "1m": 375,
+    "3m": 125,
+    "5m": 75,
+    "10m": 38,
+    "15m": 25,
+    "30m": 13,
+    "1h": 7,
+    "60m": 7,
+    "2h": 4,
+    "3h": 3,
+    "4h": 2,
+    "d": 1,
+    "day": 1,
+    "w": 0.2,
+    "week": 0.2,
+    "m": 0.05,
+    "month": 0.05,
 }
 
 
@@ -1510,10 +1625,10 @@ def calculate_indicator(
     source: str = "api",
 ) -> str:
     """
-    Run ANY of the 80+ tradeboard.ta indicators over a symbol's historical OHLCV.
+    Run ANY of the 80+ openalgo.ta indicators over a symbol's historical OHLCV.
 
     History is fetched (db/api) and the indicator is computed entirely on the
-    Tradeboard server; only compact results are returned — never the raw OHLCV.
+    OpenAlgo server; only compact results are returned — never the raw OHLCV.
 
     Args:
         symbol: Stock symbol (e.g., 'RELIANCE', 'NIFTY')
@@ -2022,7 +2137,12 @@ def screen_instruments(
                         {"status": "error", "message": f"unknown condition '{condition}'"}, indent=2
                     )
                 results.append(
-                    {"symbol": sym.upper(), "exchange": exch.upper(), "passed": passed, "metric": metric}
+                    {
+                        "symbol": sym.upper(),
+                        "exchange": exch.upper(),
+                        "passed": passed,
+                        "metric": metric,
+                    }
                 )
             except Exception as e:
                 results.append({"symbol": sym, "exchange": exch, "error": str(e)})
@@ -2087,7 +2207,14 @@ def multi_timeframe_analysis(
         for itv in intervals:
             try:
                 df = _load_history(
-                    symbol, exchange, itv, start_date, end_date, lookback_bars, lookback_days, source
+                    symbol,
+                    exchange,
+                    itv,
+                    start_date,
+                    end_date,
+                    lookback_bars,
+                    lookback_days,
+                    source,
                 )
                 _cols, args = _resolve_inputs(df, name, inputs)
                 res = fn(*args, **(params or {}))

@@ -2,7 +2,7 @@ import logging
 
 
 class AngelExchangeMapper:
-    """Maps Tradeboard exchange codes to Angel-specific exchange types"""
+    """Maps OpenAlgo exchange codes to Angel-specific exchange types"""
 
     # Exchange type mapping for Angel broker
     EXCHANGE_TYPES = {

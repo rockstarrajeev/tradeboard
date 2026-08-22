@@ -1,6 +1,6 @@
 import { Check, ChevronDown, History, Info, Search, Trash2, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -32,7 +32,7 @@ interface SearchHistoryEntry {
   ts: number
 }
 
-const HISTORY_KEY = 'tradeboard:search-history'
+const HISTORY_KEY = 'openalgo:search-history'
 const HISTORY_MAX = 10
 
 function loadHistory(): SearchHistoryEntry[] {

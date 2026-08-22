@@ -30,7 +30,7 @@ from services.order_router_service import queue_order, should_route_to_pending
 
 @pytest.fixture(autouse=True)
 def isolated_action_center_database(tmp_path, monkeypatch):
-    """Run every test against a temporary database, never db/tradeboard.db."""
+    """Run every test against a temporary database, never db/openalgo.db."""
     test_engine = create_engine(
         f"sqlite:///{tmp_path / 'action-center.db'}",
         poolclass=NullPool,

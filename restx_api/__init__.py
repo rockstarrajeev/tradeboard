@@ -5,8 +5,8 @@ api_v1_bp = Blueprint("api_v1", __name__, url_prefix="/api/v1")
 api = Api(
     api_v1_bp,
     version="1.0",
-    title="Tradeboard API",
-    description="API for Tradeboard Trading Platform",
+    title="OpenAlgo API",
+    description="API for OpenAlgo Trading Platform",
     doc=False,
 )
 
@@ -46,9 +46,11 @@ from .place_gtt_order import api as place_gtt_order_ns
 from .place_order import api as place_order_ns
 from .place_smart_order import api as place_smart_order_ns
 from .pnl_symbols import api as pnl_symbols_ns
+from .portfolio import api as portfolio_ns
 from .positionbook import api as positionbook_ns
 from .quotes import api as quotes_ns
 from .search import api as search_ns
+from .sip import api as sip_ns
 from .split_order import api as split_order_ns
 from .symbol import api as symbol_ns
 from .synthetic_future import api as synthetic_future_ns
@@ -67,6 +69,8 @@ api.add_namespace(cancel_all_order_ns, path="/cancelallorder")
 api.add_namespace(quotes_ns, path="/quotes")
 api.add_namespace(multiquotes_ns, path="/multiquotes")
 api.add_namespace(history_ns, path="/history")
+api.add_namespace(portfolio_ns, path="/portfolio")
+api.add_namespace(sip_ns, path="/sip")
 api.add_namespace(depth_ns, path="/depth")
 api.add_namespace(option_chain_ns, path="/optionchain")
 api.add_namespace(intervals_ns, path="/intervals")

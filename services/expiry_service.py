@@ -30,7 +30,7 @@ def get_expiry_dates(
             user_id = verify_api_key(api_key)
             if not user_id:
                 logger.warning("Invalid API key provided for expiry dates")
-                return False, {"status": "error", "message": "Invalid tradeboard apikey"}, 403
+                return False, {"status": "error", "message": "Invalid openalgo apikey"}, 403
 
         # Validate input
         if not symbol or not symbol.strip():
@@ -76,7 +76,10 @@ def get_expiry_dates(
             )
 
         # Validate exchange
-        supported_exchanges = ["NFO", "BFO", "MCX", "CDS", "CRYPTO"]
+        # NCO (NSE commodities) and BCD (BSE currency) list their own options
+        # and were simply missing here, so the expiry lookup returned a 400 and
+        # every downstream selector in Strategy Builder stayed empty. See #1748.
+        supported_exchanges = ["NFO", "BFO", "MCX", "CDS", "NCO", "BCD", "CRYPTO"]
         if exchange.upper() not in supported_exchanges:
             logger.warning(f"Unsupported exchange provided: {exchange}")
             return (

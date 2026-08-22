@@ -33,7 +33,7 @@ def serve_react_app():
         return (
             """
         <html>
-        <head><title>Tradeboard - Frontend Not Available</title></head>
+        <head><title>OpenAlgo - Frontend Not Available</title></head>
         <body style="font-family: system-ui; padding: 40px; max-width: 600px; margin: 0 auto;">
             <h1>Frontend Not Built</h1>
             <p>The React frontend is not available. To build it:</p>
@@ -177,6 +177,12 @@ def react_playground():
     return serve_react_app()
 
 
+# Charting terminal (line-based chart trading, powered by openalgo-charts)
+@react_bp.route("/trading", strict_slashes=False)
+def react_trading():
+    return serve_react_app()
+
+
 # ============================================================
 # Phase 4 Routes - Charts, WebSocket & Sandbox
 # ============================================================
@@ -191,6 +197,31 @@ def react_platforms():
 # TradingView webhook configuration
 @react_bp.route("/tradingview")
 def react_tradingview():
+    return serve_react_app()
+
+
+# Portfolio Backtester
+@react_bp.route("/portfolio-backtester")
+def react_portfolio_backtester():
+    return serve_react_app()
+
+
+# SIP Backtester
+@react_bp.route("/sip-backtester")
+def react_sip_backtester():
+    return serve_react_app()
+
+
+# The former path. Kept so an existing bookmark reaches the SPA, which
+# redirects it to the new one rather than showing a not-found.
+@react_bp.route("/portfolio")
+def react_portfolio_legacy():
+    return serve_react_app()
+
+
+# Portfolio Analyzer (live broker holdings)
+@react_bp.route("/portfolio-analyzer")
+def react_portfolio_analyzer():
     return serve_react_app()
 
 
@@ -304,6 +335,13 @@ def react_sandbox():
 # Sandbox P&L history
 @react_bp.route("/sandbox/mypnl")
 def react_sandbox_mypnl():
+    return serve_react_app()
+
+
+# Sandbox Calendar Ledger
+@react_bp.route("/sandbox/calendar")
+@react_bp.route("/calendar-ledger")
+def react_calendar_ledger():
     return serve_react_app()
 
 

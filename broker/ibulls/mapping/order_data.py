@@ -365,12 +365,12 @@ def map_portfolio_data(portfolio_data):
     logger.info(f"portfolio_data: {portfolio_data}")
     """
     Processes and modifies portfolio data from IbullssecuritiesXTS API.
-    
+
     Parameters:
     - portfolio_data: A dictionary containing the portfolio/holdings information from IbullssecuritiesXTS API.
-    
+
     Returns:
-    - A dictionary with 'holdings' and 'totalholding' keys structured for the TradeboardXTS system.
+    - A dictionary with 'holdings' and 'totalholding' keys structured for the OpenAlgoXTS system.
     """
     # Check if response is valid and contains result data
     if (

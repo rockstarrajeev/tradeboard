@@ -45,18 +45,26 @@ Strike Labels (different for CE and PE):
     - Strike ABOVE ATM: CE is OTM, PE is ITM
 """
 
+from datetime import UTC, datetime
 from typing import Any
 
 from database.auth_db import get_auth_token_broker
 from database.symbol import SymToken, db_session
 from database.token_db import get_br_symbol
 from database.token_db_enhanced import fno_search_symbols
+from services.option_greeks_service import (
+    calculate_chain_greeks,
+    calculate_time_to_expiry,
+    get_expiry_datetime,
+)
 from services.option_symbol_service import (
+    NO_SPOT_EXCHANGES,
     construct_option_symbol,
     find_atm_strike_from_actual,
     get_available_strikes,
     get_option_exchange,
     parse_underlying_symbol,
+    resolve_underlying_quote,
 )
 from services.quotes_service import get_multiquotes, get_quotes, import_broker_module
 from utils.constants import CRYPTO_EXCHANGES, INSTRUMENT_PERPFUT
@@ -217,6 +225,90 @@ def get_option_symbols_for_chain(
     return chain_symbols
 
 
+def _forward_from_chain(
+    chain: list[dict[str, Any]], atm_strike: float, underlying_ltp: float
+) -> float:
+    """
+    Derive the forward price from the chain's own ATM legs via put-call parity.
+
+    Black-76 prices off the forward, not spot. Indian index futures carry a
+    premium over spot, so pricing an index chain off the spot LTP biases every
+    delta. The ATM call and put are already in hand, so F = K + (C - P) costs
+    nothing extra.
+
+    Falls back to the underlying LTP when the ATM legs have no usable quotes.
+
+    Args:
+        chain: Assembled chain rows
+        atm_strike: ATM strike
+        underlying_ltp: Underlying spot or near-month future price
+
+    Returns:
+        Forward price to use for the whole chain
+    """
+    for row in chain:
+        if row.get("strike") != atm_strike:
+            continue
+        ce = row.get("ce") or {}
+        pe = row.get("pe") or {}
+        ce_ltp = ce.get("ltp") or 0
+        pe_ltp = pe.get("ltp") or 0
+        if ce_ltp > 0 and pe_ltp > 0:
+            return round(atm_strike + ce_ltp - pe_ltp, 4)
+        break
+
+    logger.info("ATM legs unpriced; falling back to underlying LTP as the forward")
+    return underlying_ltp
+
+
+def _attach_chain_greeks(
+    chain: list[dict[str, Any]],
+    expiry_dt: datetime | None,
+    forward_price: float,
+    interest_rate: float | None,
+) -> None:
+    """
+    Attach implied_volatility and Greeks to every leg of an assembled chain, in place.
+
+    One vectorized Black-76 pass over the whole ladder. Legs whose Greeks are not
+    computable are left without the fields rather than filled with zeros, so a
+    caller can tell "no data" from "genuinely zero".
+
+    Args:
+        chain: Assembled chain rows, mutated in place
+        expiry_dt: Expiry instant, or None if it could not be derived
+        forward_price: Forward price for the chain
+        interest_rate: Annualized rate percentage, or None for the default
+    """
+    if expiry_dt is None:
+        logger.warning("Skipping chain Greeks: expiry timestamp unavailable")
+        return
+
+    time_to_expiry_years, _ = calculate_time_to_expiry(expiry_dt)
+    if time_to_expiry_years <= 0:
+        logger.info("Skipping chain Greeks: option chain has expired")
+        return
+
+    strikes = [row["strike"] for row in chain]
+    ce_prices = [(row.get("ce") or {}).get("ltp", 0) for row in chain]
+    pe_prices = [(row.get("pe") or {}).get("ltp", 0) for row in chain]
+
+    ce_greeks, pe_greeks = calculate_chain_greeks(
+        strikes, ce_prices, pe_prices, forward_price, time_to_expiry_years, interest_rate
+    )
+
+    for row, ce_g, pe_g in zip(chain, ce_greeks, pe_greeks, strict=True):
+        for leg_key, greeks in (("ce", ce_g), ("pe", pe_g)):
+            leg = row.get(leg_key)
+            if leg is None or greeks is None:
+                continue
+            leg["implied_volatility"] = greeks["iv"]
+            leg["delta"] = greeks["delta"]
+            leg["gamma"] = greeks["gamma"]
+            leg["theta"] = greeks["theta"]
+            leg["vega"] = greeks["vega"]
+
+
 def get_option_chain(
     underlying: str,
     exchange: str,
@@ -224,6 +316,8 @@ def get_option_chain(
     strike_count: int,
     api_key: str,
     with_quotes: bool = True,
+    with_greeks: bool = False,
+    interest_rate: float | None = None,
 ) -> tuple[bool, dict[str, Any], int]:
     """
     Main function to get option chain data.
@@ -233,12 +327,18 @@ def get_option_chain(
         exchange: Exchange (NSE_INDEX, NSE, NFO, BSE_INDEX, BSE, BFO, MCX, CDS)
         expiry_date: Expiry date in DDMMMYY format (e.g., 28NOV25)
         strike_count: Number of strikes above and below ATM
-        api_key: Tradeboard API key
+        api_key: OpenAlgo API key
         with_quotes: When True (default) fetch live per-strike quotes via the broker.
             When False, build the strike ladder + ATM + symbols/lotsize/tick purely from
             cache/DB (one underlying LTP only) and leave price fields at 0 — used by the
             scalping ladder, which streams live prices over the WebSocket feed instead of
             paying for a slow per-strike broker multiquote.
+        with_greeks: When True, attach implied_volatility plus delta/gamma/theta/vega to
+            every leg. Computed from the quotes already fetched via one vectorized
+            Black-76 pass, so it costs no extra broker calls. Ignored when
+            with_quotes is False, since there are no prices to invert.
+        interest_rate: Risk-free rate as an annualized percentage, used only for Greeks.
+            Defaults to the exchange default (0).
 
     Returns:
         Tuple of (success, response_data, status_code)
@@ -271,17 +371,49 @@ def get_option_chain(
             # CRYPTO: look up the canonical perpetual symbol from cache (e.g. BTC -> BTCUSDFUT)
             quote_exchange = exchange.upper()
             _perp = fno_search_symbols(
-                query=f"{base_symbol}USDFUT", exchange=exchange, instrumenttype=INSTRUMENT_PERPFUT, limit=1
+                query=f"{base_symbol}USDFUT",
+                exchange=exchange,
+                instrumenttype=INSTRUMENT_PERPFUT,
+                limit=1,
             )
             if not _perp:
                 return (
                     False,
-                    {"status": "error", "message": f"No perpetual futures found for {base_symbol} on {exchange}"},
+                    {
+                        "status": "error",
+                        "message": f"No perpetual futures found for {base_symbol} on {exchange}",
+                    },
                     404,
                 )
             quote_symbol = _perp[0]["symbol"]
 
-        if exchange.upper() not in CRYPTO_EXCHANGES:
+        elif exchange.upper() in NO_SPOT_EXCHANGES:
+            # MCX and the currency segments list no spot instrument: there is a
+            # CRUDEOIL19AUG26FUT but no plain CRUDEOIL, so a spot quote returns
+            # nothing and the chain comes back with no underlying price at all.
+            # The near-month future is the pricing reference instead.
+            quote_exchange = exchange.upper()
+            resolved = resolve_underlying_quote(base_symbol, quote_exchange)
+            if resolved is None:
+                return (
+                    False,
+                    {
+                        "status": "error",
+                        "message": (
+                            f"No unexpired futures found for {base_symbol} on "
+                            f"{quote_exchange}. {quote_exchange} options are priced "
+                            "against the near-month future, which this product does "
+                            "not currently have."
+                        ),
+                    },
+                    404,
+                )
+            quote_symbol, quote_exchange = resolved
+            logger.info(
+                f"{exchange.upper()} has no spot; pricing {base_symbol} against {quote_symbol}"
+            )
+
+        if exchange.upper() not in CRYPTO_EXCHANGES and exchange.upper() not in NO_SPOT_EXCHANGES:
             # Use base symbol for index quotes (non-Delta)
             quote_symbol = base_symbol if embedded_expiry else underlying
 
@@ -293,7 +425,7 @@ def get_option_chain(
             # and module import inside the same request.
             _auth, _feed, _broker = get_auth_token_broker(api_key, include_feed_token=True)
             if _auth is None:
-                return False, {"status": "error", "message": "Invalid tradeboard apikey"}, 403
+                return False, {"status": "error", "message": "Invalid openalgo apikey"}, 403
             _bmod = import_broker_module(_broker)
             if _bmod is None:
                 return False, {"status": "error", "message": "Broker module not found"}, 404
@@ -397,22 +529,36 @@ def get_option_chain(
         if with_quotes:
             logger.info(f"Fetching quotes for {len(symbols_to_fetch)} option symbols")
             if exchange.upper() in CRYPTO_EXCHANGES:
-                # Reuse _auth, _bmod, _dh already initialised in Step 3 — no second
-                # DB query or module import needed.
+                # Use get_multiquotes for instant bulk quote resolution
                 try:
-                    _results = []
-                    for _item in symbols_to_fetch:
-                        try:
-                            _oq = _dh.get_quotes(_item["symbol"], _item["exchange"])
-                            _results.append(
-                                {"symbol": _item["symbol"], "exchange": _item["exchange"], "data": _oq}
-                            )
-                        except Exception as _qe:
-                            logger.warning(f"[CRYPTO] Quote error for {_item['symbol']}: {_qe}")
-                            _results.append(
-                                {"symbol": _item["symbol"], "exchange": _item["exchange"], "error": str(_qe)}
-                            )
+                    if hasattr(_dh, "get_multiquotes"):
+                        _results = _dh.get_multiquotes(symbols_to_fetch)
+                    else:
+                        _results = []
+                        for _item in symbols_to_fetch:
+                            try:
+                                _oq = _dh.get_quotes(_item["symbol"], _item["exchange"])
+                                _results.append(
+                                    {
+                                        "symbol": _item["symbol"],
+                                        "exchange": _item["exchange"],
+                                        "data": _oq,
+                                    }
+                                )
+                            except Exception as _qe:
+                                logger.warning(f"[CRYPTO] Quote error for {_item['symbol']}: {_qe}")
+                                _results.append(
+                                    {
+                                        "symbol": _item["symbol"],
+                                        "exchange": _item["exchange"],
+                                        "error": str(_qe),
+                                    }
+                                )
                     quotes_response = {"status": "success", "results": _results}
+                    for _res in _results:
+                        _sym = _res.get("symbol")
+                        if _sym and "data" in _res:
+                            quotes_map[_sym] = _res["data"]
                     success = True
                     status_code = 200
                 except Exception as _e:
@@ -540,6 +686,21 @@ def get_option_chain(
 
             chain.append(strike_data)
 
+        # The exact expiry instant, so callers computing time to expiry themselves
+        # (the browser, for one) do not have to re-derive each exchange's cut-off.
+        expiry_dt = None
+        expiry_ts = None
+        forward_price = None
+        try:
+            expiry_dt = get_expiry_datetime(final_expiry, options_exchange)
+            expiry_ts = int(expiry_dt.timestamp())
+        except ValueError:
+            logger.warning(f"Could not derive expiry timestamp from {final_expiry}")
+
+        if with_quotes and with_greeks:
+            forward_price = _forward_from_chain(chain, atm_strike, underlying_ltp)
+            _attach_chain_greeks(chain, expiry_dt, forward_price, interest_rate)
+
         return (
             True,
             {
@@ -548,8 +709,14 @@ def get_option_chain(
                 "underlying_ltp": underlying_ltp,
                 "underlying_prev_close": underlying_prev_close,
                 "expiry_date": final_expiry,
+                "expiry_ts": expiry_ts,
+                # Lets a client correct for its own clock skew before computing
+                # time to expiry, which otherwise silently biases every Greek.
+                "server_ts": int(datetime.now(UTC).timestamp()),
                 "atm_strike": atm_strike,
                 "quotes_included": with_quotes,
+                "greeks_included": bool(with_quotes and with_greeks),
+                "forward_price": forward_price,
                 "chain": chain,
             },
             200,

@@ -1,14 +1,17 @@
-# Mapping Tradeboard API Request https://rajeevupadhyay.com/docs
+# Mapping OpenAlgo API Request https://openalgo.in/docs
 # Mapping AliceBlue V2 API Parameters
 
 from database.token_db import get_br_symbol, get_token
+from utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 
-# ─── Product / Order type mappings (Tradeboard ↔ AliceBlue V2) ──────────────────
+# ─── Product / Order type mappings (OpenAlgo ↔ AliceBlue V2) ──────────────────
 
 
 def map_product_type(product):
-    """Map Tradeboard product type to AliceBlue V2 product type."""
+    """Map OpenAlgo product type to AliceBlue V2 product type."""
     mapping = {
         "CNC": "LONGTERM",
         "NRML": "NRML",
@@ -18,7 +21,7 @@ def map_product_type(product):
 
 
 def reverse_map_product_type(product):
-    """Map AliceBlue V2 product type back to Tradeboard product type."""
+    """Map AliceBlue V2 product type back to OpenAlgo product type."""
     mapping = {
         "LONGTERM": "CNC",
         "NRML": "NRML",
@@ -32,18 +35,30 @@ def reverse_map_product_type(product):
 
 
 def map_order_type(pricetype):
-    """Map Tradeboard price type to AliceBlue V2 order type."""
+    """Map OpenAlgo price type to AliceBlue V2 order type."""
     mapping = {
         "MARKET": "MARKET",
         "LIMIT": "LIMIT",
         "SL": "SL",
         "SL-M": "SLM",
     }
-    return mapping.get(pricetype, "MARKET")
+    order_type = mapping.get(pricetype)
+    if order_type is None:
+        # Falling back to MARKET turns a mistyped stop into an order that fills
+        # at once instead of resting - the opposite of what was asked for, and
+        # "SLM" (AliceBlue's own code for SL-M) is an easy thing to send by
+        # mistake. Keep the fallback for compatibility, but say so, as
+        # broker/fyers does at the same spot.
+        logger.warning(
+            f"Unknown pricetype {pricetype!r} received; defaulting to MARKET. "
+            f"Valid values: {', '.join(mapping)}"
+        )
+        return "MARKET"
+    return order_type
 
 
 def reverse_map_order_type(order_type):
-    """Map AliceBlue V2 order type back to Tradeboard price type."""
+    """Map AliceBlue V2 order type back to OpenAlgo price type."""
     mapping = {
         "MARKET": "MARKET",
         "LIMIT": "LIMIT",
@@ -53,14 +68,14 @@ def reverse_map_order_type(order_type):
     return mapping.get(order_type, "MARKET")
 
 
-# ─── Payload builders (Tradeboard request → AliceBlue V2 API payload) ──────────
+# ─── Payload builders (OpenAlgo request → AliceBlue V2 API payload) ──────────
 
 
 def transform_data(data):
     """
-    Transform an Tradeboard place-order request into an AliceBlue V2 API payload item.
+    Transform an OpenAlgo place-order request into an AliceBlue V2 API payload item.
     """
-    symbol = get_br_symbol(data["symbol"], data["exchange"])
+    get_br_symbol(data["symbol"], data["exchange"])
     token = get_token(data["symbol"], data["exchange"])
 
     return {
@@ -82,13 +97,13 @@ def transform_data(data):
         "trailingSlAmount": "",
         "apiOrderSource": "",
         "algoId": "",
-        "orderTag": "tradeboard",
+        "orderTag": "openalgo",
     }
 
 
 def transform_modify_order_data(data):
     """
-    Transform an Tradeboard modify-order request into an AliceBlue V2 API modify payload.
+    Transform an OpenAlgo modify-order request into an AliceBlue V2 API modify payload.
     """
     return {
         "brokerOrderId": str(data.get("orderid")),

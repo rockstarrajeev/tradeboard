@@ -4,6 +4,7 @@ Synchronous mstock WebSocket client using websocket-client library.
 Uses sync websocket-client instead of async websockets to avoid asyncio
 event loop conflicts with eventlet in gunicorn+eventlet deployments.
 """
+
 import json
 import os
 import ssl
@@ -70,9 +71,7 @@ class MstockWebSocket:
             self.auth_token = fresh_token
             self.ws_url = self._build_ws_url()
         else:
-            logger.warning(
-                "mstock token_provider returned no token; keeping existing access token"
-            )
+            logger.warning("mstock token_provider returned no token; keeping existing access token")
 
     @staticmethod
     def parse_binary_packet(data: bytes) -> dict | None:
@@ -93,13 +92,24 @@ class MstockWebSocket:
                     "sequence_number": struct.unpack("<Q", data[27:35])[0],
                     "exchange_timestamp": struct.unpack("<Q", data[35:43])[0],
                     "ltp": struct.unpack("<Q", data[43:51])[0] / 100.0,
-                    "last_traded_qty": 0, "avg_price": 0, "volume": 0,
-                    "total_buy_qty": 0, "total_sell_qty": 0,
-                    "open": 0, "high": 0, "low": 0, "close": 0,
-                    "last_traded_timestamp": 0, "oi": 0, "oi_percent": 0,
-                    "upper_circuit": 0, "lower_circuit": 0,
-                    "week_52_high": 0, "week_52_low": 0,
-                    "bids": [], "asks": [],
+                    "last_traded_qty": 0,
+                    "avg_price": 0,
+                    "volume": 0,
+                    "total_buy_qty": 0,
+                    "total_sell_qty": 0,
+                    "open": 0,
+                    "high": 0,
+                    "low": 0,
+                    "close": 0,
+                    "last_traded_timestamp": 0,
+                    "oi": 0,
+                    "oi_percent": 0,
+                    "upper_circuit": 0,
+                    "lower_circuit": 0,
+                    "week_52_high": 0,
+                    "week_52_low": 0,
+                    "bids": [],
+                    "asks": [],
                 }
                 return quote
 
@@ -120,19 +130,24 @@ class MstockWebSocket:
                     "high": struct.unpack("<Q", data[99:107])[0] / 100.0,
                     "low": struct.unpack("<Q", data[107:115])[0] / 100.0,
                     "close": struct.unpack("<Q", data[115:123])[0] / 100.0,
-                    "last_traded_timestamp": 0, "oi": 0, "oi_percent": 0,
-                    "upper_circuit": 0, "lower_circuit": 0,
-                    "week_52_high": 0, "week_52_low": 0,
-                    "bids": [], "asks": [],
+                    "last_traded_timestamp": 0,
+                    "oi": 0,
+                    "oi_percent": 0,
+                    "upper_circuit": 0,
+                    "lower_circuit": 0,
+                    "week_52_high": 0,
+                    "week_52_low": 0,
+                    "bids": [],
+                    "asks": [],
                 }
                 return quote
 
             elif len(data) == 379:
                 packet = data
             elif len(data) >= 383:
-                num_packets = struct.unpack("<H", data[0:2])[0]
-                packet_size = struct.unpack("<H", data[2:4])[0]
-                packet = data[4:4 + 379]
+                struct.unpack("<H", data[0:2])[0]
+                struct.unpack("<H", data[2:4])[0]
+                packet = data[4 : 4 + 379]
             else:
                 logger.error(f"Invalid packet size: {len(data)} bytes")
                 return None
@@ -171,9 +186,14 @@ class MstockWebSocket:
             for i in range(5):
                 bid_offset = i * 20
                 try:
-                    qty = struct.unpack("<Q", depth_data[bid_offset + 2:bid_offset + 10])[0]
-                    price = struct.unpack("<Q", depth_data[bid_offset + 10:bid_offset + 18])[0] / 100.0
-                    num_orders = struct.unpack("<H", depth_data[bid_offset + 18:bid_offset + 20])[0]
+                    qty = struct.unpack("<Q", depth_data[bid_offset + 2 : bid_offset + 10])[0]
+                    price = (
+                        struct.unpack("<Q", depth_data[bid_offset + 10 : bid_offset + 18])[0]
+                        / 100.0
+                    )
+                    num_orders = struct.unpack("<H", depth_data[bid_offset + 18 : bid_offset + 20])[
+                        0
+                    ]
                     quote["bids"].append({"price": price, "quantity": qty, "orders": num_orders})
                 except Exception:
                     quote["bids"].append({"price": 0, "quantity": 0, "orders": 0})
@@ -181,9 +201,14 @@ class MstockWebSocket:
             for i in range(5):
                 ask_offset = 100 + (i * 20)
                 try:
-                    qty = struct.unpack("<Q", depth_data[ask_offset + 2:ask_offset + 10])[0]
-                    price = struct.unpack("<Q", depth_data[ask_offset + 10:ask_offset + 18])[0] / 100.0
-                    num_orders = struct.unpack("<H", depth_data[ask_offset + 18:ask_offset + 20])[0]
+                    qty = struct.unpack("<Q", depth_data[ask_offset + 2 : ask_offset + 10])[0]
+                    price = (
+                        struct.unpack("<Q", depth_data[ask_offset + 10 : ask_offset + 18])[0]
+                        / 100.0
+                    )
+                    num_orders = struct.unpack("<H", depth_data[ask_offset + 18 : ask_offset + 20])[
+                        0
+                    ]
                     quote["asks"].append({"price": price, "quantity": qty, "orders": num_orders})
                 except Exception:
                     quote["asks"].append({"price": 0, "quantity": 0, "orders": 0})
@@ -247,7 +272,7 @@ class MstockWebSocket:
                 logger.error("Max reconnect attempts reached")
                 break
 
-            delay = min(2 * (1.5 ** self._reconnect_attempts), 60)
+            delay = min(2 * (1.5**self._reconnect_attempts), 60)
             logger.info(f"Reconnecting in {delay:.0f}s (attempt {self._reconnect_attempts})...")
             time.sleep(delay)
 
@@ -310,12 +335,16 @@ class MstockWebSocket:
         """Re-subscribe to all tracked subscriptions after reconnection"""
         for correlation_id, sub in list(self.subscriptions.items()):
             try:
-                self.subscribe_stream(correlation_id, sub["token"], sub["exchange_type"], sub["mode"])
+                self.subscribe_stream(
+                    correlation_id, sub["token"], sub["exchange_type"], sub["mode"]
+                )
                 logger.info(f"Re-subscribed to {sub['token']} mode {sub['mode']}")
             except Exception as e:
                 logger.error(f"Error re-subscribing to {sub['token']}: {e}")
 
-    def subscribe_stream(self, correlation_id: str, token: str, exchange_type: int, mode: int) -> bool:
+    def subscribe_stream(
+        self, correlation_id: str, token: str, exchange_type: int, mode: int
+    ) -> bool:
         """
         Subscribe to a symbol on the persistent WebSocket connection.
 
@@ -372,7 +401,9 @@ class MstockWebSocket:
                 "action": 0,
                 "params": {
                     "mode": sub["mode"],
-                    "tokenList": [{"exchangeType": sub["exchange_type"], "tokens": [str(sub["token"])]}],
+                    "tokenList": [
+                        {"exchangeType": sub["exchange_type"], "tokens": [str(sub["token"])]}
+                    ],
                 },
             }
 
@@ -414,6 +445,7 @@ class MstockWebSocket:
         """
         try:
             import websocket as ws_module
+
             ws = ws_module.create_connection(
                 self.ws_url,
                 sslopt={"cert_reqs": ssl.CERT_NONE},

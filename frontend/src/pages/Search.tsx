@@ -7,7 +7,7 @@ import {
   Search as SearchIcon,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -321,7 +321,7 @@ export default function Search() {
     const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
     const a = document.createElement('a')
     a.href = url
-    a.download = `tradeboard-search-${ts}.csv`
+    a.download = `openalgo-search-${ts}.csv`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)

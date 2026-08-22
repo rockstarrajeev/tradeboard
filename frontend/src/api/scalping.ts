@@ -75,7 +75,7 @@ export const scalpingApi = {
     return response.data
   },
 
-  // Historical candles for the scalping charts. interval is an Tradeboard interval
+  // Historical candles for the scalping charts. interval is an OpenAlgo interval
   // (1m/5m/15m); lookback scales 1m=1 day, 5m=3, 15m=9. Pass `date` (the trading
   // date learned on first load) so the periodic reconcile pulls a single day.
   getHistory: async (

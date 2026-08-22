@@ -1,8 +1,8 @@
 import json
 import os
-import urllib.parse
 import threading
 import time
+import urllib.parse
 
 import httpx
 
@@ -71,14 +71,14 @@ def get_holdings(auth_token):
 # --- Per-Symbol Smart Order Lock ---
 # Ensures only one smart order per symbol executes at a time.
 # Others queue and execute sequentially, each getting a fresh position book.
-_symbol_locks = {}          # {symbol_key: threading.Lock}
+_symbol_locks = {}  # {symbol_key: threading.Lock}
 _symbol_locks_lock = threading.Lock()
 
 # --- Position Book Cache ---
 # Caches get_positions() for 1 second. Invalidated after each smart order placement.
-_position_cache = {}        # {auth_token: {"data": ..., "timestamp": ...}}
+_position_cache = {}  # {auth_token: {"data": ..., "timestamp": ...}}
 _position_cache_lock = threading.Lock()
-_POSITION_CACHE_TTL = 1.0   # seconds
+_POSITION_CACHE_TTL = 1.0  # seconds
 
 
 def _get_symbol_lock(symbol, exchange, product):
@@ -113,9 +113,8 @@ def _invalidate_position_cache(auth):
         _position_cache.pop(auth, None)
 
 
-
 def get_open_position(tradingsymbol, exchange, producttype, auth_token):
-    # Convert Trading Symbol from Tradeboard Format to Broker Format Before Search in OpenPosition
+    # Convert Trading Symbol from OpenAlgo Format to Broker Format Before Search in OpenPosition
     tradingsymbol = get_br_symbol(tradingsymbol, exchange)
     positions_data = _get_cached_positions(auth_token)
     logger.debug(f"{positions_data}")
@@ -147,8 +146,16 @@ def place_order_api(data, auth_token):
     # Get the shared httpx client with connection pooling
     client = get_httpx_client()
 
-    token_id = get_token(data["symbol"], data["exchange"])
-    newdata = transform_data(data, token_id)
+    # Payload construction can reject the order before any network call — an
+    # SL-M with no trigger, or one whose tick size is unresolvable (see
+    # mapping/transform_data.py::_slm_protected_price). Return the same error
+    # shape as the request failures below instead of raising past the caller.
+    try:
+        token_id = get_token(data["symbol"], data["exchange"])
+        newdata = transform_data(data, token_id)
+    except Exception as e:
+        logger.error(f"Error building Kotak order payload: {e}")
+        return None, {"stat": "Not_Ok", "emsg": str(e)}, None
 
     json_string = json.dumps(newdata)
     payload = f"jData={urllib.parse.quote(json_string)}"
@@ -185,7 +192,6 @@ def place_order_api(data, auth_token):
 
 def place_smartorder_api(data, auth_token):
     # If no API call is made in this function then res will return None
-    res = None
 
     # Extract necessary info from data
     symbol = data.get("symbol")
@@ -298,7 +304,7 @@ def close_all_positions(current_api_key, auth_token):
             action = "SELL" if net_qty > 0 else "BUY"
             quantity = abs(net_qty)
 
-            # get tradeboard symbol to send to placeorder function
+            # get openalgo symbol to send to placeorder function
             symboltoken = position["tok"]
             exchange = map_exchange(position["exSeg"])
             position["exSeg"] = exchange
@@ -380,8 +386,14 @@ def modify_order(data, auth_token):
     # Get the shared httpx client with connection pooling
     client = get_httpx_client()
 
-    token_id = get_token(data["symbol"], data["exchange"])
-    newdata = transform_modify_order_data(data, token_id)
+    # Same pre-flight rejection as placement (SL-M without a usable trigger or
+    # tick size) — surface it as an error response, not an exception.
+    try:
+        token_id = get_token(data["symbol"], data["exchange"])
+        newdata = transform_modify_order_data(data, token_id)
+    except Exception as e:
+        logger.error(f"Error building Kotak modify payload: {e}")
+        return {"status": "error", "message": str(e)}, 400
 
     logger.debug(f"MODIFY ORDER - Transformed data: {newdata}")
 

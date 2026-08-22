@@ -58,9 +58,7 @@ def test_multi_option_greeks_converts_expired_legs_to_zero_greeks(monkeypatch):
             True,
             {
                 "status": "success",
-                "results": [
-                    {"symbol": item["symbol"], "data": {"ltp": 16.4}} for item in symbols
-                ],
+                "results": [{"symbol": item["symbol"], "data": {"ltp": 16.4}} for item in symbols],
             },
             200,
         ),
@@ -83,5 +81,8 @@ def test_multi_option_greeks_converts_expired_legs_to_zero_greeks(monkeypatch):
     assert response["summary"] == {"total": 2, "success": 2, "failed": 0}
     assert all(item["status"] == "success" for item in response["data"])
     assert all(item["implied_volatility"] == 0 for item in response["data"])
-    assert all(item["greeks"] == {"delta": 0, "gamma": 0, "theta": 0, "vega": 0, "rho": 0} for item in response["data"])
+    assert all(
+        item["greeks"] == {"delta": 0, "gamma": 0, "theta": 0, "vega": 0, "rho": 0}
+        for item in response["data"]
+    )
     assert all("expired" in item["note"] for item in response["data"])

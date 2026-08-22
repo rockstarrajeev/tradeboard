@@ -155,8 +155,8 @@ export interface SystemHardware {
 }
 
 export interface SystemBuild {
-  tradeboard_version?: string | null
-  tradeboard_sdk_version?: string | null
+  openalgo_version?: string | null
+  openalgo_sdk_version?: string | null
   git_branch?: string | null
   git_commit?: string | null
   frontend_build_time?: string | null

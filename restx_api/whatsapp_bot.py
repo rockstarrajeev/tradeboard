@@ -49,7 +49,7 @@ notify_model = api.model(
             description="If true, send to the paired device's own number (the operator).",
         ),
         "username": fields.String(
-            description="Tradeboard username — resolves to that user's linked WhatsApp number."
+            description="OpenAlgo username — resolves to that user's linked WhatsApp number."
         ),
         "phone": fields.String(
             description="Single E.164 digit string to message directly (e.g. 919876543210)."
@@ -94,7 +94,7 @@ class WhatsAppNotify(Resource):
 
         Recipient (exactly one of):
             "self": true                — send to the paired device's own number
-            "username": "<tradeboard>"    — resolve via linked-users table
+            "username": "<openalgo>"    — resolve via linked-users table
             "phone": "919876543210"     — direct E.164 digits
             "phones": ["a", "b", ...]   — small broadcast (up to 5 recipients)
 
@@ -125,7 +125,7 @@ class WhatsAppNotify(Resource):
                         "status": "error",
                         "message": (
                             "WhatsApp is not paired or not connected. Pair the device "
-                            "first from the /whatsapp page in Tradeboard before sending."
+                            "first from the /whatsapp page in OpenAlgo before sending."
                         ),
                     }
                 ),
@@ -216,9 +216,7 @@ class WhatsAppNotify(Resource):
                 jsonify(
                     {
                         "status": "error",
-                        "message": (
-                            "Specify one of: 'self', 'username', 'phone', or 'phones'"
-                        ),
+                        "message": ("Specify one of: 'self', 'username', 'phone', or 'phones'"),
                     }
                 ),
                 400,

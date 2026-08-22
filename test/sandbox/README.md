@@ -1,6 +1,6 @@
 # Sandbox Mode Test Suite
 
-This directory contains comprehensive tests for the Tradeboard sandbox (sandbox trading) mode.
+This directory contains comprehensive tests for the OpenAlgo sandbox (sandbox trading) mode.
 
 ## Test Files
 
@@ -78,14 +78,14 @@ This directory contains comprehensive tests for the Tradeboard sandbox (sandbox 
 
 ### Individual Test
 ```bash
-cd /path/to/tradeboard
+cd /path/to/openalgo
 source .venv/bin/activate
 python test/sandbox/test_margin_scenarios.py
 ```
 
 ### All Sandbox Tests
 ```bash
-cd /path/to/tradeboard
+cd /path/to/openalgo
 source .venv/bin/activate
 
 # Run all tests
@@ -141,24 +141,24 @@ db_session.commit()
 
 All tests should pass with output similar to:
 ```
-✅ SCENARIO 1 PASSED
-✅ SCENARIO 2 PASSED
-✅ SCENARIO 3 PASSED
-✅ SCENARIO 4 PASSED
+SCENARIO 1 PASSED
+SCENARIO 2 PASSED
+SCENARIO 3 PASSED
+SCENARIO 4 PASSED
 
 TEST RESULTS: 4 passed, 0 failed
-🎉 ALL TESTS PASSED!
+ALL TESTS PASSED!
 ```
 
 ## Test Coverage
 
 The test suite covers:
-- ✅ Margin calculations (blocking, release, tracking)
-- ✅ Position lifecycle (open, add, reduce, close, reopen)
-- ✅ Order validation (product rules, quantity checks)
-- ✅ Rejected order handling (audit trail, visibility)
-- ✅ API response formats (orderbook, tradebook)
-- ✅ Edge cases (reversals, partial fills, short selling)
+- Margin calculations (blocking, release, tracking)
+- Position lifecycle (open, add, reduce, close, reopen)
+- Order validation (product rules, quantity checks)
+- Rejected order handling (audit trail, visibility)
+- API response formats (orderbook, tradebook)
+- Edge cases (reversals, partial fills, short selling)
 
 ## Adding New Tests
 

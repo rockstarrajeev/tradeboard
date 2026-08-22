@@ -87,7 +87,7 @@ export const useAuthStore = create<AuthStore>()(
       },
     }),
     {
-      name: 'tradeboard-auth',
+      name: 'openalgo-auth',
     }
   )
 )

@@ -13,7 +13,7 @@ import {
   Smartphone,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router'
 import { fetchCSRFToken } from '@/api/client'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
@@ -661,7 +661,7 @@ export default function SamcoAuth() {
                   Back to Broker Selection
                 </Link>
                 <a
-                  href="https://docs.rajeevupadhyay.com"
+                  href="https://docs.openalgo.in"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline inline-flex items-center gap-1"

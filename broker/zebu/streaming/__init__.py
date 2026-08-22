@@ -1,5 +1,5 @@
 """
-Zebu WebSocket streaming module for Tradeboard
+Zebu WebSocket streaming module for OpenAlgo
 """
 
 from .zebu_adapter import ZebuWebSocketAdapter

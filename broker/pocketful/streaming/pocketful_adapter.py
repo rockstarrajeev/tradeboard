@@ -173,8 +173,8 @@ class PocketfulWebSocketAdapter(BaseBrokerWebSocketAdapter):
         Returns:
             Dict: Response with status and error message if applicable
         """
-        # Map Tradeboard mode to Pocketful mode
-        # Tradeboard: 1=LTP, 2=Quote, 3=Depth
+        # Map OpenAlgo mode to Pocketful mode
+        # OpenAlgo: 1=LTP, 2=Quote, 3=Depth
         # Pocketful: 1=Detailed, 2=Compact, 4=Snapquote
         pocketful_mode_map = {
             1: 2,  # LTP -> Compact
@@ -354,7 +354,7 @@ class PocketfulWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
         # Resubscribe to existing subscriptions if reconnecting
         with self.lock:
-            for correlation_id, sub in self.subscriptions.items():
+            for _correlation_id, sub in self.subscriptions.items():
                 try:
                     self._send_subscription(
                         sub["exchange_code"], sub["token"], sub["pocketful_mode"]

@@ -11,7 +11,7 @@ from openalgo import api
 
 # Test the history API to see the response format
 client = api(
-    api_key=os.getenv("TRADEBOARD_API_KEY"),
+    api_key=os.getenv("OPENALGO_API_KEY"),
     host="http://127.0.0.1:5000",
 )
 

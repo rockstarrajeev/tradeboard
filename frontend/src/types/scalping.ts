@@ -1,5 +1,5 @@
 // Types for the /scalping keyboard-driven options scalping terminal.
-// Order constants mirror Tradeboard (docs/prompt/order-constants.md).
+// Order constants mirror OpenAlgo (docs/prompt/order-constants.md).
 
 export type OptionType = 'CE' | 'PE'
 export type ScalpingProduct = 'MIS' | 'NRML' | 'CNC'
@@ -79,6 +79,7 @@ export interface ScalpingOrderRequest {
   quantity: number
   product: ScalpingProduct
   lots?: number // sent on manual entry so the lot cap is enforced server-side
+  ltp?: number // live WS LTP; used as a prefetched quote so sandbox skips its quote fetch
 }
 
 export interface ScalpingOrderResponse {

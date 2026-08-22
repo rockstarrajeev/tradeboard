@@ -4,6 +4,7 @@ import {
   Bot,
   ClipboardList,
   Download,
+  GraduationCap,
   HelpCircle,
   LogIn,
   Menu,
@@ -14,7 +15,7 @@ import {
   Wand2,
 } from 'lucide-react'
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 import { Footer } from '@/components/layout/Footer'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -26,6 +27,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
+import { tools } from '@/lib/tools'
 import { useThemeStore } from '@/stores/themeStore'
 
 const integrations = [
@@ -54,9 +56,10 @@ export default function Home() {
   const navLinks = [
     { href: '/', label: 'Home', internal: true },
     { href: '/faq', label: 'FAQ', internal: true },
-    { href: 'https://rajeevupadhyay.com/discord', label: 'Community', internal: false },
-    { href: 'https://rajeevupadhyay.com/roadmap', label: 'Roadmap', internal: false },
-    { href: 'https://docs.rajeevupadhyay.com', label: 'Docs', internal: false },
+    { href: 'https://www.openalgo.in/learn', label: 'Varsity', internal: false },
+    { href: 'https://openalgo.in/discord', label: 'Community', internal: false },
+    { href: 'https://openalgo.in/roadmap', label: 'Roadmap', internal: false },
+    { href: 'https://docs.openalgo.in', label: 'Docs', internal: false },
   ]
 
   return (
@@ -79,8 +82,8 @@ export default function Home() {
                   <SheetDescription>Main navigation and quick access links</SheetDescription>
                 </SheetHeader>
                 <div className="flex items-center gap-2 mb-8">
-                  <img src="/logo.png" alt="Tradeboard" className="h-8 w-8" />
-                  <span className="text-xl font-semibold">Tradeboard</span>
+                  <img src="/logo.png" alt="OpenAlgo" className="h-8 w-8" />
+                  <span className="text-xl font-semibold">OpenAlgo</span>
                 </div>
                 <div className="flex flex-col gap-2">
                   <Link
@@ -121,7 +124,16 @@ export default function Home() {
                     Download
                   </Link>
                   <a
-                    href="https://rajeevupadhyay.com/discord"
+                    href="https://www.openalgo.in/learn"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 rounded-md hover:bg-accent"
+                  >
+                    <GraduationCap className="h-5 w-5" />
+                    Varsity
+                  </a>
+                  <a
+                    href="https://openalgo.in/discord"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 rounded-md hover:bg-accent"
@@ -130,7 +142,7 @@ export default function Home() {
                     Community
                   </a>
                   <a
-                    href="https://rajeevupadhyay.com/roadmap"
+                    href="https://openalgo.in/roadmap"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 rounded-md hover:bg-accent"
@@ -139,7 +151,7 @@ export default function Home() {
                     Roadmap
                   </a>
                   <a
-                    href="https://docs.rajeevupadhyay.com"
+                    href="https://docs.openalgo.in"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 rounded-md hover:bg-accent"
@@ -152,8 +164,8 @@ export default function Home() {
             </Sheet>
 
             <Link to="/" className="flex items-center gap-2">
-              <img src="/logo.png" alt="Tradeboard" className="h-8 w-8" />
-              <span className="text-xl font-bold hidden sm:inline">Tradeboard</span>
+              <img src="/logo.png" alt="OpenAlgo" className="h-8 w-8" />
+              <span className="text-xl font-bold hidden sm:inline">OpenAlgo</span>
             </Link>
           </div>
 
@@ -203,7 +215,9 @@ export default function Home() {
             >
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px] shadow-emerald-400/60" />
               <span className="text-amber-700 dark:text-amber-500">New in V2</span>
-              <span className="text-muted-foreground">- 12-Tool Options Analytics Suite</span>
+              <span className="text-muted-foreground">
+                - {tools.length} Tool Options &amp; Portfolio Analytics Suite
+              </span>
               <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
             </Link>
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
@@ -215,8 +229,8 @@ export default function Home() {
             </p>
             <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
               Test and Execute your Trading ideas, Connect your favorite Trading Platforms, AI
-              Driven Strategy Development with a built-in Options Analytics Suite across 30+
-              Brokers.
+              Driven Strategy Development, with a built-in Options &amp; Portfolio Analytics Suite -
+              option chains and Greeks, portfolio and SIP backtesting - across 30+ Brokers.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" asChild>
@@ -269,7 +283,7 @@ export default function Home() {
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 max-w-6xl mx-auto">
-            {/* Tradeboard MCP card */}
+            {/* OpenAlgo MCP card */}
             <Card className="group transition-colors hover:border-purple-400/40">
               <CardContent className="space-y-4">
                 <div className="flex items-start gap-4">
@@ -278,7 +292,7 @@ export default function Home() {
                   </div>
                   <div>
                     <h3 className="text-xl font-bold flex items-center gap-2">
-                      Tradeboard MCP
+                      OpenAlgo MCP
                       <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
                     </h3>
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mt-1">
@@ -287,7 +301,7 @@ export default function Home() {
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Connect your Tradeboard account to Claude, Cursor, Windsurf, or ChatGPT. Place
+                  Connect your OpenAlgo account to Claude, Cursor, Windsurf, or ChatGPT. Place
                   orders, check positions, and pull live prices by simply asking - no dashboards, no
                   clicks.
                 </p>
@@ -308,7 +322,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            {/* Tradeboard Skills card */}
+            {/* OpenAlgo Skills card */}
             <Card className="group transition-colors hover:border-emerald-400/40">
               <CardContent className="space-y-4">
                 <div className="flex items-start gap-4">
@@ -317,7 +331,7 @@ export default function Home() {
                   </div>
                   <div>
                     <h3 className="text-xl font-bold flex items-center gap-2">
-                      Tradeboard Skills
+                      OpenAlgo Skills
                       <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
                     </h3>
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mt-1">

@@ -13,13 +13,14 @@ from services.telegram_bot_service import (
     stop_bot_sync,
 )
 
-if __name__ == "__main__":
+
+def main():
     # Get config
     config = get_bot_config()
 
     if not config.get("token"):
         print("[ERROR] No bot token configured")
-        exit(1)
+        return
 
     print(f"[INFO] Bot token found: {config['token'][:10]}...")
 
@@ -29,7 +30,7 @@ if __name__ == "__main__":
 
     if not success:
         print(f"[ERROR] Failed to initialize: {message}")
-        exit(1)
+        return
 
     print(f"[OK] {message}")
 
@@ -39,7 +40,7 @@ if __name__ == "__main__":
 
     if not success:
         print(f"[ERROR] Failed to start: {message}")
-        exit(1)
+        return
 
     print(f"[OK] {message}")
 
@@ -57,3 +58,6 @@ if __name__ == "__main__":
         success, message = stop_bot_sync()
         print(f"[OK] {message}")
 
+
+if __name__ == "__main__":
+    main()

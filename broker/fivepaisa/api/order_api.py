@@ -229,8 +229,8 @@ def get_open_position(
     """Get open position for a specific trading symbol
 
     Args:
-        tradingsymbol (str): Trading symbol in Tradeboard format
-        exchange (str): Exchange in Tradeboard format
+        tradingsymbol (str): Trading symbol in OpenAlgo format
+        exchange (str): Exchange in OpenAlgo format
         Exch (str): Exchange in 5Paisa format
         ExchType (str): Exchange type in 5Paisa format
         producttype (str): Product type (MIS, NRML, etc.)
@@ -240,7 +240,7 @@ def get_open_position(
         str: Net quantity as string, '0' if no position found
     """
     try:
-        # Convert Trading Symbol from Tradeboard Format to Broker Format Before Search in OpenPosition
+        # Convert Trading Symbol from OpenAlgo Format to Broker Format Before Search in OpenPosition
         token = int(get_token(tradingsymbol, exchange))  # Convert token to integer
         tradingsymbol = get_br_symbol(tradingsymbol, exchange)
         positions_data = _get_cached_positions(auth)
@@ -325,15 +325,43 @@ def place_order_api(data: dict[str, Any], auth: str) -> dict[str, Any]:
         response.raise_for_status()
         response_data = response.json()
 
-        logger.debug(f"Order Response: {response_data}")
+        logger.info(f"5Paisa PlaceOrder response: {response_data}")
 
-        if response_data["head"]["statusDescription"] == "Success":
-            orderid = response_data["body"]["BrokerOrderID"]
+        head = response_data.get("head", {}) or {}
+        body = response_data.get("body", {}) or {}
+        broker_order_id = body.get("BrokerOrderID", 0)
+        body_status = body.get("Status")
+        broker_message = body.get("Message", "")
+
+        # 5Paisa sends Status as int 0, but normalize in case it arrives as "0".
+        try:
+            status_ok = int(body_status) == 0
+        except (TypeError, ValueError):
+            status_ok = False
+
+        # 5Paisa returns HTTP 200 with head.statusDescription == "Success" even
+        # when the order is rejected by RMS. A genuinely accepted order has
+        # body.Status == 0 AND a non-zero BrokerOrderID. Anything else (margin
+        # shortfall, market closed, invalid scrip, etc.) is a rejection and must
+        # NOT be reported as a phantom success with orderid 0.
+        if head.get("statusDescription") == "Success" and status_ok and broker_order_id:
+            orderid = broker_order_id
+            # Add status attribute to make it compatible with place_order.py
+            response.status = response.status_code
         else:
             orderid = None
-
-        # Add status attribute to make it compatible with place_order.py
-        response.status = response.status_code
+            reason = broker_message or head.get("statusDescription") or "Order rejected by 5Paisa"
+            logger.error(
+                f"5Paisa order rejected - Status: {body_status}, "
+                f"BrokerOrderID: {broker_order_id}, "
+                f"RMSResponseCode: {body.get('RMSResponseCode')}, Message: {reason}"
+            )
+            # Surface the broker's rejection reason to the service layer, which
+            # reads response_data.get("message") and res.status.
+            response_data["message"] = reason
+            # Force a non-200 status so place_order_service reports an error
+            # instead of a success with orderid 0.
+            response.status = 400
 
         return response, response_data, orderid
 
@@ -346,7 +374,6 @@ def place_smartorder_api(data: dict[str, Any], auth: str) -> dict[str, Any]:
     AUTH_TOKEN = auth
 
     # If no API call is made in this function then res will return None
-    res = None
 
     # Extract necessary info from data
     symbol = data.get("symbol")
@@ -432,7 +459,7 @@ def _place_smartorder_locked(data, AUTH_TOKEN, symbol, exchange, product):
 
         # logger.debug(f"{order_data}")
         # Place the order
-        res, response, orderid = place_order_api(order_data, auth)
+        res, response, orderid = place_order_api(order_data, AUTH_TOKEN)
         _invalidate_position_cache(AUTH_TOKEN)
         logger.debug(f"{response}")
         logger.debug(f"{orderid}")
@@ -465,7 +492,7 @@ def close_all_positions(current_api_key: str, auth: str) -> dict[str, Any]:
             quantity = abs(int(position["NetQty"]))
 
             exchange = reverse_map_exchange(position["Exch"], position["ExchType"])
-            # get tradeboard symbol to send to placeorder function
+            # get openalgo symbol to send to placeorder function
 
             symbol = get_symbol(position["ScripCode"], exchange)
 

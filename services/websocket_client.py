@@ -1,5 +1,5 @@
 """
-Internal WebSocket client wrapper for connecting to the Tradeboard WebSocket server.
+Internal WebSocket client wrapper for connecting to the OpenAlgo WebSocket server.
 This client handles authentication and provides a simple interface for services.
 """
 
@@ -35,7 +35,7 @@ logger = get_logger(__name__)
 
 class WebSocketClient:
     """
-    Internal WebSocket client for connecting to Tradeboard WebSocket server.
+    Internal WebSocket client for connecting to OpenAlgo WebSocket server.
     Handles authentication, subscriptions, and data routing.
     """
 
@@ -142,9 +142,7 @@ class WebSocketClient:
         self.authenticated = False
         logger.info("Disconnected from WebSocket server")
 
-    async def _send_and_await_ack(
-        self, message: dict, request_id: str, timeout: float
-    ) -> dict:
+    async def _send_and_await_ack(self, message: dict, request_id: str, timeout: float) -> dict:
         """Send a message and await the proxy's matching response.
 
         Runs inside the asyncio loop thread (called via run_coroutine_threadsafe).
@@ -199,10 +197,9 @@ class WebSocketClient:
             # Outer timeout slightly longer than the inner ack timeout so the
             # asyncio.wait_for fires first and produces a clean error.
             ack = future.result(timeout=12)
-        except (TimeoutError, asyncio.TimeoutError):
+        except TimeoutError:
             logger.warning(
-                f"Subscribe timed out waiting for proxy ack (mode={mode}, "
-                f"symbols={len(symbols)})"
+                f"Subscribe timed out waiting for proxy ack (mode={mode}, symbols={len(symbols)})"
             )
             return {
                 "status": "error",
@@ -267,10 +264,9 @@ class WebSocketClient:
                 self.loop,
             )
             ack = future.result(timeout=12)
-        except (TimeoutError, asyncio.TimeoutError):
+        except TimeoutError:
             logger.warning(
-                f"Unsubscribe timed out waiting for proxy ack (mode={mode}, "
-                f"symbols={len(symbols)})"
+                f"Unsubscribe timed out waiting for proxy ack (mode={mode}, symbols={len(symbols)})"
             )
             return {
                 "status": "error",

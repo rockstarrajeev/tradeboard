@@ -257,9 +257,7 @@ class BrokerData:
         response = get_api_response(f"/data/depth?symbol={encoded}&ohlcv_flag=1", self.auth_token)
 
         if response.get("s") != "ok":
-            logger.debug(
-                f"Depth fetch for OI failed for {br_symbol}: {response.get('message')}"
-            )
+            logger.debug(f"Depth fetch for OI failed for {br_symbol}: {response.get('message')}")
             return 0
 
         depth_data = response.get("d", {}).get(br_symbol, {})
@@ -553,8 +551,13 @@ class BrokerData:
                     else:
                         logger.debug(f"No data available for period {chunk_start} to {chunk_end}")
 
-                    # Add a small delay between chunks to avoid rate limiting
-                    time.sleep(0.5)
+                    # No inter-chunk sleep here: get_api_response already paces
+                    # every Fyers call through the process-wide apply_rate_limit
+                    # (125ms spacing) and honours Retry-After on 429s. The old
+                    # unconditional 0.5s sleep ran even after the LAST chunk,
+                    # putting a half-second floor under every history request --
+                    # a single-chunk intraday fetch spent 500ms sleeping on
+                    # 184ms of actual HTTP.
 
                     # Move to next chunk
                     current_start = current_end + pd.Timedelta(days=1)
@@ -594,9 +597,7 @@ class BrokerData:
             logger.exception(error_msg)
             raise Exception(f"{error_msg}: {e}")
 
-    def get_option_chain(
-        self, symbol: str, strikecount: int, timestamp: str | None = None
-    ) -> dict:
+    def get_option_chain(self, symbol: str, strikecount: int, timestamp: str | None = None) -> dict:
         """
         Fetch strikes around ATM for `symbol` in a single call via Fyers'
         native /data/options-chain-v3 endpoint (see

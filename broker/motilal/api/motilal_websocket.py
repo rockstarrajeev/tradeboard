@@ -220,9 +220,7 @@ class MotilalWebSocket:
         ):
             self._heartbeat_thread.join(timeout=2)
             if self._heartbeat_thread.is_alive():
-                logger.warning(
-                    "Motilal heartbeat thread did not exit within 2s of disconnect"
-                )
+                logger.warning("Motilal heartbeat thread did not exit within 2s of disconnect")
         self._heartbeat_thread = None
 
         if self.ws:
@@ -260,9 +258,7 @@ class MotilalWebSocket:
         ):
             self._connect_thread.join(timeout=5)
             if self._connect_thread.is_alive():
-                logger.warning(
-                    "Motilal connect thread did not exit within 5s of disconnect"
-                )
+                logger.warning("Motilal connect thread did not exit within 5s of disconnect")
         self._connect_thread = None
 
         logger.info("Motilal WebSocket disconnected")
@@ -402,7 +398,7 @@ class MotilalWebSocket:
                 # Parse header (10 bytes)
                 exchange_byte = packet[0:1].decode("utf-8", errors="ignore")
                 scrip = int.from_bytes(packet[1:5], byteorder="little", signed=True)
-                timestamp = int.from_bytes(packet[5:9], byteorder="little", signed=True)
+                int.from_bytes(packet[5:9], byteorder="little", signed=True)
                 msgtype = packet[9:10].decode("utf-8", errors="ignore")
 
                 # Parse body (20 bytes) based on message type
@@ -619,7 +615,7 @@ class MotilalWebSocket:
             # Determine message type based on fields present
             exchange = data.get("Exchange", "")
             scrip_code = data.get("Scrip Code", "")
-            timestamp = data.get("Time", "")
+            data.get("Time", "")
 
             if not exchange or not scrip_code:
                 logger.debug("Message does not contain Exchange or Scrip Code, skipping")
@@ -889,9 +885,7 @@ class MotilalWebSocket:
             t = threading.Thread(target=delayed_reconnect, daemon=True)
             with self._reconnect_threads_lock:
                 # prune dead refs to keep the list bounded
-                self._reconnect_threads = [
-                    th for th in self._reconnect_threads if th.is_alive()
-                ]
+                self._reconnect_threads = [th for th in self._reconnect_threads if th.is_alive()]
                 self._reconnect_threads.append(t)
             t.start()
 
@@ -905,7 +899,7 @@ class MotilalWebSocket:
             exchange (str): Exchange code (BSE, NSE, NSEFO, NSECD, MCX, BSEFO)
             exchange_type (str): Exchange type (CASH, DERIVATIVES)
             scrip_code (int): Scrip code/token
-            symbol (str): Tradeboard symbol (optional, for reference)
+            symbol (str): OpenAlgo symbol (optional, for reference)
 
         Returns:
             bool: True if registration successful, False otherwise
@@ -1119,7 +1113,7 @@ class MotilalWebSocket:
         )
 
         # Resubscribe to scrips
-        for full_key, scrip_info in self.subscribed_scrips.items():
+        for _full_key, scrip_info in self.subscribed_scrips.items():
             self.register_scrip(
                 scrip_info["exchange"],
                 scrip_info["exchange_type"],

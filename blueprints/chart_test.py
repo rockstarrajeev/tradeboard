@@ -40,7 +40,7 @@ IST = pytz.timezone("Asia/Kolkata")
 # line up on the time axis.
 IST_OFFSET_SECONDS = 19800
 
-# Supported intervals (Tradeboard format) -> trading days of history to load.
+# Supported intervals (OpenAlgo format) -> trading days of history to load.
 INTERVAL_TRADING_DAYS = {"1m": 1, "5m": 3, "15m": 9}
 
 
@@ -49,7 +49,7 @@ INTERVAL_TRADING_DAYS = {"1m": 1, "5m": 3, "15m": 9}
 def chart_test_history():
     """Return candles for the most recent N trading days at the given interval.
 
-    ``interval`` is an Tradeboard interval (1m/5m/15m). The lookback scales with
+    ``interval`` is an OpenAlgo interval (1m/5m/15m). The lookback scales with
     it: 1m -> 1 trading day, 5m -> 3, 15m -> 9. A generous calendar window is
     fetched and the latest N IST dates with data are kept, which transparently
     skips weekends/holidays without a market-calendar lookup. An optional

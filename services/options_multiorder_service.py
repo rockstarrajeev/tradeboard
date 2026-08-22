@@ -46,7 +46,7 @@ def get_underlying_ltp(
     Args:
         underlying: Underlying symbol (e.g., "NIFTY", "NIFTY28OCT25FUT")
         exchange: Exchange (e.g., "NSE_INDEX", "NSE", "NFO")
-        api_key: Tradeboard API key
+        api_key: OpenAlgo API key
 
     Returns:
         Tuple of (success, ltp, error_message)
@@ -118,14 +118,16 @@ def emit_analyzer_error(request_data: dict[str, Any], error_message: str) -> dic
         del analyzer_request["apikey"]
     analyzer_request["api_type"] = "optionsmultiorder"
 
-    bus.publish(AnalyzerErrorEvent(
-        mode="analyze",
-        api_type="optionsmultiorder",
-        request_data=analyzer_request,
-        response_data=error_response,
-        error_message=error_message,
-        api_key=request_data.get("apikey", ""),
-    ))
+    bus.publish(
+        AnalyzerErrorEvent(
+            mode="analyze",
+            api_type="optionsmultiorder",
+            request_data=analyzer_request,
+            response_data=error_response,
+            error_message=error_message,
+            api_key=request_data.get("apikey", ""),
+        )
+    )
 
     return error_response
 
@@ -144,7 +146,7 @@ def place_single_split_order_for_leg(
 
     Args:
         order_data: Order data with symbol, exchange, action, quantity, etc.
-        api_key: Tradeboard API key
+        api_key: OpenAlgo API key
         order_num: Order number in the split sequence
         total_orders: Total number of split orders
         auth_token: Direct broker auth token (optional)
@@ -208,7 +210,7 @@ def resolve_and_place_leg(
     Args:
         leg_data: Leg-specific data (offset, option_type, action, quantity, splitsize, etc.)
         common_data: Common data (underlying, exchange, expiry_date, strike_int, strategy)
-        api_key: Tradeboard API key
+        api_key: OpenAlgo API key
         leg_index: Index of this leg
         total_legs: Total number of legs
         auth_token: Direct broker auth token (optional)
@@ -306,7 +308,12 @@ def resolve_and_place_leg(
                 order_data = copy.deepcopy(base_order_data)
                 order_data["quantity"] = splitsize
                 result = place_single_split_order_for_leg(
-                    order_data, api_key, i + 1, total_split_orders, auth_token, broker,
+                    order_data,
+                    api_key,
+                    i + 1,
+                    total_split_orders,
+                    auth_token,
+                    broker,
                     prefetched_quote=prefetched,
                 )
                 split_results.append(result)
@@ -318,7 +325,12 @@ def resolve_and_place_leg(
                 order_data = copy.deepcopy(base_order_data)
                 order_data["quantity"] = remaining_qty
                 result = place_single_split_order_for_leg(
-                    order_data, api_key, total_split_orders, total_split_orders, auth_token, broker,
+                    order_data,
+                    api_key,
+                    total_split_orders,
+                    total_split_orders,
+                    auth_token,
+                    broker,
                     prefetched_quote=prefetched,
                 )
                 split_results.append(result)
@@ -331,6 +343,10 @@ def resolve_and_place_leg(
                 "leg": leg_index + 1,
                 "symbol": resolved_symbol,
                 "exchange": resolved_exchange,
+                # The split path reports one aggregated leg. Without product,
+                # subscribers keying on (symbol, exchange, product) cannot match
+                # it, unlike the non-split path below.
+                "product": leg_data.get("product", "MIS"),
                 "offset": leg_data.get("offset"),
                 "option_type": leg_data.get("option_type", "").upper(),
                 "action": leg_data.get("action", "").upper(),
@@ -376,6 +392,9 @@ def resolve_and_place_leg(
                 "leg": leg_index + 1,
                 "symbol": resolved_symbol,
                 "exchange": resolved_exchange,
+                # Each leg can carry its own product, so the summary event's
+                # value is not authoritative for subscribers keying on the leg.
+                "product": order_data.get("product", ""),
                 "offset": leg_data.get("offset"),
                 "option_type": leg_data.get("option_type", "").upper(),
                 "action": leg_data.get("action", "").upper(),
@@ -486,6 +505,7 @@ def process_multiorder_with_auth(
             # Batch-fetch all option quotes in one multiquotes call
             if resolved_symbols:
                 from services.quotes_service import get_multiquotes
+
                 success_mq, mq_response, _ = get_multiquotes(
                     symbols=resolved_symbols, api_key=api_key
                 )
@@ -496,11 +516,11 @@ def process_multiorder_with_auth(
                         data = result.get("data")
                         if sym and exch and data:
                             leg_quote_cache[(sym, exch)] = data
-                    logger.info(
-                        f"Pre-fetched {len(leg_quote_cache)} option quotes for multiorder"
-                    )
+                    logger.info(f"Pre-fetched {len(leg_quote_cache)} option quotes for multiorder")
         except Exception as e:
-            logger.debug(f"Multiquotes pre-fetch failed for multiorder, falling back to per-leg fetch: {e}")
+            logger.debug(
+                f"Multiquotes pre-fetch failed for multiorder, falling back to per-leg fetch: {e}"
+            )
 
     # Process all legs sequentially (avoids ThreadPoolExecutor + eventlet hang)
     # Process BUY legs first
@@ -508,7 +528,14 @@ def process_multiorder_with_auth(
         if order_delay and i > 0:
             time.sleep(order_delay)
         result = resolve_and_place_leg(
-            leg, common_data, api_key, orig_idx, total_legs, auth_token, broker, underlying_ltp,
+            leg,
+            common_data,
+            api_key,
+            orig_idx,
+            total_legs,
+            auth_token,
+            broker,
+            underlying_ltp,
             leg_quote_cache=leg_quote_cache,
         )
         if result:
@@ -519,7 +546,14 @@ def process_multiorder_with_auth(
         if order_delay and (i > 0 or buy_legs):
             time.sleep(order_delay)
         result = resolve_and_place_leg(
-            leg, common_data, api_key, orig_idx, total_legs, auth_token, broker, underlying_ltp,
+            leg,
+            common_data,
+            api_key,
+            orig_idx,
+            total_legs,
+            auth_token,
+            broker,
+            underlying_ltp,
             leg_quote_cache=leg_quote_cache,
         )
         if result:
@@ -551,20 +585,22 @@ def process_multiorder_with_auth(
         del request_log["apikey"]
     request_log["api_type"] = "optionsmultiorder"
 
-    bus.publish(MultiOrderCompletedEvent(
-        mode=mode,
-        api_type="optionsmultiorder",
-        strategy=common_data.get("strategy", ""),
-        underlying=common_data.get("underlying", ""),
-        exchange=common_data.get("exchange", ""),
-        results=results,
-        successful_legs=successful_legs,
-        failed_legs=failed_legs,
-        total=len(results),
-        request_data=request_log,
-        response_data=response_data,
-        api_key=api_key or "",
-    ))
+    bus.publish(
+        MultiOrderCompletedEvent(
+            mode=mode,
+            api_type="optionsmultiorder",
+            strategy=common_data.get("strategy", ""),
+            underlying=common_data.get("underlying", ""),
+            exchange=common_data.get("exchange", ""),
+            results=results,
+            successful_legs=successful_legs,
+            failed_legs=failed_legs,
+            total=len(results),
+            request_data=request_log,
+            response_data=response_data,
+            api_key=api_key or "",
+        )
+    )
 
     return True, response_data, 200
 
@@ -581,7 +617,7 @@ def place_options_multiorder(
 
     Args:
         multiorder_data: Multi-order data containing underlying, exchange, legs, etc.
-        api_key: Tradeboard API key (for API-based calls)
+        api_key: OpenAlgo API key (for API-based calls)
         auth_token: Direct broker auth token (for internal calls)
         broker: Broker name (for internal calls)
 
@@ -614,7 +650,7 @@ def place_options_multiorder(
 
         AUTH_TOKEN, broker_name = get_auth_token_broker(api_key)
         if AUTH_TOKEN is None:
-            error_response = {"status": "error", "message": "Invalid tradeboard apikey"}
+            error_response = {"status": "error", "message": "Invalid openalgo apikey"}
             return False, error_response, 403
 
         return process_multiorder_with_auth(

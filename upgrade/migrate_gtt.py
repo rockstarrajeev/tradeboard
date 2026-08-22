@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-GTT (Good Till Triggered) Order Support Migration Script for Tradeboard
+GTT (Good Till Triggered) Order Support Migration Script for OpenAlgo
 
 Adds two tables to the sandbox database:
 
@@ -113,7 +113,7 @@ def create_gtt_tables(conn):
     )
 
     conn.commit()
-    logger.info("✅ GTT tables created (or already present)")
+    logger.info("GTT tables created (or already present)")
 
 
 def create_gtt_indexes(conn):
@@ -121,35 +121,21 @@ def create_gtt_indexes(conn):
     logger.info("Creating GTT indexes...")
 
     # sandbox_gtt
-    conn.execute(
-        text("CREATE INDEX IF NOT EXISTS idx_gtt_gtt_id ON sandbox_gtt(gtt_id)")
-    )
-    conn.execute(
-        text("CREATE INDEX IF NOT EXISTS idx_gtt_user_id ON sandbox_gtt(user_id)")
-    )
-    conn.execute(
-        text("CREATE INDEX IF NOT EXISTS idx_gtt_symbol ON sandbox_gtt(symbol)")
-    )
-    conn.execute(
-        text("CREATE INDEX IF NOT EXISTS idx_gtt_exchange ON sandbox_gtt(exchange)")
-    )
-    conn.execute(
-        text("CREATE INDEX IF NOT EXISTS idx_gtt_status ON sandbox_gtt(gtt_status)")
-    )
+    conn.execute(text("CREATE INDEX IF NOT EXISTS idx_gtt_gtt_id ON sandbox_gtt(gtt_id)"))
+    conn.execute(text("CREATE INDEX IF NOT EXISTS idx_gtt_user_id ON sandbox_gtt(user_id)"))
+    conn.execute(text("CREATE INDEX IF NOT EXISTS idx_gtt_symbol ON sandbox_gtt(symbol)"))
+    conn.execute(text("CREATE INDEX IF NOT EXISTS idx_gtt_exchange ON sandbox_gtt(exchange)"))
+    conn.execute(text("CREATE INDEX IF NOT EXISTS idx_gtt_status ON sandbox_gtt(gtt_status)"))
     conn.execute(
         text("CREATE INDEX IF NOT EXISTS idx_gtt_user_status ON sandbox_gtt(user_id, gtt_status)")
     )
     conn.execute(
-        text(
-            "CREATE INDEX IF NOT EXISTS idx_gtt_symbol_exchange ON sandbox_gtt(symbol, exchange)"
-        )
+        text("CREATE INDEX IF NOT EXISTS idx_gtt_symbol_exchange ON sandbox_gtt(symbol, exchange)")
     )
 
     # sandbox_gtt_legs — covers both the active scan (leg_status='pending')
     # and the reaper (leg_status='triggering' AND claimed_at < cutoff).
-    conn.execute(
-        text("CREATE INDEX IF NOT EXISTS idx_gtt_leg_gtt_id ON sandbox_gtt_legs(gtt_id)")
-    )
+    conn.execute(text("CREATE INDEX IF NOT EXISTS idx_gtt_leg_gtt_id ON sandbox_gtt_legs(gtt_id)"))
     conn.execute(
         text(
             "CREATE INDEX IF NOT EXISTS idx_gtt_leg_status_claimed "
@@ -158,7 +144,7 @@ def create_gtt_indexes(conn):
     )
 
     conn.commit()
-    logger.info("✅ GTT indexes created (or already present)")
+    logger.info("GTT indexes created (or already present)")
 
 
 def _sandbox_config_exists(conn):
@@ -218,7 +204,7 @@ def insert_default_config(conn):
             added += 1
 
     conn.commit()
-    logger.info(f"✅ Added {added} GTT default config entries")
+    logger.info(f"Added {added} GTT default config entries")
 
 
 def upgrade():
@@ -233,11 +219,11 @@ def upgrade():
             create_gtt_indexes(conn)
             insert_default_config(conn)
 
-        logger.info(f"✅ Migration {MIGRATION_NAME} completed successfully")
+        logger.info(f"Migration {MIGRATION_NAME} completed successfully")
         return True
 
     except Exception as e:
-        logger.error(f"❌ Migration failed: {e}")
+        logger.error(f"Migration failed: {e}")
         import traceback
 
         traceback.print_exc()
@@ -258,23 +244,18 @@ def status():
             missing_tables = []
             for t in required_tables:
                 row = conn.execute(
-                    text(
-                        "SELECT name FROM sqlite_master "
-                        "WHERE type='table' AND name=:name"
-                    ),
+                    text("SELECT name FROM sqlite_master WHERE type='table' AND name=:name"),
                     {"name": t},
                 ).fetchone()
                 if not row:
                     missing_tables.append(t)
             if missing_tables:
-                logger.info(f"❌ Missing tables: {', '.join(missing_tables)}")
+                logger.info(f"Missing tables: {', '.join(missing_tables)}")
                 return False
 
             # Config present? (sandbox_config may be absent on a truly fresh DB.)
             if not _sandbox_config_exists(conn):
-                logger.info(
-                    "⚠️  sandbox_config table is missing — run migrate_sandbox.py first."
-                )
+                logger.info("sandbox_config table is missing — run migrate_sandbox.py first.")
                 return False
 
             missing_configs = []
@@ -286,19 +267,19 @@ def status():
                 if not row:
                     missing_configs.append(k)
             if missing_configs:
-                logger.info(f"⚠️  Missing config keys: {', '.join(missing_configs)}")
+                logger.info(f"Missing config keys: {', '.join(missing_configs)}")
                 return False
 
             # Stats
             gtt_count = conn.execute(text("SELECT COUNT(*) FROM sandbox_gtt")).scalar()
             leg_count = conn.execute(text("SELECT COUNT(*) FROM sandbox_gtt_legs")).scalar()
-            logger.info("✅ GTT schema is fully configured")
+            logger.info("GTT schema is fully configured")
             logger.info(f"   Total GTTs: {gtt_count}")
             logger.info(f"   Total GTT legs: {leg_count}")
             return True
 
     except Exception as e:
-        logger.error(f"❌ Status check failed: {e}")
+        logger.error(f"Status check failed: {e}")
         return False
 
 

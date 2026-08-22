@@ -1,6 +1,6 @@
 import { ArrowLeft, Check, Eye, EyeOff, Key, Save, Settings } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 import { webClient } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -198,7 +198,7 @@ export default function TelegramConfig() {
       {/* Save Button and Documentation */}
       <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
         <a
-          href="https://docs.rajeevupadhyay.com/trading-platform/telegram"
+          href="https://docs.openalgo.in/trading-platform/telegram"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -230,7 +230,7 @@ export default function TelegramConfig() {
             <p className="text-sm">
               <span className="font-semibold">Need detailed instructions?</span> Visit our complete{' '}
               <a
-                href="https://docs.rajeevupadhyay.com/trading-platform/telegram"
+                href="https://docs.openalgo.in/trading-platform/telegram"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline font-semibold"

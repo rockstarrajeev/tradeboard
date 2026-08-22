@@ -92,18 +92,18 @@ interface ChartInstance {
 export default function IVChart() {
   const { mode } = useThemeStore()
   const isDarkMode = mode === 'dark'
-  const { fnoExchanges, defaultFnoExchange, defaultUnderlyings } = useSupportedExchanges()
+  const { toolsFnoExchanges, defaultToolsFnoExchange, defaultUnderlyings } = useSupportedExchanges()
 
   // Control state
   const [isLoading, setIsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<MetricKey>('iv')
-  const [selectedExchange, setSelectedExchange] = useState(defaultFnoExchange)
+  const [selectedExchange, setSelectedExchange] = useState(defaultToolsFnoExchange)
   const [underlyings, setUnderlyings] = useState<string[]>(
-    defaultUnderlyings[defaultFnoExchange] || []
+    defaultUnderlyings[defaultToolsFnoExchange] || []
   )
   const [underlyingOpen, setUnderlyingOpen] = useState(false)
   const [selectedUnderlying, setSelectedUnderlying] = useState(
-    defaultUnderlyings[defaultFnoExchange]?.[0] || ''
+    defaultUnderlyings[defaultToolsFnoExchange]?.[0] || ''
   )
   const [expiries, setExpiries] = useState<string[]>([])
   const [selectedExpiry, setSelectedExpiry] = useState('')
@@ -115,9 +115,9 @@ export default function IVChart() {
   // Re-sync exchange when broker capabilities load asynchronously
   useEffect(() => {
     setSelectedExchange((prev) =>
-      prev && fnoExchanges.some((ex) => ex.value === prev) ? prev : defaultFnoExchange
+      prev && toolsFnoExchanges.some((ex) => ex.value === prev) ? prev : defaultToolsFnoExchange
     )
-  }, [defaultFnoExchange, fnoExchanges])
+  }, [defaultToolsFnoExchange, toolsFnoExchanges])
 
   // Chart refs
   const containerRefs = useRef<Map<string, HTMLDivElement>>(new Map())
@@ -207,7 +207,7 @@ export default function IVChart() {
     (container: HTMLDivElement) => {
       const el = document.createElement('div')
       el.style.cssText = `position:absolute;z-index:2;font-family:Arial,sans-serif;font-size:28px;font-weight:bold;user-select:none;pointer-events:none;color:${isDarkMode ? 'rgba(166,173,187,0.12)' : 'rgba(0,0,0,0.06)'}`
-      el.textContent = 'Tradeboard'
+      el.textContent = 'OpenAlgo'
       container.appendChild(el)
       setTimeout(() => {
         el.style.left = `${container.offsetWidth / 2 - el.offsetWidth / 2}px`
@@ -474,7 +474,7 @@ export default function IVChart() {
                 <SelectValue placeholder="Exchange" />
               </SelectTrigger>
               <SelectContent>
-                {fnoExchanges.map((ex) => (
+                {toolsFnoExchanges.map((ex) => (
                   <SelectItem key={ex.value} value={ex.value}>
                     {ex.label}
                   </SelectItem>

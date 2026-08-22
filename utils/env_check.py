@@ -8,11 +8,11 @@ import time
 
 from dotenv import load_dotenv
 
-# Placeholder values shipped in .sample.env. Tradeboard detects these on startup
+# Placeholder values shipped in .sample.env. OpenAlgo detects these on startup
 # and rotates them to fresh random secrets on first run. Coordinated with the
 # install/*.sh scripts which use the same strings as their sed targets.
-PLACEHOLDER_APP_KEY = "TRADEBOARD_PLACEHOLDER_APP_KEY_REGENERATE_BEFORE_USE"
-PLACEHOLDER_PEPPER = "TRADEBOARD_PLACEHOLDER_API_KEY_PEPPER_REGENERATE_BEFORE_USE"
+PLACEHOLDER_APP_KEY = "OPENALGO_PLACEHOLDER_APP_KEY_REGENERATE_BEFORE_USE"
+PLACEHOLDER_PEPPER = "OPENALGO_PLACEHOLDER_API_KEY_PEPPER_REGENERATE_BEFORE_USE"
 
 # Historical leaked literals: these were the original values in .sample.env
 # committed to the public repo before the placeholder switch. Any .env that
@@ -40,22 +40,22 @@ def configure_llvmlite_paths() -> None:
         None
     """
     # Only configure on Linux (Windows/macOS don't have this issue)
-    if sys.platform != 'linux':
+    if sys.platform != "linux":
         return
 
     # Get the base directory (project root)
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
     # Create cache directories in project folder
-    numba_cache = os.path.join(base_dir, '.numba_cache')
-    llvm_tmp = os.path.join(base_dir, '.llvm_tmp')
+    numba_cache = os.path.join(base_dir, ".numba_cache")
+    llvm_tmp = os.path.join(base_dir, ".llvm_tmp")
 
     # Set environment variables if not already set
-    if 'NUMBA_CACHE_DIR' not in os.environ:
-        os.environ['NUMBA_CACHE_DIR'] = numba_cache
+    if "NUMBA_CACHE_DIR" not in os.environ:
+        os.environ["NUMBA_CACHE_DIR"] = numba_cache
 
-    if 'LLVMLITE_TMPDIR' not in os.environ:
-        os.environ['LLVMLITE_TMPDIR'] = llvm_tmp
+    if "LLVMLITE_TMPDIR" not in os.environ:
+        os.environ["LLVMLITE_TMPDIR"] = llvm_tmp
 
     # Create directories if they don't exist
     for dir_path in [numba_cache, llvm_tmp]:
@@ -75,30 +75,34 @@ def check_tmp_noexec() -> None:
 
     This helps users understand why llvmlite might fail to load.
     """
-    if sys.platform != 'linux':
+    if sys.platform != "linux":
         return
 
     try:
-        with open('/proc/mounts', 'r') as f:
+        with open("/proc/mounts") as f:
             for line in f:
                 parts = line.split()
-                if len(parts) >= 4 and parts[1] == '/tmp':
-                    mount_options = parts[3].split(',')
-                    if 'noexec' in mount_options:
+                if len(parts) >= 4 and parts[1] == "/tmp":
+                    mount_options = parts[3].split(",")
+                    if "noexec" in mount_options:
                         print("\n" + "=" * 70)
-                        print("⚠️  WARNING: /tmp is mounted with 'noexec' flag")
+                        print("WARNING: /tmp is mounted with 'noexec' flag")
                         print("   This can cause issues with Python libraries like numba/llvmlite.")
                         print("")
-                        print("   Tradeboard has auto-configured alternative paths:")
-                        print(f"   - NUMBA_CACHE_DIR={os.environ.get('NUMBA_CACHE_DIR', 'not set')}")
-                        print(f"   - LLVMLITE_TMPDIR={os.environ.get('LLVMLITE_TMPDIR', 'not set')}")
+                        print("   OpenAlgo has auto-configured alternative paths:")
+                        print(
+                            f"   - NUMBA_CACHE_DIR={os.environ.get('NUMBA_CACHE_DIR', 'not set')}"
+                        )
+                        print(
+                            f"   - LLVMLITE_TMPDIR={os.environ.get('LLVMLITE_TMPDIR', 'not set')}"
+                        )
                         print("")
                         print("   If you still see 'failed to map segment' errors, either:")
                         print("   1. Remount /tmp: sudo mount -o remount,exec /tmp")
                         print("   2. Or set NUMBA_DISABLE_JIT=1 in your .env file")
                         print("=" * 70 + "\n")
                     return
-    except (OSError, IOError):
+    except OSError:
         pass  # Can't read /proc/mounts, skip the check
 
 
@@ -152,7 +156,7 @@ def check_env_version_compatibility() -> bool:
     # If either version is missing, warn but continue
     if not env_version:
         print("\n" + "=" * 70)
-        print("⚠️  WARNING: No version found in your .env file")
+        print("WARNING: No version found in your .env file")
         print("   Your .env file may be outdated and missing new configuration options.")
         print("   Consider updating it with new variables from .sample.env")
         print("=" * 70)
@@ -167,37 +171,48 @@ def check_env_version_compatibility() -> bool:
         def version_tuple(v: str) -> tuple:
             """
             Convert version string to tuple of integers for comparison.
-            
+
             Args:
                 v (str): Version string (e.g. '1.5.0').
-            
+
             Returns:
                 tuple: Tuple of integers (e.g. (1, 5, 0)).
             """
-            return tuple(int(x) for x in v.split('.'))
+            return tuple(int(x) for x in v.split("."))
 
         env_ver = version_tuple(env_version)
         sample_ver = version_tuple(sample_version)
 
         if env_ver < sample_ver:
-            print("\n" + "🔴 " + "=" * 68)
-            print("🔴  CONFIGURATION UPDATE REQUIRED")
-            print("🔴 " + "=" * 68)
+            print("\n" + "=" * 70)
+            print("  CONFIGURATION UPDATE REQUIRED")
+            print("=" * 70)
             print(f"   Your .env version: {env_version}")
             print(f"   Required version:  {sample_version}")
             print("")
             print("   ACTION NEEDED:")
-            print("   1. Backup your current .env file")
+            print("   1. Backup your current .env file  (cp .env .env.backup)")
             print("   2. Compare .env with .sample.env")
             print("   3. Add any missing configuration variables to your .env")
             print("   4. Update ENV_CONFIG_VERSION in your .env to match .sample.env")
             print("")
+            print("   ADD the missing variables to your existing .env. Do NOT copy")
+            print("   .sample.env over it. These three values are unrecoverable and")
+            print("   must keep the values your install is already using:")
+            print("")
+            print("     API_KEY_PEPPER  - hashes your password and encrypts your")
+            print("                       broker tokens. Change it and you can never")
+            print("                       log in again; the hash is one-way.")
+            print("     FERNET_SALT     - encrypts the same data alongside the pepper.")
+            print("     APP_KEY         - signs session cookies (safe to change, but")
+            print("                       every logged-in browser is signed out).")
+            print("")
             print("   New features may not work properly with an outdated configuration!")
-            print("🔴 " + "=" * 68)
+            print("=" * 70)
 
             # Give user a chance to continue anyway
             try:
-                response = input("\n⚠️  Continue anyway? (y/N): ").lower().strip()
+                response = input("\nContinue anyway? (y/N): ").lower().strip()
                 if response not in ["y", "yes"]:
                     print("\nApplication startup cancelled. Please update your .env file.")
                     return False
@@ -206,7 +221,7 @@ def check_env_version_compatibility() -> bool:
                 return False
 
         elif env_ver > sample_ver:
-            print(f"\n✅ Your .env version ({env_version}) is newer than sample ({sample_version})")
+            print(f"\nYour .env version ({env_version}) is newer than sample ({sample_version})")
 
         else:
             # Only print success message in Flask child process (avoids duplicate message with debug reloader)
@@ -215,9 +230,7 @@ def check_env_version_compatibility() -> bool:
             flask_debug = os.getenv("FLASK_DEBUG", "").lower() in ("true", "1", "t")
             is_reloader_parent = flask_debug and os.environ.get("WERKZEUG_RUN_MAIN") != "true"
             if not is_reloader_parent:
-                print(
-                    f"\n\033[94m🔄\033[0m Configuration version check passed (\033[92m{env_version}\033[0m)"
-                )
+                print(f"\nConfiguration version check passed (\033[92m{env_version}\033[0m)")
 
     except Exception as e:
         print(f"\nWarning: Could not parse version numbers: {e}")
@@ -239,7 +252,7 @@ def _db_has_user_data(env_dir: str) -> bool:
 
     Args:
         env_dir: Absolute directory containing the .env file. Used to
-            resolve a relative DATABASE_URL such as ``sqlite:///db/tradeboard.db``
+            resolve a relative DATABASE_URL such as ``sqlite:///db/openalgo.db``
             against the project root.
 
     Returns:
@@ -262,9 +275,7 @@ def _db_has_user_data(env_dir: str) -> bool:
 
     try:
         with sqlite3.connect(f"file:{db_path}?mode=ro", uri=True) as conn:
-            cur = conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name='users'"
-            )
+            cur = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='users'")
             if cur.fetchone() is None:
                 return False
             cur = conn.execute("SELECT 1 FROM users LIMIT 1")
@@ -303,7 +314,7 @@ def _atomic_rewrite_dotenv(env_path: str, pairs: list) -> None:
             file lock on Windows, permission denied, etc.). Caller surfaces
             this with a manual-rotation instruction.
     """
-    with open(env_path, "r", encoding="utf-8", newline="") as f:
+    with open(env_path, encoding="utf-8", newline="") as f:
         content = f.read()
     for old, new in pairs:
         content = content.replace(old, new)
@@ -316,7 +327,7 @@ def _atomic_rewrite_dotenv(env_path: str, pairs: list) -> None:
 #   EACCES / EPERM — parent directory not writable by us. This is the common
 #       case in Docker containers where /app is root-owned (created by
 #       Dockerfile WORKDIR before any chown) but the process runs as appuser.
-#       See rockstarrajeev/tradeboard#1394.
+#       See marketcalls/openalgo#1394.
 #
 #   EXDEV / EBUSY — cross-filesystem rename. When .env is bind-mounted as a
 #       single file inside Docker (`./.env:/app/.env`), .env lives on the
@@ -473,7 +484,7 @@ def _atomic_replace_text(path: str, content: str) -> None:
 
 # .sample.env ships this placeholder so install scripts and the bootstrap
 # rotation can swap it the same way they swap APP_KEY / API_KEY_PEPPER.
-PLACEHOLDER_FERNET_SALT = "TRADEBOARD_PLACEHOLDER_FERNET_SALT_REGENERATE_BEFORE_USE"
+PLACEHOLDER_FERNET_SALT = "OPENALGO_PLACEHOLDER_FERNET_SALT_REGENERATE_BEFORE_USE"
 
 
 def _warn_fernet_write_failed(reason: str, error: BaseException) -> None:
@@ -484,10 +495,10 @@ def _warn_fernet_write_failed(reason: str, error: BaseException) -> None:
     or /app itself is root-owned), the app falls back to the legacy
     static salt so it still boots. The security upgrade is *deferred*
     until the operator fixes the permissions, but service is preserved.
-    See rockstarrajeev/tradeboard#1394.
+    See marketcalls/openalgo#1394.
     """
     sys.stderr.write(
-        "\n\033[93m\033[1m[Tradeboard Fernet salt]\033[0m "
+        "\n\033[93m\033[1m[OpenAlgo Fernet salt]\033[0m "
         f"\033[93m{reason}: {error}\n"
         "Continuing with the legacy static salt — the app will boot, but the\n"
         "per-install salt rotation is deferred until .env becomes writable.\n"
@@ -508,12 +519,12 @@ def _ensure_fernet_salt(env_path: str) -> None:
     Background:
         ``database/auth_db.py`` originally derived the Fernet key from
         ``API_KEY_PEPPER`` with a hardcoded static salt
-        (``b"tradeboard_static_salt"``). Identical salt across every Tradeboard
+        (``b"openalgo_static_salt"``). Identical salt across every OpenAlgo
         install removes the rainbow-table / cross-install-correlation
         protections that PBKDF2 salts exist for. Fix: rotate to a per-install
         random salt persisted as ``FERNET_SALT`` in .env, placed adjacent to
         ``API_KEY_PEPPER`` (the .sample.env template ships with the
-        placeholder ``TRADEBOARD_PLACEHOLDER_FERNET_SALT_REGENERATE_BEFORE_USE``
+        placeholder ``OPENALGO_PLACEHOLDER_FERNET_SALT_REGENERATE_BEFORE_USE``
         in that exact spot).
 
     Behaviour matrix — five disjoint cases, decided from the .env file
@@ -577,15 +588,13 @@ def _ensure_fernet_salt(env_path: str) -> None:
 
     # Read the .env so we can decide based on placement, not just env value.
     try:
-        with open(env_path, "r", encoding="utf-8", newline="") as f:
+        with open(env_path, encoding="utf-8", newline="") as f:
             content = f.read()
     except OSError:
         return
 
     # Locate the API_KEY_PEPPER line — it's the placement anchor for FERNET_SALT.
-    pepper_pat = re.compile(
-        r"^[ \t]*API_KEY_PEPPER[ \t]*=.*?(?=\r?\n|\Z)", re.MULTILINE
-    )
+    pepper_pat = re.compile(r"^[ \t]*API_KEY_PEPPER[ \t]*=.*?(?=\r?\n|\Z)", re.MULTILINE)
     pepper_m = pepper_pat.search(content)
     if pepper_m is None:
         # PEPPER line missing — required-vars check will surface this.
@@ -657,6 +666,7 @@ def _ensure_fernet_salt(env_path: str) -> None:
     # confirming the DB doesn't look like a previous-rotation orphan.
     try:
         import base64
+
         from cryptography.fernet import Fernet, InvalidToken
         from cryptography.hazmat.primitives import hashes
         from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -672,7 +682,7 @@ def _ensure_fernet_salt(env_path: str) -> None:
         )
         return Fernet(base64.urlsafe_b64encode(kdf.derive(pepper.encode())))
 
-    old_fernet = _make_fernet(b"tradeboard_static_salt")
+    old_fernet = _make_fernet(b"openalgo_static_salt")
 
     # ---- Sanity check (case E detection).
     db_url = os.getenv("DATABASE_URL", "")
@@ -681,12 +691,10 @@ def _ensure_fernet_salt(env_path: str) -> None:
     if db_path and os.path.exists(db_path):
         sample_cts = _sample_ciphertexts(db_path, limit=20)
         if sample_cts:
-            decryptable = any(
-                _try_decrypt(old_fernet, ct, InvalidToken) for ct in sample_cts
-            )
+            decryptable = any(_try_decrypt(old_fernet, ct, InvalidToken) for ct in sample_cts)
             if not decryptable:
                 sys.stderr.write(
-                    "\n\033[91m\033[1m[Tradeboard Fernet salt]\033[0m\n"
+                    "\n\033[91m\033[1m[OpenAlgo Fernet salt]\033[0m\n"
                     "\033[91mFERNET_SALT is missing from .env, but stored ciphertext\n"
                     "in the database does not decrypt with the legacy static salt\n"
                     "either. The salt was rotated previously and the value has been\n"
@@ -757,7 +765,7 @@ def _move_fernet_line_after_pepper(
 
 
 def _resolve_sqlite_path(db_url: str, env_path: str) -> str | None:
-    """Return absolute path to the tradeboard.db SQLite file, or None for non-SQLite."""
+    """Return absolute path to the openalgo.db SQLite file, or None for non-SQLite."""
     m = re.match(r"sqlite:///(.+)", db_url)
     if not m:
         return None
@@ -793,8 +801,7 @@ def _sample_ciphertexts(db_path: str, limit: int = 20) -> list:
                 if cur.fetchone() is None:
                     continue
                 cur = conn.execute(
-                    f"SELECT {col} FROM {table} "
-                    f"WHERE {col} IS NOT NULL AND {col} != '' LIMIT ?",
+                    f"SELECT {col} FROM {table} WHERE {col} IS NOT NULL AND {col} != '' LIMIT ?",
                     (limit - len(samples),),
                 )
                 samples.extend(r[0] for r in cur.fetchall())
@@ -813,7 +820,7 @@ def _try_decrypt(fernet, ct, invalid_token_exc) -> bool:
 
 
 def _migrate_fernet_db(env_path: str, pepper: str, new_salt: str) -> None:
-    """Re-encrypt every Fernet-protected column in tradeboard.db.
+    """Re-encrypt every Fernet-protected column in openalgo.db.
 
     Decrypts each ciphertext with the legacy static-salt key and re-encrypts
     with the per-install ``new_salt`` key. Rows whose ciphertext can't be
@@ -826,6 +833,7 @@ def _migrate_fernet_db(env_path: str, pepper: str, new_salt: str) -> None:
     """
     try:
         import base64
+
         from cryptography.fernet import Fernet, InvalidToken
         from cryptography.hazmat.primitives import hashes
         from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -845,7 +853,7 @@ def _migrate_fernet_db(env_path: str, pepper: str, new_salt: str) -> None:
         )
         return Fernet(base64.urlsafe_b64encode(kdf.derive(pepper.encode())))
 
-    old_fernet = _make_fernet(b"tradeboard_static_salt")
+    old_fernet = _make_fernet(b"openalgo_static_salt")
     new_fernet = _make_fernet(bytes.fromhex(new_salt))
 
     targets = [
@@ -874,9 +882,7 @@ def _migrate_fernet_db(env_path: str, pepper: str, new_salt: str) -> None:
                 # present but the column is not — there is nothing to migrate,
                 # so skip it instead of letting the SELECT raise and abort the
                 # whole rotation with a "no such column" warning.
-                existing_cols = {
-                    r[1] for r in conn.execute(f"PRAGMA table_info({table})")
-                }
+                existing_cols = {r[1] for r in conn.execute(f"PRAGMA table_info({table})")}
                 if col not in existing_cols:
                     continue
                 cur = conn.execute(
@@ -901,7 +907,7 @@ def _migrate_fernet_db(env_path: str, pepper: str, new_salt: str) -> None:
             conn.commit()
     except sqlite3.Error as e:
         sys.stderr.write(
-            "\n\033[93m\033[1m[Tradeboard Fernet salt]\033[0m "
+            "\n\033[93m\033[1m[OpenAlgo Fernet salt]\033[0m "
             f"\033[93mDB error during salt migration: {e}.\n"
             "FERNET_SALT was already persisted; rows that did not get\n"
             "re-encrypted will fail decrypt under the new key and trigger\n"
@@ -913,7 +919,7 @@ def _migrate_fernet_db(env_path: str, pepper: str, new_salt: str) -> None:
     is_reloader_parent = flask_debug and os.environ.get("WERKZEUG_RUN_MAIN") != "true"
     if not is_reloader_parent and (migrated or skipped):
         print(
-            "\n\033[92m\033[1m[Tradeboard Fernet salt rotation]\033[0m "
+            "\n\033[92m\033[1m[OpenAlgo Fernet salt rotation]\033[0m "
             f"\033[92mGenerated per-install FERNET_SALT and re-encrypted\n"
             f"{migrated} stored secret(s). {skipped} row(s) could not be\n"
             "decrypted with the legacy static salt and were left as-is\n"
@@ -1008,7 +1014,7 @@ def _generate_keys_on_first_run(env_path: str) -> None:
                 # rotation requires re-encryption + password reset via the
                 # dedicated upgrade/rotate_pepper.py script.
                 sys.stderr.write(
-                    "\n\033[91m\033[1m[Tradeboard security]\033[0m\n"
+                    "\n\033[91m\033[1m[OpenAlgo security]\033[0m\n"
                     "\033[91mDetected publicly-known APP_KEY in .env, but could not\n"
                     f"rewrite the file ({e}).\n"
                     "\n"
@@ -1028,7 +1034,7 @@ def _generate_keys_on_first_run(env_path: str) -> None:
             else:
                 # Fresh DB (no users yet): both can be safely regenerated.
                 sys.stderr.write(
-                    "\n\033[91m\033[1m[Tradeboard security]\033[0m\n"
+                    "\n\033[91m\033[1m[OpenAlgo security]\033[0m\n"
                     "\033[91mDetected publicly-known APP_KEY/API_KEY_PEPPER in .env, but\n"
                     f"could not rewrite the file ({e}).\n"
                     "\n"
@@ -1046,7 +1052,7 @@ def _generate_keys_on_first_run(env_path: str) -> None:
 
     if rotated_names and not db_populated and not is_reloader_parent:
         print(
-            "\n\033[92m\033[1m[Tradeboard first-run setup]\033[0m "
+            "\n\033[92m\033[1m[OpenAlgo first-run setup]\033[0m "
             f"\033[92mGenerated fresh {' and '.join(rotated_names)} and saved\n"
             f"to {env_path}. The .sample.env placeholder values have been replaced\n"
             "with cryptographically random secrets. This message will not appear\n"
@@ -1055,7 +1061,7 @@ def _generate_keys_on_first_run(env_path: str) -> None:
         )
     elif "APP_KEY" in rotated_names and db_populated and not is_reloader_parent:
         print(
-            "\n\033[93m\033[1m[Tradeboard security]\033[0m "
+            "\n\033[93m\033[1m[OpenAlgo security]\033[0m "
             "\033[93mYour APP_KEY in .env was the public sample value. It has been\n"
             "rotated to a fresh random value. Active browser sessions will need\n"
             "to log in again.\033[0m\n",
@@ -1066,6 +1072,54 @@ def _generate_keys_on_first_run(env_path: str) -> None:
     # in-place would brick existing Argon2 password hashes and Fernet-encrypted
     # tokens. The dedicated upgrade/rotate_pepper.py migration handles that
     # case explicitly with re-encryption + password reset.
+    #
+    # But silence is the wrong default for that state, so warn — every startup,
+    # not once. Two things are true at the same time here and the operator can
+    # see neither of them:
+    #
+    #   1. The pepper is the value published in .sample.env, so every stored
+    #      broker token / API key / TOTP secret in this DB is decryptable by
+    #      anyone who obtains the file.
+    #   2. If the account was created while a *different* pepper was in effect
+    #      (the usual cause: .sample.env was copied over a working .env), every
+    #      login now fails with a bare "Invalid credentials" and nothing else
+    #      in the app explains why. See issue #1660.
+    if pepper_compromised and db_populated and not is_reloader_parent:
+        sys.stderr.write(
+            "\n\033[91m\033[1m[OpenAlgo security] API_KEY_PEPPER is the public sample value\033[0m\n"
+            "\033[91mYour .env still carries the API_KEY_PEPPER placeholder from\n"
+            ".sample.env, and this database already has a user account.\n"
+            "\n"
+            "It was NOT rotated automatically - rotating it would permanently\n"
+            "destroy your stored password hash and broker tokens.\n"
+            "\n"
+            "Two consequences, both active right now:\n"
+            "\n"
+            "  1. Every broker token, API key and TOTP secret in this database\n"
+            "     is encrypted with a publicly-known value. Treat them as\n"
+            "     exposed and re-issue them once the pepper is fixed.\n"
+            "\n"
+            "  2. If you cannot log in ('Invalid credentials' with a password\n"
+            "     you know is correct), this is why: your account was created\n"
+            "     while a different pepper was in effect, so the stored hash no\n"
+            "     longer matches. This usually happens when .sample.env is\n"
+            "     copied over a working .env during an upgrade.\n"
+            "\n"
+            "To fix:\n"
+            "  - If you have a backup of the .env you set up with, restore its\n"
+            "    API_KEY_PEPPER and FERNET_SALT lines and restart. This is the\n"
+            "    only route that keeps your existing password and tokens.\n"
+            "  - Otherwise, rotate deliberately and reset the password:\n"
+            "      uv run python upgrade/rotate_pepper.py\n"
+            "      uv run python upgrade/reset_admin_password.py\n"
+            "  - On a throwaway install with nothing to keep, deleting\n"
+            "    db/openalgo.db and restarting lets first-run setup generate a\n"
+            "    fresh pepper for you.\n"
+            "\n"
+            "Run 'uv run python upgrade/init_db.py' to see which of these\n"
+            "applies to your install.\n"
+            "\033[0m\n"
+        )
 
 
 def load_and_check_env_variables() -> None:
@@ -1153,7 +1207,7 @@ def load_and_check_env_variables() -> None:
 
     # Special validation for broker-specific API key formats
     broker_api_key = os.getenv("BROKER_API_KEY", "")
-    broker_api_secret = os.getenv("BROKER_API_SECRET", "")
+    os.getenv("BROKER_API_SECRET", "")
     redirect_url = os.getenv("REDIRECT_URL", "")
 
     # Extract broker name from redirect URL for validation
@@ -1177,7 +1231,7 @@ def load_and_check_env_variables() -> None:
             print("  BROKER_API_KEY = 'abc123xyz:::12345678:::5P12345678'")
             print("  BROKER_API_SECRET = 'your_encryption_key'")
             print("\nFor detailed instructions, please refer to:")
-            print("  https://docs.rajeevupadhyay.com/connect-brokers/brokers/5paisa")
+            print("  https://docs.openalgo.in/connect-brokers/brokers/5paisa")
             sys.exit(1)
 
     # Validate flattrade API key format
@@ -1190,7 +1244,7 @@ def load_and_check_env_variables() -> None:
             print("  BROKER_API_KEY = 'FT123456:::your_api_key_here'")
             print("  BROKER_API_SECRET = 'your_api_secret'")
             print("\nFor detailed instructions, please refer to:")
-            print("  https://docs.rajeevupadhyay.com/connect-brokers/brokers/flattrade")
+            print("  https://docs.openalgo.in/connect-brokers/brokers/flattrade")
             sys.exit(1)
 
     # Validate dhan API key format
@@ -1203,7 +1257,7 @@ def load_and_check_env_variables() -> None:
             print("  BROKER_API_KEY = '1234567890:::your_dhan_apikey'")
             print("  BROKER_API_SECRET = 'your_dhan_apisecret'")
             print("\nFor detailed instructions, please refer to:")
-            print("  https://docs.rajeevupadhyay.com/connect-brokers/brokers/dhan")
+            print("  https://docs.openalgo.in/connect-brokers/brokers/dhan")
             sys.exit(1)
 
     # Validate environment variable values
@@ -1270,7 +1324,7 @@ def load_and_check_env_variables() -> None:
         print("The application cannot start without valid broker configuration.")
         sys.exit(1)
 
-    valid_brokers = set(broker.strip().lower() for broker in valid_brokers_str.split(","))
+    valid_brokers = {broker.strip().lower() for broker in valid_brokers_str.split(",")}
 
     try:
         import re
@@ -1310,9 +1364,7 @@ def load_and_check_env_variables() -> None:
     # Single: "10 per second"
     # Compound (Flask-Limiter syntax): "10 per second;40 per minute"
     single_limit = r"\d+\s+per\s+(second|minute|hour|day)"
-    rate_limit_pattern = re.compile(
-        rf"^{single_limit}(;{single_limit})*$"
-    )
+    rate_limit_pattern = re.compile(rf"^{single_limit}(;{single_limit})*$")
 
     for var in rate_limit_vars:
         value = os.getenv(var, "")

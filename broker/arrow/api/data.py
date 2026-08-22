@@ -54,7 +54,7 @@ class BrokerData:
         """Arrow data handler. `auth_token` is the JWT access token."""
         self.auth_token = auth_token
 
-        # Tradeboard timeframe -> Arrow interval string. Keys are what
+        # OpenAlgo timeframe -> Arrow interval string. Keys are what
         # intervals_service exposes to users.
         self.timeframe_map = {
             "1m": "min",
@@ -75,7 +75,7 @@ class BrokerData:
     # --- helpers --------------------------------------------------------
 
     def _lookup(self, symbol, exchange):
-        """Resolve an Tradeboard (symbol, exchange) to the Arrow instrument.
+        """Resolve an OpenAlgo (symbol, exchange) to the Arrow instrument.
 
         Returns (br_symbol, token, arrow_quote_exchange).
         """
@@ -106,7 +106,7 @@ class BrokerData:
     def _quote_index(self, mode, symbol, br_symbol, token):
         """Quote an index, resolving Arrow's INDEX-exchange symbol vocabulary.
 
-        Tries the Tradeboard symbol, then the uppercased display name, then the
+        Tries the OpenAlgo symbol, then the uppercased display name, then the
         raw display name; caches whichever the API accepts (keyed by token) so
         the fallback costs extra requests only on first use.
         """
@@ -172,7 +172,7 @@ class BrokerData:
     # --- public API -----------------------------------------------------
 
     def get_quotes(self, symbol, exchange):
-        """Return the Tradeboard quote dict. Uses Arrow `full` mode so bid/ask are
+        """Return the OpenAlgo quote dict. Uses Arrow `full` mode so bid/ask are
         available. Works for NSE_INDEX/BSE_INDEX (exchange -> INDEX)."""
         try:
             q = self._fetch_quote("full", symbol, exchange)
@@ -195,7 +195,7 @@ class BrokerData:
             raise ArrowAPIError(f"Error fetching quotes: {e}") from e
 
     def get_depth(self, symbol, exchange):
-        """Return Tradeboard 5-level market depth. Indices supported via INDEX."""
+        """Return OpenAlgo 5-level market depth. Indices supported via INDEX."""
         try:
             q = self._fetch_quote("full", symbol, exchange)
 
@@ -260,7 +260,7 @@ class BrokerData:
 
     @staticmethod
     def _format_quote(q):
-        """Arrow FULL-quote payload -> Tradeboard quote dict (same shape as get_quotes)."""
+        """Arrow FULL-quote payload -> OpenAlgo quote dict (same shape as get_quotes)."""
         bids = q.get("bids") or [{}]
         asks = q.get("asks") or [{}]
         return {
@@ -319,8 +319,12 @@ class BrokerData:
 
             if exchange in QUOTE_UNSUPPORTED_EXCHANGES:
                 # CDS/BCD/NCO would 400 the entire batch; report, don't send.
-                logger.warning(f"Skipping {symbol} on {exchange}: exchange not supported by Arrow quotes")
-                skipped_symbols.append(self._leg_error(item, "Exchange not supported by Arrow quotes"))
+                logger.warning(
+                    f"Skipping {symbol} on {exchange}: exchange not supported by Arrow quotes"
+                )
+                skipped_symbols.append(
+                    self._leg_error(item, "Exchange not supported by Arrow quotes")
+                )
                 continue
 
             try:
@@ -335,7 +339,9 @@ class BrokerData:
                 # index's quote name first (cached after the first probe).
                 name = self._resolve_index_quote_name(symbol, br_symbol, token)
                 if not name:
-                    skipped_symbols.append(self._leg_error(item, "Index not served by Arrow quote API"))
+                    skipped_symbols.append(
+                        self._leg_error(item, "Index not served by Arrow quote API")
+                    )
                     continue
                 body.append({"exchange": "INDEX", "symbol": name})
             else:
@@ -357,7 +363,11 @@ class BrokerData:
                 results.append(self._leg_error(original, "No quote data available"))
                 continue
             results.append(
-                {"symbol": original["symbol"], "exchange": original["exchange"], "data": self._format_quote(quote)}
+                {
+                    "symbol": original["symbol"],
+                    "exchange": original["exchange"],
+                    "data": self._format_quote(quote),
+                }
             )
 
         # Include skipped symbols in results
@@ -391,7 +401,7 @@ class BrokerData:
         return {}
 
     def get_history(self, symbol, exchange, timeframe, from_date, to_date):
-        """Historical candles -> Tradeboard DataFrame (timestamp, open, high, low,
+        """Historical candles -> OpenAlgo DataFrame (timestamp, open, high, low,
         close, volume, oi). Token-based; works for indices (NSE_INDEX/BSE_INDEX
         -> nse/bse path)."""
         try:

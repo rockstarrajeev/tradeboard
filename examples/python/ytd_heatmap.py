@@ -81,8 +81,8 @@ fig.update_traces(
 )
 fig.update_layout(
     title="NIFTY 50 YTD 2026 Heatmap",
-    xaxis=dict(showticklabels=False, title=""),
-    yaxis=dict(showticklabels=False, autorange="reversed", title=""),
+    xaxis={"showticklabels": False, "title": ""},
+    yaxis={"showticklabels": False, "autorange": "reversed", "title": ""},
     template="plotly_dark",
     height=600,
 )

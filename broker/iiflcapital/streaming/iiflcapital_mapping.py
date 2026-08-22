@@ -1,11 +1,11 @@
 """
-Helpers for translating between Tradeboard's market-data conventions and the
+Helpers for translating between OpenAlgo's market-data conventions and the
 IIFL Capital feed's segment/topic conventions.
 
 The contract-master loader (broker/iiflcapital/database/master_contract_db.py)
 already stores the IIFL segment in the `brexchange` column of `SymToken`:
 
-    Tradeboard exchange  →  brexchange
+    OpenAlgo exchange  →  brexchange
     -----------------     ----------
     NSE                  NSEEQ
     BSE                  BSEEQ
@@ -23,13 +23,11 @@ bridgePy/connector.py subscribe_feed/subscribe_index docstrings.
 
 from __future__ import annotations
 
-# Tradeboard exchanges that are routed to the index MQTT topic prefix
+# OpenAlgo exchanges that are routed to the index MQTT topic prefix
 # (prod/marketfeed/index/v1/...) rather than the market feed prefix.
-INDEX_EXCHANGES: frozenset[str] = frozenset(
-    {"NSE_INDEX", "BSE_INDEX", "MCX_INDEX", "GLOBAL_INDEX"}
-)
+INDEX_EXCHANGES: frozenset[str] = frozenset({"NSE_INDEX", "BSE_INDEX", "MCX_INDEX", "GLOBAL_INDEX"})
 
-# Tradeboard exchanges that support open-interest data. Anything outside this
+# OpenAlgo exchanges that support open-interest data. Anything outside this
 # set has no OI stream — saves a wasted SUBSCRIBE frame.
 OI_ELIGIBLE_EXCHANGES: frozenset[str] = frozenset({"NFO", "BFO", "CDS", "BCD", "MCX"})
 

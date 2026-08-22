@@ -3,6 +3,7 @@ Enhanced Token DB with Full Memory Caching for 100,000+ symbols
 Optimized for zero-config deployment with configurable session reset time (SESSION_EXPIRY_TIME)
 """
 
+import heapq
 import re
 import time
 from collections import defaultdict
@@ -17,7 +18,7 @@ from utils.logging import get_logger
 
 logger = get_logger(__name__)
 
-# Regex pattern to extract underlying from Tradeboard symbol format
+# Regex pattern to extract underlying from OpenAlgo symbol format
 # Format: [BaseSymbol][DDMMMYY][StrikePrice][CE/PE] or [BaseSymbol][DDMMMYY]FUT
 # Examples: NIFTY28MAR2420800CE, BANKNIFTY24APR24FUT, CRUDEOIL17APR246750CE
 _UNDERLYING_PATTERN = re.compile(
@@ -41,9 +42,9 @@ _CRYPTO_UNDERLYING_PATTERN = re.compile(
 
 def extract_underlying_from_symbol(symbol: str, exchange: str) -> str | None:
     """
-    Extract underlying name from Tradeboard symbol format.
+    Extract underlying name from OpenAlgo symbol format.
 
-    Tradeboard symbol formats:
+    OpenAlgo symbol formats:
     - Indian FNO / CRYPTO options+futures:
         [BaseSymbol][DDMMMYY][Strike][CE/PE]  e.g. NIFTY28MAR2420800CE  → NIFTY
         [BaseSymbol][DDMMMYY]FUT              e.g. BTC28FEB25FUT         → BTC
@@ -52,7 +53,7 @@ def extract_underlying_from_symbol(symbol: str, exchange: str) -> str | None:
       Underlying = strip trailing USDT or USD quote-currency suffix.
 
     Args:
-        symbol: Tradeboard formatted symbol
+        symbol: OpenAlgo formatted symbol
         exchange: Exchange code (NFO, BFO, MCX, CDS, CRYPTO, etc.)
 
     Returns:
@@ -131,7 +132,7 @@ class SymbolData:
     lotsize: int | None = None
     instrumenttype: str | None = None
     tick_size: float | None = None
-    underlying: str | None = None  # Extracted from Tradeboard symbol format for F&O
+    underlying: str | None = None  # Extracted from OpenAlgo symbol format for F&O
     contract_value: float | None = None  # Contract multiplier (e.g. 0.001 for BTCUSD.P)
 
 
@@ -205,7 +206,7 @@ class BrokerSymbolCache:
             ist_today = datetime.now(pytz.timezone("Asia/Kolkata")).date()
             # Tiny memo for repeated expiry strings (~thousands of FUT rows share
             # a few dozen distinct dates); strptime is cheap but not free.
-            _expiry_date_cache: dict[str, "datetime.date | None"] = {}
+            _expiry_date_cache: dict[str, datetime.date | None] = {}
 
             def _exp_to_date(exp_str):
                 if not exp_str:
@@ -225,7 +226,7 @@ class BrokerSymbolCache:
 
             # Build in-memory structures
             for sym in symbols:
-                # Extract underlying from Tradeboard symbol format for FNO exchanges
+                # Extract underlying from OpenAlgo symbol format for FNO exchanges
                 underlying = None
                 if sym.exchange in FNO_EXCHANGES:
                     underlying = extract_underlying_from_symbol(sym.symbol, sym.exchange)
@@ -244,7 +245,7 @@ class BrokerSymbolCache:
                     instrumenttype=sym.instrumenttype,
                     tick_size=sym.tick_size,
                     underlying=underlying,
-                    contract_value=getattr(sym, 'contract_value', None),
+                    contract_value=getattr(sym, "contract_value", None),
                 )
 
                 # Store in primary dict
@@ -262,7 +263,9 @@ class BrokerSymbolCache:
                     self.expiries_by_exchange[sym.exchange].add(sym.expiry)
                     # Use extracted underlying for index (more reliable than broker's name field)
                     if underlying:
-                        self.expiries_by_exchange_underlying[(sym.exchange, underlying)].add(sym.expiry)
+                        self.expiries_by_exchange_underlying[(sym.exchange, underlying)].add(
+                            sym.expiry
+                        )
                 # Use extracted underlying for underlyings index.
                 # `underlyings_by_exchange` is options-only — option-chain/IV-chart
                 # dropdowns must not show futures-only commodities (dead-ends).
@@ -374,7 +377,7 @@ class BrokerSymbolCache:
         return None
 
     def get_oa_symbol(self, brsymbol: str, exchange: str) -> str | None:
-        """Get Tradeboard symbol for broker symbol and exchange - O(1) lookup"""
+        """Get OpenAlgo symbol for broker symbol and exchange - O(1) lookup"""
         self.stats.hits += 1
         key = (brsymbol, exchange)
         if key in self.by_brsymbol_exchange:
@@ -459,15 +462,24 @@ class BrokerSymbolCache:
         """
         Search symbols by partial match with multi-term support.
         All terms must match (AND logic).
-        Returns list of matching SymbolData objects
-        Optimized to use exchange index when available
+        Returns list of matching SymbolData objects, most relevant first.
+        Optimized to use exchange index when available.
+
+        Ranked, not first-found: a query like "NIFTY" AND-matches every NIFTY
+        option contract on NFO (thousands of them) as well as every NIFTY
+        index (a few hundred). Stopping at the first ``limit`` hits in
+        dict-iteration order let the option chain -- which has no natural
+        relevance to a symbol search -- crowd out the index and equity
+        matches a caller actually wants, with no way to reach the rest by
+        typing a more specific query. Scoring on the query itself and taking
+        the closest matches instead fixes that for every segment, not just
+        indices, without hardcoding any exchange.
         """
         # Split query into terms
+        query_upper = query.strip().upper()
         terms = [term.strip().upper() for term in query.split() if term.strip()]
         if not terms:
             return []
-
-        matches = []
 
         # Parse numeric terms for strike matching
         num_terms = []
@@ -483,12 +495,23 @@ class BrokerSymbolCache:
         else:
             symbols_to_search = self.symbols.values()
 
+        # (score, length, symbol, tie-break sequence, row) — 0 = exact symbol
+        # match, 1 = symbol starts with the query, 2 = query is a substring of
+        # the symbol, 3 = matched only via brsymbol/name/token/strike. Shorter
+        # symbols before longer ones at the same score, so "NIFTY" and
+        # "NIFTY50" sort ahead of a 20-character option contract that merely
+        # happens to start with the same letters.
+        scored: list[tuple[int, int, str, int, SymbolData]] = []
+        seq = 0
         for symbol_data in symbols_to_search:
-            # All terms must match
+            symbol_upper = symbol_data.symbol.upper()
+
             all_match = True
+            symbol_term_match = True
             for term in terms:
+                term_in_symbol = term in symbol_upper
                 term_match = (
-                    term in symbol_data.symbol.upper()
+                    term_in_symbol
                     or term in symbol_data.brsymbol.upper()
                     or (symbol_data.name and term in symbol_data.name.upper())
                     or (symbol_data.token and term in symbol_data.token)
@@ -504,14 +527,25 @@ class BrokerSymbolCache:
                 if not term_match:
                     all_match = False
                     break
+                symbol_term_match = symbol_term_match and term_in_symbol
 
-            if all_match:
-                matches.append(symbol_data)
+            if not all_match:
+                continue
 
-                if len(matches) >= limit:
-                    break
+            if symbol_upper == query_upper:
+                score = 0
+            elif symbol_upper.startswith(query_upper):
+                score = 1
+            elif symbol_term_match:
+                score = 2
+            else:
+                score = 3
 
-        return matches
+            seq += 1
+            scored.append((score, len(symbol_upper), symbol_upper, seq, symbol_data))
+
+        top = heapq.nsmallest(limit, scored, key=lambda row: row[:4])
+        return [row[4] for row in top]
 
     def fno_search_symbols(
         self,
@@ -568,7 +602,7 @@ class BrokerSymbolCache:
             symbols_to_search = self.symbols.values()
 
         for symbol_data in symbols_to_search:
-            # Underlying filter (use extracted underlying from Tradeboard symbol format)
+            # Underlying filter (use extracted underlying from OpenAlgo symbol format)
             if underlying_upper and (
                 not symbol_data.underlying or symbol_data.underlying != underlying_upper
             ):
@@ -648,7 +682,9 @@ class BrokerSymbolCache:
 
             # Priority 2: Underlying starts with search term (e.g., "NIFTY" before "BANKNIFTY")
             underlying_starts = (
-                0 if (primary_term and s.underlying and s.underlying.startswith(primary_term)) else 1
+                0
+                if (primary_term and s.underlying and s.underlying.startswith(primary_term))
+                else 1
             )
 
             # Priority 3: Symbol starts with search term
@@ -753,7 +789,7 @@ def get_br_symbol(symbol: str, exchange: str) -> str | None:
 
 def get_oa_symbol(brsymbol: str, exchange: str) -> str | None:
     """
-    Get Tradeboard symbol for a given broker symbol and exchange
+    Get OpenAlgo symbol for a given broker symbol and exchange
     """
     cache = get_cache()
 
@@ -845,7 +881,7 @@ def get_br_symbol_dbquery(symbol: str, exchange: str) -> str | None:
 
 
 def get_oa_symbol_dbquery(brsymbol: str, exchange: str) -> str | None:
-    """Query database for Tradeboard symbol"""
+    """Query database for OpenAlgo symbol"""
     try:
         from database.symbol import SymToken
 
@@ -1100,13 +1136,27 @@ def fno_search_symbols(
 
 
 def get_distinct_expiries_cached(
-    exchange: str | None = None, underlying: str | None = None
+    exchange: str | None = None,
+    underlying: str | None = None,
+    instrumenttype: str | None = None,
 ) -> list[str]:
     """
     Get distinct expiry dates from cache - fast O(1) lookup using pre-computed indexes
     Falls back to database if cache is not available
+
+    The pre-computed indexes do not distinguish futures from options, so a
+    request that asks for one goes to the database. That matters on MCX, where
+    the two calendars differ and a mixed list hands an option chain an expiry
+    with no strikes behind it.
     """
     cache = get_cache()
+
+    if instrumenttype:
+        from database.symbol import get_distinct_expiries
+
+        return get_distinct_expiries(
+            exchange=exchange, underlying=underlying, instrumenttype=instrumenttype
+        )
 
     if cache.cache_loaded and cache.is_cache_valid():
         from datetime import datetime
@@ -1116,7 +1166,9 @@ def get_distinct_expiries_cached(
 
         if exchange and underlying_upper:
             # Use the combined index for exchange + underlying
-            expiries = cache.expiries_by_exchange_underlying.get((exchange, underlying_upper), set())
+            expiries = cache.expiries_by_exchange_underlying.get(
+                (exchange, underlying_upper), set()
+            )
         elif exchange:
             # Use the exchange-only index
             expiries = cache.expiries_by_exchange.get(exchange, set())
@@ -1184,7 +1236,7 @@ def get_distinct_underlyings_cached(
             for underlying_set in index.values():
                 underlyings.update(underlying_set)
 
-        return sorted(list(underlyings))
+        return sorted(underlyings)
 
     # Fallback to database. The DB query returns all distinct names for the
     # exchange — that already matches `include_futures=True` semantics. For

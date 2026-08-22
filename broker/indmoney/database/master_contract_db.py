@@ -117,11 +117,18 @@ def copy_from_dataframe(df, broker="indmoney"):
                         # Overall progress: importing is 60% to 100% of the total task
                         overall_progress = 60 + int(import_pct * 0.4)
 
-                        progress_msg = f"Importing: {total_inserted:,} / {total_to_insert:,} symbols"
+                        progress_msg = (
+                            f"Importing: {total_inserted:,} / {total_to_insert:,} symbols"
+                        )
                         update_status(broker, "downloading", progress_msg)
                         socketio.emit(
                             "master_contract_download",
-                            {"status": "downloading", "message": progress_msg, "progress": overall_progress, "stages": stages},
+                            {
+                                "status": "downloading",
+                                "message": progress_msg,
+                                "progress": overall_progress,
+                                "stages": stages,
+                            },
                         )
 
                     # Log progress every 20 chunks (10,000 records)
@@ -166,9 +173,11 @@ def download_csv_indmoney_data(output_path):
     # Get the access token for Indmoney broker from the database
     try:
         from database.auth_db import Auth, db_session
+
         auth_obj = Auth.query.filter_by(broker="indmoney", is_revoked=False).first()
         if auth_obj:
             from database.auth_db import decrypt_token
+
             auth_token = decrypt_token(auth_obj.auth)
         else:
             auth_token = None
@@ -192,7 +201,7 @@ def download_csv_indmoney_data(output_path):
         # Update status for download progress
         progress_pct = int(((i + 1) / total_segments) * 100)
         stages = {"download": progress_pct, "process": 0, "import": 0}
-        progress_msg = f"Downloading: {segment.upper()} instruments ({i+1}/{total_segments})"
+        progress_msg = f"Downloading: {segment.upper()} instruments ({i + 1}/{total_segments})"
 
         # Overall progress: download is first 30% of the total task
         overall_progress = int(progress_pct * 0.3)
@@ -200,7 +209,12 @@ def download_csv_indmoney_data(output_path):
         update_status("indmoney", "downloading", progress_msg)
         socketio.emit(
             "master_contract_download",
-            {"status": "downloading", "message": progress_msg, "progress": overall_progress, "stages": stages},
+            {
+                "status": "downloading",
+                "message": progress_msg,
+                "progress": overall_progress,
+                "stages": stages,
+            },
         )
 
         try:
@@ -223,16 +237,18 @@ def download_csv_indmoney_data(output_path):
 
 def reformat_symbol(row, file_segment=None):
     """
-    Reformat symbols according to Tradeboard standards based on Indmoney data structure
+    Reformat symbols according to OpenAlgo standards based on Indmoney data structure
     """
     instrument_name = str(row.get("INSTRUMENT_NAME", ""))
     option_type = str(row.get("OPTION_TYPE", "")) if pd.notna(row.get("OPTION_TYPE")) else ""
     symbol_name = str(row.get("SYMBOL_NAME", "")) if pd.notna(row.get("SYMBOL_NAME")) else ""
-    trading_symbol = str(row.get("TRADING_SYMBOL", "")) if pd.notna(row.get("TRADING_SYMBOL")) else ""
+    trading_symbol = (
+        str(row.get("TRADING_SYMBOL", "")) if pd.notna(row.get("TRADING_SYMBOL")) else ""
+    )
     expiry_date = str(row.get("EXPIRY_DATE", "")) if pd.notna(row.get("EXPIRY_DATE")) else ""
     strike_price = row.get("STRIKE_PRICE", 0)
 
-    # Format expiry date for Tradeboard format (DDMMMYY)
+    # Format expiry date for OpenAlgo format (DDMMMYY)
     if expiry_date and expiry_date != "-1":
         expiry_formatted = expiry_date.replace("-", "").upper()
     else:
@@ -285,6 +301,32 @@ def reformat_symbol(row, file_segment=None):
     else:
         # Default to trading symbol
         return trading_symbol
+
+
+def derive_name(row):
+    """
+    Underlying root for SymToken.name.
+
+    `name` must hold the UNDERLYING (e.g. "NIFTY"), not the contract
+    description. Every F&O tool filters it with an exact match - the option
+    chain's expiry lookup does `SymToken.name.ilike("NIFTY")` - so anything
+    else silently returns zero rows and the tool renders empty.
+
+    IndMoney's SYMBOL_NAME is unusable for this: it is the full contract
+    description on derivatives ("NIFTY-Aug2026-18500-CE") and blank on indices.
+    Derive the root the same way reformat_symbol() does, from the part of
+    TRADING_SYMBOL before the first hyphen, and fall back to the OpenAlgo
+    symbol for cash and index rows where the two coincide.
+
+    Must run AFTER `symbol` and `instrumenttype` are assigned.
+    """
+    instrumenttype = str(row.get("instrumenttype", "") or "")
+    if instrumenttype in ("CE", "PE", "FUT"):
+        trading_symbol = str(row.get("TRADING_SYMBOL", "") or "")
+        base = trading_symbol.split("-")[0].strip()
+        if base:
+            return base
+    return str(row.get("symbol", "") or "")
 
 
 def assign_values(row, file_segment=None):
@@ -368,7 +410,12 @@ def process_indmoney_csv(path):
         update_status("indmoney", "downloading", progress_msg)
         socketio.emit(
             "master_contract_download",
-            {"status": "downloading", "message": progress_msg, "progress": overall_progress, "stages": stages},
+            {
+                "status": "downloading",
+                "message": progress_msg,
+                "progress": overall_progress,
+                "stages": stages,
+            },
         )
 
         df = pd.read_csv(file_path, low_memory=False)
@@ -416,7 +463,7 @@ def process_indmoney_csv(path):
 
         # Map Indmoney columns to our database schema
         df["token"] = df["SECURITY_ID"].astype(str)
-        df["name"] = df["SYMBOL_NAME"].fillna(df["TRADING_SYMBOL"]).fillna("")
+        # `name` is derived below, once symbol and instrumenttype exist.
         df["expiry"] = df["EXPIRY_DATE"].str.upper()
         df["strike"] = pd.to_numeric(df["STRIKE_PRICE"], errors="coerce").fillna(0.0)
         df["lotsize"] = pd.to_numeric(df["LOT_UNITS"], errors="coerce").fillna(1).astype(int)
@@ -429,11 +476,11 @@ def process_indmoney_csv(path):
 
         # Apply exchange and instrument type mapping
         df[["exchange", "brexchange", "instrumenttype"]] = df.apply(
-            lambda row: assign_values(row, segment), axis=1, result_type="expand"
+            lambda row, s=segment: assign_values(row, s), axis=1, result_type="expand"
         )
 
-        # Generate Tradeboard formatted symbol
-        df["symbol"] = df.apply(lambda row: reformat_symbol(row, segment), axis=1)
+        # Generate OpenAlgo formatted symbol
+        df["symbol"] = df.apply(lambda row, s=segment: reformat_symbol(row, s), axis=1)
 
         # Handle special cases
         df["symbol"] = df["symbol"].replace(
@@ -447,6 +494,10 @@ def process_indmoney_csv(path):
                 "S&P BSE SENSEX 50": "SENSEX50",
             }
         )
+
+        # Derive `name` last: it needs the final symbol (after the index
+        # special-cases above) and instrumenttype. See derive_name().
+        df["name"] = df.apply(derive_name, axis=1)
 
         # Keep only required columns for the database
         db_columns = [

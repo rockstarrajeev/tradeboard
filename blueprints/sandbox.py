@@ -3,7 +3,17 @@ import io
 import os
 from datetime import datetime
 
-from flask import Blueprint, Response, flash, jsonify, redirect, render_template, request, session, url_for
+from flask import (
+    Blueprint,
+    Response,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 
 from database.sandbox_db import (
     SandboxFunds,
@@ -139,6 +149,14 @@ def api_get_configs():
                 "value": "5",
                 "description": "Interval to update MTM (0-60 sec)",
             },
+            "expiry_settlement_timing": {
+                "value": "expiry_day_close",
+                "description": "When expired F&O contracts settle",
+            },
+            "option_expiry_settlement": {
+                "value": "ltp",
+                "description": "Settlement price for expired options",
+            },
         }
 
         # Helper to get config with fallback to default
@@ -179,6 +197,13 @@ def api_get_configs():
                 "configs": {
                     "order_check_interval": get_config_value("order_check_interval"),
                     "mtm_update_interval": get_config_value("mtm_update_interval"),
+                },
+            },
+            "expiry": {
+                "title": "F&O Expiry Settlement",
+                "configs": {
+                    "expiry_settlement_timing": get_config_value("expiry_settlement_timing"),
+                    "option_expiry_settlement": get_config_value("option_expiry_settlement"),
                 },
             },
         }
@@ -460,6 +485,7 @@ def api_calendar_ledger():
         # Run catch-up tasks first to ensure any missed snapshots for past days are backfilled
         try:
             from sandbox.catch_up_processor import run_catch_up_tasks
+
             run_catch_up_tasks()
         except Exception as catch_up_err:
             logger.error(f"Error running catch-up tasks in calendar ledger api: {catch_up_err}")
@@ -473,6 +499,7 @@ def api_calendar_ledger():
 
         # Get ALL daily P&L records for this user (including backfilled ones)
         from database.sandbox_db import SandboxDailyPnL
+
         daily_pnls = (
             SandboxDailyPnL.query.filter_by(user_id=user_id)
             .order_by(SandboxDailyPnL.date.asc())
@@ -482,57 +509,69 @@ def api_calendar_ledger():
         # Format trades for the frontend
         trade_list = []
         for t in trades:
-            trade_list.append({
-                "id": str(t.id),
-                "tradeid": t.tradeid,
-                "orderid": t.orderid,
-                "symbol": t.symbol,
-                "exchange": t.exchange,
-                "action": t.action,  # BUY or SELL
-                "qty": t.quantity,
-                "price": float(t.price),
-                "product": t.product,
-                "strategy": t.strategy,
-                "time": t.trade_timestamp.strftime("%H:%M:%S"),
-                "date": t.trade_timestamp.strftime("%Y-%m-%d"),
-            })
+            trade_list.append(
+                {
+                    "id": str(t.id),
+                    "tradeid": t.tradeid,
+                    "orderid": t.orderid,
+                    "symbol": t.symbol,
+                    "exchange": t.exchange,
+                    "action": t.action,  # BUY or SELL
+                    "qty": t.quantity,
+                    "price": float(t.price),
+                    "product": t.product,
+                    "strategy": t.strategy,
+                    "time": t.trade_timestamp.strftime("%H:%M:%S"),
+                    "date": t.trade_timestamp.strftime("%Y-%m-%d"),
+                }
+            )
 
         # Format daily P&L records
         pnl_list = []
         for p in daily_pnls:
-            pnl_list.append({
-                "date": p.date.strftime("%Y-%m-%d"),
-                "realized_pnl": float(p.realized_pnl or 0),
-                "total_mtm": float(p.total_mtm or 0),
-            })
+            pnl_list.append(
+                {
+                    "date": p.date.strftime("%Y-%m-%d"),
+                    "realized_pnl": float(p.realized_pnl or 0),
+                    "total_mtm": float(p.total_mtm or 0),
+                }
+            )
 
         # Compute and inject today's live P&L (since today's snapshot won't be captured until 23:59)
         try:
-            import pytz
             from decimal import Decimal
-            from database.sandbox_db import SandboxPositions, SandboxHoldings, SandboxFunds
+
+            import pytz
+
+            from database.sandbox_db import SandboxFunds, SandboxHoldings, SandboxPositions
 
             today_ist = datetime.now(pytz.timezone("Asia/Kolkata")).date()
             today_str = today_ist.strftime("%Y-%m-%d")
 
             positions = SandboxPositions.query.filter_by(user_id=user_id).all()
-            positions_unrealized = sum(Decimal(str(p.pnl or 0)) for p in positions if p.quantity != 0)
+            positions_unrealized = sum(
+                Decimal(str(p.pnl or 0)) for p in positions if p.quantity != 0
+            )
 
             holdings = SandboxHoldings.query.filter_by(user_id=user_id).all()
             holdings_unrealized = sum(Decimal(str(h.pnl or 0)) for h in holdings if h.quantity != 0)
 
             funds = SandboxFunds.query.filter_by(user_id=user_id).first()
-            today_realized = Decimal(str(funds.today_realized_pnl or 0)) if funds else Decimal("0.00")
+            today_realized = (
+                Decimal(str(funds.today_realized_pnl or 0)) if funds else Decimal("0.00")
+            )
             today_total_mtm = today_realized + positions_unrealized + holdings_unrealized
 
             has_today = any(p["date"] == today_str for p in pnl_list)
             if not has_today:
-                pnl_list.append({
-                    "date": today_str,
-                    "realized_pnl": float(today_realized),
-                    "total_mtm": float(today_total_mtm),
-                    "is_live": True
-                })
+                pnl_list.append(
+                    {
+                        "date": today_str,
+                        "realized_pnl": float(today_realized),
+                        "total_mtm": float(today_total_mtm),
+                        "is_live": True,
+                    }
+                )
             else:
                 # If today already exists, merge the live data
                 for p in pnl_list:
@@ -543,14 +582,12 @@ def api_calendar_ledger():
         except Exception as live_calc_err:
             logger.error(f"Error computing live P&L for calendar ledger: {live_calc_err}")
 
-        return jsonify({
-            "status": "success",
-            "trades": trade_list,
-            "daily_pnls": pnl_list
-        })
+        return jsonify({"status": "success", "trades": trade_list, "daily_pnls": pnl_list})
     except Exception as e:
         logger.exception(f"Error loading calendar ledger data: {str(e)}")
-        return jsonify({"status": "error", "message": f"Error loading calendar ledger data: {str(e)}"}), 500
+        return jsonify(
+            {"status": "error", "message": f"Error loading calendar ledger data: {str(e)}"}
+        ), 500
 
 
 @sandbox_bp.route("/mypnl/api/data")
@@ -735,7 +772,7 @@ def my_pnl():
         import pytz
 
         user_id = session.get("user")
-        ist = pytz.timezone("Asia/Kolkata")
+        pytz.timezone("Asia/Kolkata")
 
         # Get all positions (both open and closed) for P&L history
         positions = (
@@ -916,16 +953,22 @@ def validate_config(config_key, config_value):
                 # Additional validations
                 if config_key == "starting_capital":
                     valid_capitals = [
-                        50, 100, 500,                        # USD sandbox amounts
-                        1000, 5000, 10000, 50000,           # small sandbox amounts
-                        100000, 500000, 1000000, 2500000, 5000000, 10000000,
+                        50,
+                        100,
+                        500,
+                        1000,
+                        5000,
+                        10000,
+                        50000,
+                        100000,
+                        500000,
+                        1000000,
+                        2500000,
+                        5000000,
+                        10000000,
                     ]
-                    if value not in valid_capitals:
-                        return (
-                            "Starting capital must be one of: "
-                            "$50, $100, $500 (USD) or "
-                            "₹1K, ₹5K, ₹10K, ₹50K, ₹1L, ₹5L, ₹10L, ₹25L, ₹50L, or ₹1Cr"
-                        )
+                    if value not in valid_capitals and value <= 0:
+                        return "Starting capital must be a positive number"
 
                 if config_key.endswith("_leverage"):
                     if value < 1:
@@ -971,6 +1014,15 @@ def validate_config(config_key, config_value):
             if config_value not in valid_days:
                 return f"Reset day must be one of: {', '.join(valid_days)}"
 
+        # Validate expiry settlement enums
+        if config_key == "expiry_settlement_timing":
+            if config_value not in ("expiry_day_close", "next_day"):
+                return "Expiry settlement timing must be 'expiry_day_close' or 'next_day'"
+
+        if config_key == "option_expiry_settlement":
+            if config_value not in ("ltp", "zero"):
+                return "Option expiry settlement must be 'ltp' or 'zero'"
+
         return None  # No validation error
 
     except Exception as e:
@@ -996,7 +1048,7 @@ def sanitize_csv_value(value):
 
     # Check if the value starts with potentially dangerous characters
     # Note: '-' is excluded because negative numbers are common in financial data
-    if str_value and str_value[0] in ('=', '+', '@', '\t', '\r'):
+    if str_value and str_value[0] in ("=", "+", "@", "\t", "\r"):
         return "'" + str_value
 
     return str_value
@@ -1177,7 +1229,9 @@ def export_daily_pnl():
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         response = Response(csv_data, mimetype="text/csv")
-        response.headers["Content-Disposition"] = f'attachment; filename=sandbox_daily_pnl_{timestamp}.csv'
+        response.headers["Content-Disposition"] = (
+            f"attachment; filename=sandbox_daily_pnl_{timestamp}.csv"
+        )
         return response
 
     except Exception as e:
@@ -1207,7 +1261,9 @@ def export_positions():
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         response = Response(csv_data, mimetype="text/csv")
-        response.headers["Content-Disposition"] = f'attachment; filename=sandbox_positions_{timestamp}.csv'
+        response.headers["Content-Disposition"] = (
+            f"attachment; filename=sandbox_positions_{timestamp}.csv"
+        )
         return response
 
     except Exception as e:
@@ -1237,7 +1293,9 @@ def export_holdings():
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         response = Response(csv_data, mimetype="text/csv")
-        response.headers["Content-Disposition"] = f'attachment; filename=sandbox_holdings_{timestamp}.csv'
+        response.headers["Content-Disposition"] = (
+            f"attachment; filename=sandbox_holdings_{timestamp}.csv"
+        )
         return response
 
     except Exception as e:
@@ -1267,7 +1325,9 @@ def export_trades():
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         response = Response(csv_data, mimetype="text/csv")
-        response.headers["Content-Disposition"] = f'attachment; filename=sandbox_trades_{timestamp}.csv'
+        response.headers["Content-Disposition"] = (
+            f"attachment; filename=sandbox_trades_{timestamp}.csv"
+        )
         return response
 
     except Exception as e:

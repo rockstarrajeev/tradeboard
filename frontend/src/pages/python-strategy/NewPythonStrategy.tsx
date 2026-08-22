@@ -1,6 +1,6 @@
 import { ArrowLeft, Clock, FileCode, Info, Upload } from 'lucide-react'
 import { useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router'
 import { pythonStrategyApi } from '@/api/python-strategy'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -12,8 +12,8 @@ import { CRYPTO_EXCHANGE_VALUE, SCHEDULE_DAYS, STRATEGY_EXCHANGES } from '@/type
 import { showToast } from '@/utils/toast'
 
 const EXAMPLE_STRATEGY = `"""
-Example Tradeboard Strategy
-This is a minimal example showing how to use the Tradeboard Python SDK.
+Example OpenAlgo Strategy
+This is a minimal example showing how to use the OpenAlgo Python SDK.
 """
 
 import os
@@ -21,7 +21,7 @@ import time
 from openalgo import api
 
 # Get API key from environment variable
-API_KEY = os.getenv('TRADEBOARD_API_KEY')
+API_KEY = os.getenv('OPENALGO_API_KEY')
 
 # Initialize the API client
 client = api(
@@ -202,8 +202,8 @@ export default function NewPythonStrategy() {
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          Your Python script should use the <code className="bg-muted px-1 rounded">tradeboard</code>{' '}
-          SDK. Install it with: <code className="bg-muted px-1 rounded">pip install tradeboard</code>
+          Your Python script should use the <code className="bg-muted px-1 rounded">openalgo</code>{' '}
+          SDK. Install it with: <code className="bg-muted px-1 rounded">pip install openalgo</code>
         </AlertDescription>
       </Alert>
 

@@ -4,16 +4,54 @@ from utils.logging import get_logger
 logger = get_logger(__name__)
 
 
+# TradeSmart (Noren) order statuses arrive with underscores ("TRIGGER_PENDING")
+# and inconsistent casing ("Open" / "OPEN", "REJECT" / "REJECTED"), so normalize
+# the separator and case before matching.
+_COMPLETE_STATUSES = {"COMPLETE"}
+_REJECTED_STATUSES = {"REJECTED", "REJECT"}
+_CANCELLED_STATUSES = {"CANCELED", "CANCELLED"}
+# Still working at the exchange, i.e. modifiable/cancellable. A stop-loss order
+# waiting for its trigger sits in TRIGGER_PENDING and must surface as "open" so
+# the order book offers Modify/Cancel.
+_OPEN_STATUSES = {
+    "OPEN",
+    "PENDING",
+    "TRIGGER PENDING",
+    "NEW",
+    "REPLACED",
+    "OPEN PENDING",
+    "MODIFY PENDING",
+    "CANCEL PENDING",
+    "AFTER MARKET ORDER REQ RECEIVED",
+}
+
+
+def normalize_order_status(raw_status):
+    """Map a TradeSmart status to an OpenAlgo status (open/complete/cancelled/rejected)."""
+    status = str(raw_status or "").strip().upper().replace("_", " ")
+    if status in _COMPLETE_STATUSES:
+        return "complete"
+    if status in _OPEN_STATUSES:
+        return "open"
+    if status in _REJECTED_STATUSES:
+        return "rejected"
+    if status in _CANCELLED_STATUSES:
+        return "cancelled"
+    return status.lower()
+
+
 def map_order_data(order_data):
-    """Normalize raw OrderBook rows: resolve Tradeboard symbol + product/pricetype."""
-    if order_data is None or (isinstance(order_data, dict) and (order_data.get("stat") == "Not_Ok")):
+    """Normalize raw OrderBook rows: resolve OpenAlgo symbol + product/pricetype."""
+    if order_data is None or (
+        isinstance(order_data, dict) and (order_data.get("stat") == "Not_Ok")
+    ):
         logger.warning("No order data available.")
         order_data = {}
 
     if order_data:
         for order in order_data:
             # Capture broker rejection reason for rejected orders
-            if str(order.get("status", "")).upper() == "REJECTED":
+            if normalize_order_status(order.get("status")) == "rejected":
                 logger.debug(
                     f"Rejected order {order.get('norenordno', '')} "
                     f"({order.get('tsym', '')}): {order.get('rejreason', 'no reason provided')}"
@@ -25,33 +63,38 @@ def map_order_data(order_data):
 
             if symbol_from_db:
                 order["tsym"] = symbol_from_db
-                if (order["exch"] in ("NSE", "BSE")) and order["prd"] == "C":
-                    order["prd"] = "CNC"
-                elif order["prd"] == "I":
-                    order["prd"] = "MIS"
-                elif order["exch"] in ["NFO", "MCX", "BFO", "CDS"] and order["prd"] == "M":
-                    order["prd"] = "NRML"
-
-                if order["prctyp"] == "MKT":
-                    order["prctyp"] = "MARKET"
-                elif order["prctyp"] == "LMT":
-                    order["prctyp"] = "LIMIT"
-                elif order["prctyp"] == "SL-MKT":
-                    order["prctyp"] = "SL-M"
-                elif order["prctyp"] == "SL-LMT":
-                    order["prctyp"] = "SL"
-
-                # Prefer average fill price when present
-                if order.get("avgprc") and float(order.get("avgprc", 0)) > 0:
-                    order["prc"] = order["avgprc"]
-                elif order["prctyp"] in ["MARKET", "SL-M"] and float(order.get("prc", 0)) == 0.0:
-                    rprc = order.get("rprc", 0)
-                    if rprc and float(rprc) > 0:
-                        order["prc"] = rprc
             else:
-                logger.warning(
-                    f"Symbol not found for token {symboltoken} and exchange {exchange}."
-                )
+                logger.warning(f"Symbol not found for token {symboltoken} and exchange {exchange}.")
+
+            # Product, price type and the price preference are independent of the
+            # symbol lookup, so map them unconditionally - otherwise a lookup
+            # miss leaves raw Noren values (e.g. "SL-LMT") that the order book's
+            # Modify dialog cannot match.
+            if (order["exch"] in ("NSE", "BSE")) and order["prd"] == "C":
+                order["prd"] = "CNC"
+            elif order["prd"] == "I":
+                order["prd"] = "MIS"
+            elif order["exch"] in ["NFO", "MCX", "BFO", "CDS"] and order["prd"] == "M":
+                order["prd"] = "NRML"
+
+            price_type = str(order.get("prctyp") or "").upper()
+            if price_type == "MKT":
+                order["prctyp"] = "MARKET"
+            elif price_type == "LMT":
+                order["prctyp"] = "LIMIT"
+            elif price_type in ("SL-MKT", "SLMKT"):
+                order["prctyp"] = "SL-M"
+            elif price_type in ("SL-LMT", "SLLMT"):
+                order["prctyp"] = "SL"
+
+            # Prefer average fill price when present. Runs after the price-type
+            # mapping above, which the rprc fallback reads.
+            if order.get("avgprc") and float(order.get("avgprc", 0)) > 0:
+                order["prc"] = order["avgprc"]
+            elif order.get("prctyp") in ["MARKET", "SL-M"] and float(order.get("prc", 0)) == 0.0:
+                rprc = order.get("rprc", 0)
+                if rprc and float(rprc) > 0:
+                    order["prc"] = rprc
 
     return order_data
 
@@ -70,11 +113,12 @@ def calculate_order_statistics(order_data):
                 order["trantype"] = "SELL"
                 total_sell_orders += 1
 
-            if order["status"] == "COMPLETE":
+            status = normalize_order_status(order.get("status"))
+            if status == "complete":
                 total_completed_orders += 1
-            elif order["status"] == "OPEN":
+            elif status == "open":
                 total_open_orders += 1
-            elif order["status"] == "REJECTED":
+            elif status == "rejected":
                 total_rejected_orders += 1
 
     return {
@@ -87,7 +131,7 @@ def calculate_order_statistics(order_data):
 
 
 def transform_order_data(orders):
-    """Convert normalized OrderBook rows into the Tradeboard common orderbook shape."""
+    """Convert normalized OrderBook rows into the OpenAlgo common orderbook shape."""
     if orders is None:
         logger.warning("No order data available - orders is None")
         return []
@@ -100,26 +144,30 @@ def transform_order_data(orders):
             logger.warning(f"Expected dict, found {type(order)}. Skipping.")
             continue
 
-        transformed_orders.append({
-            "symbol": order.get("tsym", ""),
-            "exchange": order.get("exch", ""),
-            "action": order.get("trantype", ""),
-            "quantity": order.get("qty", 0),
-            "price": order.get("prc", 0.0),
-            "trigger_price": order.get("trgprc", 0.0),
-            "pricetype": order.get("prctyp", ""),
-            "product": order.get("prd", ""),
-            "orderid": order.get("norenordno", ""),
-            "order_status": order.get("status", "").lower(),
-            "timestamp": order.get("norentm", ""),
-        })
+        transformed_orders.append(
+            {
+                "symbol": order.get("tsym", ""),
+                "exchange": order.get("exch", ""),
+                "action": order.get("trantype", ""),
+                "quantity": order.get("qty", 0),
+                "price": order.get("prc", 0.0),
+                "trigger_price": order.get("trgprc", 0.0),
+                "pricetype": order.get("prctyp", ""),
+                "product": order.get("prd", ""),
+                "orderid": order.get("norenordno", ""),
+                "order_status": normalize_order_status(order.get("status")),
+                "timestamp": order.get("norentm", ""),
+            }
+        )
 
     return transformed_orders
 
 
 def map_trade_data(trade_data):
     """Normalize raw TradeBook rows."""
-    if trade_data is None or (isinstance(trade_data, dict) and (trade_data.get("stat") == "Not_Ok")):
+    if trade_data is None or (
+        isinstance(trade_data, dict) and (trade_data.get("stat") == "Not_Ok")
+    ):
         logger.warning("No trade data available.")
         trade_data = {}
 
@@ -149,24 +197,26 @@ def map_trade_data(trade_data):
 
 
 def transform_tradebook_data(tradebook_data):
-    """Convert normalized TradeBook rows into the Tradeboard common tradebook shape."""
+    """Convert normalized TradeBook rows into the OpenAlgo common tradebook shape."""
     transformed_data = []
     for trade in tradebook_data:
         avg_price = round(float(trade.get("avgprc", 0)), 2)
         quantity = int(float(trade.get("qty", 0)))
         trade_value = round(avg_price * quantity, 2)
 
-        transformed_data.append({
-            "symbol": trade.get("tsym", ""),
-            "exchange": trade.get("exch", ""),
-            "product": trade.get("prd", ""),
-            "action": trade.get("trantype", ""),
-            "quantity": quantity,
-            "average_price": avg_price,
-            "trade_value": trade_value,
-            "orderid": trade.get("norenordno", ""),
-            "timestamp": trade.get("norentm", ""),
-        })
+        transformed_data.append(
+            {
+                "symbol": trade.get("tsym", ""),
+                "exchange": trade.get("exch", ""),
+                "product": trade.get("prd", ""),
+                "action": trade.get("trantype", ""),
+                "quantity": quantity,
+                "average_price": avg_price,
+                "trade_value": trade_value,
+                "orderid": trade.get("norenordno", ""),
+                "timestamp": trade.get("norentm", ""),
+            }
+        )
     return transformed_data
 
 
@@ -199,7 +249,7 @@ def map_position_data(position_data):
 
 
 def transform_positions_data(positions_data):
-    """Convert normalized PositionBook rows into the Tradeboard common positions shape."""
+    """Convert normalized PositionBook rows into the OpenAlgo common positions shape."""
     transformed_data = []
     for position in positions_data:
         realized_pnl = float(position.get("rpnl", 0))
@@ -214,17 +264,19 @@ def transform_positions_data(positions_data):
 
         total_pnl = realized_pnl + unrealized_pnl
 
-        transformed_data.append({
-            "symbol": position.get("tsym", ""),
-            "exchange": position.get("exch", ""),
-            "product": position.get("prd", ""),
-            "quantity": position.get("netqty", 0),
-            "average_price": position.get("netavgprc", 0.0),
-            "realized_pnl": realized_pnl,
-            "unrealized_pnl": unrealized_pnl,
-            "ltp": position.get("lp", 0.0),
-            "pnl": round(total_pnl, 2),
-        })
+        transformed_data.append(
+            {
+                "symbol": position.get("tsym", ""),
+                "exchange": position.get("exch", ""),
+                "product": position.get("prd", ""),
+                "quantity": position.get("netqty", 0),
+                "average_price": position.get("netavgprc", 0.0),
+                "realized_pnl": realized_pnl,
+                "unrealized_pnl": unrealized_pnl,
+                "ltp": position.get("lp", 0.0),
+                "pnl": round(total_pnl, 2),
+            }
+        )
     return transformed_data
 
 
@@ -310,7 +362,7 @@ def calculate_portfolio_statistics(holdings_data):
 
 
 def transform_holdings_data(holdings_data):
-    """Convert normalized Holdings into the Tradeboard common holdings shape (NSE leg)."""
+    """Convert normalized Holdings into the OpenAlgo common holdings shape (NSE leg)."""
     transformed_data = []
     if isinstance(holdings_data, list):
         for holding in holdings_data:
@@ -318,14 +370,16 @@ def transform_holdings_data(holdings_data):
                 exch for exch in holding.get("exch_tsym", []) if exch.get("exch") == "NSE"
             ]
             for exch_tsym in nse_entries:
-                transformed_data.append({
-                    "symbol": exch_tsym.get("tsym", ""),
-                    "exchange": exch_tsym.get("exch", ""),
-                    "quantity": int(holding.get("holdqty", 0))
-                    + max(int(holding.get("npoadqty", 0)), int(holding.get("dpqty", 0))),
-                    "product": exch_tsym.get("product", "CNC"),
-                    "average_price": float(holding.get("upldprc", 0.0)),
-                    "pnl": 0.0,
-                    "pnlpercent": 0.0,
-                })
+                transformed_data.append(
+                    {
+                        "symbol": exch_tsym.get("tsym", ""),
+                        "exchange": exch_tsym.get("exch", ""),
+                        "quantity": int(holding.get("holdqty", 0))
+                        + max(int(holding.get("npoadqty", 0)), int(holding.get("dpqty", 0))),
+                        "product": exch_tsym.get("product", "CNC"),
+                        "average_price": float(holding.get("upldprc", 0.0)),
+                        "pnl": 0.0,
+                        "pnlpercent": 0.0,
+                    }
+                )
     return transformed_data

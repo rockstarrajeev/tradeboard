@@ -156,7 +156,9 @@ class _PooledAdapterWrapper:
 
         return self._pool
 
-    def initialize(self, broker_name: str, user_id: str, auth_data: dict = None, force: bool = False):
+    def initialize(
+        self, broker_name: str, user_id: str, auth_data: dict = None, force: bool = False
+    ):
         """Initialize the pool with user credentials
 
         Args:
@@ -288,7 +290,9 @@ class _PooledAdapterWrapper:
             # It only caches broker names which don't affect auth token validation
 
             if caches_cleared:
-                self.logger.info(f"Cleared auth caches for user {user_id}: {', '.join(caches_cleared)}")
+                self.logger.info(
+                    f"Cleared auth caches for user {user_id}: {', '.join(caches_cleared)}"
+                )
             else:
                 self.logger.debug(f"No cached auth data found for user {user_id}")
 
@@ -332,10 +336,10 @@ def cleanup_pools_for_user(user_id: str, broker_name: str | None = None) -> int:
     pool from before the auth refresh — which still holds the stale token
     that initialised it — and the user sees ``Adapter initialization
     failed: No authentication token found`` until they restart the whole
-    process. See rockstarrajeev/tradeboard#1394 for the user-visible symptom.
+    process. See marketcalls/openalgo#1394 for the user-visible symptom.
 
     Args:
-        user_id: Tradeboard username whose pools should be discarded.
+        user_id: OpenAlgo username whose pools should be discarded.
         broker_name: Optional. When set, only that broker's pool is
             discarded; otherwise every pool keyed by this user is purged.
 

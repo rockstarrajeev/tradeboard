@@ -22,11 +22,15 @@ def emit_analyzer_error(request_data: dict[str, Any], error_message: str) -> dic
         del analyzer_request["apikey"]
     analyzer_request["api_type"] = API_TYPE
 
-    bus.publish(AnalyzerErrorEvent(
-        mode="analyze", api_type=API_TYPE,
-        request_data=analyzer_request, response_data=error_response,
-        error_message=error_message,
-    ))
+    bus.publish(
+        AnalyzerErrorEvent(
+            mode="analyze",
+            api_type=API_TYPE,
+            request_data=analyzer_request,
+            response_data=error_response,
+            error_message=error_message,
+        )
+    )
 
     return error_response
 
@@ -40,6 +44,42 @@ def import_broker_gtt_module(broker_name: str) -> Any | None:
         return None
 
 
+def _event_trigger_prices(order_data: dict[str, Any]) -> list[float]:
+    """Trigger prices for the event payload, derived from the flat fields."""
+    if (order_data.get("trigger_type") or "").upper() == "OCO":
+        return [
+            float(order_data.get("triggerprice_sl") or 0),
+            float(order_data.get("triggerprice_tg") or 0),
+        ]
+    return [
+        float(
+            order_data.get("trigger_price")
+            or order_data.get("triggerprice_sl")
+            or order_data.get("triggerprice_tg")
+            or 0
+        )
+    ]
+
+
+def _fetch_last_price_for_sandbox(symbol: str, exchange: str, api_key: str) -> float:
+    """LTP snapshot for a sandbox GTT.
+
+    Live GTTs get this from the broker module; sandbox has no broker call, so it
+    reads the same quotes service the sandbox engine uses. Best effort only -
+    last_price is echoed back for parity and diagnostics, so a quote failure
+    must not stop a GTT being placed.
+    """
+    try:
+        from services.quotes_service import get_quotes
+
+        success, response, _ = get_quotes(symbol=symbol, exchange=exchange, api_key=api_key)
+        if success and isinstance(response, dict):
+            return float((response.get("data") or {}).get("ltp") or 0)
+    except Exception:
+        logger.exception(f"Could not fetch last_price for sandbox GTT {symbol}/{exchange}")
+    return 0.0
+
+
 def place_gtt_order_with_auth(
     order_data: dict[str, Any],
     auth_token: str,
@@ -51,27 +91,65 @@ def place_gtt_order_with_auth(
     order_request_data.pop("apikey", None)
     api_key = original_data.get("apikey", "")
 
-    # Analyze (sandbox) mode: not wired yet — clean 501 until Phase 3.
+    # Analyze (sandbox) mode: the sandbox GTT engine owns the whole lifecycle,
+    # so nothing below this point (broker module, broker call) applies.
     if get_analyze_mode():
-        error_response = {
-            "mode": "analyze",
-            "status": "error",
-            "message": "Sandbox GTT support not yet implemented",
-        }
-        return False, error_response, 501
+        from services.sandbox_service import sandbox_place_gtt_order
+
+        last_price = _fetch_last_price_for_sandbox(
+            order_data.get("symbol", ""), order_data.get("exchange", ""), api_key
+        )
+        success, response, status_code = sandbox_place_gtt_order(order_data, api_key, last_price)
+        if success:
+            bus.publish(
+                GTTPlacedEvent(
+                    mode="analyze",
+                    api_type=API_TYPE,
+                    strategy=order_data.get("strategy", ""),
+                    symbol=order_data.get("symbol", ""),
+                    exchange=order_data.get("exchange", ""),
+                    trigger_type=order_data.get("trigger_type", ""),
+                    trigger_id=response.get("trigger_id", ""),
+                    trigger_prices=_event_trigger_prices(order_data),
+                    request_data=order_request_data,
+                    response_data=response,
+                    api_key=api_key,
+                )
+            )
+        else:
+            bus.publish(
+                GTTFailedEvent(
+                    mode="analyze",
+                    api_type=API_TYPE,
+                    symbol=order_data.get("symbol", ""),
+                    exchange=order_data.get("exchange", ""),
+                    trigger_type=order_data.get("trigger_type", ""),
+                    error_message=response.get("message", "GTT placement failed"),
+                    request_data=order_request_data,
+                    response_data=response,
+                    api_key=api_key,
+                )
+            )
+        return success, response, status_code
 
     # Capability gate: if the broker does not ship a gtt_api module, 501.
     broker_module = import_broker_gtt_module(broker)
     if broker_module is None:
         message = f"GTT orders are not supported for broker '{broker}' yet"
         error_response = {"status": "error", "message": message}
-        bus.publish(GTTFailedEvent(
-            mode="live", api_type=API_TYPE,
-            symbol=order_data.get("symbol", ""), exchange=order_data.get("exchange", ""),
-            trigger_type=order_data.get("trigger_type", ""),
-            error_message=message,
-            request_data=order_request_data, response_data=error_response, api_key=api_key,
-        ))
+        bus.publish(
+            GTTFailedEvent(
+                mode="live",
+                api_type=API_TYPE,
+                symbol=order_data.get("symbol", ""),
+                exchange=order_data.get("exchange", ""),
+                trigger_type=order_data.get("trigger_type", ""),
+                error_message=message,
+                request_data=order_request_data,
+                response_data=error_response,
+                api_key=api_key,
+            )
+        )
         return False, error_response, 501
 
     try:
@@ -79,13 +157,19 @@ def place_gtt_order_with_auth(
     except Exception as e:
         logger.exception(f"Error in broker_module.place_gtt_order: {e}")
         error_response = {"status": "error", "message": "Failed to place GTT due to internal error"}
-        bus.publish(GTTFailedEvent(
-            mode="live", api_type=API_TYPE,
-            symbol=order_data.get("symbol", ""), exchange=order_data.get("exchange", ""),
-            trigger_type=order_data.get("trigger_type", ""),
-            error_message=str(e),
-            request_data=order_request_data, response_data=error_response, api_key=api_key,
-        ))
+        bus.publish(
+            GTTFailedEvent(
+                mode="live",
+                api_type=API_TYPE,
+                symbol=order_data.get("symbol", ""),
+                exchange=order_data.get("exchange", ""),
+                trigger_type=order_data.get("trigger_type", ""),
+                error_message=str(e),
+                request_data=order_request_data,
+                response_data=error_response,
+                api_key=api_key,
+            )
+        )
         return False, error_response, 500
 
     if res.status in (200, 201) and trigger_id:
@@ -98,15 +182,21 @@ def place_gtt_order_with_auth(
             ]
         else:
             event_trigger_prices = [float(order_data.get("trigger_price") or 0)]
-        bus.publish(GTTPlacedEvent(
-            mode="live", api_type=API_TYPE,
-            strategy=order_data.get("strategy", ""),
-            symbol=order_data.get("symbol", ""), exchange=order_data.get("exchange", ""),
-            trigger_type=order_data.get("trigger_type", ""),
-            trigger_id=trigger_id,
-            trigger_prices=event_trigger_prices,
-            request_data=order_request_data, response_data=success_response, api_key=api_key,
-        ))
+        bus.publish(
+            GTTPlacedEvent(
+                mode="live",
+                api_type=API_TYPE,
+                strategy=order_data.get("strategy", ""),
+                symbol=order_data.get("symbol", ""),
+                exchange=order_data.get("exchange", ""),
+                trigger_type=order_data.get("trigger_type", ""),
+                trigger_id=trigger_id,
+                trigger_prices=event_trigger_prices,
+                request_data=order_request_data,
+                response_data=success_response,
+                api_key=api_key,
+            )
+        )
         return True, success_response, 200
 
     message = (
@@ -115,13 +205,19 @@ def place_gtt_order_with_auth(
         else "Failed to place GTT"
     )
     error_response = {"status": "error", "message": message}
-    bus.publish(GTTFailedEvent(
-        mode="live", api_type=API_TYPE,
-        symbol=order_data.get("symbol", ""), exchange=order_data.get("exchange", ""),
-        trigger_type=order_data.get("trigger_type", ""),
-        error_message=message,
-        request_data=order_request_data, response_data=error_response, api_key=api_key,
-    ))
+    bus.publish(
+        GTTFailedEvent(
+            mode="live",
+            api_type=API_TYPE,
+            symbol=order_data.get("symbol", ""),
+            exchange=order_data.get("exchange", ""),
+            trigger_type=order_data.get("trigger_type", ""),
+            error_message=message,
+            request_data=order_request_data,
+            response_data=error_response,
+            api_key=api_key,
+        )
+    )
     return False, error_response, res.status if res.status != 200 else 500
 
 
@@ -152,7 +248,7 @@ def place_gtt_order(
     if api_key and not (auth_token and broker):
         AUTH_TOKEN, broker_name = get_auth_token_broker(api_key)
         if AUTH_TOKEN is None:
-            return False, {"status": "error", "message": "Invalid tradeboard apikey"}, 403
+            return False, {"status": "error", "message": "Invalid openalgo apikey"}, 403
         return place_gtt_order_with_auth(order_data, AUTH_TOKEN, broker_name, original_data)
 
     # Direct internal call

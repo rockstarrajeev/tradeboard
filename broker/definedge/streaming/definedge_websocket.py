@@ -103,9 +103,7 @@ class DefinedGeWebSocket:
         try:
             fresh = self.token_provider()
             if not fresh or not isinstance(fresh, dict):
-                logger.warning(
-                    "Could not fetch fresh tokens on reconnect; using existing tokens"
-                )
+                logger.warning("Could not fetch fresh tokens on reconnect; using existing tokens")
                 return
 
             auth_token = fresh.get("auth_token", "")
@@ -337,7 +335,9 @@ class DefinedGeWebSocket:
         exchange = data.get("e")
 
         # Log tick data at debug level to avoid flooding logs
-        logger.debug(f"Tick data for {exchange}|{token}: lp={data.get('lp')}, fields={list(data.keys())}")
+        logger.debug(
+            f"Tick data for {exchange}|{token}: lp={data.get('lp')}, fields={list(data.keys())}"
+        )
 
         if self.on_tick:
             try:

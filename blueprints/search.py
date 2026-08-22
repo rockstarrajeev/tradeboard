@@ -214,9 +214,7 @@ def api_search():
                             "lotsize": result.lotsize,
                             "contract_value": result.contract_value,
                             "instrumenttype": result.instrumenttype,
-                            "freeze_qty": get_freeze_qty_for_option(
-                                result.symbol, result.exchange
-                            ),
+                            "freeze_qty": get_freeze_qty_for_option(result.symbol, result.exchange),
                         }
                     )
 
@@ -230,9 +228,17 @@ def api_expiries():
     """API endpoint to get available expiry dates for FNO symbols"""
     exchange = request.args.get("exchange", "").strip() or None
     underlying = request.args.get("underlying", "").strip() or None
+    # Option-chain tools pass instrumenttype=options. Without it the list mixes
+    # futures and options expiries, which coincide on NFO but not on MCX.
+    instrumenttype = request.args.get("instrumenttype", "").strip() or None
 
-    logger.debug(f"Fetching expiries: exchange={exchange}, underlying={underlying}")
-    expiries = get_distinct_expiries(exchange=exchange, underlying=underlying)
+    logger.debug(
+        f"Fetching expiries: exchange={exchange}, underlying={underlying}, "
+        f"instrumenttype={instrumenttype}"
+    )
+    expiries = get_distinct_expiries(
+        exchange=exchange, underlying=underlying, instrumenttype=instrumenttype
+    )
 
     return jsonify({"status": "success", "expiries": expiries})
 
@@ -254,9 +260,7 @@ def api_underlyings():
         "yes",
     )
 
-    logger.debug(
-        f"Fetching underlyings: exchange={exchange}, include_futures={include_futures}"
-    )
+    logger.debug(f"Fetching underlyings: exchange={exchange}, include_futures={include_futures}")
     underlyings = get_distinct_underlyings(exchange=exchange, include_futures=include_futures)
 
     # Filter out exchange test symbols (e.g. 011NSETEST, 021BSETEST)

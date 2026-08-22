@@ -13,7 +13,7 @@ import {
   X,
 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 import { io, type Socket } from 'socket.io-client'
 import { webClient } from '@/api/client'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -358,7 +358,7 @@ export default function ActionCenterPage() {
       {/* Info Alert */}
       <Alert>
         <Info className="h-4 w-4" />
-        <AlertTitle>Tradeboard Action Center</AlertTitle>
+        <AlertTitle>OpenAlgo Action Center</AlertTitle>
         <AlertDescription>
           Centralized hub for managing semi-automated trading orders. When Semi-Auto mode is enabled
           in API Key settings, all incoming orders are queued here for manual approval before broker

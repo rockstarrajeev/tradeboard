@@ -210,7 +210,7 @@ def plot_chart(df: pd.DataFrame):
                 x=x_category,
                 y=df["wvf_upper"],
                 name="Upper Band",
-                line=dict(color="aqua", width=2),
+                line={"color": "aqua", "width": 2},
                 showlegend=True,
             ),
             row=2,
@@ -224,7 +224,7 @@ def plot_chart(df: pd.DataFrame):
                 x=x_category,
                 y=df["range_high"],
                 name=f"Range High ({PERCENTILE_HIGH * 100:.0f}%)",
-                line=dict(color="orange", width=2, dash="dash"),
+                line={"color": "orange", "width": 2, "dash": "dash"},
                 showlegend=True,
             ),
             row=2,
@@ -236,7 +236,7 @@ def plot_chart(df: pd.DataFrame):
                 x=x_category,
                 y=df["range_low"],
                 name=f"Range Low ({(PERCENTILE_LOW - 1) * 100:.0f}%)",
-                line=dict(color="orange", width=2, dash="dash"),
+                line={"color": "orange", "width": 2, "dash": "dash"},
                 showlegend=True,
             ),
             row=2,
@@ -245,18 +245,18 @@ def plot_chart(df: pd.DataFrame):
 
     # ───────── LAYOUT ─────────
     fig.update_layout(
-        title=dict(
-            text=f"{SYMBOL} with CM Williams Vix Fix<br><sup>{START_DATE} to {END_DATE}</sup>",
-            x=0.5,
-            font=dict(size=18),
-        ),
+        title={
+            "text": f"{SYMBOL} with CM Williams Vix Fix<br><sup>{START_DATE} to {END_DATE}</sup>",
+            "x": 0.5,
+            "font": {"size": 18},
+        },
         template="plotly_dark",
         height=900,
         width=1400,
         hovermode="x unified",
-        margin=dict(l=60, r=100, t=80, b=80),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        xaxis2=dict(rangeslider=dict(visible=False)),
+        margin={"l": 60, "r": 100, "t": 80, "b": 80},
+        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
+        xaxis2={"rangeslider": {"visible": False}},
     )
 
     # Update x-axes
@@ -267,7 +267,7 @@ def plot_chart(df: pd.DataFrame):
         tickangle=-45,
         showgrid=True,
         gridcolor="rgba(128, 128, 128, 0.2)",
-        rangeslider=dict(visible=False),
+        rangeslider={"visible": False},
         row=1,
         col=1,
     )

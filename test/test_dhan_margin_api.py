@@ -101,6 +101,7 @@ def test_calculate_margin_api_routes_multi_position_to_basket_api(monkeypatch):
     captured = {}
 
     monkeypatch.setattr(margin_api, "get_client_id", lambda api_key=None: "client-1")
+
     def fake_transform(pos, client_id):
         idx = len(captured.setdefault("seen", []))
         captured["seen"].append((pos["symbol"], client_id))
@@ -209,7 +210,7 @@ def test_basket_error_body_returns_non_200_response(monkeypatch):
     assert "invalid or expired" in payload["message"]
 
 
-def test_transform_margin_position_accepts_tradeboard_option_and_future_symbols(monkeypatch):
+def test_transform_margin_position_accepts_openalgo_option_and_future_symbols(monkeypatch):
     tokens = {
         ("NIFTY30JUN2624000CE", "NFO"): "71472",
         ("NIFTY30JUN2624000PE", "NFO"): "71473",

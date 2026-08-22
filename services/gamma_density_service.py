@@ -97,7 +97,9 @@ def _expiry_datetime(expiry_date: str, exchange: str) -> datetime:
     return datetime(year, month, day, hour, minute)
 
 
-def _safe_iv(black76, price: float, F: float, K: float, r: float, t: float, flag: str) -> float | None:
+def _safe_iv(
+    black76, price: float, F: float, K: float, r: float, t: float, flag: str
+) -> float | None:
     """Black-76 implied volatility (decimal), or None if it cannot be inverted."""
     if not price or price <= 0 or F <= 0 or K <= 0 or t <= 0:
         return None
@@ -146,7 +148,7 @@ def calculate_gamma_density(
         underlying: Underlying symbol (e.g. NIFTY, BANKNIFTY)
         exchange: Options exchange (NFO, BFO, CDS, MCX, crypto)
         expiry_date: Expiry in DDMMMYY format
-        api_key: Tradeboard API key
+        api_key: OpenAlgo API key
         interest_rate: Optional risk-free rate (annualized %); default per exchange
 
     Returns:

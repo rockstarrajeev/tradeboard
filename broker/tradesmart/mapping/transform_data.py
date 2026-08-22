@@ -1,4 +1,4 @@
-# Mapping Tradeboard API Request https://rajeevupadhyay.com/docs
+# Mapping OpenAlgo API Request https://openalgo.in/docs
 # Mapping TradeSmart (Noren v2) order parameters
 
 from database.token_db import get_br_symbol
@@ -9,7 +9,7 @@ logger = get_logger(__name__)
 
 
 def transform_data(data, token=None, uid="", auth_token=None):
-    """Transform an Tradeboard order request into a TradeSmart PlaceOrder payload.
+    """Transform an OpenAlgo order request into a TradeSmart PlaceOrder payload.
 
     TradeSmart's OMS rejects market-type orders placed via the API
     ("ALGO_CHK: MKT Order type not allowed for API order"), so we apply Market
@@ -83,19 +83,19 @@ def transform_modify_order_data(data, token=None, uid=""):
 
 
 def map_order_type(pricetype):
-    """Tradeboard price type -> TradeSmart price type."""
+    """OpenAlgo price type -> TradeSmart price type."""
     order_type_mapping = {"MARKET": "MKT", "LIMIT": "LMT", "SL": "SL-LMT", "SL-M": "SL-MKT"}
     return order_type_mapping.get(pricetype, "MKT")
 
 
 def map_product_type(product):
-    """Tradeboard product -> TradeSmart product (C=CNC, M=NRML, I=MIS)."""
+    """OpenAlgo product -> TradeSmart product (C=CNC, M=NRML, I=MIS)."""
     product_type_mapping = {"CNC": "C", "NRML": "M", "MIS": "I"}
     return product_type_mapping.get(product, "I")
 
 
 def reverse_map_product_type(product):
-    """TradeSmart product -> Tradeboard product."""
+    """TradeSmart product -> OpenAlgo product."""
     reverse_product_type_mapping = {"C": "CNC", "M": "NRML", "I": "MIS"}
     return reverse_product_type_mapping.get(product)
 
@@ -112,9 +112,7 @@ def _apply_mpp(data, action, pricetype, supplied_price, auth_token):
     """
     target_type = "LMT" if pricetype == "MARKET" else "SL-LMT"
     fallback_price = (
-        supplied_price
-        if pricetype == "MARKET"
-        else str(data.get("trigger_price", "0") or "0")
+        supplied_price if pricetype == "MARKET" else str(data.get("trigger_price", "0") or "0")
     )
 
     if not auth_token:

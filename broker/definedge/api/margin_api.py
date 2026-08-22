@@ -17,7 +17,7 @@ def calculate_margin_api(positions, auth):
     Calculate margin requirement for a basket of positions using Definedge Span Calculator API.
 
     Args:
-        positions: List of positions in Tradeboard format
+        positions: List of positions in OpenAlgo format
         auth: Authentication token (format: api_session_key:::susertoken:::api_token)
 
     Returns:
@@ -66,7 +66,9 @@ def calculate_margin_api(positions, auth):
 
     try:
         # Make the request to Definedge Span Calculator API
-        response = rate_limited_request(client, "POST", DEFINEDGE_MARGIN_URL, headers=headers, json=payload)
+        response = rate_limited_request(
+            client, "POST", DEFINEDGE_MARGIN_URL, headers=headers, json=payload
+        )
 
         # Add status attribute for compatibility
         response.status = response.status_code
