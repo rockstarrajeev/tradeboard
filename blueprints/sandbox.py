@@ -325,7 +325,7 @@ def reset_config():
 
         # Default configurations
         default_configs = {
-            "starting_capital": "10000000.00",
+            "starting_capital": "50.00",
             "reset_day": "Never",
             "reset_time": "00:00",
             "order_check_interval": "5",

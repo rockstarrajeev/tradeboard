@@ -53,7 +53,7 @@ class FundManager:
 
     def __init__(self, user_id):
         self.user_id = user_id
-        self.starting_capital = Decimal(get_config("starting_capital", "10000000.00"))
+        self.starting_capital = Decimal(get_config("starting_capital", "50.00"))
 
     def initialize_funds(self):
         """Initialize funds for a new user"""

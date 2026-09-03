@@ -504,8 +504,8 @@ def init_default_config():
     default_configs = [
         {
             "config_key": "starting_capital",
-            "config_value": "10000000.00",
-            "description": "Starting sandbox capital in INR (₹1 Crore) - Min: ₹1000",
+            "config_value": "50.00",
+            "description": "Starting sandbox capital in USD ($50)",
         },
         {
             "config_key": "reset_day",

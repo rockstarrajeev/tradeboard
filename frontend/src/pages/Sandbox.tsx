@@ -334,7 +334,7 @@ export default function Sandbox() {
 
     // Starting capital selector
     if (configKey === 'starting_capital') {
-      const currentValue = parseFloat(configData.value || '10000000').toFixed(0)
+      const currentValue = parseFloat(configData.value || '50').toFixed(0)
       return (
         <div className="flex gap-2">
           <Select value={currentValue} onValueChange={(value) => updateConfig(configKey, value)}>
