@@ -161,7 +161,7 @@ Fork https://github.com/marketcalls/openalgo on GitHub, then:
 ```bash
 git clone https://github.com/YOUR_USERNAME/openalgo.git
 cd openalgo
-git remote add upstream https://github.com/marketcalls/openalgo.git
+git remote add upstream https://github.com/wesoftcorp/tradeboard.git
 git remote -v
 ```
 

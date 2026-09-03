@@ -77,7 +77,7 @@ sudo chown $USER:$USER /opt/openalgo
 
 # Clone repository
 cd /opt/openalgo
-git clone --filter=blob:none https://github.com/marketcalls/openalgo.git .
+git clone --filter=blob:none https://github.com/wesoftcorp/tradeboard.git .
 ```
 
 ### 2. Setup Python Environment

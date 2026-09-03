@@ -268,12 +268,12 @@ Tradeboard provides officially supported client libraries for application develo
 
 | Language / Platform | Repository |
 |---------------------|------------|
-| Python | [tradeboard-python-library](https://github.com/rockstarrajeev/tradeboard-python-library) |
-| Node.js | [tradeboard-node](https://github.com/rockstarrajeev/tradeboard-node) |
-| Java | [tradeboard-java](https://github.com/rockstarrajeev/tradeboard-java) |
-| Rust | [tradeboard-rust](https://github.com/rockstarrajeev/tradeboard-rust) |
-| .NET / C# | [tradeboard.NET](https://github.com/rockstarrajeev/tradeboard.NET) |
-| Go | [tradeboard-go](https://github.com/rockstarrajeev/tradeboard-go) |
+| Python | [tradeboard-python-library](https://github.com/wesoftcorp/tradeboard-python-library) |
+| Node.js | [tradeboard-node](https://github.com/wesoftcorp/tradeboard-node) |
+| Java | [tradeboard-java](https://github.com/wesoftcorp/tradeboard-java) |
+| Rust | [tradeboard-rust](https://github.com/wesoftcorp/tradeboard-rust) |
+| .NET / C# | [tradeboard.NET](https://github.com/wesoftcorp/tradeboard.NET) |
+| Go | [tradeboard-go](https://github.com/wesoftcorp/tradeboard-go) |
 
 ## Tradeboard FOSS Ecosystem
 
@@ -304,7 +304,7 @@ Tradeboard uses the modern `uv` package manager for faster, more reliable instal
 
 ```bash
 # Clone the repository
-git clone https://github.com/rockstarrajeev/tradeboard.git
+git clone https://github.com/wesoftcorp/tradeboard.git
 cd tradeboard
 
 # Install UV package manager
@@ -370,7 +370,7 @@ We welcome contributions! To contribute:
 - **Discord**: [Join our community](https://www.rajeevupadhyay.com/discord)
 - **Twitter/X**: [@tradeboardHQ](https://twitter.com/tradeboardHQ)
 - **YouTube**: [@tradeboard](https://www.youtube.com/@tradeboard)
-- **GitHub Issues**: [Report bugs or request features](https://github.com/rockstarrajeev/tradeboard/issues)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/wesoftcorp/tradeboard/issues)
 
 ## License
 

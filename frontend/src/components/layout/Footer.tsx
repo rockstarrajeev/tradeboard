@@ -69,7 +69,7 @@ export function Footer({ className }: FooterProps) {
         <div className="flex justify-center gap-2 mt-4">
           <Button variant="ghost" size="icon" asChild className="h-8 w-8">
             <a
-              href="https://github.com/rockstarrajeev/tradeboard"
+              href="https://github.com/wesoftcorp/tradeboard"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="GitHub"

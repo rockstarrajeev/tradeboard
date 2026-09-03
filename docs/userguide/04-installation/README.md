@@ -10,7 +10,7 @@ If you're comfortable with command line, here's the fastest way:
 
 ```bash
 # 1. Clone the repository
-git clone --filter=blob:none https://github.com/marketcalls/openalgo.git
+git clone --filter=blob:none https://github.com/wesoftcorp/tradeboard.git
 cd openalgo
 
 # 2. Install UV package manager
@@ -71,7 +71,7 @@ Open Command Prompt (search "cmd") and run:
 cd C:\Users\YourName\Documents
 
 # Clone the repository
-git clone --filter=blob:none https://github.com/marketcalls/openalgo.git
+git clone --filter=blob:none https://github.com/wesoftcorp/tradeboard.git
 
 # Enter the folder
 cd openalgo
@@ -129,7 +129,7 @@ python3.12 --version
 
 ```bash
 # Clone repository
-git clone --filter=blob:none https://github.com/marketcalls/openalgo.git
+git clone --filter=blob:none https://github.com/wesoftcorp/tradeboard.git
 cd openalgo
 ```
 
@@ -169,7 +169,7 @@ brew install python@3.12 git
 
 ```bash
 # Clone repository
-git clone --filter=blob:none https://github.com/marketcalls/openalgo.git
+git clone --filter=blob:none https://github.com/wesoftcorp/tradeboard.git
 cd openalgo
 
 # Install UV
@@ -219,7 +219,7 @@ ZMQ_PORT='5555'
 
 ```bash
 # Clone repository
-git clone --filter=blob:none https://github.com/marketcalls/openalgo.git
+git clone --filter=blob:none https://github.com/wesoftcorp/tradeboard.git
 cd openalgo
 
 # Create environment file

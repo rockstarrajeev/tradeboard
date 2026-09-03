@@ -86,5 +86,5 @@ We acknowledge security researchers who responsibly disclose vulnerabilities. Wi
 ## Contact
 
 - **Security issues:** rajeev.upadhyay@live.in
-- **General issues:** https://github.com/rockstarrajeev/tradeboard/issues
+- **General issues:** https://github.com/wesoftcorp/tradeboard/issues
 - **Documentation:** https://docs.rajeevupadhyay.com

@@ -117,7 +117,7 @@ Before you begin, make sure you have the following installed:
 
 ```bash
 # Clone the repository
-git clone https://github.com/marketcalls/openalgo.git
+git clone https://github.com/wesoftcorp/tradeboard.git
 cd openalgo
 
 # Install uv package manager (if not already installed)
@@ -281,7 +281,7 @@ git clone https://github.com/YOUR_USERNAME/openalgo.git
 cd openalgo
 
 # Add upstream remote
-git remote add upstream https://github.com/marketcalls/openalgo.git
+git remote add upstream https://github.com/wesoftcorp/tradeboard.git
 
 # Verify remotes
 git remote -v

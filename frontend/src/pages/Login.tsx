@@ -388,7 +388,7 @@ export default function Login() {
             <div className="flex justify-center lg:justify-start gap-4">
               <Button variant="outline" asChild>
                 <a
-                  href="https://github.com/rockstarrajeev/tradeboard"
+                  href="https://github.com/wesoftcorp/tradeboard"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"
