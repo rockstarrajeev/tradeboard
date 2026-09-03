@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://openalgo.in/docs
+# Mapping OpenAlgo API Request https://rajeevupadhyay.com/docs
 # Mapping Dhan Margin API https://dhanhq.co/docs/v2/funds/
 
 from broker.dhan.mapping.transform_data import map_exchange_type

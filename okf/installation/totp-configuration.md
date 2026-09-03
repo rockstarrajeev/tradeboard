@@ -2,7 +2,7 @@
 type: Reference
 title: TOTP Configuration
 description: Set up authenticator-app (TOTP) two-factor login and offline password recovery for OpenAlgo.
-resource: https://docs.openalgo.in/installation-guidelines/getting-started/totp-configuration
+resource: https://docs.rajeevupadhyay.com/installation-guidelines/getting-started/totp-configuration
 tags:
 - installation
 - totp
@@ -17,6 +17,6 @@ timestamp: '2026-07-03T00:00:00+00:00'
 
 Set up authenticator-app (TOTP) two-factor login and offline password recovery for OpenAlgo.
 
-**Source:** [https://docs.openalgo.in/installation-guidelines/getting-started/totp-configuration](https://docs.openalgo.in/installation-guidelines/getting-started/totp-configuration)
+**Source:** [https://docs.rajeevupadhyay.com/installation-guidelines/getting-started/totp-configuration](https://docs.rajeevupadhyay.com/installation-guidelines/getting-started/totp-configuration)
 
 **Related:** [overview](../overview.md)

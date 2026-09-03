@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://openalgo.in/docs
+# Mapping OpenAlgo API Request https://rajeevupadhyay.com/docs
 # FivePaisaXTS does not provide Margin Calculator API
 
 from utils.logging import get_logger

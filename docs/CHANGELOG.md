@@ -675,6 +675,6 @@ See [GitHub Releases](https://github.com/marketcalls/openalgo/releases) for prev
 ## Links
 
 - **Repository**: https://github.com/marketcalls/openalgo
-- **Documentation**: https://docs.openalgo.in
-- **Discord**: https://www.openalgo.in/discord
+- **Documentation**: https://docs.rajeevupadhyay.com
+- **Discord**: https://www.rajeevupadhyay.com/discord
 - **YouTube**: https://www.youtube.com/@openalgo

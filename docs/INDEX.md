@@ -31,7 +31,7 @@ need → drill into the specific file. Don't load everything at once.
 |---|---|
 | Ubuntu server install | [installation-guidelines/getting-started/ubuntu-server-installation.md](installation-guidelines/getting-started/ubuntu-server-installation.md) |
 | Docker | [docker/README.md](docker/README.md) |
-| Upgrade / SMTP / TOTP / forgot-password | https://docs.openalgo.in/installation-guidelines/getting-started/ |
+| Upgrade / SMTP / TOTP / forgot-password | https://docs.rajeevupadhyay.com/installation-guidelines/getting-started/ |
 | Broker integration (36 plugins) | [broker-integration-guide.md](broker-integration-guide.md) |
 | Release notes & changelog | [releases/](releases/) · [CHANGELOG.md](CHANGELOG.md) |
 
@@ -66,5 +66,5 @@ need → drill into the specific file. Don't load everything at once.
 
 ## Governance
 
-- User responsibilities & risk ownership: https://docs.openalgo.in/responsibilities
-- Repository: https://github.com/marketcalls/openalgo · Docs: https://docs.openalgo.in
+- User responsibilities & risk ownership: https://docs.rajeevupadhyay.com/responsibilities
+- Repository: https://github.com/marketcalls/openalgo · Docs: https://docs.rajeevupadhyay.com

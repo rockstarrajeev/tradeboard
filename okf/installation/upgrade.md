@@ -2,7 +2,7 @@
 type: Reference
 title: Upgrade OpenAlgo
 description: How to safely upgrade an existing OpenAlgo installation across Ubuntu server, Docker, desktop, and manual methods.
-resource: https://docs.openalgo.in/installation-guidelines/getting-started/upgrade
+resource: https://docs.rajeevupadhyay.com/installation-guidelines/getting-started/upgrade
 tags:
 - installation
 - upgrade
@@ -17,6 +17,6 @@ timestamp: '2026-07-03T00:00:00+00:00'
 
 How to safely upgrade an existing OpenAlgo installation across Ubuntu server, Docker, desktop, and manual methods.
 
-**Source:** [https://docs.openalgo.in/installation-guidelines/getting-started/upgrade](https://docs.openalgo.in/installation-guidelines/getting-started/upgrade)
+**Source:** [https://docs.rajeevupadhyay.com/installation-guidelines/getting-started/upgrade](https://docs.rajeevupadhyay.com/installation-guidelines/getting-started/upgrade)
 
 **Related:** [overview](../overview.md)

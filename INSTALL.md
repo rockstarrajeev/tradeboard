@@ -113,4 +113,4 @@ If you encounter any issues during installation:
    - Check if your firewall allows WebSocket connections
    - Verify Socket.IO client version matches server version
 
-For more detailed configuration instructions, visit [https://docs.openalgo.in](https://docs.openalgo.in)
+For more detailed configuration instructions, visit [https://docs.rajeevupadhyay.com](https://docs.rajeevupadhyay.com)

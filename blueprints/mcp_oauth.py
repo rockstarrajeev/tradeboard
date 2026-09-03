@@ -210,7 +210,7 @@ def discovery_authorization_server():
                 "client_secret_post",
                 "none",  # public clients (PKCE-only)
             ],
-            "service_documentation": "https://docs.openalgo.in/remote-mcp",
+            "service_documentation": "https://docs.rajeevupadhyay.com/remote-mcp",
         }
     )
 
@@ -223,7 +223,7 @@ def _build_protected_resource_metadata():
             "authorization_servers": [base],
             "bearer_methods_supported": ["header"],
             "scopes_supported": _supported_scopes(),
-            "resource_documentation": "https://docs.openalgo.in/remote-mcp",
+            "resource_documentation": "https://docs.rajeevupadhyay.com/remote-mcp",
         }
     )
 

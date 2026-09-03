@@ -253,7 +253,7 @@ echo.
 echo   Redirect URL for broker portal:
 echo   http://127.0.0.1:5000/%BROKER_NAME%/callback
 echo.
-echo   Documentation: https://docs.openalgo.in
+echo   Documentation: https://docs.rajeevupadhyay.com
 echo.
 set /p OPEN_ENV="Open .env in Notepad for review? (y/n): "
 if /i "%OPEN_ENV%"=="y" (

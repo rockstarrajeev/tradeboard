@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://openalgo.in/docs
+# Mapping OpenAlgo API Request https://rajeevupadhyay.com/docs
 # Mapping Nubra Trading API V3 (OMS V3 intent orders)
 #
 # V3 replaces the old snake_case /orders/v2 payload with a camelCase "intent

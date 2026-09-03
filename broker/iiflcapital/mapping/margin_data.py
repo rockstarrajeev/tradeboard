@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://openalgo.in/docs
+# Mapping OpenAlgo API Request https://rajeevupadhyay.com/docs
 # Mapping IIFL Capital SPAN and Exposure Margin API
 
 from broker.iiflcapital.mapping.transform_data import map_exchange

@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://openalgo.in/docs
+# Mapping OpenAlgo API Request https://rajeevupadhyay.com/docs
 # Mapping HDFC Securities InvestRight Trading Parameters (developer.hdfcsec.com)
 #
 # InvestRight addresses instruments by THREE fields at once, unlike most

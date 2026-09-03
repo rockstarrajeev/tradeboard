@@ -116,8 +116,8 @@ The "price crosses trigger but pending sandbox order never fires" pattern report
 **Links**
 
 * **Repository**: <https://github.com/marketcalls/openalgo>
-* **Documentation**: <https://docs.openalgo.in>
-* **Discord**: <https://www.openalgo.in/discord>
+* **Documentation**: <https://docs.rajeevupadhyay.com>
+* **Discord**: <https://www.rajeevupadhyay.com/discord>
 * **YouTube**: <https://www.youtube.com/@openalgo>
 * **Issue tracker**: <https://github.com/marketcalls/openalgo/issues>
 
@@ -133,7 +133,7 @@ If you need additional information that is not directly available in this page, 
 Perform an HTTP GET request on the current page URL with the `ask` query parameter:
 
 ```
-GET https://docs.openalgo.in/change-log/release/version-2.0.0.7-released.md?ask=<question>
+GET https://docs.rajeevupadhyay.com/change-log/release/version-2.0.0.7-released.md?ask=<question>
 ```
 
 The question should be specific, self-contained, and written in natural language.

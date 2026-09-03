@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://openalgo.in/docs
+# Mapping OpenAlgo API Request https://rajeevupadhyay.com/docs
 # Mapping Upstox Margin API https://upstox.com/developer/api-documentation/margin
 
 from broker.upstox.mapping.transform_data import map_product_type

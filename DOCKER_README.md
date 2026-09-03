@@ -57,7 +57,7 @@ All data is stored locally in the script directory:
 
 ## Documentation
 
-- **Full Docs**: https://docs.openalgo.in
+- **Full Docs**: https://docs.rajeevupadhyay.com
 - **Installation Guide**: https://github.com/marketcalls/openalgo/blob/main/install/Docker-install-readme.md
 - **GitHub**: https://github.com/marketcalls/openalgo
 
@@ -65,7 +65,7 @@ All data is stored locally in the script directory:
 
 - **Discord**: https://discord.com/invite/UPh7QPsNhP
 - **YouTube**: https://youtube.com/@openalgoHQ
-- **Website**: https://openalgo.in
+- **Website**: https://rajeevupadhyay.com
 
 ## License
 

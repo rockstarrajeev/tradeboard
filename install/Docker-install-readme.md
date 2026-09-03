@@ -179,7 +179,7 @@ chmod +x install-docker.sh
 ### Follow the Prompts
 
 The script will ask you for:
-- Domain name (e.g., demo.openalgo.in)
+- Domain name (e.g., demo.rajeevupadhyay.com)
 - Broker name from the supported list
 - Broker API credentials (key and secret)
 - Market data credentials (for XTS brokers only)
@@ -483,11 +483,11 @@ sudo rm -rf /var/lib/docker
 
 ### Getting Help
 
-- **Documentation**: https://docs.openalgo.in
+- **Documentation**: https://docs.rajeevupadhyay.com
 - **Discord Community**: https://discord.com/invite/UPh7QPsNhP
 - **GitHub Issues**: https://github.com/marketcalls/openalgo/issues
 - **YouTube Tutorials**: https://youtube.com/@openalgoHQ
-- **Website**: https://openalgo.in
+- **Website**: https://rajeevupadhyay.com
 
 ### Supported Brokers
 

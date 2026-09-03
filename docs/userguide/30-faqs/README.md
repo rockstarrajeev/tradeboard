@@ -126,10 +126,10 @@ Yes. Strategy isolation and host capacity still matter; use unique strategy name
 
 ## Support
 
-- Documentation: [docs.openalgo.in](https://docs.openalgo.in)
+- Documentation: [docs.rajeevupadhyay.com](https://docs.rajeevupadhyay.com)
 - GitHub issues: [github.com/marketcalls/openalgo/issues](https://github.com/marketcalls/openalgo/issues)
 - GitHub discussions: [github.com/marketcalls/openalgo/discussions](https://github.com/marketcalls/openalgo/discussions)
-- Community: [openalgo.in/discord](https://openalgo.in/discord)
+- Community: [rajeevupadhyay.com/discord](https://rajeevupadhyay.com/discord)
 
 When reporting a bug, include the OpenAlgo version, deployment method, reproduction steps, relevant redacted logs, and the expected versus actual behavior. Never attach `.env`, API keys, broker credentials, or session tokens.
 

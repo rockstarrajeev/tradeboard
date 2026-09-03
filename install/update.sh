@@ -635,7 +635,7 @@ if [ "$SERVER_MODE" = true ]; then
 else
     log_message "\nNext Steps:" "$YELLOW"
     log_message "  Start application: uv run app.py" "$BLUE"
-    log_message "  API documentation: https://docs.openalgo.in/api-documentation/v1" "$BLUE"
+    log_message "  API documentation: https://docs.rajeevupadhyay.com/api-documentation/v1" "$BLUE"
 fi
 
 if [ -n "$NEW_VARS" ]; then

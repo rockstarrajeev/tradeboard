@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://openalgo.in/docs
+# Mapping OpenAlgo API Request https://rajeevupadhyay.com/docs
 # Mapping MStock Type B Parameters https://tradingapi.mstock.com/docs/v1/typeB/Orders/
 
 from database.symbol import SymToken

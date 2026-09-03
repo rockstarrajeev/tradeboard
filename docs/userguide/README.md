@@ -77,8 +77,8 @@ This guide takes you from zero to automated trading, covering everything from ba
 ## Additional Resources
 
 - **Developer Documentation**: See `/design` folder for technical architecture
-- **Official Docs**: [docs.openalgo.in](https://docs.openalgo.in)
-- **Community**: [Discord](https://www.openalgo.in/discord)
+- **Official Docs**: [docs.rajeevupadhyay.com](https://docs.rajeevupadhyay.com)
+- **Community**: [Discord](https://www.rajeevupadhyay.com/discord)
 - **Video Tutorials**: [YouTube](https://www.youtube.com/@openalgo)
 
 ## Support
@@ -86,5 +86,5 @@ This guide takes you from zero to automated trading, covering everything from ba
 If you encounter issues:
 1. Check [Troubleshooting](./29-troubleshooting/README.md)
 2. Read [FAQs](./30-faqs/README.md)
-3. Ask on [Discord](https://www.openalgo.in/discord)
+3. Ask on [Discord](https://www.rajeevupadhyay.com/discord)
 4. Open a [GitHub Issue](https://github.com/marketcalls/openalgo/issues)

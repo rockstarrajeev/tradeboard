@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://openalgo.in/docs
+# Mapping OpenAlgo API Request https://rajeevupadhyay.com/docs
 # Mapping Arrow Trading Parameters (edge.arrow.trade)
 #
 # Arrow uses short, single/short codes that differ from OpenAlgo's vocabulary:

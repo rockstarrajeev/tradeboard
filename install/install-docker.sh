@@ -98,7 +98,7 @@ log "\n=== Installation Configuration ===" "$BLUE"
 
 # Get domain name
 while true; do
-    read -p "Enter your domain name (e.g., demo.openalgo.in): " DOMAIN
+    read -p "Enter your domain name (e.g., demo.rajeevupadhyay.com): " DOMAIN
     if [ -z "$DOMAIN" ]; then
         log "Error: Domain name is required" "$RED"
         continue

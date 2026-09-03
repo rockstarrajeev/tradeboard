@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://openalgo.in/docs
+# Mapping OpenAlgo API Request https://rajeevupadhyay.com/docs
 # Mapping mStock Type B Margin API https://tradingapi.mstock.com/docs/v1/typeB/Margins/
 
 from database.token_db import get_br_symbol, get_token

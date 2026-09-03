@@ -84,11 +84,11 @@ Create `broker/your_broker/plugin.json`:
 ```json
 {
     "Plugin Name": "your_broker",
-    "Plugin URI": "https://openalgo.in",
+    "Plugin URI": "https://rajeevupadhyay.com",
     "Description": "YourBroker OpenAlgo Plugin",
     "Version": "1.0",
     "Author": "Your Name",
-    "Author URI": "https://openalgo.in"
+    "Author URI": "https://rajeevupadhyay.com"
 }
 ```
 

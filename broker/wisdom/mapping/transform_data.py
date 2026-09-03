@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://openalgo.in/docs
+# Mapping OpenAlgo API Request https://rajeevupadhyay.com/docs
 # Mapping Wisdom Capital Broking Parameters https://symphonyfintech.com/xts-trading-front-end-api/
 
 from database.token_db import get_br_symbol, get_token

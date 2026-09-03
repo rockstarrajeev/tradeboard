@@ -219,9 +219,9 @@ uv run app.py
 **Links**
 
 * **Repository**: <https://github.com/marketcalls/openalgo>
-* **Documentation**: <https://docs.openalgo.in>
-* **Remote MCP guide**: <https://docs.openalgo.in/mcp/remote-mcp>
-* **Discord**: <https://www.openalgo.in/discord>
+* **Documentation**: <https://docs.rajeevupadhyay.com>
+* **Remote MCP guide**: <https://docs.rajeevupadhyay.com/mcp/remote-mcp>
+* **Discord**: <https://www.rajeevupadhyay.com/discord>
 * **YouTube**: <https://www.youtube.com/@openalgo>
 * **Issue tracker**: <https://github.com/marketcalls/openalgo/issues>
 
@@ -237,7 +237,7 @@ If you need additional information that is not directly available in this page, 
 Perform an HTTP GET request on the current page URL with the `ask` query parameter:
 
 ```
-GET https://docs.openalgo.in/change-log/release/version-2.0.1.0-released.md?ask=<question>
+GET https://docs.rajeevupadhyay.com/change-log/release/version-2.0.1.0-released.md?ask=<question>
 ```
 
 The question should be specific, self-contained, and written in natural language.
