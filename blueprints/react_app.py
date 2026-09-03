@@ -90,7 +90,7 @@ npm run build</pre>
         )
 
     index_path = FRONTEND_DIST / "index.html"
-    response = send_file(index_path, mimetype="text/html")
+    response = send_file(str(index_path), mimetype="text/html")
     # index.html references content-hashed asset URLs, so it must always be
     # revalidated — otherwise a browser could serve a stale shell pointing at
     # chunks that no longer exist after an update. "no-cache" means
