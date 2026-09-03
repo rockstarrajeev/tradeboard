@@ -7,15 +7,15 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# OpenAlgo Multi-Instance Installation Banner
+# Tradeboard Multi-Instance Installation Banner
 echo -e "${BLUE}"
-echo "  ██████╗ ██████╗ ███████╗███╗   ██╗ █████╗ ██╗      ██████╗  ██████╗ "
-echo " ██╔═══██╗██╔══██╗██╔════╝████╗  ██║██╔══██╗██║     ██╔════╝ ██╔═══██╗"
-echo " ██║   ██║██████╔╝███████╗██╔██╗ ██║███████║██║     ██║  ███╗██║   ██║"
-echo " ██║   ██║██╔═══╝ ██╔══╝  ██║╚██╗██║██╔══██║██║     ██║   ██║██║   ██║"
-echo " ╚██████╔╝██╗     ███████╗██║ ╚████║██║  ██║███████╗╚██████╔╝╚██████╔╝"
-echo "  ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝ ╚═════╝  ╚═════╝ "
-echo "                      MULTI-INSTANCE INSTALLER                          "
+echo " ████████╗██████╗  █████╗ ██████╗ ███████╗██████╗  ██████╗  █████╗ ██████╗ ██████╗ "
+echo " ╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔══██╗██╔═══██╗██╔══██╗██╔══██╗██╔══██╗"
+echo "    ██║   ██████╔╝███████║██║  ██║█████╗  ██████╔╝██║   ██║███████║██████╔╝██║  ██║"
+echo "    ██║   ██╔══██╗██╔══██║██║  ██║██╔══╝  ██╔══██╗██║   ██║██╔══██║██╔══██╗██║  ██║"
+echo "    ██║   ██║  ██║██║  ██║██████╔╝███████╗██████╔╝╚██████╔╝██║  ██║██║  ██║██████╔╝"
+echo "    ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚══════╝╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ "
+echo "                             MULTI-INSTANCE INSTALLER                              "
 echo -e "${NC}"
 
 # Create logs directory
@@ -50,7 +50,7 @@ generate_hex() {
 # Function to validate broker name
 validate_broker() {
     local broker=$1
-    local valid_brokers="fivepaisa,fivepaisaxts,aliceblue,angel,arrow,compositedge,definedge,deltaexchange,dhan,dhan_sandbox,firstock,flattrade,fyers,groww,hdfcsecurities,hdfcsky,ibulls,iifl,iiflcapital,indmoney,jainamxts,kotak,motilal,mstock,nubra,paytm,pocketful,rmoney,samco,shoonya,tradejini,tradesmart,upstox,wisdom,zebu,zerodha"
+    local valid_brokers="fivepaisa,fivepaisaxts,aliceblue,angel,arrow,compositedge,definedge,deltaexchange,dhan,dhan_sandbox,firstock,flattrade,fyers,groww,ibulls,iifl,iiflcapital,indmoney,jainamxts,kotak,motilal,mstock,nubra,paytm,pocketful,rmoney,samco,shoonya,tradejini,tradesmart,upstox,wisdom,zebu,zerodha"
 
     if [[ ",$valid_brokers," == *",$broker,"* ]]; then
         return 0
@@ -93,7 +93,7 @@ check_timezone() {
 }
 
 # Start logging
-log_message "Starting OpenAlgo Multi-Instance installation" "$BLUE"
+log_message "Starting Tradeboard Multi-Instance installation" "$BLUE"
 log_message "Log file: $LOG_FILE" "$BLUE"
 log_message "----------------------------------------" "$BLUE"
 
@@ -102,18 +102,18 @@ check_timezone
 
 # Ask number of instances
 while true; do
-    read -p "How many OpenAlgo instances do you want to set up? " INSTANCES
+    read -p "How many Tradeboard instances do you want to set up? " INSTANCES
     if [[ "$INSTANCES" =~ ^[0-9]+$ ]] && [ "$INSTANCES" -gt 0 ]; then
         break
     else
-        log_message "Invalid number. Please enter a positive integer." "$RED"
+        log_message "❌ Invalid number. Please enter a positive integer." "$RED"
     fi
 done
 
-log_message "Setting up $INSTANCES OpenAlgo instances" "$GREEN"
+log_message "Setting up $INSTANCES Tradeboard instances" "$GREEN"
 
 # Base configuration
-BASE_DIR="/var/python/openalgo-flask"
+BASE_DIR="/var/python/tradeboard-flask"
 REPO_URL="https://github.com/rockstarrajeev/tradeboard.git"
 FLASK_PORT_BASE=5000
 WS_PORT_BASE=8765
@@ -153,7 +153,7 @@ for ((i=1; i<=INSTANCES; i++)); do
 
     # Get broker
     while true; do
-        log_message "\nValid brokers: fivepaisa,fivepaisaxts,aliceblue,angel,arrow,compositedge,definedge,deltaexchange,dhan,dhan_sandbox,firstock,flattrade,fyers,groww,hdfcsecurities,hdfcsky,ibulls,iifl,iiflcapital,indmoney,jainamxts,kotak,motilal,mstock,nubra,paytm,pocketful,rmoney,samco,shoonya,tradejini,tradesmart,upstox,wisdom,zebu,zerodha" "$BLUE"
+        log_message "\nValid brokers: fivepaisa,fivepaisaxts,aliceblue,angel,arrow,compositedge,definedge,deltaexchange,dhan,dhan_sandbox,firstock,flattrade,fyers,groww,ibulls,iifl,indmoney,jainamxts,kotak,motilal,mstock,nubra,paytm,pocketful,rmoney,samco,shoonya,tradejini,tradesmart,upstox,wisdom,zebu,zerodha" "$BLUE"
         read -p "Enter broker name for instance $i: " broker
         if validate_broker "$broker"; then
             BROKERS+=("$broker")
@@ -203,7 +203,7 @@ for ((i=1; i<=INSTANCES; i++)); do
     # Same-domain mode — /mcp and /oauth/* are served from the same nginx
     # vhost as this instance's dashboard, so no extra config is required.
     # Local stdio MCP (Claude Desktop / Cursor / Windsurf) works regardless.
-    log_message "\nRemote MCP lets hosted AI clients (Claude.ai, ChatGPT) connect to OpenAlgo over HTTPS." "$BLUE"
+    log_message "\nRemote MCP lets hosted AI clients (Claude.ai, ChatGPT) connect to Tradeboard over HTTPS." "$BLUE"
     log_message "Skip this if you only use the local MCP server with Claude Desktop / Cursor." "$YELLOW"
     read -p "Enable Remote MCP for instance $i? (y/N): " enable_mcp_input
     if [[ $enable_mcp_input =~ ^[Yy]$ ]]; then
@@ -213,7 +213,7 @@ for ((i=1; i<=INSTANCES; i++)); do
         MCP_ENABLED_LIST+=("false")
     fi
 
-    log_message "Instance $i configuration collected" "$GREEN"
+    log_message "✅ Instance $i configuration collected" "$GREEN"
 done
 
 # System packages installation (one-time)
@@ -228,7 +228,7 @@ check_status "Failed to install packages"
 # Install Chromium for Kaleido/Plotly static chart rendering (Telegram /chart command).
 # Kaleido 1.x ships no bundled browser; it drives a system Chromium via choreographer.
 # Debian has 'chromium' in main; Ubuntu 19.10+ renamed it to 'chromium-browser' (snap transitional).
-# Non-fatal — if nothing sticks we warn; the rest of openalgo still installs fine.
+# Non-fatal — if nothing sticks we warn; the rest of tradeboard still installs fine.
 log_message "\nInstalling Chromium for Telegram /chart rendering..." "$BLUE"
 if sudo apt-get install -y chromium fonts-liberation 2>/dev/null; then
     log_message "Installed chromium (Debian package)" "$GREEN"
@@ -274,10 +274,10 @@ for ((i=1; i<=INSTANCES; i++)); do
 
     # Paths
     DEPLOY_NAME="${DOMAIN/./-}-${BROKER}"
-    INSTANCE_DIR="$BASE_DIR/openalgo$i"
+    INSTANCE_DIR="$BASE_DIR/tradeboard$i"
     VENV_PATH="$INSTANCE_DIR/venv"
-    SOCKET_FILE="$INSTANCE_DIR/openalgo.sock"
-    SERVICE_NAME="openalgo$i"
+    SOCKET_FILE="$INSTANCE_DIR/tradeboard.sock"
+    SERVICE_NAME="tradeboard$i"
 
     # Ports
     FLASK_PORT=$((FLASK_PORT_BASE + i - 1))
@@ -286,19 +286,11 @@ for ((i=1; i<=INSTANCES; i++)); do
 
     # Clone or update repository
     if [ ! -d "$INSTANCE_DIR" ]; then
-        log_message "Cloning repository to $INSTANCE_DIR" "$BLUE"
-        # --filter=blob:none makes this a partial clone: the server sends every
-        # commit and tree but no file contents, so it pulls ~20 MB instead of
-        # ~280 MB. Blobs outside the current checkout are fetched on demand, so
-        # the full history stays usable -- all 4,824 commits, 62 tags, every
-        # branch -- which keeps `git reset --hard HEAD~n`, tag checkouts and
-        # branch switching working. Nearly all of that 280 MB is superseded
-        # frontend/dist bundles that a server never reads. A host without filter
-        # support just full-clones, so this is never worse than no flag at all.
-        sudo git clone --filter=blob:none "$REPO_URL" "$INSTANCE_DIR"
+        log_message "📥 Cloning repository to $INSTANCE_DIR" "$BLUE"
+        sudo git clone "$REPO_URL" "$INSTANCE_DIR"
         check_status "Failed to clone repository"
     else
-        log_message "Directory exists, skipping clone" "$YELLOW"
+        log_message "⚠️ Directory exists, skipping clone" "$YELLOW"
     fi
 
     # Create virtual environment
@@ -333,7 +325,7 @@ for ((i=1; i<=INSTANCES; i++)); do
     API_KEY_PEPPER=$(generate_hex)
 
     # Database paths (unique per instance for complete isolation)
-    DB_PATH="sqlite:///db/openalgo${i}.db"
+    DB_PATH="sqlite:///db/tradeboard${i}.db"
     LATENCY_DB="sqlite:///db/latency${i}.db"
     LOGS_DB="sqlite:///db/logs${i}.db"
     HEALTH_DB="sqlite:///db/health${i}.db"
@@ -373,8 +365,8 @@ for ((i=1; i<=INSTANCES; i++)); do
     sudo sed -i "s|YOUR_BROKER_API_SECRET|$API_SECRET|g" "$ENV_FILE"
 
     # 7. Update security keys
-    sudo sed -i "s|OPENALGO_PLACEHOLDER_APP_KEY_REGENERATE_BEFORE_USE|$APP_KEY|g" "$ENV_FILE"
-    sudo sed -i "s|OPENALGO_PLACEHOLDER_API_KEY_PEPPER_REGENERATE_BEFORE_USE|$API_KEY_PEPPER|g" "$ENV_FILE"
+    sudo sed -i "s|TRADEBOARD_PLACEHOLDER_APP_KEY_REGENERATE_BEFORE_USE|$APP_KEY|g" "$ENV_FILE"
+    sudo sed -i "s|TRADEBOARD_PLACEHOLDER_API_KEY_PEPPER_REGENERATE_BEFORE_USE|$API_KEY_PEPPER|g" "$ENV_FILE"
 
     # Each instance runs gunicorn behind nginx (Unix socket bind). Trust the
     # proxy's X-Forwarded-For / X-Real-IP for IP-based features.
@@ -569,12 +561,8 @@ server {
         proxy_buffers 4 256k;
         proxy_busy_buffers_size 256k;
 
-        # Plain HTTP only: /ws, /ws/ and /socket.io/ have their own blocks.
-        # Forcing "Connection: upgrade" here sent every ordinary request
-        # upstream with a bogus upgrade header and an empty Upgrade:, which
-        # breaks HTTP/1.1 keep-alive to gunicorn and shows up as intermittent
-        # truncated asset responses and 5xx (GitHub issue #1807).
-        proxy_set_header Connection "";
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -591,7 +579,7 @@ EOL
     log_message "Creating systemd service..." "$BLUE"
     sudo tee /etc/systemd/system/$SERVICE_NAME.service > /dev/null << EOL
 [Unit]
-Description=OpenAlgo Instance $i ($DOMAIN - $BROKER)
+Description=Tradeboard Instance $i ($DOMAIN - $BROKER)
 After=network.target
 
 [Service]
@@ -608,7 +596,7 @@ Environment="NUMBA_CACHE_DIR=$INSTANCE_DIR/tmp/numba_cache"
 Environment="LLVMLITE_TMPDIR=$INSTANCE_DIR/tmp"
 Environment="MPLCONFIGDIR=$INSTANCE_DIR/tmp/matplotlib"
 # Limit OpenBLAS/NumPy threads to prevent RLIMIT_NPROC exhaustion
-# See: https://github.com/marketcalls/openalgo/issues/822
+# See: https://github.com/rockstarrajeev/tradeboard/issues/822
 Environment="OPENBLAS_NUM_THREADS=2"
 Environment="OMP_NUM_THREADS=2"
 Environment="MKL_NUM_THREADS=2"
@@ -636,7 +624,7 @@ EOL
     sudo systemctl start $SERVICE_NAME
     check_status "Failed to start service"
 
-    log_message "Instance $i installed successfully!" "$GREEN"
+    log_message "✅ Instance $i installed successfully!" "$GREEN"
     log_message "   URL: https://$DOMAIN" "$BLUE"
     log_message "   Flask:$FLASK_PORT | WS:$WS_PORT | ZMQ:$ZMQ_PORT" "$BLUE"
     log_message "   Service: $SERVICE_NAME" "$BLUE"
@@ -656,14 +644,14 @@ log_message "\n╔════════════════════�
 log_message "║          MULTI-INSTANCE INSTALLATION COMPLETE          ║" "$GREEN"
 log_message "╚════════════════════════════════════════════════════════╝" "$GREEN"
 
-log_message "\n INSTANCE SUMMARY:" "$YELLOW"
+log_message "\n📋 INSTANCE SUMMARY:" "$YELLOW"
 for ((i=1; i<=INSTANCES; i++)); do
     idx=$((i-1))
     log_message "\nInstance $i:" "$BLUE"
     log_message "  Domain: https://${DOMAINS[$idx]}" "$GREEN"
     log_message "  Broker: ${BROKERS[$idx]}" "$BLUE"
-    log_message "  Service: openalgo$i" "$BLUE"
-    log_message "  Directory: $BASE_DIR/openalgo$i" "$BLUE"
+    log_message "  Service: tradeboard$i" "$BLUE"
+    log_message "  Directory: $BASE_DIR/tradeboard$i" "$BLUE"
     if [ "${MCP_ENABLED_LIST[$idx]}" = "true" ]; then
         log_message "  Remote MCP: Enabled at https://${DOMAINS[$idx]}/mcp" "$BLUE"
     else
@@ -671,11 +659,11 @@ for ((i=1; i<=INSTANCES; i++)); do
     fi
 done
 
-log_message "\n USEFUL COMMANDS:" "$YELLOW"
-log_message "View all services: systemctl list-units 'openalgo*'" "$BLUE"
-log_message "Restart instance: sudo systemctl restart openalgo<N>" "$BLUE"
-log_message "View logs: sudo journalctl -u openalgo<N> -f" "$BLUE"
-log_message "Check status: sudo systemctl status openalgo<N>" "$BLUE"
+log_message "\n📚 USEFUL COMMANDS:" "$YELLOW"
+log_message "View all services: systemctl list-units 'tradeboard*'" "$BLUE"
+log_message "Restart instance: sudo systemctl restart tradeboard<N>" "$BLUE"
+log_message "View logs: sudo journalctl -u tradeboard<N> -f" "$BLUE"
+log_message "Check status: sudo systemctl status tradeboard<N>" "$BLUE"
 
-log_message "\n Installation log saved to: $LOG_FILE" "$BLUE"
-log_message "\n All instances are ready to use!" "$GREEN"
+log_message "\n📝 Installation log saved to: $LOG_FILE" "$BLUE"
+log_message "\n🎉 All instances are ready to use!" "$GREEN"

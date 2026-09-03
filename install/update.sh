@@ -7,20 +7,22 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# OpenAlgo Update Banner
+# Tradeboard Update Banner
 echo -e "${BLUE}"
-echo "  ██████╗ ██████╗ ███████╗███╗   ██╗ █████╗ ██╗      ██████╗  ██████╗ "
-echo " ██╔═══██╗██╔══██╗██╔════╝████╗  ██║██╔══██╗██║     ██╔════╝ ██╔═══██╗"
-echo " ██║   ██║██████╔╝███████╗██╔██╗ ██║███████║██║     ██║  ███╗██║   ██║"
-echo " ██║   ██║██╔═══╝ ██╔══╝  ██║╚██╗██║██╔══██║██║     ██║   ██║██║   ██║"
-echo " ╚██████╔╝██╗     ███████╗██║ ╚████║██║  ██║███████╗╚██████╔╝╚██████╔╝"
-echo "  ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝ ╚═════╝  ╚═════╝ "
-echo "                          UPDATE  SCRIPT                                "
+echo " â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•—â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•—  â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•— â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•— â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•—â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•—  â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•—  â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•— â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•— â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•— "
+echo " â•šâ•â•â–ˆâ–ˆâ•”â•â•â•â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—â–ˆâ–ˆâ•”â•â•â•â•â•â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—â–ˆâ–ˆâ•”â•â•â•â–ˆâ–ˆâ•—â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—"
+echo "    â–ˆâ–ˆâ•‘   â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•”â•â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•‘â–ˆâ–ˆâ•‘  â–ˆâ–ˆâ•‘â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•—  â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•”â•â–ˆâ–ˆâ•‘   â–ˆâ–ˆâ•‘â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•‘â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•”â•â–ˆâ–ˆâ•‘  â–ˆâ–ˆâ•‘"
+echo "    â–ˆâ–ˆâ•‘   â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•‘â–ˆâ–ˆâ•‘  â–ˆâ–ˆâ•‘â–ˆâ–ˆâ•”â•â•â•  â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—â–ˆâ–ˆâ•‘   â–ˆâ–ˆâ•‘â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•‘â–ˆâ–ˆâ•”â•â•â–ˆâ–ˆâ•—â–ˆâ–ˆâ•‘  â–ˆâ–ˆâ•‘"
+echo "    â–ˆâ–ˆâ•‘   â–ˆâ–ˆâ•‘  â–ˆâ–ˆâ•‘â–ˆâ–ˆâ•‘  â–ˆâ–ˆâ•‘â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•”â•â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•—â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•”â•â•šâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•”â•â–ˆâ–ˆâ•‘  â–ˆâ–ˆâ•‘â–ˆâ–ˆâ•‘  â–ˆâ–ˆâ•‘â–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ–ˆâ•”â•"
+echo "    â•šâ•â•   â•šâ•â•  â•šâ•â•â•šâ•â•  â•šâ•â•â•šâ•â•â•â•â•â• â•šâ•â•â•â•â•â•â•â•šâ•â•â•â•â•â•  â•šâ•â•â•â•â•â• â•šâ•â•  â•šâ•â•â•šâ•â•  â•šâ•â•â•šâ•â•â•â•â•â• "
+echo "                                 UPDATE  SCRIPT                                    "
 echo -e "${NC}"
 
-# OpenAlgo Update Script
-# Updates an existing OpenAlgo installation to the latest version using the UV method.
+# Tradeboard Update Script
+# Updates an existing Tradeboard installation to the latest version using the UV method.
 # Supports both server deployments (installed via install.sh) and local development setups.
+REPO_URL="https://github.com/rockstarrajeev/tradeboard.git"
+DEFAULT_BRANCH="main"
 
 # Create logs directory if it doesn't exist
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -47,7 +49,7 @@ check_status() {
 }
 
 # Start logging
-log_message "Starting OpenAlgo update log at: $LOG_FILE" "$BLUE"
+log_message "Starting Tradeboard update log at: $LOG_FILE" "$BLUE"
 log_message "----------------------------------------" "$BLUE"
 
 # Detect OS type
@@ -111,14 +113,14 @@ detect_uv() {
 # Find server deployments installed via install.sh
 #
 # Two layouts are supported:
-#   1. Simple (current install.sh)   /var/python/openalgo, service "openalgo"
-#   2. Legacy multi-deploy           /var/python/openalgo-flask/<deploy>/openalgo,
-#                                    service "openalgo-<deploy>" (still produced
+#   1. Simple (current install.sh)   /var/python/tradeboard, service "tradeboard"
+#   2. Legacy multi-deploy           /var/python/tradeboard-flask/<deploy>/tradeboard,
+#                                    service "tradeboard-<deploy>" (still produced
 #                                    by install/install-multi.sh)
 # We try the simple layout first because it's unambiguous; only fall back
 # to scanning the legacy parent dir when the simple path is absent.
-SIMPLE_PATH="/var/python/openalgo"
-DEPLOY_BASE="/var/python/openalgo-flask"
+SIMPLE_PATH="/var/python/tradeboard"
+DEPLOY_BASE="/var/python/tradeboard-flask"
 SERVER_MODE=false
 STASHED=false
 
@@ -126,7 +128,7 @@ find_deployments() {
     local deployments=()
     if [ -d "$DEPLOY_BASE" ]; then
         for dir in "$DEPLOY_BASE"/*/; do
-            if [ -d "${dir}openalgo/.git" ]; then
+            if [ -d "${dir}tradeboard/.git" ]; then
                 deploy_name=$(basename "$dir")
                 deployments+=("$deploy_name")
             fi
@@ -135,15 +137,15 @@ find_deployments() {
     echo "${deployments[@]}"
 }
 
-if [ -d "$SIMPLE_PATH/.git" ] && [ -f "$SIMPLE_PATH/.env" ]; then
+if [ -d "$SIMPLE_PATH/.git" ]; then
     SERVER_MODE=true
-    SELECTED_DEPLOY="openalgo"
+    SELECTED_DEPLOY="tradeboard"
     BASE_PATH="$SIMPLE_PATH"
-    OPENALGO_PATH="$SIMPLE_PATH"
+    TRADEBOARD_PATH="$SIMPLE_PATH"
     VENV_PATH="$SIMPLE_PATH/.venv"
-    SERVICE_NAME="openalgo"
+    SERVICE_NAME="tradeboard"
 
-    log_message "Found OpenAlgo install at $SIMPLE_PATH" "$GREEN"
+    log_message "Found Tradeboard install at $SIMPLE_PATH" "$GREEN"
     log_message "Service: $SERVICE_NAME" "$BLUE"
 else
     DEPLOYMENTS=($(find_deployments))
@@ -175,42 +177,69 @@ if [ "$SERVER_MODE" = false ] && [ ${#DEPLOYMENTS[@]} -gt 0 ]; then
 
     # Derive paths from deployment name (legacy multi-deploy layout)
     BASE_PATH="$DEPLOY_BASE/$SELECTED_DEPLOY"
-    OPENALGO_PATH="$BASE_PATH/openalgo"
+    TRADEBOARD_PATH="$BASE_PATH/tradeboard"
     VENV_PATH="$BASE_PATH/venv"
-    SERVICE_NAME="openalgo-$SELECTED_DEPLOY"
+    SERVICE_NAME="tradeboard-$SELECTED_DEPLOY"
 
     log_message "\nUpdating deployment: $SELECTED_DEPLOY" "$BLUE"
-    log_message "Path: $OPENALGO_PATH" "$BLUE"
+    log_message "Path: $TRADEBOARD_PATH" "$BLUE"
     log_message "Service: $SERVICE_NAME" "$BLUE"
 fi
 
 if [ "$SERVER_MODE" = false ]; then
-    # Check if we're in or near an openalgo git repo (local development)
+    # Check if we're in or near a tradeboard git repo (local development)
     if [ -d ".git" ] && [ -f "app.py" ]; then
-        OPENALGO_PATH="$(pwd)"
+        TRADEBOARD_PATH="$(pwd)"
     elif [ -d "$SCRIPT_DIR/../.git" ] && [ -f "$SCRIPT_DIR/../app.py" ]; then
-        OPENALGO_PATH="$(cd "$SCRIPT_DIR/.." && pwd)"
+        TRADEBOARD_PATH="$(cd "$SCRIPT_DIR/.." && pwd)"
     else
-        log_message "Error: No OpenAlgo deployment found." "$RED"
+        log_message "Error: No Tradeboard deployment found." "$RED"
         log_message "For server deployments, ensure install.sh was run first." "$YELLOW"
-        log_message "For local development, run this script from the openalgo directory." "$YELLOW"
+        log_message "For local development, run this script from the tradeboard directory." "$YELLOW"
         exit 1
     fi
 
-    log_message "Detected local development setup at: $OPENALGO_PATH" "$GREEN"
+    log_message "Detected local development setup at: $TRADEBOARD_PATH" "$GREEN"
 fi
+
+# Configure safe.directory to prevent dubious ownership fatal errors
+configure_safe_directory() {
+    local path="$1"
+    if [ "$SERVER_MODE" = true ]; then
+        # Configure system-wide (covers all users, including root and web server user)
+        if ! sudo git config --system --get-all safe.directory 2>/dev/null | grep -qFx "$path"; then
+            log_message "Adding $path to system-wide git safe directories..." "$YELLOW"
+            sudo git config --system --add safe.directory "$path"
+        fi
+        # Fallback to user-specific configurations
+        if ! sudo git config --global --get-all safe.directory 2>/dev/null | grep -qFx "$path"; then
+            log_message "Adding $path to sudo global git safe directories..." "$YELLOW"
+            sudo git config --global --add safe.directory "$path"
+        fi
+        if ! sudo -u "$WEB_USER" git config --global --get-all safe.directory 2>/dev/null | grep -qFx "$path"; then
+            log_message "Adding $path to $WEB_USER global git safe directories..." "$YELLOW"
+            sudo -u "$WEB_USER" git config --global --add safe.directory "$path"
+        fi
+    else
+        if ! git config --global --get-all safe.directory 2>/dev/null | grep -qFx "$path"; then
+            log_message "Adding $path to global git safe directories..." "$YELLOW"
+            git config --global --add safe.directory "$path"
+        fi
+    fi
+}
+configure_safe_directory "$TRADEBOARD_PATH"
 
 # Detect uv
 detect_uv
 
 # Get current version info before update
-cd "$OPENALGO_PATH"
+cd "$TRADEBOARD_PATH"
 if [ "$SERVER_MODE" = true ]; then
-    CURRENT_COMMIT=$(sudo git -C "$OPENALGO_PATH" rev-parse --short HEAD 2>/dev/null || echo "unknown")
-    CURRENT_BRANCH=$(sudo git -C "$OPENALGO_PATH" branch --show-current 2>/dev/null || echo "main")
+    CURRENT_COMMIT=$(sudo git -C "$TRADEBOARD_PATH" rev-parse --short HEAD 2>/dev/null || echo "unknown")
+    CURRENT_BRANCH=$(sudo git -C "$TRADEBOARD_PATH" branch --show-current 2>/dev/null || echo "$DEFAULT_BRANCH")
 else
     CURRENT_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-    CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "main")
+    CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "$DEFAULT_BRANCH")
 fi
 log_message "\nCurrent version: $CURRENT_COMMIT (branch: $CURRENT_BRANCH)" "$BLUE"
 
@@ -234,10 +263,10 @@ fi
 # Step 2: Backup databases
 # ============================================
 log_message "\n[Step 2/7] Backing up databases..." "$BLUE"
-BACKUP_DIR="$OPENALGO_PATH/db/backup_${TIMESTAMP}"
+BACKUP_DIR="$TRADEBOARD_PATH/db/backup_${TIMESTAMP}"
 BACKUP_COUNT=0
 
-if [ -d "$OPENALGO_PATH/db" ]; then
+if [ -d "$TRADEBOARD_PATH/db" ]; then
     if [ "$SERVER_MODE" = true ]; then
         sudo mkdir -p "$BACKUP_DIR"
     else
@@ -245,12 +274,12 @@ if [ -d "$OPENALGO_PATH/db" ]; then
     fi
 
     # Backup SQLite databases
-    for db_file in openalgo.db logs.db latency.db sandbox.db; do
-        if [ -f "$OPENALGO_PATH/db/$db_file" ]; then
+    for db_file in tradeboard.db logs.db latency.db sandbox.db; do
+        if [ -f "$TRADEBOARD_PATH/db/$db_file" ]; then
             if [ "$SERVER_MODE" = true ]; then
-                sudo cp "$OPENALGO_PATH/db/$db_file" "$BACKUP_DIR/$db_file"
+                sudo cp "$TRADEBOARD_PATH/db/$db_file" "$BACKUP_DIR/$db_file"
             else
-                cp "$OPENALGO_PATH/db/$db_file" "$BACKUP_DIR/$db_file"
+                cp "$TRADEBOARD_PATH/db/$db_file" "$BACKUP_DIR/$db_file"
             fi
             log_message "  Backed up: $db_file" "$GREEN"
             BACKUP_COUNT=$((BACKUP_COUNT + 1))
@@ -258,11 +287,11 @@ if [ -d "$OPENALGO_PATH/db" ]; then
     done
 
     # Backup DuckDB database
-    if [ -f "$OPENALGO_PATH/db/historify.duckdb" ]; then
+    if [ -f "$TRADEBOARD_PATH/db/historify.duckdb" ]; then
         if [ "$SERVER_MODE" = true ]; then
-            sudo cp "$OPENALGO_PATH/db/historify.duckdb" "$BACKUP_DIR/historify.duckdb"
+            sudo cp "$TRADEBOARD_PATH/db/historify.duckdb" "$BACKUP_DIR/historify.duckdb"
         else
-            cp "$OPENALGO_PATH/db/historify.duckdb" "$BACKUP_DIR/historify.duckdb"
+            cp "$TRADEBOARD_PATH/db/historify.duckdb" "$BACKUP_DIR/historify.duckdb"
         fi
         log_message "  Backed up: historify.duckdb" "$GREEN"
         BACKUP_COUNT=$((BACKUP_COUNT + 1))
@@ -286,11 +315,11 @@ fi
 # Step 3: Pull latest code
 # ============================================
 log_message "\n[Step 3/7] Pulling latest code from repository..." "$BLUE"
-cd "$OPENALGO_PATH"
+cd "$TRADEBOARD_PATH"
 
 # Check for local modifications (excluding untracked files)
 if [ "$SERVER_MODE" = true ]; then
-    LOCAL_CHANGES=$(sudo git -C "$OPENALGO_PATH" status --porcelain 2>/dev/null | grep -v "^??" | head -20)
+    LOCAL_CHANGES=$(sudo git -C "$TRADEBOARD_PATH" status --porcelain 2>/dev/null | grep -v "^??" | head -20)
 else
     LOCAL_CHANGES=$(git status --porcelain 2>/dev/null | grep -v "^??" | head -20)
 fi
@@ -300,24 +329,56 @@ if [ -n "$LOCAL_CHANGES" ]; then
     echo "$LOCAL_CHANGES" | tee -a "$LOG_FILE"
     log_message "\nStashing local changes..." "$YELLOW"
     if [ "$SERVER_MODE" = true ]; then
-        sudo git -C "$OPENALGO_PATH" stash push -m "auto-stash before update $TIMESTAMP"
+        sudo git -C "$TRADEBOARD_PATH" stash push -m "auto-stash before update $TIMESTAMP"
     else
         git stash push -m "auto-stash before update $TIMESTAMP"
     fi
     STASHED=true
 fi
 
-# Pull latest code
+# Ensure git remote is correct for existing app updates
 if [ "$SERVER_MODE" = true ]; then
-    sudo git -C "$OPENALGO_PATH" pull origin "$CURRENT_BRANCH"
+    CURRENT_REMOTE=$(sudo git -C "$TRADEBOARD_PATH" remote get-url origin 2>/dev/null || true)
 else
-    git pull origin "$CURRENT_BRANCH"
+    CURRENT_REMOTE=$(git -C "$TRADEBOARD_PATH" remote get-url origin 2>/dev/null || true)
 fi
-check_status "Failed to pull latest code. Please resolve any conflicts and try again"
+
+if [ -z "$CURRENT_REMOTE" ]; then
+    log_message "No git origin found. Adding origin: $REPO_URL" "$YELLOW"
+    if [ "$SERVER_MODE" = true ]; then
+        sudo git -C "$TRADEBOARD_PATH" remote add origin "$REPO_URL"
+    else
+        git -C "$TRADEBOARD_PATH" remote add origin "$REPO_URL"
+    fi
+    check_status "Failed to add git origin"
+elif [ "$CURRENT_REMOTE" != "$REPO_URL" ]; then
+    log_message "Updating git origin from $CURRENT_REMOTE to $REPO_URL" "$YELLOW"
+    if [ "$SERVER_MODE" = true ]; then
+        sudo git -C "$TRADEBOARD_PATH" remote set-url origin "$REPO_URL"
+    else
+        git -C "$TRADEBOARD_PATH" remote set-url origin "$REPO_URL"
+    fi
+    check_status "Failed to update git origin"
+fi
+
+if [ -z "$CURRENT_BRANCH" ] || [ "$CURRENT_BRANCH" = "HEAD" ]; then
+    CURRENT_BRANCH="$DEFAULT_BRANCH"
+fi
+
+if [ "$SERVER_MODE" = true ]; then
+    sudo git -C "$TRADEBOARD_PATH" fetch origin "$CURRENT_BRANCH"
+    check_status "Failed to fetch latest code from origin/$CURRENT_BRANCH"
+    sudo git -C "$TRADEBOARD_PATH" reset --hard "origin/$CURRENT_BRANCH"
+else
+    git -C "$TRADEBOARD_PATH" fetch origin "$CURRENT_BRANCH"
+    check_status "Failed to fetch latest code from origin/$CURRENT_BRANCH"
+    git -C "$TRADEBOARD_PATH" reset --hard "origin/$CURRENT_BRANCH"
+fi
+check_status "Failed to update working tree to origin/$CURRENT_BRANCH"
 
 # Get new commit hash
 if [ "$SERVER_MODE" = true ]; then
-    NEW_COMMIT=$(sudo git -C "$OPENALGO_PATH" rev-parse --short HEAD 2>/dev/null || echo "unknown")
+    NEW_COMMIT=$(sudo git -C "$TRADEBOARD_PATH" rev-parse --short HEAD 2>/dev/null || echo "unknown")
 else
     NEW_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 fi
@@ -329,7 +390,7 @@ else
 fi
 
 if [ "$STASHED" = true ]; then
-    log_message "Note: Local changes were stashed. Use 'git stash pop' to restore if needed." "$YELLOW"
+    log_message "Note: Local changes were stashed. Use 'git stash list' and 'git stash pop' to restore if needed." "$YELLOW"
 fi
 
 # ============================================
@@ -337,10 +398,10 @@ fi
 # ============================================
 log_message "\n[Step 4/7] Checking environment configuration..." "$BLUE"
 
-if [ -f "$OPENALGO_PATH/.env" ] && [ -f "$OPENALGO_PATH/.sample.env" ]; then
+if [ -f "$TRADEBOARD_PATH/.env" ] && [ -f "$TRADEBOARD_PATH/.sample.env" ]; then
     # Extract variable names from both files and compare
-    SAMPLE_VARS=$(grep -oP "^[A-Z_][A-Z_0-9]+ *=" "$OPENALGO_PATH/.sample.env" 2>/dev/null | sed 's/ *=$//' | sort -u)
-    CURRENT_VARS=$(grep -oP "^[A-Z_][A-Z_0-9]+ *=" "$OPENALGO_PATH/.env" 2>/dev/null | sed 's/ *=$//' | sort -u)
+    SAMPLE_VARS=$(grep -oP "^[A-Z_][A-Z_0-9]+ *=" "$TRADEBOARD_PATH/.sample.env" 2>/dev/null | sed 's/ *=$//' | sort -u)
+    CURRENT_VARS=$(grep -oP "^[A-Z_][A-Z_0-9]+ *=" "$TRADEBOARD_PATH/.env" 2>/dev/null | sed 's/ *=$//' | sort -u)
 
     NEW_VARS=$(comm -23 <(echo "$SAMPLE_VARS") <(echo "$CURRENT_VARS") 2>/dev/null)
 
@@ -353,80 +414,81 @@ if [ -f "$OPENALGO_PATH/.env" ] && [ -f "$OPENALGO_PATH/.sample.env" ]; then
     else
         log_message "Environment configuration is up to date" "$GREEN"
     fi
-elif [ ! -f "$OPENALGO_PATH/.env" ]; then
+elif [ ! -f "$TRADEBOARD_PATH/.env" ]; then
     log_message "Warning: No .env file found. Creating from .sample.env..." "$YELLOW"
     if [ "$SERVER_MODE" = true ]; then
-        sudo cp "$OPENALGO_PATH/.sample.env" "$OPENALGO_PATH/.env"
+        sudo cp "$TRADEBOARD_PATH/.sample.env" "$TRADEBOARD_PATH/.env"
     else
-        cp "$OPENALGO_PATH/.sample.env" "$OPENALGO_PATH/.env"
+        cp "$TRADEBOARD_PATH/.sample.env" "$TRADEBOARD_PATH/.env"
     fi
 
     # Generate fresh APP_KEY and API_KEY_PEPPER and substitute the placeholders.
-    # Without this, the new .env would carry the public sample placeholder values
-    # — the app's startup check would then auto-rotate them, which works, but
-    # generating here keeps update.sh symmetric with install.sh and avoids the
-    # noisy "first-run setup" message after what the user thinks is just an update.
     NEW_APP_KEY=$($PYTHON_CMD -c "import secrets; print(secrets.token_hex(32))")
     NEW_PEPPER=$($PYTHON_CMD -c "import secrets; print(secrets.token_hex(32))")
     if [ "$SERVER_MODE" = true ]; then
-        sudo sed -i "s|OPENALGO_PLACEHOLDER_APP_KEY_REGENERATE_BEFORE_USE|$NEW_APP_KEY|g" "$OPENALGO_PATH/.env"
-        sudo sed -i "s|OPENALGO_PLACEHOLDER_API_KEY_PEPPER_REGENERATE_BEFORE_USE|$NEW_PEPPER|g" "$OPENALGO_PATH/.env"
-        sudo chmod 600 "$OPENALGO_PATH/.env"
+        sudo sed -i "s|TRADEBOARD_PLACEHOLDER_APP_KEY_REGENERATE_BEFORE_USE|$NEW_APP_KEY|g" "$TRADEBOARD_PATH/.env"
+        sudo sed -i "s|TRADEBOARD_PLACEHOLDER_API_KEY_PEPPER_REGENERATE_BEFORE_USE|$NEW_PEPPER|g" "$TRADEBOARD_PATH/.env"
+        sudo chmod 600 "$TRADEBOARD_PATH/.env"
     else
-        sed -i.bak "s|OPENALGO_PLACEHOLDER_APP_KEY_REGENERATE_BEFORE_USE|$NEW_APP_KEY|g" "$OPENALGO_PATH/.env" && rm -f "$OPENALGO_PATH/.env.bak"
-        sed -i.bak "s|OPENALGO_PLACEHOLDER_API_KEY_PEPPER_REGENERATE_BEFORE_USE|$NEW_PEPPER|g" "$OPENALGO_PATH/.env" && rm -f "$OPENALGO_PATH/.env.bak"
-        chmod 600 "$OPENALGO_PATH/.env"
+        sed -i.bak "s|TRADEBOARD_PLACEHOLDER_APP_KEY_REGENERATE_BEFORE_USE|$NEW_APP_KEY|g" "$TRADEBOARD_PATH/.env" && rm -f "$TRADEBOARD_PATH/.env.bak"
+        sed -i.bak "s|TRADEBOARD_PLACEHOLDER_API_KEY_PEPPER_REGENERATE_BEFORE_USE|$NEW_PEPPER|g" "$TRADEBOARD_PATH/.env" && rm -f "$TRADEBOARD_PATH/.env.bak"
+        chmod 600 "$TRADEBOARD_PATH/.env"
     fi
-    log_message "Generated fresh APP_KEY and API_KEY_PEPPER in $OPENALGO_PATH/.env" "$GREEN"
-    log_message "Please edit $OPENALGO_PATH/.env with your broker credentials and settings." "$RED"
+    log_message "Generated fresh APP_KEY and API_KEY_PEPPER in $TRADEBOARD_PATH/.env" "$GREEN"
+    log_message "Please edit $TRADEBOARD_PATH/.env with your broker credentials and settings." "$RED"
 fi
 
 # ============================================
 # Step 4b: Existing-install hardening
 # ============================================
-# Two one-time fixups for deployments that predate the v2.0.0.6 security
-# release: they may carry world-readable .env perms (the old install.sh did
-# `chmod -R 755`) and they don't have TRUST_PROXY_HEADERS set so the
-# default-secure value of FALSE would silently disable IP-based features
-# behind their nginx proxy.
-if [ -f "$OPENALGO_PATH/.env" ]; then
-    # Tighten .env to mode 0o600 if it isn't already (server mode only —
-    # the file is owned by the web user and gunicorn runs as that user, so
-    # owner-only read is correct).
+if [ -f "$TRADEBOARD_PATH/.env" ]; then
     if [ "$SERVER_MODE" = true ]; then
-        ENV_PERMS=$(stat -c '%a' "$OPENALGO_PATH/.env" 2>/dev/null || stat -f '%Lp' "$OPENALGO_PATH/.env" 2>/dev/null)
+        ENV_PERMS=$(stat -c '%a' "$TRADEBOARD_PATH/.env" 2>/dev/null || stat -f '%Lp' "$TRADEBOARD_PATH/.env" 2>/dev/null)
         if [ "$ENV_PERMS" != "600" ]; then
-            sudo chmod 600 "$OPENALGO_PATH/.env"
+            sudo chmod 600 "$TRADEBOARD_PATH/.env"
             log_message "Tightened .env perms: $ENV_PERMS -> 600 (owner-only)" "$GREEN"
         fi
     fi
 
-    # Add TRUST_PROXY_HEADERS to .env if missing. Auto-detect whether nginx
-    # is configured for this deployment so the default matches reality.
-    if ! grep -q "^TRUST_PROXY_HEADERS" "$OPENALGO_PATH/.env"; then
-        # Detect nginx in front of openalgo: any sites-enabled/ or conf.d/
-        # config that mentions a unix-socket proxy_pass or the deployment name.
+    if ! grep -q "^TRUST_PROXY_HEADERS" "$TRADEBOARD_PATH/.env"; then
         BEHIND_NGINX="false"
         if [ -d /etc/nginx/sites-enabled ]; then
-            if find /etc/nginx/sites-enabled -type f -o -type l 2>/dev/null | xargs grep -l "unix:.*\.sock\|openalgo\|gunicorn" 2>/dev/null | head -1 | grep -q .; then
+            if find /etc/nginx/sites-enabled -type f -o -type l 2>/dev/null | xargs grep -l "unix:.*\.sock\|tradeboard\|gunicorn" 2>/dev/null | head -1 | grep -q .; then
                 BEHIND_NGINX="true"
             fi
         fi
         if [ "$BEHIND_NGINX" = "false" ] && [ -d /etc/nginx/conf.d ]; then
-            if find /etc/nginx/conf.d -type f -name "*.conf" 2>/dev/null | xargs grep -l "unix:.*\.sock\|openalgo\|gunicorn" 2>/dev/null | head -1 | grep -q .; then
+            if find /etc/nginx/conf.d -type f -name "*.conf" 2>/dev/null | xargs grep -l "unix:.*\.sock\|tradeboard\|gunicorn" 2>/dev/null | head -1 | grep -q .; then
                 BEHIND_NGINX="true"
             fi
         fi
         if [ "$BEHIND_NGINX" = "true" ]; then
-            echo "" | sudo tee -a "$OPENALGO_PATH/.env" >/dev/null
-            echo "# Auto-added by update.sh — nginx reverse proxy detected." | sudo tee -a "$OPENALGO_PATH/.env" >/dev/null
-            echo "TRUST_PROXY_HEADERS = 'TRUE'" | sudo tee -a "$OPENALGO_PATH/.env" >/dev/null
+            if [ "$SERVER_MODE" = true ]; then
+                echo "" | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
+                echo "# Auto-added by update.sh â€” nginx reverse proxy detected." | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
+                echo "TRUST_PROXY_HEADERS = 'TRUE'" | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
+            else
+                {
+                    echo ""
+                    echo "# Auto-added by update.sh â€” nginx reverse proxy detected."
+                    echo "TRUST_PROXY_HEADERS = 'TRUE'"
+                } >> "$TRADEBOARD_PATH/.env"
+            fi
             log_message "Added TRUST_PROXY_HEADERS=TRUE to .env (nginx reverse proxy detected)" "$GREEN"
         else
-            echo "" | sudo tee -a "$OPENALGO_PATH/.env" >/dev/null
-            echo "# Auto-added by update.sh — set to TRUE only if behind a reverse proxy" | sudo tee -a "$OPENALGO_PATH/.env" >/dev/null
-            echo "# that strips client-supplied X-Forwarded-For / CF-Connecting-IP / X-Real-IP." | sudo tee -a "$OPENALGO_PATH/.env" >/dev/null
-            echo "TRUST_PROXY_HEADERS = 'FALSE'" | sudo tee -a "$OPENALGO_PATH/.env" >/dev/null
+            if [ "$SERVER_MODE" = true ]; then
+                echo "" | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
+                echo "# Auto-added by update.sh â€” set to TRUE only if behind a reverse proxy" | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
+                echo "# that strips client-supplied X-Forwarded-For / CF-Connecting-IP / X-Real-IP." | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
+                echo "TRUST_PROXY_HEADERS = 'FALSE'" | sudo tee -a "$TRADEBOARD_PATH/.env" >/dev/null
+            else
+                {
+                    echo ""
+                    echo "# Auto-added by update.sh â€” set to TRUE only if behind a reverse proxy"
+                    echo "# that strips client-supplied X-Forwarded-For / CF-Connecting-IP / X-Real-IP."
+                    echo "TRUST_PROXY_HEADERS = 'FALSE'"
+                } >> "$TRADEBOARD_PATH/.env"
+            fi
             log_message "Added TRUST_PROXY_HEADERS=FALSE to .env (no proxy detected)" "$YELLOW"
         fi
     fi
@@ -438,23 +500,29 @@ fi
 log_message "\n[Step 5/7] Updating Python dependencies..." "$BLUE"
 
 if [ "$SERVER_MODE" = true ]; then
-    # Server mode: use uv pip install with the deployment venv
-    sudo $UV_CMD pip install --python "$VENV_PATH/bin/python" -r "$OPENALGO_PATH/requirements-nginx.txt"
+    if [ ! -x "$VENV_PATH/bin/python" ]; then
+        log_message "Virtual environment missing at $VENV_PATH. Recreating..." "$YELLOW"
+        sudo mkdir -p "$VENV_PATH"
+        sudo $UV_CMD venv "$VENV_PATH"
+        check_status "Failed to recreate Python virtual environment"
+    fi
+
+    sudo $UV_CMD pip install --python "$VENV_PATH/bin/python" -r "$TRADEBOARD_PATH/requirements-nginx.txt"
     check_status "Failed to update Python dependencies"
 
-    # Ensure gunicorn and eventlet are installed
     ACTIVATE_CMD="source $VENV_PATH/bin/activate"
     if ! sudo bash -c "$ACTIVATE_CMD && pip freeze | grep -q 'gunicorn=='"; then
         log_message "  Installing gunicorn..." "$YELLOW"
         sudo $UV_CMD pip install --python "$VENV_PATH/bin/python" "gunicorn>=25.0,<26"
+        check_status "Failed to install gunicorn"
     fi
     if ! sudo bash -c "$ACTIVATE_CMD && pip freeze | grep -q 'eventlet=='"; then
         log_message "  Installing eventlet..." "$YELLOW"
         sudo $UV_CMD pip install --python "$VENV_PATH/bin/python" eventlet
+        check_status "Failed to install eventlet"
     fi
 else
-    # Local mode: use uv sync (reads pyproject.toml)
-    cd "$OPENALGO_PATH"
+    cd "$TRADEBOARD_PATH"
     $UV_CMD sync
     check_status "Failed to update Python dependencies"
 fi
@@ -467,30 +535,32 @@ log_message "Dependencies updated successfully" "$GREEN"
 if [ "$SERVER_MODE" = true ]; then
     log_message "\n[Step 6/7] Setting permissions and running database migrations..." "$BLUE"
 
-    # Fix ownership and permissions before running migrations
     sudo chown -R "$WEB_USER:$WEB_GROUP" "$BASE_PATH"
     sudo chmod -R 755 "$BASE_PATH"
 
-    # Ensure required directories exist with correct ownership
-    sudo mkdir -p "$OPENALGO_PATH/db"
-    sudo mkdir -p "$OPENALGO_PATH/tmp/numba_cache"
-    sudo mkdir -p "$OPENALGO_PATH/tmp/matplotlib"
-    sudo mkdir -p "$OPENALGO_PATH/strategies/scripts"
-    sudo mkdir -p "$OPENALGO_PATH/strategies/examples"
-    sudo mkdir -p "$OPENALGO_PATH/log/strategies"
-    sudo mkdir -p "$OPENALGO_PATH/keys"
-    sudo chown -R "$WEB_USER:$WEB_GROUP" "$OPENALGO_PATH"
-    sudo chmod 700 "$OPENALGO_PATH/keys"
+    sudo mkdir -p "$TRADEBOARD_PATH/db"
+    sudo mkdir -p "$TRADEBOARD_PATH/tmp/numba_cache"
+    sudo mkdir -p "$TRADEBOARD_PATH/tmp/matplotlib"
+    sudo mkdir -p "$TRADEBOARD_PATH/strategies/scripts"
+    sudo mkdir -p "$TRADEBOARD_PATH/strategies/examples"
+    sudo mkdir -p "$TRADEBOARD_PATH/log/strategies"
+    sudo mkdir -p "$TRADEBOARD_PATH/keys"
+    sudo chown -R "$WEB_USER:$WEB_GROUP" "$TRADEBOARD_PATH"
+    sudo chmod 700 "$TRADEBOARD_PATH/keys"
+
+    if [ -f "$TRADEBOARD_PATH/.env" ]; then
+        sudo chmod 600 "$TRADEBOARD_PATH/.env"
+    fi
 
     log_message "Permissions set successfully" "$GREEN"
 
-    # Run migrations as the web user (database files are owned by web user)
-    if [ -f "$OPENALGO_PATH/upgrade/migrate_all.py" ]; then
+    if [ -f "$TRADEBOARD_PATH/upgrade/migrate_all.py" ]; then
         log_message "Running database migrations..." "$BLUE"
-        sudo -u "$WEB_USER" bash -c "source $VENV_PATH/bin/activate && cd $OPENALGO_PATH && python upgrade/migrate_all.py" 2>&1 | tee -a "$LOG_FILE"
+        sudo -u "$WEB_USER" bash -c "source $VENV_PATH/bin/activate && cd \"$TRADEBOARD_PATH\" && python upgrade/migrate_all.py" 2>&1 | tee -a "$LOG_FILE"
         if [ ${PIPESTATUS[0]} -ne 0 ]; then
             log_message "Retrying migrations with elevated permissions..." "$YELLOW"
-            sudo bash -c "source $VENV_PATH/bin/activate && cd $OPENALGO_PATH && python upgrade/migrate_all.py" 2>&1 | tee -a "$LOG_FILE"
+            sudo bash -c "source $VENV_PATH/bin/activate && cd \"$TRADEBOARD_PATH\" && python upgrade/migrate_all.py" 2>&1 | tee -a "$LOG_FILE"
+            check_status "Failed to run database migrations"
         fi
         log_message "Database migrations completed" "$GREEN"
     else
@@ -498,9 +568,10 @@ if [ "$SERVER_MODE" = true ]; then
     fi
 else
     log_message "\n[Step 6/7] Running database migrations..." "$BLUE"
-    if [ -f "$OPENALGO_PATH/upgrade/migrate_all.py" ]; then
-        cd "$OPENALGO_PATH"
+    if [ -f "$TRADEBOARD_PATH/upgrade/migrate_all.py" ]; then
+        cd "$TRADEBOARD_PATH"
         $UV_CMD run upgrade/migrate_all.py 2>&1 | tee -a "$LOG_FILE"
+        check_status "Failed to run database migrations"
         log_message "Database migrations completed" "$GREEN"
     else
         log_message "No migration script found (upgrade/migrate_all.py)" "$YELLOW"
@@ -513,137 +584,43 @@ fi
 if [ "$SERVER_MODE" = true ]; then
     log_message "\n[Step 7/7] Restarting services..." "$BLUE"
 
-    # Reload systemd in case service file changed
     sudo systemctl daemon-reload
 
-    # Start the OpenAlgo service
     sudo systemctl start "$SERVICE_NAME"
     check_status "Failed to start $SERVICE_NAME"
 
-    # --------------------------------------------------------------
-    # Warn about the forced WebSocket upgrade header on the main proxy
-    # block. Configs written by earlier installers set
-    #     proxy_set_header Upgrade $http_upgrade;
-    #     proxy_set_header Connection "upgrade";
-    # inside `location / {`, which carries ordinary HTTP, not WebSockets
-    # (/ws, /ws/ and /socket.io/ have their own blocks). Every normal
-    # request then reaches gunicorn claiming an upgrade with an empty
-    # Upgrade:, which breaks HTTP/1.1 keep-alive and shows up as
-    # intermittent truncated asset responses and 5xx (issue #1807).
-    #
-    # This only reports; it does not edit nginx configs. A wrong automated
-    # rewrite of a live reverse proxy takes the whole instance offline, and
-    # admins routinely hand-customise these files, so the edit is left to a
-    # human who can run `nginx -t` and watch the reload.
-    # --------------------------------------------------------------
-    check_nginx_upgrade_header() {
-        local conf found=""
-        for conf in /etc/nginx/sites-available/* /etc/nginx/conf.d/*.conf; do
-            [ -f "$conf" ] || continue
-            grep -q 'unix:.*\.sock\|openalgo\|gunicorn' "$conf" 2>/dev/null || continue
-            # Report only when `location / {` still forces the header.
-            if awk '
-                /location \/ \{/           { inroot = 1 }
-                inroot && /^[[:space:]]*\}/ { inroot = 0 }
-                inroot && /proxy_set_header[[:space:]]+Connection[[:space:]]+"upgrade";/ { hit = 1 }
-                END { exit !hit }
-            ' "$conf" 2>/dev/null; then
-                found="$found $conf"
-            fi
-        done
-
-        [ -n "$found" ] || return 0
-
-        log_message "
-Nginx: the main proxy block forces a WebSocket upgrade header" "$YELLOW"
-        log_message "Affected config(s):$found" "$YELLOW"
-        log_message "Inside the 'location / {' block only, replace these two lines:" "$YELLOW"
-        log_message "    proxy_set_header Upgrade \$http_upgrade;" "$YELLOW"
-        log_message "    proxy_set_header Connection \"upgrade\";" "$YELLOW"
-        log_message "with this single line:" "$YELLOW"
-        log_message "    proxy_set_header Connection \"\";" "$YELLOW"
-        log_message "Leave the /ws, /ws/ and /socket.io/ blocks unchanged, then run:" "$YELLOW"
-        log_message "    sudo nginx -t && sudo systemctl reload nginx" "$YELLOW"
-        log_message "Background: https://github.com/marketcalls/openalgo/issues/1807
-" "$YELLOW"
-    }
-
-    check_nginx_upgrade_header
-
-    # Reload Nginx
-    sudo systemctl reload nginx
-    check_status "Failed to reload Nginx"
+    if systemctl list-unit-files | grep -q '^nginx\.service'; then
+        sudo systemctl reload nginx
+        check_status "Failed to reload Nginx"
+    fi
 
     log_message "Services restarted successfully" "$GREEN"
 
-    # Verify service is running
     sleep 3
     if sudo systemctl is-active --quiet "$SERVICE_NAME"; then
         log_message "Service $SERVICE_NAME is running" "$GREEN"
     else
-        log_message "Warning: Service $SERVICE_NAME may not have started correctly" "$RED"
-        log_message "Check logs with: sudo journalctl -u $SERVICE_NAME -n 50" "$YELLOW"
+        log_message "Warning: Service $SERVICE_NAME may not be running correctly" "$RED"
+        log_message "Check status with: sudo systemctl status $SERVICE_NAME" "$YELLOW"
+        log_message "View logs with: sudo journalctl -u $SERVICE_NAME -n 100 --no-pager" "$YELLOW"
+        exit 1
     fi
 else
-    log_message "\n[Step 7/7] Finalizing update..." "$BLUE"
-
-    # Build frontend if dist/ directory is missing and npm is available
-    if [ ! -d "$OPENALGO_PATH/frontend/dist" ]; then
-        if command -v npm >/dev/null 2>&1; then
-            log_message "Building React frontend (dist/ not found)..." "$BLUE"
-            cd "$OPENALGO_PATH/frontend"
-            npm ci && npm run build
-            if [ $? -eq 0 ]; then
-                log_message "Frontend built successfully" "$GREEN"
-            else
-                log_message "Frontend build failed. Run manually: cd frontend && npm ci && npm run build" "$YELLOW"
-            fi
-        else
-            log_message "Warning: frontend/dist/ not found and Node.js is not installed." "$YELLOW"
-            log_message "Install Node.js 20.20+, 22.22+, or 24.13+ and run: cd frontend && npm ci && npm run build" "$YELLOW"
-        fi
-    fi
-
-    log_message "Update finalized" "$GREEN"
+    log_message "\n[Step 7/7] Local development update complete." "$GREEN"
 fi
 
-# ============================================
-# Summary
-# ============================================
 log_message "\n========================================" "$GREEN"
-log_message "  OpenAlgo Update Summary" "$GREEN"
+log_message "Tradeboard update completed successfully!" "$GREEN"
 log_message "========================================" "$GREEN"
-log_message "Version: $CURRENT_COMMIT -> $NEW_COMMIT" "$BLUE"
-log_message "Branch: $CURRENT_BRANCH" "$BLUE"
-log_message "Path: $OPENALGO_PATH" "$BLUE"
-if [ -d "$BACKUP_DIR" ]; then
-    log_message "Database Backup: $BACKUP_DIR" "$BLUE"
-fi
-if [ "$SERVER_MODE" = true ]; then
-    log_message "Service: $SERVICE_NAME" "$BLUE"
-    log_message "Mode: Server (Nginx + Gunicorn)" "$BLUE"
-else
-    log_message "Mode: Local Development" "$BLUE"
-fi
-log_message "Update Log: $LOG_FILE" "$BLUE"
 
 if [ "$SERVER_MODE" = true ]; then
-    log_message "\nUseful Commands:" "$YELLOW"
-    log_message "  Check status:  sudo systemctl status $SERVICE_NAME" "$BLUE"
-    log_message "  View logs:     sudo journalctl -u $SERVICE_NAME -n 50" "$BLUE"
-    log_message "  Restart:       sudo systemctl restart $SERVICE_NAME" "$BLUE"
+    log_message "Updated app path: $TRADEBOARD_PATH" "$BLUE"
+    log_message "Virtualenv path:  $VENV_PATH" "$BLUE"
+    log_message "Service name:     $SERVICE_NAME" "$BLUE"
+    log_message "Check status:     sudo systemctl status $SERVICE_NAME" "$BLUE"
+    log_message "View logs:        sudo journalctl -u $SERVICE_NAME -f" "$BLUE"
 else
-    log_message "\nNext Steps:" "$YELLOW"
-    log_message "  Start application: uv run app.py" "$BLUE"
-    log_message "  API documentation: https://docs.rajeevupadhyay.com/api-documentation/v1" "$BLUE"
+    log_message "Updated local repository: $TRADEBOARD_PATH" "$BLUE"
 fi
 
-if [ -n "$NEW_VARS" ]; then
-    log_message "\nReminder: New environment variables were found. Please review .sample.env." "$YELLOW"
-fi
-
-if [ "$STASHED" = true ]; then
-    log_message "\nReminder: Local changes were stashed. Run 'git stash pop' to restore." "$YELLOW"
-fi
-
-log_message "\nUpdate completed successfully!" "$GREEN"
+log_message "Update log saved to: $LOG_FILE" "$BLUE"
