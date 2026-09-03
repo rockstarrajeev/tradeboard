@@ -100,15 +100,15 @@ class ArrowOrderUpdateAdapter(BaseOrderUpdateAdapter):
         # Symbol -> OpenAlgo format (get_oa_symbol on Arrow's brsymbol, with
         # the instrument token as an extra key), same as the REST mapping.
         exchange = data.get("exchange", "")
-        symbol = to_openalgo_symbol(data.get("symbol", ""), exchange, token=data.get("token"))
+        symbol = to_openalgo_symbol(
+            data.get("symbol", ""), exchange, token=data.get("token")
+        )
 
         return {
             "orderid": str(data.get("id", "")),
             "symbol": symbol,
             "exchange": exchange,
-            "action": _ACTION_MAP.get(
-                data.get("transactionType", ""), data.get("transactionType", "")
-            ),
+            "action": _ACTION_MAP.get(data.get("transactionType", ""), data.get("transactionType", "")),
             "quantity": quantity,
             "price": _num(data.get("price")),
             "trigger_price": _num(data.get("orderTriggerPrice")),
@@ -118,9 +118,7 @@ class ArrowOrderUpdateAdapter(BaseOrderUpdateAdapter):
             "filled_quantity": filled,
             "pending_quantity": leaves,
             "average_price": _num(data.get("averagePrice")),
-            "rejection_reason": data.get("rejectionReason", "")
-            if order_status == "rejected"
-            else "",
+            "rejection_reason": data.get("rejectionReason", "") if order_status == "rejected" else "",
         }
 
 
@@ -133,9 +131,7 @@ def create_arrow_order_adapter(user_id: str) -> "ArrowOrderUpdateAdapter | None"
 
     access_token = get_auth_token(user_id, bypass_cache=True)
     if not access_token:
-        logger.warning(
-            f"No Arrow access token found for user {user_id}; order-update adapter not started"
-        )
+        logger.warning(f"No Arrow access token found for user {user_id}; order-update adapter not started")
         return None
 
     return ArrowOrderUpdateAdapter(user_id=user_id, app_id=app_id, access_token=access_token)

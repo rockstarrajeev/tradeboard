@@ -1,6 +1,5 @@
 import base64
 import json
-import logging
 import os
 import sys
 import threading
@@ -10,6 +9,7 @@ from typing import Any, Dict, List, Optional
 from broker.jainamxts.streaming.jainamxts_websocket import JainamXTSWebSocketClient
 from database.auth_db import get_auth_token, get_feed_token
 from database.token_db import get_token
+from utils.logging import get_logger
 
 # Add parent directory to path to allow imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
@@ -26,7 +26,7 @@ class JainamXTSWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
     def __init__(self):
         super().__init__()
-        self.logger = logging.getLogger("jainamxts_websocket")
+        self.logger = get_logger("jainamxts_websocket")
         self.ws_client = None
         self.user_id = None
         self.broker_name = "jainamxts"
@@ -90,7 +90,7 @@ class JainamXTSWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 self.logger.error("Missing required authentication data")
                 raise ValueError("Missing required authentication data")
 
-        self.logger.debug(f"Using API Key: {api_key[:10]}... for JainamXTS XTS connection")
+        self.logger.debug("Using configured API key for JainamXTS XTS connection")
 
         # Create JainamXTS WebSocket client with API credentials
         self.ws_client = JainamXTSWebSocketClient(
@@ -236,7 +236,9 @@ class JainamXTSWebSocketAdapter(BaseBrokerWebSocketAdapter):
                     with self.lock:
                         self.reconnect_attempts += 1
                         attempts = self.reconnect_attempts
-                    delay = min(self.reconnect_delay * (2**attempts), self.max_reconnect_delay)
+                    delay = min(
+                        self.reconnect_delay * (2**attempts), self.max_reconnect_delay
+                    )
                     self.logger.error(f"Connection failed: {e}. Retrying in {delay} seconds...")
                     time.sleep(delay)
 
@@ -681,7 +683,7 @@ class JainamXTSWebSocketAdapter(BaseBrokerWebSocketAdapter):
             active_modes = []
             mode_to_str = {1: "LTP", 2: "QUOTE", 3: "DEPTH"}
 
-            for _correlation_id, sub in self.subscriptions.items():
+            for correlation_id, sub in self.subscriptions.items():
                 if sub.get("symbol") == symbol and sub.get("exchange") == exchange:
                     active_modes.append(sub.get("mode"))
 

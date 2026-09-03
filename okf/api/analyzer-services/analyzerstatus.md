@@ -2,7 +2,7 @@
 type: API Endpoint
 title: AnalyzerStatus
 description: Get analyzer (sandbox) mode status
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/analyzer-services/analyzerstatus.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/analyzer-services/analyzerstatus.md
 tags:
 - analyzer
 - sandbox

@@ -102,7 +102,9 @@ def test_repeated_failures_stop_the_adapter_instead_of_retrying_forever():
             if attempt < MAX_FAILURES:
                 assert not a.disconnect.called, f"gave up early at attempt {attempt}"
 
-    assert a.disconnect.called, f"adapter kept reconnecting past {MAX_FAILURES} identical failures"
+    assert a.disconnect.called, (
+        f"adapter kept reconnecting past {MAX_FAILURES} identical failures"
+    )
 
 
 def test_the_failure_counter_resets_after_a_success():

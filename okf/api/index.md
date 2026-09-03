@@ -1,4 +1,4 @@
-# Tradeboard REST API
+# OpenAlgo REST API
 
 The unified broker API (`/api/v1/`). All endpoints authenticate with your API
 key in the JSON body and return a consistent `{ "status": ..., "data": ... }`

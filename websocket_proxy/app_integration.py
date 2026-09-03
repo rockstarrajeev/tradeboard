@@ -26,7 +26,6 @@ def _eventlet_active() -> bool:
     """True when eventlet has monkey-patched the stdlib (gunicorn worker)."""
     try:
         from eventlet.patcher import is_monkey_patched
-
         return bool(is_monkey_patched("socket"))
     except Exception:
         return False
@@ -134,7 +133,6 @@ def cleanup_websocket_server():
         # Clean up shared ZMQ context (handles app restart without process exit)
         try:
             from .base_adapter import BaseBrokerWebSocketAdapter
-
             BaseBrokerWebSocketAdapter.cleanup_shared_context()
             logger.info("Shared ZMQ context cleaned up")
         except Exception as e:
@@ -197,7 +195,7 @@ def _spawn_websocket_subprocess():
             # Do NOT set start_new_session=True — staying in the gunicorn
             # cgroup means systemd reaps the child if gunicorn dies hard.
         )
-        logger.info(f"WebSocket subprocess started with PID {_websocket_subprocess.pid}")
+        logger.debug(f"WebSocket subprocess started with PID {_websocket_subprocess.pid}")
     except Exception as e:
         logger.exception(f"Failed to spawn WebSocket subprocess: {e}")
         _websocket_subprocess = None

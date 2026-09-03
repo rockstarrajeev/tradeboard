@@ -77,7 +77,9 @@ def get_order_book(auth):
         try:
             payload = _request("GET", "/oapi/v1/orders", auth, params={"type": order_type})
             if payload.get("status") == "error":
-                logger.warning(f"HDFC Sky {order_type} order book error: {payload.get('message')}")
+                logger.warning(
+                    f"HDFC Sky {order_type} order book error: {payload.get('message')}"
+                )
                 continue
             rows = (payload.get("data") or {}).get("orders") or []
             orders.extend(rows)

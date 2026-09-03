@@ -2,7 +2,7 @@
 type: API Endpoint
 title: Expiry
 description: Get expiry dates for F&O instruments
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/symbol-services/expiry.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/symbol-services/expiry.md
 tags:
 - symbol
 - expiry

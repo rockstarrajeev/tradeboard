@@ -2,7 +2,7 @@
 type: API Endpoint
 title: OptionsMultiOrder
 description: Place a multi-leg options order in a single call
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/order-management/optionsmultiorder.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/order-management/optionsmultiorder.md
 tags:
 - order
 - options

@@ -20,7 +20,7 @@
 
 The blueprint provides underlyings, all-underlying search, expiry, strikes, futures, symbol search, history, order, close-leg, close-all, cancel-all, tracked-symbol GET/DELETE, and stop GET/POST/DELETE resources under `/scalping/api`.
 
-These are browser session APIs, not public `/api/v1` API-key endpoints. They resolve the current user's Tradeboard API key internally.
+These are browser session APIs, not public `/api/v1` API-key endpoints. They resolve the current user's OpenAlgo API key internally.
 
 ## Instruments And Execution
 

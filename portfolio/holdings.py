@@ -143,7 +143,9 @@ def holdings_summary(holdings: list[Holding]) -> dict:
                 "invested": round(h.invested, 2),
                 "current": round(h.current, 2),
                 "pnl": round(h.pnl, 2),
-                "pnl_pct": (round((h.current / h.invested - 1.0) * 100, 2) if h.invested else None),
+                "pnl_pct": (
+                    round((h.current / h.invested - 1.0) * 100, 2) if h.invested else None
+                ),
                 "weight": round(weight, 5),
                 "product": h.product,
             }

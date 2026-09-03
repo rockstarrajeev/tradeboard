@@ -98,7 +98,9 @@ def get_margin_data(auth_token):
         or payload.get("error")
     ):
         message = (
-            payload.get("message") or payload.get("error") if isinstance(payload, dict) else payload
+            payload.get("message") or payload.get("error")
+            if isinstance(payload, dict)
+            else payload
         )
         logger.error(
             f"Error fetching HDFC Sky margin data (HTTP {response.status_code}): {message}"

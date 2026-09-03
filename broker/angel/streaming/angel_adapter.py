@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 from broker.angel.streaming.smartWebSocketV2 import SmartWebSocketV2
 from database.auth_db import get_auth_token, get_feed_token
 from database.token_db import get_token
+from utils.logging import get_logger
 
 # Add parent directory to path to allow imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
@@ -32,7 +33,7 @@ class AngelWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
     def __init__(self):
         super().__init__()
-        self.logger = logging.getLogger("angel_websocket")
+        self.logger = get_logger("angel_websocket")
         self.ws_client = None
         self.user_id = None
         self.broker_name = "angel"
@@ -157,8 +158,7 @@ class AngelWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 except Exception as e:
                     self.reconnect_attempts += 1
                     delay = min(
-                        self.reconnect_delay * (2**self.reconnect_attempts),
-                        self.max_reconnect_delay,
+                        self.reconnect_delay * (2**self.reconnect_attempts), self.max_reconnect_delay
                     )
                     self.logger.error(f"Connection failed: {e}. Retrying in {delay} seconds...")
                     time.sleep(delay)
@@ -254,7 +254,7 @@ class AngelWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 return
 
             # Get API key (should be stored from initialization)
-            api_key = getattr(self, "_api_key", "api_key")
+            api_key = getattr(self, '_api_key', 'api_key')
 
             # Create new SmartWebSocketV2 instance
             self.ws_client = SmartWebSocketV2(
@@ -547,7 +547,9 @@ class AngelWebSocketAdapter(BaseBrokerWebSocketAdapter):
             self.batch_timer = None
 
         if not self.connected or not self.ws_client:
-            self.logger.warning(f"Dropping batch of {len(pending)} subscriptions — not connected")
+            self.logger.warning(
+                f"Dropping batch of {len(pending)} subscriptions — not connected"
+            )
             return
 
         # Group by mode (broker requires separate subscribe per mode), then by
@@ -915,7 +917,7 @@ class AngelWebSocketAdapter(BaseBrokerWebSocketAdapter):
             self.logger.debug(
                 f"No {side_label} depth data in message (expected for indices). Keys: {message.keys()}"
             )
-            for _i in range(5):  # Default to 5 empty levels
+            for i in range(5):  # Default to 5 empty levels
                 depth.append({"price": 0.0, "quantity": 0, "orders": 0})
         else:
             # Log the depth data being returned for debugging

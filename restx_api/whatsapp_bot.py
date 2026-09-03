@@ -216,7 +216,9 @@ class WhatsAppNotify(Resource):
                 jsonify(
                     {
                         "status": "error",
-                        "message": ("Specify one of: 'self', 'username', 'phone', or 'phones'"),
+                        "message": (
+                            "Specify one of: 'self', 'username', 'phone', or 'phones'"
+                        ),
                     }
                 ),
                 400,

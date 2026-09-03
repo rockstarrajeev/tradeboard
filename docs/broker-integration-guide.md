@@ -1,6 +1,6 @@
 # New Broker Integration Guide
 
-This guide walks through every step required to add a new broker to Tradeboard. It covers the directory structure, authentication patterns, order/data APIs, symbol mapping, WebSocket streaming, master contract database, rate limiting, and all registration points across the codebase.
+This guide walks through every step required to add a new broker to OpenAlgo. It covers the directory structure, authentication patterns, order/data APIs, symbol mapping, WebSocket streaming, master contract database, rate limiting, and all registration points across the codebase.
 
 ---
 
@@ -61,7 +61,7 @@ broker/
     │   ├── data.py                    # Quotes, depth, historical data (required)
     │   └── funds.py                   # Account balance and margins (required)
     ├── mapping/
-    │   ├── transform_data.py          # Tradeboard ↔ broker format mapping (required)
+    │   ├── transform_data.py          # OpenAlgo ↔ broker format mapping (required)
     │   ├── order_data.py              # Order response mapping (required)
     │   └── margin_data.py             # Margin calculation data (optional)
     ├── database/
@@ -84,11 +84,11 @@ Create `broker/your_broker/plugin.json`:
 ```json
 {
     "Plugin Name": "your_broker",
-    "Plugin URI": "https://rajeevupadhyay.com",
-    "Description": "YourBroker Tradeboard Plugin",
+    "Plugin URI": "https://openalgo.in",
+    "Description": "YourBroker OpenAlgo Plugin",
     "Version": "1.0",
     "Author": "Your Name",
-    "Author URI": "https://rajeevupadhyay.com"
+    "Author URI": "https://openalgo.in"
 }
 ```
 
@@ -479,7 +479,7 @@ def get_margin_data(auth):
 
 ### transform_data.py
 
-This is the critical translation layer between Tradeboard's unified format and the broker's API format.
+This is the critical translation layer between OpenAlgo's unified format and the broker's API format.
 
 ```python
 # broker/your_broker/mapping/transform_data.py
@@ -488,9 +488,9 @@ from database.token_db import get_br_symbol
 
 def transform_data(data):
     """
-    Transform Tradeboard order request to broker-specific format.
+    Transform OpenAlgo order request to broker-specific format.
 
-    Input (Tradeboard format):
+    Input (OpenAlgo format):
         {
             "symbol": "SBIN",
             "exchange": "NSE",
@@ -525,28 +525,28 @@ def transform_modify_order_data(data):
     """Transform modify order request to broker format."""
 
 def map_order_type(pricetype):
-    """Map Tradeboard price type to broker price type."""
+    """Map OpenAlgo price type to broker price type."""
     mapping = {"MARKET": "MARKET", "LIMIT": "LIMIT", "SL": "SL", "SL-M": "SL-M"}
     return mapping.get(pricetype, "MARKET")
 
 def map_product_type(product):
-    """Map Tradeboard product type to broker product type."""
+    """Map OpenAlgo product type to broker product type."""
     mapping = {"CNC": "CNC", "NRML": "NRML", "MIS": "MIS"}
     return mapping.get(product, "MIS")
 
 def reverse_map_product_type(exchange, product):
-    """Reverse map broker product type to Tradeboard product type."""
+    """Reverse map broker product type to OpenAlgo product type."""
     mapping = {"CNC": "CNC", "NRML": "NRML", "MIS": "MIS"}
     return mapping.get(product)
 ```
 
 ### order_data.py
 
-Maps broker order response fields to Tradeboard's standardized format:
+Maps broker order response fields to OpenAlgo's standardized format:
 
 ```python
 def map_order_data(order):
-    """Map broker order data to Tradeboard format."""
+    """Map broker order data to OpenAlgo format."""
     return {
         "orderid": order.get("order_id"),
         "symbol": order.get("tradingsymbol"),
@@ -565,7 +565,7 @@ def map_order_data(order):
 
 Create `broker/your_broker/database/master_contract_db.py`.
 
-This module downloads the broker's instrument/symbol master file and populates the `symtoken` table, which maps Tradeboard symbols to broker-specific symbols.
+This module downloads the broker's instrument/symbol master file and populates the `symtoken` table, which maps OpenAlgo symbols to broker-specific symbols.
 
 ```python
 import os
@@ -623,7 +623,7 @@ def master_contract_download():
     This function:
     1. Downloads the instrument list from the broker API
     2. Transforms it to match the SymToken schema
-    3. Maps broker-specific symbols to Tradeboard's standardized format
+    3. Maps broker-specific symbols to OpenAlgo's standardized format
     4. Bulk inserts into the database
     5. Emits a SocketIO event when complete
 
@@ -659,10 +659,10 @@ def master_contract_download():
 
 | SymToken Column | Description | Example |
 |----------------|-------------|---------|
-| `symbol` | Tradeboard standardized symbol | `SBIN-EQ`, `NIFTY24JAN24000CE` |
+| `symbol` | OpenAlgo standardized symbol | `SBIN-EQ`, `NIFTY24JAN24000CE` |
 | `brsymbol` | Broker's native symbol | `SBIN`, `NIFTY24JAN24000CE` |
 | `name` | Human-readable name | `State Bank of India` |
-| `exchange` | Tradeboard exchange | `NSE`, `NFO`, `BSE`, `BFO`, `CDS`, `MCX` |
+| `exchange` | OpenAlgo exchange | `NSE`, `NFO`, `BSE`, `BFO`, `CDS`, `MCX` |
 | `brexchange` | Broker's exchange code | Varies per broker |
 | `token` | Broker's instrument token | `779` |
 | `expiry` | Expiry date (derivatives) | `2024-01-25` |
@@ -939,7 +939,7 @@ class YourBrokerWebSocket:
 
 def map_feed_data(raw_data):
     """
-    Normalize broker-specific tick data to Tradeboard's unified format.
+    Normalize broker-specific tick data to OpenAlgo's unified format.
 
     Returns:
         dict: {
@@ -1008,7 +1008,7 @@ A new broker must be registered in **all** of the following locations:
 Add your broker to the "Supported Brokers" section (alphabetical order):
 
 ```markdown
-## Supported Brokers (34 plugins)
+## Supported Brokers (36 plugins)
 
 <details>
 <summary>View All Supported Brokers</summary>
@@ -1160,7 +1160,7 @@ The route `/broker/your_broker/totp` must be handled by the React router.
 
 ## 13. Authentication Patterns Reference
 
-Tradeboard supports five distinct authentication patterns:
+OpenAlgo supports six distinct authentication patterns:
 
 ### Pattern A: OAuth2 Redirect Flow
 
@@ -1183,7 +1183,7 @@ User → GET /<broker>/callback → Redirect to /broker/<broker>/totp (React pag
      → auth_api.authenticate_broker(userid, password, totp) → (token, error)
 ```
 
-**Brokers:** Angel, AliceBlue, Firstock, Shoonya, Zebu, Kotak, Samco, Motilal, Nubra, MStock
+**Brokers:** Angel, AliceBlue, Firstock, Shoonya, Zebu, Kotak, Motilal, Nubra, MStock
 
 ### Pattern C: XTS API Key Authentication (No Redirect)
 
@@ -1211,6 +1211,21 @@ User → GET /<broker>/callback → login_step1() sends OTP → Redirect to Reac
      → User enters OTP → POST /<broker>/callback
      → authenticate_broker(otp_token, otp_code, api_secret) → (token, feed_token, user_id, error)
 ```
+
+### Pattern F: Session Token from API Key + Secret (No Redirect, No Input)
+
+```
+User → GET /<broker>/callback → Redirect to a broker connect page
+     → User clicks Connect → POST /<broker>/callback
+     → auth_api.authenticate_broker() → (token, error)
+```
+
+Credentials come entirely from `BROKER_API_KEY` / `BROKER_API_SECRET`, so no
+credential form is shown. The connect page exists to surface setup state — for
+Samco it also calls `GET /samco/ip-status` after connecting, which proxies the
+broker's IP diagnostic so a static-IP mismatch is caught before it rejects orders.
+
+**Brokers:** Samco
 
 ---
 
@@ -1440,9 +1455,24 @@ Study these implementations for the pattern closest to your broker:
 
 ---
 
-## Appendix: Complete Plugin Inventory (34)
+## Appendix: Complete Plugin Inventory (36)
 
 This inventory is derived from `broker/*/plugin.json`. Authentication requirements must be read from the adapter and the broker's current developer instructions rather than copied from a static cross-broker table.
+
+> **Maintainer note:** To verify the current broker plugin count and ensure documentation remains consistent across releases, run:
+> ```bash
+> # Count all broker plugin definitions
+> find broker -name "plugin.json" | wc -l
+>
+> # Confirm .sample.env stays in step with the directories on disk
+> grep VALID_BROKERS .sample.env | tr ',' '\n' | wc -l
+>
+> # Check for hard-coded counts across docs, skills, and shipped UI copy
+> rg -n "\b3[0-9]\+?\s*(plugins?|brokers?|Indian brokers?)\b|Inventory \(3[0-9]\)" \
+>    README.md CONTRIBUTING.md DOCKER_README.md DISCOVERY_MAP.md \
+>    docs/ .claude/skills/ frontend/src/ \
+>    --glob '!docs/audit/**' --glob '!docs/releases/**' --glob '!docs/superpowers/**'
+> ```
 
 | # | Directory | Type |
 |---:|---|---|
@@ -1460,23 +1490,25 @@ This inventory is derived from `broker/*/plugin.json`. Authentication requiremen
 | 12 | `flattrade` | Securities |
 | 13 | `fyers` | Securities |
 | 14 | `groww` | Securities |
-| 15 | `ibulls` | Securities |
-| 16 | `iifl` | Securities |
-| 17 | `iiflcapital` | Securities |
-| 18 | `indmoney` | Securities |
-| 19 | `jainamxts` | Securities |
-| 20 | `kotak` | Securities |
-| 21 | `motilal` | Securities |
-| 22 | `mstock` | Securities |
-| 23 | `nubra` | Securities |
-| 24 | `paytm` | Securities |
-| 25 | `pocketful` | Securities |
-| 26 | `rmoney` | Securities |
-| 27 | `samco` | Securities |
-| 28 | `shoonya` | Securities |
-| 29 | `tradejini` | Securities |
-| 30 | `tradesmart` | Securities |
-| 31 | `upstox` | Securities |
-| 32 | `wisdom` | Securities |
-| 33 | `zebu` | Securities |
-| 34 | `zerodha` | Securities |
+| 15 | `hdfcsecurities` | Securities |
+| 16 | `hdfcsky` | Securities |
+| 17 | `ibulls` | Securities |
+| 18 | `iifl` | Securities |
+| 19 | `iiflcapital` | Securities |
+| 20 | `indmoney` | Securities |
+| 21 | `jainamxts` | Securities |
+| 22 | `kotak` | Securities |
+| 23 | `motilal` | Securities |
+| 24 | `mstock` | Securities |
+| 25 | `nubra` | Securities |
+| 26 | `paytm` | Securities |
+| 27 | `pocketful` | Securities |
+| 28 | `rmoney` | Securities |
+| 29 | `samco` | Securities |
+| 30 | `shoonya` | Securities |
+| 31 | `tradejini` | Securities |
+| 32 | `tradesmart` | Securities |
+| 33 | `upstox` | Securities |
+| 34 | `wisdom` | Securities |
+| 35 | `zebu` | Securities |
+| 36 | `zerodha` | Securities |

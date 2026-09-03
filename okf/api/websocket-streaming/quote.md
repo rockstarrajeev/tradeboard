@@ -2,7 +2,7 @@
 type: API Endpoint
 title: Quote (WebSocket)
 description: Subscribe to quote updates over WebSocket
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/websocket-streaming/quote.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/websocket-streaming/quote.md
 tags:
 - websocket
 - streaming

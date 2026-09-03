@@ -2,7 +2,7 @@
 type: API Endpoint
 title: OrderBook
 description: Get all orders for the day
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/account-services/orderbook.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/account-services/orderbook.md
 tags:
 - orders
 - account

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Tradeboard records HTTP request metadata for monitoring, latency review, and security analysis. It does **not** store request bodies, response bodies, headers, user agents, or a processing timeline in the traffic table.
+OpenAlgo records HTTP request metadata for monitoring, latency review, and security analysis. It does **not** store request bodies, response bodies, headers, user agents, or a processing timeline in the traffic table.
 
 Open **Logs > Traffic** or visit `/logs/traffic` after signing in.
 
@@ -35,7 +35,7 @@ Traffic rows are stored in `db/logs.db`. `TRAFFIC_LOG_RETENTION_DAYS` controls t
 
 - API keys and broker tokens are not captured by traffic logging.
 - Dashboard, data, statistics, and export routes require an application session.
-- `TRUST_PROXY_HEADERS` is off by default. Enable it only when a controlled reverse proxy is the only route to Tradeboard; otherwise forwarded IP headers can be spoofed.
+- `TRUST_PROXY_HEADERS` is off by default. Enable it only when a controlled reverse proxy is the only route to OpenAlgo; otherwise forwarded IP headers can be spoofed.
 - `logs.db` also contains IP-ban and invalid-attempt tracking, but that state is managed from the Security dashboard.
 
 ## Supporting Routes

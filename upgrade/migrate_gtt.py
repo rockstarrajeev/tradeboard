@@ -31,7 +31,10 @@ import sys
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+# Register the app's SQLite pragmas on this process's engines, so a migration
+# waits the same 15s for a write lock the running app does instead of the
+# sqlite3 default of 5s (GitHub issue #1726).
+import _pragmas  # noqa: F401,E402
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 
@@ -121,21 +124,35 @@ def create_gtt_indexes(conn):
     logger.info("Creating GTT indexes...")
 
     # sandbox_gtt
-    conn.execute(text("CREATE INDEX IF NOT EXISTS idx_gtt_gtt_id ON sandbox_gtt(gtt_id)"))
-    conn.execute(text("CREATE INDEX IF NOT EXISTS idx_gtt_user_id ON sandbox_gtt(user_id)"))
-    conn.execute(text("CREATE INDEX IF NOT EXISTS idx_gtt_symbol ON sandbox_gtt(symbol)"))
-    conn.execute(text("CREATE INDEX IF NOT EXISTS idx_gtt_exchange ON sandbox_gtt(exchange)"))
-    conn.execute(text("CREATE INDEX IF NOT EXISTS idx_gtt_status ON sandbox_gtt(gtt_status)"))
+    conn.execute(
+        text("CREATE INDEX IF NOT EXISTS idx_gtt_gtt_id ON sandbox_gtt(gtt_id)")
+    )
+    conn.execute(
+        text("CREATE INDEX IF NOT EXISTS idx_gtt_user_id ON sandbox_gtt(user_id)")
+    )
+    conn.execute(
+        text("CREATE INDEX IF NOT EXISTS idx_gtt_symbol ON sandbox_gtt(symbol)")
+    )
+    conn.execute(
+        text("CREATE INDEX IF NOT EXISTS idx_gtt_exchange ON sandbox_gtt(exchange)")
+    )
+    conn.execute(
+        text("CREATE INDEX IF NOT EXISTS idx_gtt_status ON sandbox_gtt(gtt_status)")
+    )
     conn.execute(
         text("CREATE INDEX IF NOT EXISTS idx_gtt_user_status ON sandbox_gtt(user_id, gtt_status)")
     )
     conn.execute(
-        text("CREATE INDEX IF NOT EXISTS idx_gtt_symbol_exchange ON sandbox_gtt(symbol, exchange)")
+        text(
+            "CREATE INDEX IF NOT EXISTS idx_gtt_symbol_exchange ON sandbox_gtt(symbol, exchange)"
+        )
     )
 
     # sandbox_gtt_legs — covers both the active scan (leg_status='pending')
     # and the reaper (leg_status='triggering' AND claimed_at < cutoff).
-    conn.execute(text("CREATE INDEX IF NOT EXISTS idx_gtt_leg_gtt_id ON sandbox_gtt_legs(gtt_id)"))
+    conn.execute(
+        text("CREATE INDEX IF NOT EXISTS idx_gtt_leg_gtt_id ON sandbox_gtt_legs(gtt_id)")
+    )
     conn.execute(
         text(
             "CREATE INDEX IF NOT EXISTS idx_gtt_leg_status_claimed "
@@ -244,7 +261,10 @@ def status():
             missing_tables = []
             for t in required_tables:
                 row = conn.execute(
-                    text("SELECT name FROM sqlite_master WHERE type='table' AND name=:name"),
+                    text(
+                        "SELECT name FROM sqlite_master "
+                        "WHERE type='table' AND name=:name"
+                    ),
                     {"name": t},
                 ).fetchone()
                 if not row:
@@ -255,7 +275,9 @@ def status():
 
             # Config present? (sandbox_config may be absent on a truly fresh DB.)
             if not _sandbox_config_exists(conn):
-                logger.info("sandbox_config table is missing — run migrate_sandbox.py first.")
+                logger.info(
+                    "sandbox_config table is missing — run migrate_sandbox.py first."
+                )
                 return False
 
             missing_configs = []

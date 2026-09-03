@@ -543,74 +543,40 @@ class PocketfulSocket:
         return data
 
     def subscribe_order_update(self, orderupdate_payload):
-        global websock
-        try:
-            if (
-                websock
-                and getattr(websock, "sock", None)
-                and getattr(websock.sock, "connected", False)
-            ):
-                subscription_pkt = [orderupdate_payload["client_id"], "web"]
-                sub_packet = {"a": "subscribe", "v": subscription_pkt, "m": "OrderUpdateMessage"}
-                websock.send(json.dumps(sub_packet))
-        except Exception as e:
-            logger.error(f"Error subscribing to order update: {e}")
+        subscription_pkt = [orderupdate_payload["client_id"], "web"]
+        th_order_update = threading.Thread(
+            target=send_message, args=("OrderUpdateMessage", subscription_pkt)
+        )
+        th_order_update.start()
 
     def unsubscribe_order_update(self, orderupdate_payload):
-        global websock
-        try:
-            if (
-                websock
-                and getattr(websock, "sock", None)
-                and getattr(websock.sock, "connected", False)
-            ):
-                unsubscription_pkt = [orderupdate_payload["client_id"], "web"]
-                sub_packet = {
-                    "a": "unsubscribe",
-                    "v": unsubscription_pkt,
-                    "m": "OrderUpdateMessage",
-                }
-                websock.send(json.dumps(sub_packet))
-        except Exception as e:
-            logger.error(f"Error unsubscribing from order update: {e}")
+        unsubscription_pkt = [orderupdate_payload["client_id"], "web"]
+        th_order_update = threading.Thread(
+            target=unsubscribe_update, args=("OrderUpdateMessage", unsubscription_pkt)
+        )
+        th_order_update.start()
 
     def read_order_update_data(self):
-        return {}
+        data = get_order_update()
+        return data
 
     def subscribe_trade_update(self, tradeupdate_payload):
-        global websock
-        try:
-            if (
-                websock
-                and getattr(websock, "sock", None)
-                and getattr(websock.sock, "connected", False)
-            ):
-                subscription_pkt = [tradeupdate_payload["client_id"], "web"]
-                sub_packet = {"a": "subscribe", "v": subscription_pkt, "m": "TradeUpdateMessage"}
-                websock.send(json.dumps(sub_packet))
-        except Exception as e:
-            logger.error(f"Error subscribing to trade update: {e}")
+        subscription_pkt = [tradeupdate_payload["client_id"], "web"]
+        th_trade_update = threading.Thread(
+            target=send_message, args=("TradeUpdateMessage", subscription_pkt)
+        )
+        th_trade_update.start()
 
     def unsubscribe_trade_update(self, tradeupdate_payload):
-        global websock
-        try:
-            if (
-                websock
-                and getattr(websock, "sock", None)
-                and getattr(websock.sock, "connected", False)
-            ):
-                unsubscription_pkt = [tradeupdate_payload["client_id"], "web"]
-                sub_packet = {
-                    "a": "unsubscribe",
-                    "v": unsubscription_pkt,
-                    "m": "TradeUpdateMessage",
-                }
-                websock.send(json.dumps(sub_packet))
-        except Exception as e:
-            logger.error(f"Error unsubscribing from trade update: {e}")
+        unsubscription_pkt = [tradeupdate_payload["client_id"], "web"]
+        th_trade_update = threading.Thread(
+            target=unsubscribe_update, args=("OrderUpdateMessage", unsubscription_pkt)
+        )
+        th_trade_update.start()
 
     def read_trade_update_data(self):
-        return {}
+        data = get_trade_update()
+        return data
 
     def subscribe_multiple_detailed_marketdata(self, detailedmarketdata_payload):
         """Subscribe to multiple detailed market data"""

@@ -34,11 +34,11 @@ logger = get_logger(__name__)
 # ---------------------------------------------------------------------------
 _rate_limit_lock = threading.Lock()
 _last_call_ts = {"quote": 0.0, "history": 0.0}
-QUOTE_MIN_INTERVAL = float(os.getenv("ANGEL_QUOTE_MIN_INTERVAL", "0.15"))  # ~6.6 req/s (limit 10)
+QUOTE_MIN_INTERVAL = float(os.getenv("ANGEL_QUOTE_MIN_INTERVAL", "0.15"))      # ~6.6 req/s (limit 10)
 # History is paced at ~2 req/s. Angel's table says 3 req/s, but it enforces a
 # strict rolling 1-second window, so steady 0.4s spacing puts 3 requests inside
 # some windows and gets sporadically rejected. 0.5s keeps it at <=2 per window.
-HISTORY_MIN_INTERVAL = float(os.getenv("ANGEL_HISTORY_MIN_INTERVAL", "0.5"))  # ~2 req/s (limit 3)
+HISTORY_MIN_INTERVAL = float(os.getenv("ANGEL_HISTORY_MIN_INTERVAL", "0.5"))   # ~2 req/s (limit 3)
 
 
 def _apply_rate_limit(category: str) -> None:
@@ -148,7 +148,7 @@ def get_api_response(endpoint, auth, method="GET", payload="", max_retries=2):
                     )
                     continue
                 raise Exception("Angel API rate limit exceeded. Please retry shortly.")
-            logger.debug(f"Debug - API returned 403 Forbidden. Headers: {headers}")
+            logger.debug(f"Debug - API returned 403 Forbidden. Header fields: {sorted(headers)}")
             logger.debug(f"Debug - Response text: {body_text}")
             raise Exception("Authentication failed. Please check your API key and auth token.")
 
@@ -193,7 +193,7 @@ class BrokerData:
         """
         try:
             # Convert symbol to broker format and get token
-            get_br_symbol(symbol, exchange)
+            br_symbol = get_br_symbol(symbol, exchange)
             token = get_token(symbol, exchange)
 
             if exchange == "NSE_INDEX":
@@ -561,9 +561,7 @@ class BrokerData:
                     # signalled a rate limit, otherwise give up on this chunk
                     # (e.g. bad token or genuinely no data for the range).
                     err_msg = response.get("message", "") if isinstance(response, dict) else ""
-                    if (
-                        "exceed" in err_msg.lower() or "rate" in err_msg.lower()
-                    ) and chunk_attempt < 3:
+                    if ("exceed" in err_msg.lower() or "rate" in err_msg.lower()) and chunk_attempt < 3:
                         backoff = 1.0 * (2**chunk_attempt)
                         _penalize_rate_limit("history", backoff)
                         logger.warning(
@@ -799,7 +797,7 @@ class BrokerData:
         """
         try:
             # Convert symbol to broker format and get token
-            get_br_symbol(symbol, exchange)
+            br_symbol = get_br_symbol(symbol, exchange)
             token = get_token(symbol, exchange)
 
             if exchange == "NSE_INDEX":

@@ -56,11 +56,7 @@ def scan(dir_: str, exts: tuple[str, ...]) -> dict:
                 signal_hits.append(str(p))
             if EXCHANGE_CODES.search(text):
                 exchange_hits.append(str(p))
-    return {
-        "ext": list(exts),
-        "signal_files": len(signal_hits),
-        "exchange_code_files": len(exchange_hits),
-    }
+    return {"ext": list(exts), "signal_files": len(signal_hits), "exchange_code_files": len(exchange_hits)}
 
 
 def main() -> None:

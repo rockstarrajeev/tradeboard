@@ -96,7 +96,7 @@ def debug_smtp_connection():
 
         # Get server capabilities
         try:
-            server.ehlo_or_helo_if_needed()
+            capabilities = server.ehlo_or_helo_if_needed()
             if hasattr(server, "ehlo_resp"):
                 details.append(f"Server capabilities: {server.ehlo_resp.decode('utf-8')}")
         except Exception as e:

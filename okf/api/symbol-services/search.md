@@ -2,7 +2,7 @@
 type: API Endpoint
 title: Search
 description: Search for symbols across exchanges
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/symbol-services/search.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/symbol-services/search.md
 tags:
 - symbol
 - search

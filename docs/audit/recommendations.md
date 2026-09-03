@@ -2,7 +2,7 @@
 
 ## Overview
 
-When deploying Tradeboard using `install.sh` on Ubuntu server, most security measures are **automatically configured**. This document covers what's already done and what remains for you.
+When deploying OpenAlgo using `install.sh` on Ubuntu server, most security measures are **automatically configured**. This document covers what's already done and what remains for you.
 
 ## What `install.sh` Already Does
 
@@ -58,7 +58,7 @@ When deploying Tradeboard using `install.sh` on Ubuntu server, most security mea
 
 #### 1. Set Strong Login Password
 
-**When**: First login to Tradeboard
+**When**: First login to OpenAlgo
 
 **How**:
 - Visit `https://yourdomain.com`
@@ -98,8 +98,8 @@ When deploying Tradeboard using `install.sh` on Ubuntu server, most security mea
 
 **How**:
 ```bash
-# View Tradeboard logs
-sudo journalctl -u tradeboard-yourdomain-broker -f
+# View OpenAlgo logs
+sudo journalctl -u openalgo-yourdomain-broker -f
 
 # View Nginx access logs
 sudo tail -f /var/log/nginx/access.log
@@ -117,8 +117,8 @@ sudo tail -f /var/log/nginx/error.log
 # Update Ubuntu packages
 sudo apt update && sudo apt upgrade -y
 
-# Update Tradeboard dependencies
-cd /var/python/tradeboard-flask/*/tradeboard
+# Update OpenAlgo dependencies
+cd /var/python/openalgo-flask/*/openalgo
 sudo -u www-data uv sync
 ```
 
@@ -222,7 +222,7 @@ Nginx Full                 ALLOW       Anywhere
 ### Check Service Status
 
 ```bash
-sudo systemctl status tradeboard-*
+sudo systemctl status openalgo-*
 sudo systemctl status nginx
 ```
 
@@ -256,18 +256,18 @@ sudo certbot renew
 
 ```bash
 # Check logs
-sudo journalctl -u tradeboard-yourdomain-broker -n 50
+sudo journalctl -u openalgo-yourdomain-broker -n 50
 
 # Restart service
-sudo systemctl restart tradeboard-yourdomain-broker
+sudo systemctl restart openalgo-yourdomain-broker
 ```
 
 ### Permission Issues
 
 ```bash
 # Re-apply permissions
-sudo chown -R www-data:www-data /var/python/tradeboard-flask/*/
-sudo chmod -R 755 /var/python/tradeboard-flask/*/
+sudo chown -R www-data:www-data /var/python/openalgo-flask/*/
+sudo chmod -R 755 /var/python/openalgo-flask/*/
 ```
 
 ## Security Incident Response
@@ -276,7 +276,7 @@ sudo chmod -R 755 /var/python/tradeboard-flask/*/
 
 1. **Immediately disable the service**:
    ```bash
-   sudo systemctl stop tradeboard-*
+   sudo systemctl stop openalgo-*
    ```
 
 2. **Revoke broker session**:
@@ -289,7 +289,7 @@ sudo chmod -R 755 /var/python/tradeboard-flask/*/
 
 4. **Review logs**:
    ```bash
-   sudo journalctl -u tradeboard-* --since "24 hours ago"
+   sudo journalctl -u openalgo-* --since "24 hours ago"
    sudo cat /var/log/nginx/access.log | tail -1000
    ```
 

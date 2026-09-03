@@ -53,7 +53,7 @@ Historify downloads normalized broker history into a local DuckDB store for char
 
 ## Operational Requirements
 
-- Downloads require the logged-in user's Tradeboard API key and normalized history service.
+- Downloads require the logged-in user's OpenAlgo API key and normalized history service.
 - Broker history failures and no-data responses must remain visible per job item.
 - DuckDB operations must use the database module's lock/retry behavior.
 - Active jobs left without in-memory state after restart are marked failed so they can be retried.

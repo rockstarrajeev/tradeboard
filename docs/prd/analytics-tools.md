@@ -2,7 +2,7 @@
 
 ## Current Tools
 
-Tradeboard includes session-authenticated trading analytics pages in addition to the REST market-data contract.
+OpenAlgo includes session-authenticated trading analytics pages in addition to the REST market-data contract.
 
 | Tool | Current source | Core behavior |
 |---|---|---|

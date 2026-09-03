@@ -1,6 +1,6 @@
 # Developer Guide
 
-This guide covers everything you need to know to develop the Tradeboard frontend.
+This guide covers everything you need to know to develop the OpenAlgo frontend.
 
 ## Prerequisites
 
@@ -13,7 +13,7 @@ This guide covers everything you need to know to develop the Tradeboard frontend
 ### 1. Clone and Install
 
 ```bash
-cd tradeboard/frontend
+cd openalgo/frontend
 npm install
 ```
 

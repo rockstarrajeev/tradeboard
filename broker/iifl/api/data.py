@@ -117,7 +117,9 @@ class BrokerData:
             logger.error(f"Error refreshing feed token: {e}")
             return False
 
-    def _market_data_request(self, endpoint, method="GET", payload="", params=None, _retried=False):
+    def _market_data_request(
+        self, endpoint, method="GET", payload="", params=None, _retried=False
+    ):
         """Call the XTS market-data API, refreshing the feed token once on expiry.
 
         XTS serves market data from a session separate from the interactive one,
@@ -884,9 +886,9 @@ class BrokerData:
 
             # Get exchange_token from database
             logger.info("Querying database for symbol token...")
-            with db_session() as db:
+            with db_session() as session:
                 symbol_info = (
-                    db.query(SymToken)
+                    session.query(SymToken)
                     .filter(SymToken.exchange == exchange, SymToken.brsymbol == br_symbol)
                     .first()
                 )
@@ -965,6 +967,26 @@ class BrokerData:
                 "oi": 0,
             }
             logger.info("Returning empty market depth structure")
+            return empty_depth
+
+        except Exception as e:
+            logger.error(f"Error in get_market_depth: {str(e)}", exc_info=True)
+            # Return empty structure on error
+            empty_depth = {
+                "bids": [{"price": 0, "quantity": 0} for _ in range(5)],
+                "asks": [{"price": 0, "quantity": 0} for _ in range(5)],
+                "totalbuyqty": 0,
+                "totalsellqty": 0,
+                "ltp": 0,
+                "ltq": 0,
+                "volume": 0,
+                "open": 0,
+                "high": 0,
+                "low": 0,
+                "prev_close": 0,
+                "oi": 0,
+            }
+            logger.info("Returning empty market depth structure due to error")
             return empty_depth
 
     def get_depth(self, symbol: str, exchange: str) -> dict:

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The scalping terminal provides fast F&O discovery and order actions while keeping validation and risk-reducing exits on the server. The page is session-authenticated and obtains the user's Tradeboard API key server-side for normalized trading calls.
+The scalping terminal provides fast F&O discovery and order actions while keeping validation and risk-reducing exits on the server. The page is session-authenticated and obtains the user's OpenAlgo API key server-side for normalized trading calls.
 
 ## HTTP Surface
 

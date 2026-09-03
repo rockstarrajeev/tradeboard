@@ -3,7 +3,7 @@ Feature: Account state, margin, and market depth
 
   # Source: restx_api/funds.py:24, restx_api/orderbook.py:23, restx_api/tradebook.py:23, restx_api/positionbook.py:23, restx_api/holdings.py:23
   Scenario Outline: Account collection endpoint authenticates the API key
-    Given an API client submits an Tradeboard API key
+    Given an API client submits an OpenAlgo API key
     When it posts to "<path>"
     Then the corresponding account service verifies or resolves the active session
     And the result uses the normalized wrapper response

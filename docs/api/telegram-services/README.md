@@ -1,6 +1,6 @@
 # Telegram REST API
 
-The Telegram namespace exposes configuration, lifecycle, user, notification, statistics, and preference resources. Most calls accept the Tradeboard key in `X-API-KEY`, the `apikey` query parameter for GET, or the JSON body for POST.
+The Telegram namespace exposes configuration, lifecycle, user, notification, statistics, and preference resources. Most calls accept the OpenAlgo key in `X-API-KEY`, the `apikey` query parameter for GET, or the JSON body for POST.
 
 ## Endpoint Inventory
 
@@ -25,7 +25,7 @@ curl -X POST 'http://127.0.0.1:5000/api/v1/telegram/notify' \
   -H 'Content-Type: application/json' \
   -d '{
     "apikey": "<your_app_apikey>",
-    "username": "tradeboard-user",
+    "username": "openalgo-user",
     "message": "Strategy alert",
     "wait_for_delivery": false
   }'
@@ -35,7 +35,7 @@ curl -X POST 'http://127.0.0.1:5000/api/v1/telegram/notify' \
 
 ## Webhook Authentication
 
-Telegram sends `X-Telegram-Bot-Api-Secret-Token`. Tradeboard compares it with `TELEGRAM_WEBHOOK_SECRET`, or with a token-derived fallback when the explicit secret is absent. Missing and incorrect headers return 401 and 403 respectively. Structurally valid updates are acknowledged with an empty HTTP 200 response, but `process_webhook_update` is not implemented in this RESTX handler.
+Telegram sends `X-Telegram-Bot-Api-Secret-Token`. OpenAlgo compares it with `TELEGRAM_WEBHOOK_SECRET`, or with a token-derived fallback when the explicit secret is absent. Missing and incorrect headers return 401 and 403 respectively. Structurally valid updates are acknowledged with an empty HTTP 200 response, but `process_webhook_update` is not implemented in this RESTX handler.
 
 ## Automatic Alert Gate
 

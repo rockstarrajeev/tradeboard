@@ -103,7 +103,9 @@ def _normalize_zerodha(data: dict) -> dict | None:
         "product": data.get("product", ""),
         "order_status": order_status,
         "filled_quantity": int(data.get("filled_quantity") or 0),
-        "pending_quantity": int(data.get("pending_quantity") or data.get("unfilled_quantity") or 0),
+        "pending_quantity": int(
+            data.get("pending_quantity") or data.get("unfilled_quantity") or 0
+        ),
         "average_price": float(data.get("average_price") or 0),
         "rejection_reason": (data.get("status_message") or "")
         if order_status == "rejected"
@@ -296,7 +298,9 @@ def _validate_zerodha_checksum(data: dict) -> bool:
     order_timestamp = str(data.get("order_timestamp", ""))
     if not (api_secret and checksum and order_id):
         return False
-    expected = hashlib.sha256(f"{order_id}{order_timestamp}{api_secret}".encode()).hexdigest()
+    expected = hashlib.sha256(
+        f"{order_id}{order_timestamp}{api_secret}".encode()
+    ).hexdigest()
     return checksum == expected
 
 

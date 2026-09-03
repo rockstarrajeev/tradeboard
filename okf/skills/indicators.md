@@ -1,8 +1,8 @@
 ---
 type: Reference
 title: Indicator Skills (Agentic)
-description: The Tradeboard indicator skill package for AI coding agents — charting, scanners, custom indicators, and live feeds.
-resource: https://docs.rajeevupadhyay.com/skills/indicators
+description: The OpenAlgo indicator skill package for AI coding agents — charting, scanners, custom indicators, and live feeds.
+resource: https://docs.openalgo.in/skills/indicators
 tags:
 - skills
 - agentic
@@ -15,8 +15,8 @@ timestamp: '2026-07-03T00:00:00+00:00'
 > source doc linked below; this OKF concept exists only to index, tag, and
 > cross-link it. Edit the source, never this file.
 
-The Tradeboard indicator skill package for AI coding agents — charting, scanners, custom indicators, and live feeds.
+The OpenAlgo indicator skill package for AI coding agents — charting, scanners, custom indicators, and live feeds.
 
-**Source:** [https://docs.rajeevupadhyay.com/skills/indicators](https://docs.rajeevupadhyay.com/skills/indicators)
+**Source:** [https://docs.openalgo.in/skills/indicators](https://docs.openalgo.in/skills/indicators)
 
 **Related:** [overview](../overview.md)

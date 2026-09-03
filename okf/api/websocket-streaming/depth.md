@@ -2,7 +2,7 @@
 type: API Endpoint
 title: Depth (WebSocket)
 description: Subscribe to market depth over WebSocket
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/websocket-streaming/depth.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/websocket-streaming/depth.md
 tags:
 - websocket
 - streaming

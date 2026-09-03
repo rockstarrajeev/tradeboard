@@ -125,9 +125,7 @@ def resolve_exchange(security_id, exchange, segment, default="NSE"):
 
         # A stated exchange still narrows the choice even when the segment did not.
         if exch in ("NSE", "BSE"):
-            candidates = tuple(
-                c for c in candidates if c in (exch, "NFO" if exch == "NSE" else "BFO")
-            )
+            candidates = tuple(c for c in candidates if c in (exch, "NFO" if exch == "NSE" else "BFO"))
 
         for candidate in candidates:
             if get_symbol(token, candidate):

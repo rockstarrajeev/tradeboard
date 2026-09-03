@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The Latency Monitor tracks the time taken for various operations in Tradeboard, from receiving signals to order execution. Understanding and optimizing latency is critical for algorithmic trading, especially for time-sensitive strategies.
+The Latency Monitor tracks the time taken for various operations in OpenAlgo, from receiving signals to order execution. Understanding and optimizing latency is critical for algorithmic trading, especially for time-sensitive strategies.
 
 ## What is Latency?
 
@@ -10,7 +10,7 @@ The Latency Monitor tracks the time taken for various operations in Tradeboard, 
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                        Order Execution Latency                              │
 │                                                                              │
-│  Signal Source → Tradeboard Processing → Broker API → Exchange → Execution   │
+│  Signal Source → OpenAlgo Processing → Broker API → Exchange → Execution   │
 │       │               │                    │            │           │       │
 │       │←── Network ──▶│←── Processing ────▶│←─ Broker ─▶│←─ Exch ──▶│       │
 │       │    Latency    │     Latency        │   Latency  │  Latency  │       │
@@ -26,9 +26,9 @@ The Latency Monitor tracks the time taken for various operations in Tradeboard, 
 
 | Component | Description | Typical Range |
 |-----------|-------------|---------------|
-| Network Latency | Signal source to Tradeboard | 50-500ms |
-| Processing Latency | Tradeboard internal processing | 1-10ms |
-| API Latency | Tradeboard to Broker API | 50-200ms |
+| Network Latency | Signal source to OpenAlgo | 50-500ms |
+| Processing Latency | OpenAlgo internal processing | 1-10ms |
+| API Latency | OpenAlgo to Broker API | 50-200ms |
 | Broker Latency | Broker to Exchange | 10-50ms |
 | Exchange Latency | Order matching | 1-5ms |
 
@@ -212,7 +212,7 @@ Example:
 ### Alert Example
 
 ```
-⚠️ LATENCY ALERT
+LATENCY ALERT
 
 High latency detected!
 
@@ -234,10 +234,10 @@ Recommendation:
 
 ```
 Current Setup:
-Signal Source → Internet → Tradeboard
+Signal Source → Internet → OpenAlgo
 
 Optimized Setup:
-Signal Source → Same Network → Tradeboard (Co-located)
+Signal Source → Same Network → OpenAlgo (Co-located)
 
 Improvement: 50-100ms reduction
 ```
@@ -282,11 +282,11 @@ place_basket_order(orders)  # 200ms total
 │                                                                              │
 │  Broker        Avg      P99      Orders    Status                          │
 │  ──────────    ───────  ───────  ──────    ──────                          │
-│  Zerodha       65ms     180ms    500       ✅ Excellent                    │
-│  Angel One     75ms     200ms    450       ✅ Good                         │
-│  Dhan          70ms     190ms    480       ✅ Good                         │
-│  Upstox        80ms     220ms    420       ✅ Good                         │
-│  Fyers         85ms     250ms    380       ⚠️ Fair                        │
+│  Zerodha       65ms     180ms    500 Excellent                    │
+│  Angel One     75ms     200ms    450 Good                         │
+│  Dhan          70ms     190ms    480 Good                         │
+│  Upstox        80ms     220ms    420 Good                         │
+│  Fyers         85ms     250ms    380 Fair                        │
 │                                                                              │
 │  Note: Latency varies by time of day and market conditions                 │
 │                                                                              │

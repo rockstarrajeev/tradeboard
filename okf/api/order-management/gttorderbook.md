@@ -2,7 +2,7 @@
 type: API Endpoint
 title: GTTOrderBook
 description: List active GTT triggers
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/order-management/gttorderbook.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/order-management/gttorderbook.md
 tags:
 - order
 - gtt

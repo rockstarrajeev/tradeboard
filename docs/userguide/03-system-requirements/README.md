@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Tradeboard is designed to run on modest hardware. This guide helps you understand what you need and choose the right setup for your needs.
+OpenAlgo is designed to run on modest hardware. This guide helps you understand what you need and choose the right setup for your needs.
 
 ## Minimum Requirements
 
@@ -76,7 +76,7 @@ Tradeboard is designed to run on modest hardware. This guide helps you understan
 │     Your Windows/Mac Computer       │
 │                                     │
 │  ┌─────────────────────────────┐   │
-│  │       Tradeboard              │   │
+│  │       OpenAlgo              │   │
 │  │       Running               │   │
 │  └─────────────────────────────┘   │
 │                                     │
@@ -93,7 +93,7 @@ Tradeboard is designed to run on modest hardware. This guide helps you understan
 **Limitations**:
 - PC must be on during trading hours
 - Internet must be stable
-- PC restart = Tradeboard restart
+- PC restart = OpenAlgo restart
 
 ### Option 2: Cloud VPS (Recommended)
 
@@ -103,7 +103,7 @@ Tradeboard is designed to run on modest hardware. This guide helps you understan
 │    (AWS, DigitalOcean, etc.)        │
 │                                     │
 │  ┌─────────────────────────────┐   │
-│  │       Tradeboard              │   │
+│  │       OpenAlgo              │   │
 │  │    Running 24/7             │   │
 │  └─────────────────────────────┘   │
 │                                     │
@@ -163,7 +163,7 @@ Lower latency = Faster order execution
 
 ### Firewall & Ports
 
-Tradeboard uses these ports:
+OpenAlgo uses these ports:
 
 | Port | Purpose | Required |
 |------|---------|----------|
@@ -183,7 +183,7 @@ Tradeboard uses these ports:
 |----------|---------|---------|
 | Python | 3.11, 3.12, 3.13, or 3.14 | Core runtime |
 | pip/uv | Latest | Package management |
-| Git | Latest | Download Tradeboard |
+| Git | Latest | Download OpenAlgo |
 | Web Browser | Chrome/Firefox | Access interface |
 
 ### For Development/Frontend

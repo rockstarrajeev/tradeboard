@@ -13,6 +13,8 @@ from typing import Any, Dict, List, Optional, Set
 import requests
 import websocket
 
+from utils.logging import get_logger
+
 # Import protobuf message definitions (local copy)
 try:
     from . import msg_pb2 as protomsg
@@ -52,7 +54,7 @@ class FyersTbtWebSocket:
         """
         self.access_token = access_token
         self.log_path = log_path
-        self.logger = logging.getLogger("fyers_tbt_websocket")
+        self.logger = get_logger("fyers_tbt_websocket")
 
         # WebSocket state
         self.ws = None
@@ -533,7 +535,9 @@ class FyersTbtWebSocket:
         """Start data-stall watchdog thread"""
         if self.health_check_thread and self.health_check_thread.is_alive():
             return
-        self.health_check_thread = threading.Thread(target=self._health_check_loop, daemon=True)
+        self.health_check_thread = threading.Thread(
+            target=self._health_check_loop, daemon=True
+        )
         self.health_check_thread.start()
 
     def _health_check_loop(self):
@@ -631,7 +635,9 @@ class FyersTbtWebSocket:
                     if channel not in self.active_channels:
                         self.switch_channel(resume_channels=[channel], pause_channels=[])
                 except Exception as e:
-                    self.logger.error(f"Error flushing subscribe batch for channel {channel}: {e}")
+                    self.logger.error(
+                        f"Error flushing subscribe batch for channel {channel}: {e}"
+                    )
         except Exception as e:
             self.logger.error(f"Subscribe batch flush error: {e}")
 
@@ -760,9 +766,7 @@ class FyersTbtWebSocket:
             self.disconnect()
         except Exception as e:
             # Fallback logging if self.logger is not available
-            import logging
-
-            logger = logging.getLogger("fyers_tbt_websocket")
+            logger = get_logger("fyers_tbt_websocket")
             logger.error(f"Error in TBT WebSocket destructor: {e}")
 
     def force_cleanup(self):

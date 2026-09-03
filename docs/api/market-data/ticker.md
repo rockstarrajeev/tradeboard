@@ -23,7 +23,7 @@ curl --get 'http://127.0.0.1:5000/api/v1/ticker/NSE:RELIANCE' \
 
 | Parameter | Required | Description |
 |---|---:|---|
-| `apikey` | Yes | Tradeboard API key |
+| `apikey` | Yes | OpenAlgo API key |
 | `interval` | No | History interval; defaults to `D` |
 | `from` | Yes | Start date in `YYYY-MM-DD` |
 | `to` | Yes | End date in `YYYY-MM-DD` |

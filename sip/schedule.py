@@ -61,7 +61,9 @@ def requested_dates(
 ) -> list[date]:
     """The calendar dates a SIP would target, ignoring market holidays."""
     if frequency not in FREQUENCIES:
-        raise ScheduleError(f"frequency must be one of {', '.join(FREQUENCIES)}, got {frequency!r}")
+        raise ScheduleError(
+            f"frequency must be one of {', '.join(FREQUENCIES)}, got {frequency!r}"
+        )
     if end < start:
         raise ScheduleError("end date is before start date")
 
@@ -158,7 +160,9 @@ def build_schedule(
 
     wanted = requested_dates(start, end, frequency, day_of_month)
     if not wanted:
-        raise ScheduleError("the SIP window is too short to contain a single installment")
+        raise ScheduleError(
+            "the SIP window is too short to contain a single installment"
+        )
 
     amounts = apply_step_up(wanted, amount, step_up_percent)
     session_dates = [d.date() if hasattr(d, "date") else d for d in sessions]

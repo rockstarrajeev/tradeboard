@@ -2,7 +2,7 @@
 type: API Endpoint
 title: OptionsOrder
 description: Place an options order using a strike offset from ATM
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/order-management/optionsorder.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/order-management/optionsorder.md
 tags:
 - order
 - options

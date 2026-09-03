@@ -2,7 +2,7 @@
 type: API Endpoint
 title: PlaceGTTOrder
 description: Place a SINGLE or OCO GTT (Good Till Triggered) order
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/order-management/placegttorder.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/order-management/placegttorder.md
 tags:
 - order
 - gtt

@@ -67,16 +67,7 @@ function groupOf(toolId: string | null): string | null {
   return null
 }
 
-export function DrawingRail({
-  stats,
-  onPick,
-  onUndo,
-  onRedo,
-  onRemove,
-  onMagnet,
-  portalHost,
-  onShortcut,
-}: Props) {
+export function DrawingRail({ stats, onPick, onUndo, onRedo, onRemove, onMagnet, portalHost, onShortcut }: Props) {
   // Last tool chosen per group, so the bare button re-arms it instead of
   // reopening the flyout every time.
   const lastRef = useRef<Record<string, string>>({})
@@ -182,12 +173,7 @@ export function DrawingRail({
               {open !== g.key && <RailTip text={g.label} />}
             </div>
 
-            <DropdownMenuContent
-              container={portalHost}
-              side="right"
-              align="start"
-              className="w-64 p-1"
-            >
+            <DropdownMenuContent container={portalHost} side="right" align="start" className="w-64 p-1">
               {g.sections.map((sec, si) => (
                 <div key={sec.head ?? `s${si}`}>
                   {sec.head && (
@@ -256,16 +242,7 @@ export function DrawingRail({
           onClick={onUndo}
           className={btn}
         >
-          <svg
-            viewBox="0 0 24 24"
-            className="h-[18px] w-[18px]"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.6}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
+          <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M4 10a7 7 0 1 1 2.5 5.3" />
             <path d="M3 5v5h5" />
           </svg>
@@ -280,16 +257,7 @@ export function DrawingRail({
           onClick={onRedo}
           className={btn}
         >
-          <svg
-            viewBox="0 0 24 24"
-            className="h-[18px] w-[18px]"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.6}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
+          <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M20 10a7 7 0 1 0-2.5 5.3" />
             <path d="M21 5v5h-5" />
           </svg>
@@ -297,27 +265,20 @@ export function DrawingRail({
         <RailTip text="Redo" chord="Ctrl + Shift + Z" />
       </div>
       <div className="group relative">
-        <button
+      <button
           type="button"
           aria-label="Delete drawings"
           disabled={stats.count === 0}
           onClick={() => onRemove(!stats.hasSelection)}
           className={btn}
         >
-          <svg
-            viewBox="0 0 24 24"
-            className="h-[18px] w-[18px]"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.6}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
+          <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M3.5 6.5h17M9.5 6.5v-3h5v3M6 6.5l1 14h10l1-14" />
           </svg>
         </button>
-        <RailTip text={stats.hasSelection ? 'Delete selected' : `Remove all (${stats.count})`} />
+        <RailTip
+          text={stats.hasSelection ? 'Delete selected' : `Remove all (${stats.count})`}
+        />
       </div>
     </div>
   )

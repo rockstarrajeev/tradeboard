@@ -1,10 +1,11 @@
+import datetime
 import json
 import os
 import re
-import threading
-import time
 import uuid
 from datetime import datetime
+import threading
+import time
 
 from broker.groww.database.master_contract_db import (
     format_groww_to_openalgo_symbol,
@@ -25,8 +26,6 @@ from broker.groww.mapping.transform_data import (
     PRODUCT_MIS,
     PRODUCT_NRML,
     SEGMENT_CASH,
-    SEGMENT_COMMODITY,
-    SEGMENT_CURRENCY,
     SEGMENT_FNO,
     TRANSACTION_TYPE_BUY,
     TRANSACTION_TYPE_SELL,
@@ -899,6 +898,7 @@ def get_positions(auth):
                         # Get the trading symbol
                         groww_symbol = position.get("trading_symbol", "")
                         openalgo_symbol = groww_symbol
+                        symbol_converted = False
 
                         # Handle symbol conversion for consistency with orderbook
                         # This is primarily for FNO instruments, but we'll check all symbols
@@ -916,6 +916,7 @@ def get_positions(auth):
                                 logger.debug(
                                     f"Database: Converted Groww symbol: {groww_symbol} -> {openalgo_symbol}"
                                 )
+                                symbol_converted = True
                             else:
                                 # Pattern matching fallbacks if database lookup fails
                                 # 1. Try option pattern
@@ -958,6 +959,7 @@ def get_positions(auth):
                                     logger.debug(
                                         f"Pattern: Converted Groww option symbol: {groww_symbol} -> {openalgo_symbol}"
                                     )
+                                    symbol_converted = True
                                 else:
                                     # 2. Try futures pattern
                                     future_pattern = re.compile(
@@ -995,6 +997,7 @@ def get_positions(auth):
                                         logger.debug(
                                             f"Pattern: Converted Groww futures symbol: {groww_symbol} -> {openalgo_symbol}"
                                         )
+                                        symbol_converted = True
 
                         except Exception as e:
                             logger.error(f"Error converting position symbol: {e}")
@@ -1091,6 +1094,7 @@ def get_positions(auth):
                             # Get the trading symbol
                             groww_symbol = position.get("trading_symbol", "")
                             openalgo_symbol = groww_symbol
+                            symbol_converted = False
 
                             # Handle FNO symbol conversion
                             if (
@@ -1111,6 +1115,7 @@ def get_positions(auth):
                                         logger.debug(
                                             f"Database: Converted Groww FNO symbol: {groww_symbol} -> {openalgo_symbol}"
                                         )
+                                        symbol_converted = True
                                     else:
                                         # Fallback to pattern matching if database lookup fails
                                         # For Options: Convert from Groww format to OpenAlgo format
@@ -1153,6 +1158,7 @@ def get_positions(auth):
                                         logger.debug(
                                             f"Pattern: Converted Groww option position symbol: {groww_symbol} -> {openalgo_symbol}"
                                         )
+                                        symbol_converted = True
 
                                     # For Futures: Convert from "NIFTY2551FUT" to "NIFTY29MAY25FUT"
                                     else:
@@ -1193,6 +1199,7 @@ def get_positions(auth):
                                             logger.debug(
                                                 f"Pattern: Converted Groww futures position symbol: {groww_symbol} -> {openalgo_symbol}"
                                             )
+                                            symbol_converted = True
                                 except Exception as e:
                                     logger.error(f"Error converting position symbol: {e}")
                                     # Fall back to original symbol if conversion fails
@@ -1397,14 +1404,14 @@ def get_holdings(auth):
 # --- Per-Symbol Smart Order Lock ---
 # Ensures only one smart order per symbol executes at a time.
 # Others queue and execute sequentially, each getting a fresh position book.
-_symbol_locks = {}  # {symbol_key: threading.Lock}
+_symbol_locks = {}          # {symbol_key: threading.Lock}
 _symbol_locks_lock = threading.Lock()
 
 # --- Position Book Cache ---
 # Caches get_positions() for 1 second. Invalidated after each smart order placement.
-_position_cache = {}  # {auth_token: {"data": ..., "timestamp": ...}}
+_position_cache = {}        # {auth_token: {"data": ..., "timestamp": ...}}
 _position_cache_lock = threading.Lock()
-_POSITION_CACHE_TTL = 1.0  # seconds
+_POSITION_CACHE_TTL = 1.0   # seconds
 
 
 def _get_symbol_lock(symbol, exchange, product):
@@ -1481,9 +1488,7 @@ def get_open_position(tradingsymbol, exchange, product, auth):
             "NFO": {"NFO", "NSE_FO", "NSE"},
             "BFO": {"BFO", "BSE_FO", "BSE"},
         }
-        expected_exchanges = exchange_variants.get(
-            exchange, {map_exchange_type(exchange), exchange}
-        )
+        expected_exchanges = exchange_variants.get(exchange, {map_exchange_type(exchange), exchange})
 
         for position in positions_list:
             # Check for matching position - compare with both tradingsymbol and symbol fields
@@ -1818,20 +1823,68 @@ def direct_place_order(
     order_reference_id=None,
 ):
     """
-    Directly place an order with Groww API (for testing)
+    Directly place an order with Groww SDK (for testing)
+
+    Args:
+        auth_token (str): Authentication token
+        symbol (str): Trading symbol
+        quantity (int): Quantity to trade
+        price (float, optional): Price for limit orders. Defaults to None.
+        order_type (str, optional): Order type. Defaults to "MARKET".
+        transaction_type (str, optional): BUY or SELL. Defaults to "BUY".
+        product (str, optional): Product type. Defaults to "CNC".
+        order_reference_id (str, optional): Custom reference ID. If None, a valid ID will be generated.
+
+    Returns:
+        dict: Order response
     """
-    data = {
-        "symbol": symbol,
-        "quantity": str(quantity),
-        "price": str(price or 0),
-        "order_type": order_type,
-        "action": transaction_type,
-        "product": product,
-    }
-    if order_reference_id:
-        data["order_reference_id"] = order_reference_id
-    _, resp, _ = direct_place_order_api(data, auth_token)
-    return resp
+    try:
+        # Initialize Groww API client
+        groww = init_groww_client(auth_token)
+
+        # Default exchange and segment
+        exchange = EXCHANGE_NSE
+        segment = SEGMENT_CASH
+        validity = VALIDITY_DAY
+
+        # Generate a valid Groww order reference ID if not provided
+        if not order_reference_id:
+            timestamp = datetime.now().strftime("%Y%m%d")
+            uuid_part = str(uuid.uuid4()).replace("-", "")[:8]
+            order_reference_id = f"{timestamp}-{uuid_part}"
+
+            # Ensure it meets Groww's requirements
+            order_reference_id = re.sub(r"[^a-zA-Z0-9-]", "", order_reference_id)[:20]
+            if len(order_reference_id) < 8:
+                order_reference_id = order_reference_id.ljust(8, "0")
+
+        logger.debug(
+            f"Placing {transaction_type} order for {quantity} of {symbol} at {price if price else 'MARKET'}"
+        )
+        logger.debug(
+            f"SDK Parameters: exchange={{exchange}}, segment={{segment}}, product={{product}}, order_type={order_type}"
+        )
+        logger.debug(f"Using order reference ID: {order_reference_id}")
+
+        # Place order using SDK
+        response = groww.place_order(
+            trading_symbol=symbol,
+            quantity=quantity,
+            price=price,
+            validity=validity,
+            exchange=exchange,
+            segment=segment,
+            product=product,
+            order_type=order_type,
+            transaction_type=transaction_type,
+            order_reference_id=order_reference_id,
+        )
+        logger.debug(f"Direct order response: {response}")
+        return response
+
+    except Exception as e:
+        logger.exception(f"Direct order error: {e}")
+        return {"status": "error", "message": str(e)}
 
 
 def place_smartorder_api(data, auth):
@@ -1893,9 +1946,7 @@ def place_smartorder_api(data, auth):
                 from openalgo.database.token_db import get_br_symbol
 
             # Get current open position for the symbol
-            position_str = get_open_position(
-                symbol, exchange, map_product_type(product), AUTH_TOKEN
-            )
+            position_str = get_open_position(symbol, exchange, map_product_type(product), AUTH_TOKEN)
             logger.debug(
                 f"Raw position from get_open_position: '{position_str}' (type: {type(position_str)})"
             )
@@ -2040,6 +2091,86 @@ def place_smartorder_api(data, auth):
         logger.exception(f"Error in smart order placement: {e}")
         response = {"status": "error", "message": f"Smart order error: {str(e)}"}
         return None, response, None
+
+
+def get_holdings(auth):
+    """
+    Fetch user's current stock holdings from Groww API
+
+    Args:
+        auth (str): Authentication token
+
+    Returns:
+        tuple: (holdings data, response status)
+    """
+    try:
+        # Logging for debugging
+        logger.debug("===== FETCH HOLDINGS START =====")
+
+        # Prepare headers for the API request
+        headers = {
+            "Accept": "application/json",
+            "Authorization": f"Bearer {auth}",
+            "X-API-VERSION": "1.0",
+        }
+
+        # Make the API request
+        import httpx
+
+        with httpx.Client() as client:
+            response = client.get(
+                "https://api.groww.in/v1/holdings/user",
+                headers=headers,
+                timeout=10.0,  # 10-second timeout
+            )
+
+        # Log the raw response
+        logger.debug(f"Holdings API Response Status: {response.status_code}")
+        logger.debug(f"Holdings API Response: {response.text}")
+
+        # Check response status
+        if response.status_code != 200:
+            error_msg = f"Holdings API Error: {response.status_code} - {response.text}"
+            logger.error(error_msg)
+            return None, {"status": "error", "message": error_msg}
+
+        # Parse the response
+        response_data = response.json()
+
+        # Validate response structure
+        if not response_data or response_data.get("status") != "SUCCESS":
+            error_msg = f"Invalid holdings response: {response_data}"
+            logger.error(error_msg)
+            return None, {"status": "error", "message": error_msg}
+
+        # Transform holdings to OpenAlgo format
+        holdings = response_data.get("payload", {}).get("holdings", [])
+        formatted_holdings = []
+
+        for holding in holdings:
+            formatted_holding = {
+                "symbol": holding.get("trading_symbol"),
+                "isin": holding.get("isin"),
+                "quantity": holding.get("quantity", 0),
+                "average_price": holding.get("average_price", 0),
+                "free_quantity": holding.get("demat_free_quantity", 0),
+                "locked_quantity": (
+                    holding.get("demat_locked_quantity", 0)
+                    + holding.get("groww_locked_quantity", 0)
+                ),
+                "pledged_quantity": holding.get("pledge_quantity", 0),
+                "t1_quantity": holding.get("t1_quantity", 0),
+            }
+            formatted_holdings.append(formatted_holding)
+
+        logger.debug(f"Processed {len(formatted_holdings)} holdings")
+
+        return formatted_holdings, {"status": "success"}
+
+    except Exception as e:
+        error_msg = f"Error fetching holdings: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        return None, {"status": "error", "message": error_msg}
 
 
 def close_all_positions(token=None, auth=None):
@@ -2480,7 +2611,9 @@ def cancel_order(orderid, auth, segment=None, symbol=None, exchange=None):
             }
 
             # Log the response we're returning for debugging
-            logger.debug(f"Returning error response: {json.dumps(response, indent=2)}")
+            logger.debug(
+                f"Returning error response: {json.dumps(response, indent=2)}"
+            )
 
         # Return the error response with 200 status code for consistency
         return response, 200
@@ -2998,7 +3131,7 @@ def cancel_all_orders_api(data, auth):
                     )
 
         # Prepare success response even if some orders failed
-        {
+        response = {
             "status": "success",
             "message": f"Successfully cancelled {len(cancelled_orders)} orders. {len(failed_to_cancel)} orders failed.",
             "cancelled_orders": cancelled_orders,

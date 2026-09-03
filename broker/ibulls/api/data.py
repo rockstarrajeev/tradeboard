@@ -25,7 +25,7 @@ def get_api_response(endpoint, auth, method="GET", payload="", feed_token=None, 
     AUTH_TOKEN = auth
     if feed_token:
         FEED_TOKEN = feed_token
-    logger.info(f"Feed Token: {FEED_TOKEN}")
+    logger.info("Feed token loaded")
 
     # Get the shared httpx client with connection pooling
     client = get_httpx_client()
@@ -855,9 +855,9 @@ class BrokerData:
 
             # Get exchange_token from database
             logger.info("Querying database for symbol token...")
-            with db_session() as db:
+            with db_session() as session:
                 symbol_info = (
-                    db.query(SymToken)
+                    session.query(SymToken)
                     .filter(SymToken.exchange == exchange, SymToken.brsymbol == br_symbol)
                     .first()
                 )
@@ -936,6 +936,26 @@ class BrokerData:
                 "oi": 0,
             }
             logger.info("Returning empty market depth structure")
+            return empty_depth
+
+        except Exception as e:
+            logger.error(f"Error in get_market_depth: {str(e)}", exc_info=True)
+            # Return empty structure on error
+            empty_depth = {
+                "bids": [{"price": 0, "quantity": 0} for _ in range(5)],
+                "asks": [{"price": 0, "quantity": 0} for _ in range(5)],
+                "totalbuyqty": 0,
+                "totalsellqty": 0,
+                "ltp": 0,
+                "ltq": 0,
+                "volume": 0,
+                "open": 0,
+                "high": 0,
+                "low": 0,
+                "prev_close": 0,
+                "oi": 0,
+            }
+            logger.info("Returning empty market depth structure due to error")
             return empty_depth
 
     def get_depth(self, symbol: str, exchange: str) -> dict:

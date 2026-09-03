@@ -2,7 +2,7 @@
 type: Reference
 title: Flow Editor — Import JSON Reference
 description: JSON import/export format for the Flow no-code strategy builder
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/prompt/flow-import-format.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/prompt/flow-import-format.md
 tags:
 - flow
 - workflow

@@ -5,7 +5,7 @@ Provides SDK-like interface using internal OpenAlgo services
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -588,11 +588,8 @@ class FlowOpenAlgoClient:
 
             report = whatsapp_bot_service.send_sync(to=target, text=message)
             if report.get("failed"):
-                return {
-                    "status": "error",
-                    "error": report["failed"][0].get("error", "send failed"),
-                    "data": report,
-                }
+                return {"status": "error", "error": report["failed"][0].get("error", "send failed"),
+                        "data": report}
             return {"status": "success", "data": report}
 
         except Exception as e:

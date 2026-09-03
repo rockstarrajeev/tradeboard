@@ -36,7 +36,7 @@ client = api(api_key="...", host="...", ws_url="...", verbose=2)
 
 ```python
 """
-Test verbose control in Tradeboard WebSocket Feed
+Test verbose control in OpenAlgo WebSocket Feed
 """
 from openalgo import api
 import time
@@ -153,6 +153,7 @@ MY CALLBACK: NIFTY LTP: 26008.5
 | **\[LTP]**   | LTP updates *(verbose=2)*           |
 | **\[QUOTE]** | Quote updates *(verbose=2)*         |
 | **\[DEPTH]** | Market depth updates *(verbose=2)*  |
+| **\[ORDER]** | Order status updates via `subscribe_orders()` *(verbose=2)* |
 | **\[ERROR]** | Error messages *(always shown)*     |
 
 
@@ -165,7 +166,7 @@ If you need additional information that is not directly available in this page, 
 Perform an HTTP GET request on the current page URL with the `ask` query parameter:
 
 ```
-GET https://docs.rajeevupadhyay.com/trading-platform/python/websockets-verbose-control.md?ask=<question>
+GET https://docs.openalgo.in/trading-platform/python/websockets-verbose-control.md?ask=<question>
 ```
 
 The question should be specific, self-contained, and written in natural language.

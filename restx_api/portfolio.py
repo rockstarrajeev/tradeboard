@@ -75,7 +75,9 @@ class PortfolioBacktestSchema(Schema):
     brokerage_pct = fields.Float(load_default=0.0, validate=validate.Range(min=0, max=0.05))
     # Which exchange's transaction charge applies. Explicit rather than taken
     # from the first holding, since a mixed NSE/BSE book has no single answer.
-    cost_exchange = fields.Str(load_default="NSE", validate=validate.OneOf(PORTFOLIO_EXCHANGES))
+    cost_exchange = fields.Str(
+        load_default="NSE", validate=validate.OneOf(PORTFOLIO_EXCHANGES)
+    )
     # Per-charge overrides, so every rate is the caller's to set. Statutory
     # rates change with the budget and differ by market; baking them into the
     # server would mean a release every time one moves.
@@ -90,9 +92,8 @@ class PortfolioBacktestSchema(Schema):
         ),
         load_default=dict,
     )
-    gst_rate = fields.Float(
-        load_default=None, allow_none=True, validate=validate.Range(min=0, max=1)
-    )
+    gst_rate = fields.Float(load_default=None, allow_none=True,
+                            validate=validate.Range(min=0, max=1))
     cost_bps = fields.Float(load_default=0.0, validate=validate.Range(min=0, max=1000))
     slippage = fields.Float(load_default=0.0, validate=validate.Range(min=0, max=0.1))
     initial_capital = fields.Float(load_default=100000.0, validate=validate.Range(min=1))
@@ -135,7 +136,9 @@ class PortfolioBacktest(Resource):
         try:
             data = backtest_schema.load(request.json or {})
         except ValidationError as err:
-            return make_response(jsonify({"status": "error", "message": err.messages}), 400)
+            return make_response(
+                jsonify({"status": "error", "message": err.messages}), 400
+            )
 
         api_key = data.pop("apikey")
 
@@ -152,7 +155,9 @@ class PortfolioBacktest(Resource):
 
         auth_token = feed_token = broker = None
         if data["source"] == "api":
-            auth_token, feed_token, broker = get_auth_token_broker(api_key, include_feed_token=True)
+            auth_token, feed_token, broker = get_auth_token_broker(
+                api_key, include_feed_token=True
+            )
             if auth_token is None:
                 return make_response(
                     jsonify(
@@ -192,7 +197,9 @@ class PortfolioBacktest(Resource):
             )
         except Exception:  # noqa: BLE001
             logger.exception("portfolio backtest endpoint failed")
-            return make_response(jsonify({"status": "error", "message": "Backtest failed."}), 500)
+            return make_response(
+                jsonify({"status": "error", "message": "Backtest failed."}), 500
+            )
 
         return make_response(jsonify(payload), status)
 
@@ -207,7 +214,9 @@ class PortfolioTearsheet(Resource):
         try:
             data = backtest_schema.load(request.json or {})
         except ValidationError as err:
-            return make_response(jsonify({"status": "error", "message": err.messages}), 400)
+            return make_response(
+                jsonify({"status": "error", "message": err.messages}), 400
+            )
 
         api_key = data.pop("apikey")
         if verify_api_key(api_key) is None:
@@ -217,7 +226,9 @@ class PortfolioTearsheet(Resource):
 
         auth_token = feed_token = broker = None
         if data["source"] == "api":
-            auth_token, feed_token, broker = get_auth_token_broker(api_key, include_feed_token=True)
+            auth_token, feed_token, broker = get_auth_token_broker(
+                api_key, include_feed_token=True
+            )
             if auth_token is None:
                 return make_response(
                     jsonify(
@@ -271,7 +282,9 @@ class PortfolioTearsheet(Resource):
         # not a page the app renders.
         response = make_response(payload, 200)
         response.headers["Content-Type"] = "text/html; charset=utf-8"
-        response.headers["Content-Disposition"] = 'attachment; filename="portfolio-tearsheet.html"'
+        response.headers["Content-Disposition"] = (
+            'attachment; filename="portfolio-tearsheet.html"'
+        )
         return response
 
 
@@ -299,7 +312,9 @@ class PortfolioHoldings(Resource):
         try:
             data = holdings_schema.load(request.json or {})
         except ValidationError as err:
-            return make_response(jsonify({"status": "error", "message": err.messages}), 400)
+            return make_response(
+                jsonify({"status": "error", "message": err.messages}), 400
+            )
 
         api_key = data.pop("apikey")
         if verify_api_key(api_key) is None:
@@ -309,7 +324,9 @@ class PortfolioHoldings(Resource):
 
         # Holdings always need a broker session -- unlike a backtest, there is
         # no local copy of what someone owns.
-        auth_token, feed_token, broker = get_auth_token_broker(api_key, include_feed_token=True)
+        auth_token, feed_token, broker = get_auth_token_broker(
+            api_key, include_feed_token=True
+        )
         if auth_token is None:
             return make_response(
                 jsonify(
@@ -336,6 +353,8 @@ class PortfolioHoldings(Resource):
             )
         except Exception:  # noqa: BLE001
             logger.exception("holdings analysis failed")
-            return make_response(jsonify({"status": "error", "message": "Analysis failed."}), 500)
+            return make_response(
+                jsonify({"status": "error", "message": "Analysis failed."}), 500
+            )
 
         return make_response(jsonify(payload), status)

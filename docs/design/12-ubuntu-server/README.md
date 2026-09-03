@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers deploying Tradeboard on an Ubuntu server (20.04/22.04 LTS) with Nginx reverse proxy, systemd services, and SSL configuration for production use.
+This guide covers deploying OpenAlgo on an Ubuntu server (20.04/22.04 LTS) with Nginx reverse proxy, systemd services, and SSL configuration for production use.
 
 ## Architecture Diagram
 
@@ -28,19 +28,19 @@ This guide covers deploying Tradeboard on an Ubuntu server (20.04/22.04 LTS) wit
                     │                       │
                     ▼                       ▼
 ┌─────────────────────────────────────────────────────┐
-│           Tradeboard (Gunicorn + WebSocket)           │
+│           OpenAlgo (Gunicorn + WebSocket)           │
 │                                                     │
 │  Flask App ─────────── localhost:5000               │
 │  WebSocket Thread ──── localhost:8765               │
 │                                                     │
-│  systemd: tradeboard                                  │
+│  systemd: openalgo                                  │
 └─────────────────────────────────────────────────────┘
                            │
                            ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                          File System                                         │
 │                                                                              │
-│  /opt/tradeboard/                                                             │
+│  /opt/openalgo/                                                             │
 │  ├── .venv/              # Virtual environment                              │
 │  ├── db/                 # SQLite databases                                 │
 │  ├── log/                # Application logs                                 │
@@ -72,12 +72,12 @@ sudo apt install -y nodejs
 
 ```bash
 # Create application directory
-sudo mkdir -p /opt/tradeboard
-sudo chown $USER:$USER /opt/tradeboard
+sudo mkdir -p /opt/openalgo
+sudo chown $USER:$USER /opt/openalgo
 
 # Clone repository
-cd /opt/tradeboard
-git clone https://github.com/rockstarrajeev/tradeboard.git .
+cd /opt/openalgo
+git clone --filter=blob:none https://github.com/marketcalls/openalgo.git .
 ```
 
 ### 2. Setup Python Environment
@@ -123,21 +123,21 @@ cd ..
 **Note:** One systemd service is sufficient. Under Gunicorn/eventlet, `websocket_proxy.app_integration` spawns the WebSocket proxy as an isolated child process on port 8765; it is not an in-process daemon thread.
 
 ```bash
-sudo nano /etc/systemd/system/tradeboard.service
+sudo nano /etc/systemd/system/openalgo.service
 ```
 
 ```ini
 [Unit]
-Description=Tradeboard Trading Platform
+Description=OpenAlgo Trading Platform
 After=network.target
 
 [Service]
 Type=simple
 User=www-data
 Group=www-data
-WorkingDirectory=/opt/tradeboard
-Environment="PATH=/opt/tradeboard/.venv/bin"
-ExecStart=/opt/tradeboard/.venv/bin/gunicorn \
+WorkingDirectory=/opt/openalgo
+Environment="PATH=/opt/openalgo/.venv/bin"
+ExecStart=/opt/openalgo/.venv/bin/gunicorn \
     --worker-class eventlet \
     -w 1 \
     --bind 127.0.0.1:5000 \
@@ -156,21 +156,30 @@ WantedBy=multi-user.target
 
 ```bash
 # Set ownership
-sudo chown -R www-data:www-data /opt/tradeboard
+sudo chown -R www-data:www-data /opt/openalgo
 
 # Set permissions
-sudo chmod -R 755 /opt/tradeboard
-sudo chmod 700 /opt/tradeboard/keys
-sudo chmod 600 /opt/tradeboard/.env
+sudo chmod -R 755 /opt/openalgo
+sudo chmod 700 /opt/openalgo/keys
+sudo chmod 600 /opt/openalgo/.env
 ```
 
 ### 7. Configure Nginx
 
 ```bash
-sudo nano /etc/nginx/sites-available/tradeboard
+sudo nano /etc/nginx/sites-available/openalgo
 ```
 
 ```nginx
+# Send "Connection: upgrade" upstream only for a real WebSocket handshake.
+# Hardcoding "upgrade" makes every ordinary request reach gunicorn claiming an
+# upgrade with an empty Upgrade:, which breaks HTTP/1.1 keep-alive and causes
+# intermittent truncated responses and 5xx. See GitHub issue #1807.
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
 server {
     listen 80;
     server_name your-domain.com;
@@ -201,9 +210,10 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
 
-        # WebSocket support for Socket.IO
+        # WebSocket support for Socket.IO. Socket.IO also long-polls over plain
+        # HTTP, so this must not force the upgrade header - see the map above.
         proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
+        proxy_set_header Connection $connection_upgrade;
         proxy_read_timeout 86400;
     }
 
@@ -212,14 +222,14 @@ server {
         proxy_pass http://127.0.0.1:8765;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
+        proxy_set_header Connection $connection_upgrade;
         proxy_set_header Host $host;
         proxy_read_timeout 86400;
     }
 
     # Static files
     location /static {
-        alias /opt/tradeboard/static;
+        alias /opt/openalgo/static;
         expires 30d;
         add_header Cache-Control "public, immutable";
     }
@@ -230,14 +240,14 @@ server {
 
 ```bash
 # Enable Nginx site
-sudo ln -s /etc/nginx/sites-available/tradeboard /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/openalgo /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl restart nginx
 
-# Enable and start Tradeboard service
+# Enable and start OpenAlgo service
 sudo systemctl daemon-reload
-sudo systemctl enable tradeboard
-sudo systemctl start tradeboard
+sudo systemctl enable openalgo
+sudo systemctl start openalgo
 ```
 
 ### 9. Setup SSL (Let's Encrypt)
@@ -250,16 +260,16 @@ sudo certbot --nginx -d your-domain.com
 
 ```bash
 # Check status
-sudo systemctl status tradeboard
+sudo systemctl status openalgo
 
 # View logs
-sudo journalctl -u tradeboard -f
+sudo journalctl -u openalgo -f
 
 # Restart service
-sudo systemctl restart tradeboard
+sudo systemctl restart openalgo
 
 # Stop service
-sudo systemctl stop tradeboard
+sudo systemctl stop openalgo
 ```
 
 ## Firewall Configuration
@@ -281,10 +291,10 @@ sudo ufw status
 
 ```bash
 # Stop service
-sudo systemctl stop tradeboard
+sudo systemctl stop openalgo
 
 # Pull updates
-cd /opt/tradeboard
+cd /opt/openalgo
 git pull origin main
 
 # Update dependencies
@@ -298,25 +308,25 @@ npm run build
 cd ..
 
 # Start service
-sudo systemctl start tradeboard
+sudo systemctl start openalgo
 ```
 
 ## Troubleshooting
 
 | Issue | Solution |
 |-------|----------|
-| 502 Bad Gateway | Check if Tradeboard service is running: `systemctl status tradeboard` |
+| 502 Bad Gateway | Check if OpenAlgo service is running: `systemctl status openalgo` |
 | WebSocket fails | Check Nginx /ws proxy config and service logs |
-| Permission denied | Verify www-data ownership: `chown -R www-data:www-data /opt/tradeboard` |
+| Permission denied | Verify www-data ownership: `chown -R www-data:www-data /opt/openalgo` |
 | SSL error | Renew certificates: `sudo certbot renew` |
 
 ## Key Files Reference
 
 | File | Purpose |
 |------|---------|
-| `/etc/systemd/system/tradeboard.service` | Main service (includes WebSocket) |
-| `/etc/nginx/sites-available/tradeboard` | Nginx config |
-| `/opt/tradeboard/.env` | Application config |
+| `/etc/systemd/system/openalgo.service` | Main service (includes WebSocket) |
+| `/etc/nginx/sites-available/openalgo` | Nginx config |
+| `/opt/openalgo/.env` | Application config |
 | `/var/log/nginx/` | Nginx logs |
 
-**Note:** There is no separate `tradeboard-ws.service`. The Gunicorn-managed application starts the WebSocket proxy as a child process on port 8765, and systemd's service cgroup owns both processes.
+**Note:** There is no separate `openalgo-ws.service`. The Gunicorn-managed application starts the WebSocket proxy as a child process on port 8765, and systemd's service cgroup owns both processes.

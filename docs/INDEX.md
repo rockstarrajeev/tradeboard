@@ -1,4 +1,4 @@
-# Tradeboard Documentation Map
+# OpenAlgo Documentation Map
 
 The entry point for humans and AI agents. This file is a **map, not a copy** —
 it points at the canonical docs that already live under `docs/`. Edit a source
@@ -9,18 +9,19 @@ need → drill into the specific file. Don't load everything at once.
 
 ---
 
-## Using Tradeboard (product, API, SDK)
+## Using OpenAlgo (product, API, SDK)
 
 | Read this when you need… | Entry point |
 |---|---|
 | The REST API (`/api/v1/`) — orders, market data, options, account, streaming | [api/README.md](api/README.md) |
-| The Python SDK — install, client, data/order/account calls | [<prompt/tradeboard python sdk.md>](<prompt/tradeboard python sdk.md>) |
+| The Python SDK — install, client, data/order/account calls | [<prompt/openalgo python sdk.md>](<prompt/openalgo python sdk.md>) |
 | Symbol format across exchanges (equity/futures/options) | [prompt/symbol-format.md](prompt/symbol-format.md) |
 | Order constants (exchange / product / price-type / action codes) | [prompt/order-constants.md](prompt/order-constants.md) |
 | Contract lot sizes | [prompt/LotSize.md](prompt/LotSize.md) |
 | WebSocket subscription & message format | [prompt/websockets-format.md](prompt/websockets-format.md) · [prompt/websockets-verbose-control.md](prompt/websockets-verbose-control.md) |
 | Service-layer functions & Flow JSON import | [prompt/services_documentation.md](prompt/services_documentation.md) · [prompt/flow-import-format.md](prompt/flow-import-format.md) |
-| Technical indicators (`ta` library) | [<prompt/indicators/tradeboard indicators - introduction.md>](<prompt/indicators/tradeboard indicators - introduction.md>) |
+| Technical indicators (`ta` library) | [<prompt/indicators/openalgo indicators - introduction.md>](<prompt/indicators/openalgo indicators - introduction.md>) |
+| Writing your own chart indicators for `/trading` | [custom-indicators.md](custom-indicators.md) |
 | Step-by-step user guide (setup → first order → integrations) | [userguide/README.md](userguide/README.md) |
 | MCP tool reference (Claude Desktop / Cursor / Windsurf) | [mcp-tool-reference.md](mcp-tool-reference.md) |
 
@@ -30,8 +31,8 @@ need → drill into the specific file. Don't load everything at once.
 |---|---|
 | Ubuntu server install | [installation-guidelines/getting-started/ubuntu-server-installation.md](installation-guidelines/getting-started/ubuntu-server-installation.md) |
 | Docker | [docker/README.md](docker/README.md) |
-| Upgrade / SMTP / TOTP / forgot-password | https://docs.rajeevupadhyay.com/installation-guidelines/getting-started/ |
-| Broker integration (34 plugins) | [broker-integration-guide.md](broker-integration-guide.md) |
+| Upgrade / SMTP / TOTP / forgot-password | https://docs.openalgo.in/installation-guidelines/getting-started/ |
+| Broker integration (36 plugins) | [broker-integration-guide.md](broker-integration-guide.md) |
 | Release notes & changelog | [releases/](releases/) · [CHANGELOG.md](CHANGELOG.md) |
 
 ## Feature surfaces
@@ -48,6 +49,7 @@ need → drill into the specific file. Don't load everything at once.
 
 | Topic | Entry point |
 |---|---|
+| First-time contributor setup (devsprint prep) | [devsprint/README.md](devsprint/README.md) |
 | System design (frontend, backend, DB, UI) | [design/README.md](design/README.md) |
 | Product requirements — Flow, Python strategies, Sandbox, Historify, MCP, event bus, websocket proxy | [prd/README.md](prd/README.md) · [prd/PRD.md](prd/PRD.md) |
 | BDD feature specs (Gherkin `.feature`) | [bdd/README.md](bdd/README.md) |
@@ -64,5 +66,5 @@ need → drill into the specific file. Don't load everything at once.
 
 ## Governance
 
-- User responsibilities & risk ownership: https://docs.rajeevupadhyay.com/responsibilities
-- Repository: https://github.com/rockstarrajeev/tradeboard · Docs: https://docs.rajeevupadhyay.com
+- User responsibilities & risk ownership: https://docs.openalgo.in/responsibilities
+- Repository: https://github.com/marketcalls/openalgo · Docs: https://docs.openalgo.in

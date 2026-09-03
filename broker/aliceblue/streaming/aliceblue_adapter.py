@@ -1,7 +1,6 @@
 import base64
 import hashlib
 import json
-import logging
 import os
 import ssl
 import sys
@@ -15,6 +14,7 @@ from dotenv import load_dotenv
 from database.auth_db import get_auth_token, get_feed_token, get_user_id
 from database.token_db import get_token
 from utils.httpx_client import get_httpx_client
+from utils.logging import get_logger
 
 from .aliceblue_client import Aliceblue, Instrument
 
@@ -37,7 +37,7 @@ class AliceblueWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
     def __init__(self):
         super().__init__()
-        self.logger = logging.getLogger("aliceblue_websocket")
+        self.logger = get_logger("aliceblue_websocket")
         self.ws_client = None
         self.aliceblue_client = None
         self.user_id = None
@@ -98,7 +98,10 @@ class AliceblueWebSocketAdapter(BaseBrokerWebSocketAdapter):
         self.broker_name = broker_name
 
         # Debug logging
-        self.logger.info(f"Initializing AliceBlue adapter with auth_data: {auth_data}")
+        self.logger.info(
+            f"Initializing AliceBlue adapter with auth_data fields: "
+            f"{sorted(auth_data) if auth_data else None}"
+        )
 
         try:
             if auth_data:
@@ -314,7 +317,9 @@ class AliceblueWebSocketAdapter(BaseBrokerWebSocketAdapter):
             # fixed sleep — returns immediately on success and gives a clean
             # timeout signal on failure.
             if not self._auth_event.wait(timeout=10):
-                self.logger.warning("Timed out waiting for AliceBlue auth confirmation")
+                self.logger.warning(
+                    "Timed out waiting for AliceBlue auth confirmation"
+                )
                 return False
 
             return bool(self.ws_client.sock and self.ws_client.sock.connected)
@@ -535,7 +540,7 @@ class AliceblueWebSocketAdapter(BaseBrokerWebSocketAdapter):
             if not self.ws_client or not self.ws_client.sock or not self.ws_client.sock.connected:
                 self.logger.info("AliceBlue WebSocket not connected - attempting to reconnect...")
                 reconnect_result = self.connect()
-                if reconnect_result and not reconnect_result.get("success"):
+                if reconnect_result and reconnect_result.get("success") == False:
                     self.logger.error("Failed to reconnect to AliceBlue WebSocket")
                     return self._create_error_response(
                         "RECONNECT_FAILED", "Failed to reconnect to WebSocket"
@@ -545,7 +550,9 @@ class AliceblueWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 # returned via a different path (e.g. running flag) make sure
                 # auth has actually settled.
                 if not self._auth_event.wait(timeout=5):
-                    self.logger.warning("Auth handshake did not complete in time after reconnect")
+                    self.logger.warning(
+                        "Auth handshake did not complete in time after reconnect"
+                    )
                     return self._create_error_response(
                         "RECONNECT_TIMEOUT", "Auth handshake timeout after reconnect"
                     )
@@ -910,8 +917,9 @@ class AliceblueWebSocketAdapter(BaseBrokerWebSocketAdapter):
                     # Add message type
                     parsed_data["message_type"] = "dk"
                     # Store symbol info from dk message
-                    data.get("tk", "")
-                    data.get("e", "")
+                    token = data.get("tk", "")
+                    exchange = data.get("e", "")
+                    symbol_key = f"{exchange}|{token}"
                     if "ts" in data:
                         # Extract and clean symbol name
                         raw_symbol = data["ts"]
@@ -1056,7 +1064,9 @@ class AliceblueWebSocketAdapter(BaseBrokerWebSocketAdapter):
                     f"Resubscribed {len(unique_keys)} tokens with feed type '{feed_type}'"
                 )
             except Exception as e:
-                self.logger.error(f"Error resubscribing batch for feed type '{feed_type}': {e}")
+                self.logger.error(
+                    f"Error resubscribing batch for feed type '{feed_type}': {e}"
+                )
 
     def is_connected(self) -> bool:
         """Check if WebSocket is connected"""

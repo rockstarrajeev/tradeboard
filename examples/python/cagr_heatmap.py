@@ -2,12 +2,12 @@
 # Python Code to Compute Rolling CAGR Heatmap for NIFTY 50
 # Recommended to use Daily Historical Data more than 5 Years
 # Minor variations in Rolling Returns might occur due to data source differences
-# Coded by Rajandran R - Creator of Tradeboard (https://rajeevupadhyay.com)
+# Coded by Rajandran R - Creator of OpenAlgo (https://openalgo.in)
 # Author - www.marketcalls.in
 # ---------------------------------------------------
-# NOTE: This code requires Tradeboard to be running locally or on a server.
-# Get your API key from your self-hosted Tradeboard platform.
-# Tradeboard GitHub: https://github.com/rockstarrajeev/tradeboard
+# NOTE: This code requires OpenAlgo to be running locally or on a server.
+# Get your API key from your self-hosted OpenAlgo platform.
+# OpenAlgo GitHub: https://github.com/marketcalls/openalgo
 # ---------------------------------------------------
 
 from datetime import datetime, timedelta
@@ -18,11 +18,11 @@ import plotly.express as px
 from openalgo import api
 
 # ---------------------------------------------------
-# Initialize Tradeboard Client
+# Initialize OpenAlgo Client
 # ---------------------------------------------------
 client = api(api_key="your_api_key_here", host="http://127.0.0.1:5000")
 
-print("🔁 Tradeboard Python Bot is running.")
+print("OpenAlgo Python Bot is running.")
 
 # ---------------------------------------------------
 # NIFTY 50 SYMBOLS
@@ -179,7 +179,7 @@ def create_heatmap(df, period, label):
     )
 
     if df_period.empty:
-        print(f"⚠️ No data for {label}")
+        print(f"No data for {label}")
         return
 
     cols = 10
@@ -205,8 +205,8 @@ def create_heatmap(df, period, label):
 
     fig.update_layout(
         title=f"NIFTY 50 {label} Heatmap (%)",
-        xaxis={"showticklabels": False, "title": ""},
-        yaxis={"showticklabels": False, "autorange": "reversed", "title": ""},
+        xaxis=dict(showticklabels=False, title=""),
+        yaxis=dict(showticklabels=False, autorange="reversed", title=""),
         template="plotly_dark",
         height=600,
         width=1200,
@@ -214,7 +214,7 @@ def create_heatmap(df, period, label):
 
     filename = f"nifty50_{period.lower()}_heatmap.png"
     fig.write_image(filename, width=1200, height=600, scale=2)
-    print(f"✅ {label} Heatmap saved as {filename}")
+    print(f"{label} Heatmap saved as {filename}")
 
 
 # ---------------------------------------------------
@@ -224,4 +224,4 @@ create_heatmap(df_cagr, "1Y", "1-Year Absolute Return")
 create_heatmap(df_cagr, "3Y", "3-Year CAGR")
 create_heatmap(df_cagr, "5Y", "5-Year CAGR")
 
-print("\n✅ All heatmaps generated successfully!")
+print("\n All heatmaps generated successfully!")

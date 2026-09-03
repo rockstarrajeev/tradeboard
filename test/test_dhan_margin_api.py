@@ -101,7 +101,6 @@ def test_calculate_margin_api_routes_multi_position_to_basket_api(monkeypatch):
     captured = {}
 
     monkeypatch.setattr(margin_api, "get_client_id", lambda api_key=None: "client-1")
-
     def fake_transform(pos, client_id):
         idx = len(captured.setdefault("seen", []))
         captured["seen"].append((pos["symbol"], client_id))

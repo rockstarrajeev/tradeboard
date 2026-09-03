@@ -3,7 +3,6 @@ Fixed Dhan WebSocket adapter for OpenAlgo.
 Implements the broker-specific WebSocket adapter for Dhan with proper mode mapping.
 """
 
-import logging
 import os
 
 # Add the project root to Python path if not already there
@@ -19,6 +18,7 @@ if project_root not in sys.path:
 # Now import using relative paths from the project root
 from database.auth_db import get_auth_token
 from database.token_db import get_token
+from utils.logging import get_logger
 from websocket_proxy.base_adapter import BaseBrokerWebSocketAdapter
 
 from .dhan_mapping import get_dhan_exchange, get_openalgo_exchange
@@ -50,7 +50,7 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
         """Initialize the WebSocket adapter"""
         super().__init__()
         # Set a default logger name, will be updated in initialize()
-        self.logger = logging.getLogger("websocket_adapter")
+        self.logger = get_logger("websocket_adapter")
         self.ws_client = None
         self.user_id = None
         # broker_name will be set in initialize()
@@ -99,7 +99,7 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
         """
         self.broker_name = broker_name.lower()  # Store broker name for later use
         # Update logger name based on broker name
-        self.logger = logging.getLogger(f"{self.broker_name}_websocket_adapter")
+        self.logger = get_logger(f"{self.broker_name}_websocket_adapter")
         self.logger.info(f"Initializing {self.broker_name} WebSocket adapter")
         self.user_id = user_id
 
@@ -204,7 +204,9 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
         """
         if self.batch_timer:
             self.batch_timer.cancel()
-        self.batch_timer = threading.Timer(self.batch_delay, self._process_batch_subscriptions)
+        self.batch_timer = threading.Timer(
+            self.batch_delay, self._process_batch_subscriptions
+        )
         self.batch_timer.daemon = True
         self.batch_timer.start()
 
@@ -223,7 +225,9 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
             ws_client = self.ws_client
 
         if not ws_client:
-            self.logger.warning(f"Dropping batch of {len(pending)} subscriptions — ws_client gone")
+            self.logger.warning(
+                f"Dropping batch of {len(pending)} subscriptions — ws_client gone"
+            )
             return
 
         # Group by (mode, exchange_code) — Dhan's subscribe_tokens accepts
@@ -245,7 +249,9 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
                     f"(exchange_code={exch_code})"
                 )
             except Exception as e:
-                self.logger.error(f"Batch subscribe failed for mode {mode}: {e}")
+                self.logger.error(
+                    f"Batch subscribe failed for mode {mode}: {e}"
+                )
 
     def disconnect(self):
         """
@@ -429,7 +435,9 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 self.token_to_symbol[str(actual_token)] = (symbol, exchange)
                 self.token_to_symbol[int(actual_token)] = (symbol, exchange)
 
-                self.logger.info(f"Stored token mapping: {actual_token} -> ({symbol}, {exchange})")
+                self.logger.info(
+                    f"Stored token mapping: {actual_token} -> ({symbol}, {exchange})"
+                )
                 self.logger.info(f"Current token_to_symbol: {self.token_to_symbol}")
 
             # Map OpenAlgo exchange to Dhan exchange code
@@ -587,7 +595,7 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
             # Group tokens by mode for bulk subscription
             mode_tokens = {}
 
-            for _symbol, data in self.subscribed_symbols.items():
+            for symbol, data in self.subscribed_symbols.items():
                 token = data["token"]
                 mode = data["mode"]
 
@@ -733,7 +741,7 @@ class DhanWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 tick["symbol"] = symbol
 
                 # Store Dhan's exchange code
-                tick.get("exchange")
+                dhan_exchange = tick.get("exchange")
 
                 # Get original subscription exchange for topic generation
                 subscription_exchange = exchange

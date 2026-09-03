@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Tradeboard Docker Multi-Instance Installation with Custom SSL
+# OpenAlgo Docker Multi-Instance Installation with Custom SSL
 # Supports deploying multiple instances with existing SSL certificates (including Wildcards)
 
 # Colors for output
@@ -11,19 +11,19 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Base Configuration
-INSTALL_BASE="/opt/tradeboard"
+INSTALL_BASE="/opt/openalgo"
 START_FLASK_PORT=5000
 START_WS_PORT=8765
 
 # Script Banner
 echo -e "${BLUE}"
-echo " ████████╗██████╗  █████╗ ██████╗ ███████╗██████╗  ██████╗  █████╗ ██████╗ ██████╗ "
-echo " ╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔══██╗██╔═══██╗██╔══██╗██╔══██╗██╔══██╗"
-echo "    ██║   ██████╔╝███████║██║  ██║█████╗  ██████╔╝██║   ██║███████║██████╔╝██║  ██║"
-echo "    ██║   ██╔══██╗██╔══██║██║  ██║██╔══╝  ██╔══██╗██║   ██║██╔══██║██╔══██╗██║  ██║"
-echo "    ██║   ██║  ██║██║  ██║██████╔╝███████╗██████╔╝╚██████╔╝██║  ██║██║  ██║██████╔╝"
-echo "    ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚══════╝╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ "
-echo "                     MULTI-INSTANCE DOCKER + CUSTOM SSL INSTALLER                  "
+echo "  ██████╗ ██████╗ ███████╗███╗   ██╗ █████╗ ██╗      ██████╗  ██████╗ "
+echo " ██╔═══██╗██╔══██╗██╔════╝████╗  ██║██╔══██╗██║     ██╔════╝ ██╔═══██╗"
+echo " ██║   ██║██████╔╝███████╗██╔██╗ ██║███████║██║     ██║  ███╗██║   ██║"
+echo " ██║   ██║██╔═══╝ ██╔══╝  ██║╚██╗██║██╔══██║██║     ██║   ██║██║   ██║"
+echo " ╚██████╔╝██╗     ███████╗██║ ╚████║██║  ██║███████╗╚██████╔╝╚██████╔╝"
+echo "  ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝ ╚═════╝  ╚═════╝ "
+echo "             MULTI-INSTANCE DOCKER + CUSTOM SSL INSTALLER               "
 echo -e "${NC}"
 
 # -----------------
@@ -47,7 +47,7 @@ generate_hex() {
 
 validate_broker() {
     local broker=$1
-    local valid_brokers="fivepaisa,fivepaisaxts,aliceblue,angel,arrow,compositedge,definedge,deltaexchange,dhan,dhan_sandbox,firstock,flattrade,fyers,groww,ibulls,iifl,iiflcapital,indmoney,jainamxts,kotak,motilal,mstock,nubra,paytm,pocketful,rmoney,samco,shoonya,tradejini,tradesmart,upstox,wisdom,zebu,zerodha"
+    local valid_brokers="fivepaisa,fivepaisaxts,aliceblue,angel,arrow,compositedge,definedge,deltaexchange,dhan,dhan_sandbox,firstock,flattrade,fyers,groww,hdfcsecurities,hdfcsky,ibulls,iifl,iiflcapital,indmoney,jainamxts,kotak,motilal,mstock,nubra,paytm,pocketful,rmoney,samco,shoonya,tradejini,tradesmart,upstox,wisdom,zebu,zerodha"
     [[ ",$valid_brokers," == *",$broker,"* ]]
 }
 
@@ -164,7 +164,7 @@ fi
 log "\n=== Configuration ===" "$BLUE"
 
 # 0. Git Repository Selection
-DEFAULT_REPO="https://github.com/rockstarrajeev/tradeboard.git"
+DEFAULT_REPO="https://github.com/marketcalls/openalgo.git"
 read -p "Enter Git Repository URL [Default: $DEFAULT_REPO]: " REPO_URL
 REPO_URL=${REPO_URL:-$DEFAULT_REPO}
 log "Using Repository: $REPO_URL" "$GREEN"
@@ -690,8 +690,12 @@ server {
     location / {
         proxy_pass http://127.0.0.1:9000;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "upgrade";
+        # Plain HTTP only: /ws, /ws/ and /socket.io/ have their own blocks.
+        # Forcing "Connection: upgrade" here sent every ordinary request
+        # upstream with a bogus upgrade header and an empty Upgrade:, which
+        # breaks HTTP/1.1 keep-alive to gunicorn and shows up as intermittent
+        # truncated asset responses and 5xx (GitHub issue #1807).
+        proxy_set_header Connection "";
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -722,7 +726,7 @@ for i in "${!CONF_DOMAINS[@]}"; do
     FLASK_PORT=${PORTS[0]}
     WS_PORT=${PORTS[1]}
     SANITIZED_NAME=$(sanitize_domain "$DOMAIN")
-    PROJECT_NAME="tradeboard-${SANITIZED_NAME}"
+    PROJECT_NAME="openalgo-${SANITIZED_NAME}"
 
     log " -> Ports: Flask=$FLASK_PORT, WS=$WS_PORT" "$GREEN"
     log " -> Dir: $INSTANCE_DIR" "$GREEN"
@@ -772,7 +776,15 @@ for i in "${!CONF_DOMAINS[@]}"; do
             log "Directory exists but is not a valid git repo. Backing up and re-cloning..." "$YELLOW"
             mv "$INSTANCE_DIR" "${INSTANCE_DIR}_backup_$(date +%s)"
         fi
-        git clone "$REPO_URL" "$INSTANCE_DIR"
+        # --filter=blob:none makes this a partial clone: the server sends every
+        # commit and tree but no file contents, so it pulls ~20 MB instead of
+        # ~280 MB. Blobs outside the current checkout are fetched on demand, so
+        # the full history stays usable -- all 4,824 commits, 62 tags, every
+        # branch -- which keeps `git reset --hard HEAD~n`, tag checkouts and
+        # branch switching working. Nearly all of that 280 MB is superseded
+        # frontend/dist bundles that a server never reads. A host without filter
+        # support just full-clones, so this is never worse than no flag at all.
+        git clone --filter=blob:none "$REPO_URL" "$INSTANCE_DIR"
     else
         log "Updating existing repository..." "$GREEN"
         cd "$INSTANCE_DIR"
@@ -809,7 +821,7 @@ for i in "${!CONF_DOMAINS[@]}"; do
         fi
         
         # CSP: Add domain if not already present (delete-and-append avoids sed regex issues with nested quotes)
-        # See: https://github.com/rockstarrajeev/tradeboard/issues/938
+        # See: https://github.com/marketcalls/openalgo/issues/938
         if ! grep "CSP_CONNECT_SRC" "$ENV_FILE" | grep -q "https://$DOMAIN"; then
             CURRENT_CSP=$(grep "^CSP_CONNECT_SRC" "$ENV_FILE" | sed 's/^CSP_CONNECT_SRC *= *//; s/^"//; s/"$//')
             if [ -n "$CURRENT_CSP" ] && ! echo "$CURRENT_CSP" | grep -q "https://$DOMAIN"; then
@@ -831,16 +843,16 @@ for i in "${!CONF_DOMAINS[@]}"; do
         sed -i "s|YOUR_BROKER_API_SECRET|$API_SECRET|g" "$ENV_FILE"
         sed -i "s|http://127.0.0.1:5000|https://$DOMAIN|g" "$ENV_FILE"
         sed -i "s|<broker>|$BROKER|g" "$ENV_FILE"
-        sed -i "s|TRADEBOARD_PLACEHOLDER_APP_KEY_REGENERATE_BEFORE_USE|$APP_KEY|g" "$ENV_FILE"
-        sed -i "s|TRADEBOARD_PLACEHOLDER_API_KEY_PEPPER_REGENERATE_BEFORE_USE|$PEPPER|g" "$ENV_FILE"
+        sed -i "s|OPENALGO_PLACEHOLDER_APP_KEY_REGENERATE_BEFORE_USE|$APP_KEY|g" "$ENV_FILE"
+        sed -i "s|OPENALGO_PLACEHOLDER_API_KEY_PEPPER_REGENERATE_BEFORE_USE|$PEPPER|g" "$ENV_FILE"
 
         # Capture build-time git info for the diagnostics page (issue #1388).
         # .git/ is dockerignored, so the running container has no .git/HEAD;
         # surface the values via env from the cloned source instead.
         GIT_BRANCH=$(cd "$INSTANCE_DIR" && git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
         GIT_COMMIT=$(cd "$INSTANCE_DIR" && git rev-parse --short HEAD 2>/dev/null || echo "")
-        echo "TRADEBOARD_GIT_BRANCH = '${GIT_BRANCH}'" >> "$ENV_FILE"
-        echo "TRADEBOARD_GIT_COMMIT = '${GIT_COMMIT}'" >> "$ENV_FILE"
+        echo "OPENALGO_GIT_BRANCH = '${GIT_BRANCH}'" >> "$ENV_FILE"
+        echo "OPENALGO_GIT_COMMIT = '${GIT_COMMIT}'" >> "$ENV_FILE"
         # Each instance is published only on 127.0.0.1 with nginx in front;
         # trust the proxy's X-Forwarded-For / X-Real-IP.
         sed -i "s|TRUST_PROXY_HEADERS = 'FALSE'|TRUST_PROXY_HEADERS = 'TRUE'|g" "$ENV_FILE"
@@ -867,7 +879,7 @@ for i in "${!CONF_DOMAINS[@]}"; do
         # Exposing it would leak the raw tick feed.
         sed -i "s|CORS_ALLOWED_ORIGINS = '.*'|CORS_ALLOWED_ORIGINS = 'https://$DOMAIN'|g" "$ENV_FILE"
         # CSP: Set connect sources with domain (delete-and-append avoids sed regex issues with nested quotes)
-        # See: https://github.com/rockstarrajeev/tradeboard/issues/938
+        # See: https://github.com/marketcalls/openalgo/issues/938
         sed -i '/^CSP_CONNECT_SRC/d' "$ENV_FILE"
         echo "CSP_CONNECT_SRC = \"'self' wss://$DOMAIN https://$DOMAIN wss: ws: https://cdn.socket.io\"" >> "$ENV_FILE"
         
@@ -877,7 +889,7 @@ for i in "${!CONF_DOMAINS[@]}"; do
     # 6. Docker Compose
     cat <<EOF > "$INSTANCE_DIR/docker-compose.yaml"
 services:
-  tradeboard:
+  openalgo:
     image: ${PROJECT_NAME}:latest
     build:
       context: .
@@ -887,11 +899,11 @@ services:
       - "127.0.0.1:${FLASK_PORT}:5000"
       - "127.0.0.1:${WS_PORT}:8765"
     volumes:
-      - tradeboard_db:/app/db
-      - tradeboard_log:/app/log
-      - tradeboard_strategies:/app/strategies
-      - tradeboard_keys:/app/keys
-      - tradeboard_tmp:/app/tmp
+      - openalgo_db:/app/db
+      - openalgo_log:/app/log
+      - openalgo_strategies:/app/strategies
+      - openalgo_keys:/app/keys
+      - openalgo_tmp:/app/tmp
       - ./.env:/app/.env
     environment:
       - FLASK_ENV=production
@@ -899,7 +911,7 @@ services:
       - APP_MODE=standalone
       - TZ=Asia/Kolkata
       # Resource limits auto-calculated for multi-instance deployment
-      # See: https://github.com/rockstarrajeev/tradeboard/issues/822
+      # See: https://github.com/marketcalls/openalgo/issues/822
       - OPENBLAS_NUM_THREADS=${THREAD_LIMIT}
       - OMP_NUM_THREADS=${THREAD_LIMIT}
       - MKL_NUM_THREADS=${THREAD_LIMIT}
@@ -916,26 +928,26 @@ services:
     restart: unless-stopped
 
 volumes:
-  tradeboard_db:
+  openalgo_db:
     driver: local
-  tradeboard_log:
+  openalgo_log:
     driver: local
-  tradeboard_strategies:
+  openalgo_strategies:
     driver: local
-  tradeboard_keys:
+  openalgo_keys:
     driver: local
-  tradeboard_tmp:
+  openalgo_tmp:
     driver: local
 EOF
 
     # 7. Nginx Config
     cat <<EOF > "/etc/nginx/sites-available/$DOMAIN"
-upstream tradeboard_flask_${SANITIZED_NAME} {
+upstream openalgo_flask_${SANITIZED_NAME} {
     server 127.0.0.1:${FLASK_PORT};
     keepalive 64;
 }
 
-upstream tradeboard_websocket_${SANITIZED_NAME} {
+upstream openalgo_websocket_${SANITIZED_NAME} {
     server 127.0.0.1:${WS_PORT};
     keepalive 64;
 }
@@ -969,7 +981,7 @@ server {
 
     # Logic: WebSocket
     location = /ws {
-        proxy_pass http://tradeboard_websocket_${SANITIZED_NAME};
+        proxy_pass http://openalgo_websocket_${SANITIZED_NAME};
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -977,7 +989,7 @@ server {
         proxy_read_timeout 86400s;
     }
     location /ws/ {
-        proxy_pass http://tradeboard_websocket_${SANITIZED_NAME}/;
+        proxy_pass http://openalgo_websocket_${SANITIZED_NAME}/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -987,7 +999,7 @@ server {
 
     # Logic: Socket.IO (Flask-SocketIO real-time events)
     location /socket.io/ {
-        proxy_pass http://tradeboard_flask_${SANITIZED_NAME}/socket.io/;
+        proxy_pass http://openalgo_flask_${SANITIZED_NAME}/socket.io/;
         proxy_http_version 1.1;
         proxy_read_timeout 86400s;
         proxy_send_timeout 86400s;
@@ -1002,7 +1014,7 @@ server {
 
     # Logic: Main App
     location / {
-        proxy_pass http://tradeboard_flask_${SANITIZED_NAME};
+        proxy_pass http://openalgo_flask_${SANITIZED_NAME};
         proxy_http_version 1.1;
         proxy_read_timeout 300s;
         proxy_connect_timeout 300s;
@@ -1043,11 +1055,11 @@ check_status "Nginx reload failed"
 # Management Tool
 # -----------------
 
-cat <<'EOF' > /usr/local/bin/tradeboard-ctl
+cat <<'EOF' > /usr/local/bin/openalgo-ctl
 #!/bin/bash
-# Tradeboard Manager
+# OpenAlgo Manager
 
-INSTALL_BASE="/opt/tradeboard"
+INSTALL_BASE="/opt/openalgo"
 
 cmd=$1
 target=$2
@@ -1068,7 +1080,7 @@ list_instances() {
 }
 
 usage() {
-    echo "Usage: tradeboard-ctl <command> [domain]"
+    echo "Usage: openalgo-ctl <command> [domain]"
     echo "Commands:"
     echo "  list              - List all instances"
     echo "  restart <domain>  - Restart specific instance"
@@ -1115,16 +1127,16 @@ case "$cmd" in
 esac
 EOF
 
-chmod +x /usr/local/bin/tradeboard-ctl
+chmod +x /usr/local/bin/openalgo-ctl
 
 
 log "\n==============================================" "$GREEN"
 log " INSTALLATION COMPLETE" "$GREEN"
 log "==============================================" "$GREEN"
-log "Management Command: tradeboard-ctl" "$BLUE"
-log "  tradeboard-ctl list" "$BLUE"
-log "  tradeboard-ctl restart <domain.com>" "$BLUE"
-log "  tradeboard-ctl logs <domain.com>" "$BLUE"
+log "Management Command: openalgo-ctl" "$BLUE"
+log "  openalgo-ctl list" "$BLUE"
+log "  openalgo-ctl restart <domain.com>" "$BLUE"
+log "  openalgo-ctl logs <domain.com>" "$BLUE"
 
 log "\n[IMPORTANT] CLOUD FIREWALL SETTINGS:" "$YELLOW"
 log "Ensure the following Inbound Ports are OPEN in your Azure NSG / AWS Security Group:" "$RED"

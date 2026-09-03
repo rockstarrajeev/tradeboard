@@ -66,7 +66,10 @@ def walk_forward(
         return {
             "windows": [],
             "summary": None,
-            "note": (f"{len(index)} sessions is shorter than the {window}-session window"),
+            "note": (
+                f"{len(index)} sessions is shorter than the "
+                f"{window}-session window"
+            ),
         }
 
     windows: list[WalkForwardWindow] = []
@@ -128,7 +131,9 @@ def _bootstrap_path(
     """Sample full blocks, then trim to exactly the source-series length."""
     blocks = max(1, ceil(len(values) / block))
     starts = rng.integers(0, len(values) - block + 1, size=blocks)
-    return np.concatenate([values[start : start + block] for start in starts])[: len(values)]
+    return np.concatenate([values[start : start + block] for start in starts])[
+        : len(values)
+    ]
 
 
 def monte_carlo(

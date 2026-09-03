@@ -67,7 +67,6 @@ _initialized = False
 class StrategyBookUnavailable(RuntimeError):
     """The per-strategy book could not be read, so its figures are unknown."""
 
-
 engine = create_db_engine()
 
 db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))

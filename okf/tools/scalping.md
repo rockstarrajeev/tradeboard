@@ -2,7 +2,7 @@
 type: Reference
 title: Scalping Terminal (/scalping)
 description: Keyboard-driven, low-latency options/futures/equity scalping terminal with a browser-independent server-side risk engine.
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/scalping/PRD.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/scalping/PRD.md
 tags:
 - scalping
 - terminal

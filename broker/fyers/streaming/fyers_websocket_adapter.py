@@ -4,7 +4,6 @@ Integrates with the OpenAlgo WebSocket proxy system
 """
 
 import json
-import logging
 import os
 
 # Import base adapter
@@ -31,6 +30,7 @@ except ImportError:
     from mapping import SymbolMapper
 from database.auth_db import get_auth_token
 from database.token_db import get_br_symbol
+from utils.logging import get_logger
 
 # Import our HSM implementation
 from .fyers_adapter import FyersAdapter
@@ -52,7 +52,7 @@ class FyersWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
     def __init__(self):
         super().__init__()
-        self.logger = logging.getLogger("fyers_websocket_adapter")
+        self.logger = get_logger("fyers_websocket_adapter")
         self.fyers_adapter = None
         self.tbt_client = None  # TBT WebSocket for 50-level depth
         self.user_id = None
@@ -268,7 +268,9 @@ class FyersWebSocketAdapter(BaseBrokerWebSocketAdapter):
             # stale token via keyword match and rebuild this adapter against
             # a freshly-read auth_db token.
             needs_reconnect = (
-                not self.connected or not self.fyers_adapter or not self.fyers_adapter.connected
+                not self.connected
+                or not self.fyers_adapter
+                or not self.fyers_adapter.connected
             )
             if needs_reconnect:
                 self.logger.info("Not connected to Fyers - attempting to reconnect...")
@@ -283,6 +285,7 @@ class FyersWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
             with self.lock:
                 # Convert to OpenAlgo format
+                symbol_info = [{"exchange": exchange, "symbol": symbol}]
 
                 # Create a unique callback for this specific subscription
                 # Capture the original subscription details
@@ -328,10 +331,14 @@ class FyersWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 # from the UI collapse into one FyersAdapter.subscribe_symbols
                 # call (and thus one Fyers symbol-token POST).
                 if mode == 1:  # LTP
-                    self._enqueue_hsm_subscribe("SymbolUpdate", exchange, symbol, data_callback)
+                    self._enqueue_hsm_subscribe(
+                        "SymbolUpdate", exchange, symbol, data_callback
+                    )
                     success = True
                 elif mode == 2:  # Quote
-                    self._enqueue_hsm_subscribe("SymbolUpdate", exchange, symbol, data_callback)
+                    self._enqueue_hsm_subscribe(
+                        "SymbolUpdate", exchange, symbol, data_callback
+                    )
                     success = True
                 elif mode == 3:  # Depth
                     # Check if 50-level depth is requested via symbol suffix (e.g., "TCS:50")
@@ -344,6 +351,7 @@ class FyersWebSocketAdapter(BaseBrokerWebSocketAdapter):
                         actual_symbol = symbol[:-3]
                         use_tbt = True
                         # Update symbol_info with actual symbol for broker API
+                        symbol_info = [{"exchange": exchange, "symbol": actual_symbol}]
                         # Keep original_symbol as "TCS:50" for ZeroMQ topic matching
                         # The client subscribed with "TCS:50", so we must publish with that
 
@@ -423,7 +431,7 @@ class FyersWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
                 if key in self.subscriptions:
                     # Remove from our subscription tracking
-                    self.subscriptions.pop(key)
+                    subscription_info = self.subscriptions.pop(key)
 
                     self.logger.info(f"Unsubscribe for {exchange}:{symbol} (mode: {mode})")
                     # self.logger.warning("Note: Fyers HSM doesn't support selective unsubscription - data will stop publishing but HSM will continue receiving in background")
@@ -444,8 +452,12 @@ class FyersWebSocketAdapter(BaseBrokerWebSocketAdapter):
                     # ticks (issue #1093).
                     full_symbol = f"{exchange}:{symbol}"
                     data_type_key = "DepthUpdate" if mode == 3 else "SymbolUpdate"
-                    self._hsm_callback_registry.pop(f"{data_type_key}_{full_symbol}", None)
-                    if self.fyers_adapter and hasattr(self.fyers_adapter, "subscription_callbacks"):
+                    self._hsm_callback_registry.pop(
+                        f"{data_type_key}_{full_symbol}", None
+                    )
+                    if self.fyers_adapter and hasattr(
+                        self.fyers_adapter, "subscription_callbacks"
+                    ):
                         self.fyers_adapter.subscription_callbacks.pop(
                             f"{data_type_key}_{full_symbol}", None
                         )
@@ -510,7 +522,9 @@ class FyersWebSocketAdapter(BaseBrokerWebSocketAdapter):
             self.logger.error(f"Unsubscription error: {e}")
             return {"status": "error", "message": f"Unsubscription failed: {str(e)}"}
 
-    def _enqueue_hsm_subscribe(self, data_type: str, exchange: str, symbol: str, callback) -> None:
+    def _enqueue_hsm_subscribe(
+        self, data_type: str, exchange: str, symbol: str, callback
+    ) -> None:
         """Queue a single HSM subscribe and arm the batch flush timer."""
         with self._hsm_batch_lock:
             self._hsm_batch_queue.append(
@@ -568,14 +582,17 @@ class FyersWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
             for data_type, items in grouped.items():
                 symbol_info = [
-                    {"exchange": it["exchange"], "symbol": it["symbol"]} for it in items.values()
+                    {"exchange": it["exchange"], "symbol": it["symbol"]}
+                    for it in items.values()
                 ]
 
                 # Populate the SHARED registry BEFORE registering the dispatcher.
                 # Once subscribe_*() returns, ticks may start arriving immediately,
                 # and the dispatcher needs the registry entries to be visible.
                 for full_symbol, it in items.items():
-                    self._hsm_callback_registry[f"{data_type}_{full_symbol}"] = it["callback"]
+                    self._hsm_callback_registry[f"{data_type}_{full_symbol}"] = it[
+                        "callback"
+                    ]
 
                 # Capture data_type via default-arg to avoid Python's late-binding
                 # gotcha when this loop is iterated for multiple data_types.
@@ -583,7 +600,9 @@ class FyersWebSocketAdapter(BaseBrokerWebSocketAdapter):
                     if not data:
                         return
                     full_symbol = f"{data.get('exchange')}:{data.get('symbol')}"
-                    cb = self._hsm_callback_registry.get(f"{_data_type}_{full_symbol}")
+                    cb = self._hsm_callback_registry.get(
+                        f"{_data_type}_{full_symbol}"
+                    )
                     if cb:
                         cb(data)
 
@@ -942,12 +961,12 @@ class FyersWebSocketAdapter(BaseBrokerWebSocketAdapter):
             elif mode == 2:  # Quote
                 # Convert all price fields from paise to rupees using correct field names
                 raw_ltp = fyers_data.get("ltp", 0)
-                fyers_data.get("open_price", 0)
-                fyers_data.get("high_price", 0)
-                fyers_data.get("low_price", 0)
-                fyers_data.get("prev_close_price", 0)
-                fyers_data.get("bid_price", 0)
-                fyers_data.get("ask_price", 0)
+                raw_open = fyers_data.get("open_price", 0)
+                raw_high = fyers_data.get("high_price", 0)
+                raw_low = fyers_data.get("low_price", 0)
+                raw_close = fyers_data.get("prev_close_price", 0)
+                raw_bid = fyers_data.get("bid_price", 0)
+                raw_ask = fyers_data.get("ask_price", 0)
 
                 # Data is already properly mapped by FyersDataMapper with OHLC fields
                 # Debug log to see if we have the proper data now
@@ -1074,9 +1093,7 @@ class FyersWebSocketAdapter(BaseBrokerWebSocketAdapter):
             self.disconnect()
         except Exception as e:
             # Can't rely on self.logger being available during destruction
-            import logging
-
-            logger = logging.getLogger("fyers_websocket_adapter")
+            logger = get_logger("fyers_websocket_adapter")
             logger.error(f"Error in FyersWebSocketAdapter destructor: {e}")
 
     def cleanup_all_resources(self):

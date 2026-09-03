@@ -6,7 +6,7 @@ The download engine runs multi-symbol history jobs outside the request thread, p
 
 ## Creation And Execution
 
-`POST /historify/api/jobs` validates the logged-in session, resolves the user's Tradeboard API key, and submits `create_and_start_job()` with:
+`POST /historify/api/jobs` validates the logged-in session, resolves the user's OpenAlgo API key, and submits `create_and_start_job()` with:
 
 - `job_type`: `custom`, `watchlist`, `option_chain`, or `futures_chain`.
 - A non-empty array of `{symbol, exchange}` entries.

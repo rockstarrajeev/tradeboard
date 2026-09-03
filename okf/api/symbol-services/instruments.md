@@ -2,7 +2,7 @@
 type: API Endpoint
 title: Instruments
 description: Get the full instruments/contract master list
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/symbol-services/instruments.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/symbol-services/instruments.md
 tags:
 - symbol
 - instruments

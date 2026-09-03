@@ -79,7 +79,7 @@ def test_index_exchanges_get_the_suffix(exchange, expected):
 
 @pytest.mark.parametrize("exchange", ["NSE", "BSE", "NFO", "BFO", "MCX", "CDS"])
 def test_tradable_exchanges_are_sent_unchanged(exchange):
-    """ "NSE::index" with an equity token returns nothing, so the suffix must
+    """"NSE::index" with an equity token returns nothing, so the suffix must
     not leak onto non-index requests."""
     sent = _capture_payload("RELIANCE", exchange)["exchange"]
     assert sent == exchange

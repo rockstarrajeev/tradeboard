@@ -1,11 +1,11 @@
 """
 RELIANCE 5-Minute Candlestick Chart - Last 20 Days
 With Bollinger Bands (Top) and RSI (Bottom)
-Author : Tradeboard GPT
+Author : OpenAlgo GPT
 Description: Plots RELIANCE 5m candlestick chart using Plotly with category x-axis
 """
 
-print("🔁 Tradeboard Python Bot is running.")
+print("OpenAlgo Python Bot is running.")
 
 from datetime import datetime
 
@@ -46,7 +46,7 @@ def fetch_historical_data():
     # Print the raw response
     print(f"History Response: {response}")
 
-    # Tradeboard history() returns DataFrame directly (not a dict)
+    # OpenAlgo history() returns DataFrame directly (not a dict)
     if isinstance(response, pd.DataFrame):
         df = response.copy()
     else:
@@ -89,7 +89,7 @@ BB_STD_DEV = 2.0
 
 # ───────────────────── CALCULATE INDICATORS ─────────────────────
 def calculate_indicators(df: pd.DataFrame):
-    """Calculate RSI and Bollinger Bands using Tradeboard ta library"""
+    """Calculate RSI and Bollinger Bands using OpenAlgo ta library"""
 
     # RSI (20)
     df["rsi"] = ta.rsi(df["close"], period=RSI_PERIOD)
@@ -155,7 +155,7 @@ def plot_candlestick(df: pd.DataFrame):
             x=x_category,
             y=df["bb_upper"],
             name="BB Upper",
-            line={"color": "rgba(173, 216, 230, 0.8)", "width": 1},
+            line=dict(color="rgba(173, 216, 230, 0.8)", width=1),
             showlegend=True,
         ),
         row=1,
@@ -168,7 +168,7 @@ def plot_candlestick(df: pd.DataFrame):
             x=x_category,
             y=df["bb_middle"],
             name="BB Middle",
-            line={"color": "rgba(255, 165, 0, 0.8)", "width": 1, "dash": "dash"},
+            line=dict(color="rgba(255, 165, 0, 0.8)", width=1, dash="dash"),
             showlegend=True,
         ),
         row=1,
@@ -181,7 +181,7 @@ def plot_candlestick(df: pd.DataFrame):
             x=x_category,
             y=df["bb_lower"],
             name="BB Lower",
-            line={"color": "rgba(173, 216, 230, 0.8)", "width": 1},
+            line=dict(color="rgba(173, 216, 230, 0.8)", width=1),
             fill="tonexty",  # Fill area between upper and lower bands
             fillcolor="rgba(173, 216, 230, 0.1)",
             showlegend=True,
@@ -198,7 +198,7 @@ def plot_candlestick(df: pd.DataFrame):
             x=x_category,
             y=df["rsi"],
             name=f"RSI ({RSI_PERIOD})",
-            line={"color": "#ab47bc", "width": 1.5},
+            line=dict(color="#ab47bc", width=1.5),
             showlegend=True,
         ),
         row=2,
@@ -234,18 +234,18 @@ def plot_candlestick(df: pd.DataFrame):
 
     # ───────── LAYOUT ─────────
     fig.update_layout(
-        title={
-            "text": f"{SYMBOL} Technical Analysis<br><sup>{START_DATE} to {END_DATE}</sup>",
-            "x": 0.5,
-            "font": {"size": 18},
-        },
+        title=dict(
+            text=f"{SYMBOL} Technical Analysis<br><sup>{START_DATE} to {END_DATE}</sup>",
+            x=0.5,
+            font=dict(size=18),
+        ),
         template="plotly_dark",
         height=900,
         width=1400,
         hovermode="x unified",
-        margin={"l": 60, "r": 100, "t": 80, "b": 80},
-        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
-        xaxis2={"rangeslider": {"visible": False}},
+        margin=dict(l=60, r=100, t=80, b=80),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        xaxis2=dict(rangeslider=dict(visible=False)),
     )
 
     # Update x-axes
@@ -256,7 +256,7 @@ def plot_candlestick(df: pd.DataFrame):
         tickangle=-45,
         showgrid=True,
         gridcolor="rgba(128, 128, 128, 0.2)",
-        rangeslider={"visible": False},
+        rangeslider=dict(visible=False),
         row=1,
         col=1,
     )

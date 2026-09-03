@@ -5,9 +5,7 @@ Based on Dhan V2 API documentation with proper binary packet parsing.
 
 import asyncio
 import json
-import logging
 import os
-import random
 import struct
 import sys
 import threading
@@ -18,8 +16,10 @@ from typing import Any, Dict, List, Optional, Union
 
 import websockets
 
+from utils.logging import get_logger
+
 # Set up logging
-logger = logging.getLogger("dhan_websocket")
+logger = get_logger("dhan_websocket")
 
 # Issue #1344 (CRITICAL) — when running under gunicorn+eventlet (production
 # install path), eventlet monkey-patches threading.Thread into green threads.
@@ -71,6 +71,18 @@ class DhanWebSocket:
     REQUEST_CODE_QUOTE = TYPE_QUOTE  # 17 - Quote/marketdata
     REQUEST_CODE_FULL = TYPE_DEPTH  # 21 - Full market data (5-level depth)
     REQUEST_CODE_DEPTH_20 = 23  # 23 - 20-level market depth
+
+    # Unsubscribe codes. These previously sent RequestCode 0, which is not a
+    # valid feed request code - Dhan's table has no 0 - so every unsubscribe
+    # was a malformed request the broker ignored, leaving the subscription
+    # live server-side. Verified on the live feed that 16 does stop a ticker
+    # subscription. UNSUBSCRIBE_DEPTH_20 is 24 per Dhan's live annexure; the
+    # vendored copy in broker-api-docs says 25 and it could not be settled on
+    # the wire outside NSE hours, so re-check it against a live depth feed.
+    UNSUBSCRIBE_CODE_TICKER = 16
+    UNSUBSCRIBE_CODE_QUOTE = 18
+    UNSUBSCRIBE_CODE_FULL = 22
+    UNSUBSCRIBE_CODE_DEPTH_20 = 24
 
     # Heartbeat interval in seconds. Aligned to ping_interval=30 (used in
     # _connect) so we have a single liveness signal cadence rather than two
@@ -163,7 +175,9 @@ class DhanWebSocket:
             # Use _original_threading.Thread so the asyncio event loop runs
             # on a real OS thread under gunicorn+eventlet — see issue #1344
             # and the import-time setup at the top of this file.
-            self.thread = _original_threading.Thread(target=self._run_event_loop, daemon=True)
+            self.thread = _original_threading.Thread(
+                target=self._run_event_loop, daemon=True
+            )
             self.thread.start()
             self.running = True
             logger.info("WebSocket client thread started")
@@ -586,7 +600,9 @@ class DhanWebSocket:
 
                 # Log all tokens for debugging
                 exchange_name = self.EXCHANGE_MAP.get(exchange_code, f"UNK_{exchange_code}")
-                logger.info(f"Received message for {exchange_name} token {token}, type {msg_type}")
+                logger.info(
+                    f"Received message for {exchange_name} token {token}, type {msg_type}"
+                )
 
                 # Validate message length
                 if msg_type == 8:  # Full data packet
@@ -975,7 +991,7 @@ class DhanWebSocket:
 
             # Parse buy depth (5 levels)
             offset = 7  # Starting after token and exchange
-            for _i in range(5):
+            for i in range(5):
                 price = struct.unpack("<f", data[offset : offset + 4])[0]
                 offset += 4
                 quantity = struct.unpack("<I", data[offset : offset + 4])[0]
@@ -985,7 +1001,7 @@ class DhanWebSocket:
                 buy_depth.append({"price": price, "quantity": quantity, "orders": orders})
 
             # Parse sell depth (5 levels)
-            for _i in range(5):
+            for i in range(5):
                 price = struct.unpack("<f", data[offset : offset + 4])[0]
                 offset += 4
                 quantity = struct.unpack("<I", data[offset : offset + 4])[0]
@@ -1298,7 +1314,9 @@ class DhanWebSocket:
                 else:
                     # MCX/BSE tokens use regular 5-level depth connection
                     request_code = self.REQUEST_CODE_FULL  # 21 - 5-level depth
-                    logger.info("Using 5-level depth (RequestCode 21) for MCX/BSE/other exchanges")
+                    logger.info(
+                        "Using 5-level depth (RequestCode 21) for MCX/BSE/other exchanges"
+                    )
 
             # Create instrument list with exchange codes
             instrument_list = []
@@ -1603,7 +1621,7 @@ class DhanWebSocket:
                 feed_code = header[2]  # Single byte
                 exchange_segment = header[3]  # Single byte
                 security_id = struct.unpack("<i", header[4:8])[0]  # Little-endian
-                struct.unpack("<I", header[8:12])[0]  # Little-endian (ignored)
+                msg_sequence = struct.unpack("<I", header[8:12])[0]  # Little-endian (ignored)
                 logger.debug(
                     f"20-level depth header: length={msg_length}, feed_code={feed_code}, exchange={exchange_segment}, token={security_id}"
                 )
@@ -2084,8 +2102,8 @@ class DhanWebSocket:
             except struct.error as e:
                 logger.error(f"Error processing 20-level depth message (struct error): {e}")
                 logger.error(f"Exception type: {type(e).__name__}")
-                if locals().get("header") is not None:
-                    logger.error(f"Header hex: {locals()['header'].hex()}")
+                if "header" in locals():
+                    logger.error(f"Header hex: {header.hex()}")
                 logger.error(f"Full message length: {len(message)}")
                 # Log which parsing step failed
                 logger.error(f"msg_length parsed: {'msg_length' in locals()}")
@@ -2225,9 +2243,21 @@ class DhanWebSocket:
 
             # First unsubscribe from main WebSocket
             if self.connected and self.ws:
+                # The unsubscribe code has to match the mode the token was
+                # subscribed in, so read it back from the tracking dict.
+                with self.lock:
+                    tracked = self.instruments.get(token)
+                mode = tracked.get("mode") if tracked else None
+                unsubscribe_code = {
+                    self.MODE_LTP: self.UNSUBSCRIBE_CODE_TICKER,
+                    self.MODE_QUOTE: self.UNSUBSCRIBE_CODE_QUOTE,
+                    self.MODE_FULL: self.UNSUBSCRIBE_CODE_FULL,
+                    self.MODE_DEPTH_20: self.UNSUBSCRIBE_CODE_DEPTH_20,
+                }.get(mode, self.UNSUBSCRIBE_CODE_FULL)
+
                 # Create unsubscription packet
                 packet = {
-                    "RequestCode": 0,  # 0 = Unsubscribe
+                    "RequestCode": unsubscribe_code,
                     "InstrumentCount": 1,
                     "InstrumentList": [
                         {
@@ -2246,7 +2276,10 @@ class DhanWebSocket:
                         if token in self.instruments:
                             del self.instruments[token]
 
-                    logger.info(f"Unsubscribed token {token} from main WebSocket")
+                    logger.info(
+                        f"Unsubscribed token {token} from main WebSocket "
+                        f"(mode {mode}, RequestCode {unsubscribe_code})"
+                    )
                 except Exception as e:
                     logger.error(f"Error unsubscribing token {token} from main WebSocket: {e}")
                     success_main = False
@@ -2286,7 +2319,7 @@ class DhanWebSocket:
 
             # Create unsubscription packet
             packet = {
-                "RequestCode": 0,  # 0 = Unsubscribe
+                "RequestCode": self.UNSUBSCRIBE_CODE_DEPTH_20,
                 "InstrumentCount": 1,
                 "InstrumentList": [
                     {

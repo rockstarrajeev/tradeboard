@@ -66,7 +66,9 @@ def test_heartbeat_fires_again_after_window(monkeypatch, app_ctx):
         session["user"] = "rajandran"
         session["logged_in"] = True
         session["session_id"] = "device-A"
-        old = datetime.now(UTC) - timedelta(seconds=auth_module.HEARTBEAT_THROTTLE_SECONDS + 10)
+        old = datetime.now(UTC) - timedelta(
+            seconds=auth_module.HEARTBEAT_THROTTLE_SECONDS + 10
+        )
         session["last_heartbeat"] = old.isoformat()
         auth_module._touch_session_heartbeat()
     assert calls == ["device-A"]

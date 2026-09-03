@@ -2,14 +2,14 @@
 
 ## Session Types
 
-Tradeboard maintains separate but related state:
+OpenAlgo maintains separate but related state:
 
 | State | Meaning |
 |---|---|
 | Flask app session | Browser is authenticated to the local application |
 | Active-session row | Device/IP/login/last-seen audit for the app session |
 | Broker auth row | Installation's current broker and encrypted auth/feed tokens |
-| Tradeboard API key | External/internal service authentication that resolves the broker row |
+| OpenAlgo API key | External/internal service authentication that resolves the broker row |
 
 Multiple app devices share one broker auth row and one server-side broker market-data feed.
 

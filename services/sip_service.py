@@ -104,14 +104,10 @@ def list_frequencies() -> tuple[bool, dict[str, Any], int]:
         "monthly": "Monthly",
         "quarterly": "Quarterly",
     }
-    return (
-        True,
-        {
-            "status": "success",
-            "data": [{"value": f, "label": labels.get(f, f.title())} for f in FREQUENCIES],
-        },
-        200,
-    )
+    return True, {
+        "status": "success",
+        "data": [{"value": f, "label": labels.get(f, f.title())} for f in FREQUENCIES],
+    }, 200
 
 
 def run_sip_backtest(
@@ -178,9 +174,13 @@ def run_sip_backtest(
         return _error(f"frequency must be one of {', '.join(FREQUENCIES)}")
     exchange = (exchange or "NSE").upper()
     if exchange not in SUPPORTED_EXCHANGES:
-        return _error(f"exchange must be one of {', '.join(SUPPORTED_EXCHANGES)} for a SIP")
+        return _error(
+            f"exchange must be one of {', '.join(SUPPORTED_EXCHANGES)} for a SIP"
+        )
     if benchmark and benchmark_exchange.upper() not in BENCHMARK_EXCHANGES:
-        return _error(f"benchmark_exchange must be one of {', '.join(BENCHMARK_EXCHANGES)}")
+        return _error(
+            f"benchmark_exchange must be one of {', '.join(BENCHMARK_EXCHANGES)}"
+        )
 
     creds = {
         "api_key": api_key,
@@ -190,7 +190,9 @@ def run_sip_backtest(
     }
 
     try:
-        matrix = load_prices([symbol], [exchange], str(start), str(end), source=source, **creds)
+        matrix = load_prices(
+            [symbol], [exchange], str(start), str(end), source=source, **creds
+        )
     except DataError as exc:
         return _error(str(exc), 422)
     except Exception as exc:  # noqa: BLE001 - surface the reason, not a 500
@@ -223,14 +225,8 @@ def run_sip_backtest(
 
     try:
         result = run_sip(
-            closes,
-            symbol,
-            exchange,
-            start,
-            end,
-            float(amount),
-            warnings=[str(w) for w in warnings],
-            **sip_kw,
+            closes, symbol, exchange, start, end, float(amount),
+            warnings=[str(w) for w in warnings], **sip_kw,
         )
     except (SipError, ScheduleError) as exc:
         return _error(str(exc), 422)
@@ -256,7 +252,9 @@ def run_sip_backtest(
         "lumpsum": lumpsum_comparison(closes, result, start, end, costs=costs),
         "charges": {
             "total": round(result.charges, 2),
-            "per_installment": round(result.charges / max(result.installment_count, 1), 2),
+            "per_installment": round(
+                result.charges / max(result.installment_count, 1), 2
+            ),
             # Share of everything paid in that went to charges rather than units.
             "drag": round(result.charges / result.total_invested, 6)
             if result.total_invested
@@ -266,10 +264,7 @@ def run_sip_backtest(
             "exchange": cost_exchange,
         },
         "frequency_comparison": frequency_comparison(
-            closes,
-            start,
-            end,
-            float(amount),
+            closes, start, end, float(amount),
             **{k: v for k, v in sip_kw.items() if k != "frequency"},
         ),
         "curves": {
@@ -295,7 +290,9 @@ def run_sip_backtest(
 
     if include_grids:
         payload["rolling_xirr"] = rolling_xirr(closes, float(amount), **sip_kw)
-        payload["start_date_heatmap"] = start_date_heatmap(closes, float(amount), **sip_kw)
+        payload["start_date_heatmap"] = start_date_heatmap(
+            closes, float(amount), **sip_kw
+        )
         crisis_rows = crisis_sip_analysis(closes, float(amount), sip_kw=sip_kw)
         payload["crisis"] = {
             "summary": crisis_summary(crisis_rows),
@@ -309,15 +306,8 @@ def run_sip_backtest(
 
     if benchmark:
         payload["benchmark"] = _benchmark_sip(
-            benchmark,
-            benchmark_exchange.upper(),
-            start,
-            end,
-            float(amount),
-            result,
-            source,
-            creds,
-            sip_kw,
+            benchmark, benchmark_exchange.upper(), start, end, float(amount),
+            result, source, creds, sip_kw,
         )
 
     return True, payload, 200
@@ -343,13 +333,8 @@ def _benchmark_sip(
     """
     try:
         matrix = load_prices(
-            [symbol],
-            [exchange],
-            str(start),
-            str(end),
-            source=source,
-            allowed_exchanges=BENCHMARK_EXCHANGES,
-            **creds,
+            [symbol], [exchange], str(start), str(end), source=source,
+            allowed_exchanges=BENCHMARK_EXCHANGES, **creds,
         )
         closes = matrix.closes[matrix.closes.columns[0]]
         bench = run_sip(closes, symbol, exchange, start, end, amount, **sip_kw)
@@ -366,12 +351,12 @@ def _benchmark_sip(
         "headline": headline(bench),
         "xirr": bench_xirr,
         "excess_xirr": (self_xirr - bench_xirr)
-        if (self_xirr is not None and bench_xirr is not None)
-        else None,
+        if (self_xirr is not None and bench_xirr is not None) else None,
         "beat_benchmark": bool(
             self_xirr is not None and bench_xirr is not None and self_xirr > bench_xirr
         ),
         "curve": [
-            {"date": str(d.date()), "value": round(float(v), 2)} for d, v in bench.value.items()
+            {"date": str(d.date()), "value": round(float(v), 2)}
+            for d, v in bench.value.items()
         ],
     }

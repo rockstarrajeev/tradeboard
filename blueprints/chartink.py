@@ -5,7 +5,7 @@ import threading
 import time as time_module
 import uuid
 from collections import deque
-from datetime import datetime
+from datetime import datetime, time
 from time import time
 
 import pytz
@@ -866,7 +866,7 @@ def webhook(webhook_id):
 
         # Get symbols and trigger prices
         symbols = data.get("stocks", "").split(",")
-        data.get("trigger_prices", "").split(",")
+        trigger_prices = data.get("trigger_prices", "").split(",")
 
         if not symbols:
             logger.error("No symbols received in webhook")

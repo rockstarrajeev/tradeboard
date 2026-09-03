@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 import sys
 import threading
@@ -8,6 +7,7 @@ from typing import Any, Dict, List, Optional
 
 from broker.indmoney.streaming.indWebSocket import IndWebSocket
 from database.auth_db import get_auth_token
+from utils.logging import get_logger
 
 # Add parent directory to path to allow imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
@@ -23,7 +23,7 @@ class IndmoneyWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
     def __init__(self):
         super().__init__()
-        self.logger = logging.getLogger("indmoney_websocket")
+        self.logger = get_logger("indmoney_websocket")
         self.ws_client = None
         self.user_id = None
         self.broker_name = "indmoney"
@@ -163,7 +163,9 @@ class IndmoneyWebSocketAdapter(BaseBrokerWebSocketAdapter):
             self._reconnecting = True
             # Fresh loop: clear any stop signal left by a previous disconnect.
             self._stop_event.clear()
-            self._reconnect_thread = threading.Thread(target=self._connect_with_retry, daemon=True)
+            self._reconnect_thread = threading.Thread(
+                target=self._connect_with_retry, daemon=True
+            )
             self._reconnect_thread.start()
 
     def _connect_with_retry(self) -> None:
@@ -287,7 +289,9 @@ class IndmoneyWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 )
                 self.ws_client.subscribe(instruments=instruments, mode=mode)
             except Exception as e:
-                self.logger.error(f"Batch subscription failed for {segment} in {mode} mode: {e}")
+                self.logger.error(
+                    f"Batch subscription failed for {segment} in {mode} mode: {e}"
+                )
 
     def subscribe(
         self, symbol: str, exchange: str, mode: int = 2, depth_level: int = 1
@@ -429,7 +433,9 @@ class IndmoneyWebSocketAdapter(BaseBrokerWebSocketAdapter):
             self.subscription_queue = [
                 s
                 for s in self.subscription_queue
-                if not (s["instrument_token"] == instrument_token and s["mode"] == indmoney_mode)
+                if not (
+                    s["instrument_token"] == instrument_token and s["mode"] == indmoney_mode
+                )
             ]
             # Check if all subscriptions are removed
             if len(self.subscriptions) == 0:

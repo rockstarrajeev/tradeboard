@@ -133,7 +133,9 @@ def transform_data(data, token):
         "NSE",
         "BSE",
     }:
-        raise ValueError(f"Unsupported exchange for IndMoney order placement: {data['exchange']}")
+        raise ValueError(
+            f"Unsupported exchange for IndMoney order placement: {data['exchange']}"
+        )
     # algo_id is exchange-specific: 99999 for NSE, 9999999999999999 for BSE.
     algo_id = "9999999999999999" if api_exchange == "BSE" else "99999"
 
@@ -147,7 +149,8 @@ def transform_data(data, token):
         trigger = float(data.get("trigger_price") or 0)
         if trigger <= 0:
             raise ValueError(
-                f"A trigger_price is required for an {data['pricetype']} order ({data['symbol']})."
+                f"A trigger_price is required for an {data['pricetype']} order "
+                f"({data['symbol']})."
             )
 
         # Smart orders are documented for NSE only.
@@ -162,7 +165,9 @@ def transform_data(data, token):
             # protective limit when none was supplied.
             limit_price = float(data.get("price") or 0)
             if limit_price <= 0:
-                limit_price = _protective_limit(trigger, action, data["symbol"], data["exchange"])
+                limit_price = _protective_limit(
+                    trigger, action, data["symbol"], data["exchange"]
+                )
         else:
             # SL-M: no market-on-trigger exists, so protect off the trigger.
             limit_price = _protective_limit(trigger, action, data["symbol"], data["exchange"])

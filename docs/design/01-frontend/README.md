@@ -43,7 +43,7 @@ The exact route list is in `frontend/src/App.tsx`; navigation visibility is defi
 
 | Store/context | Responsibility |
 |---|---|
-| `authStore.ts` | User and Tradeboard API key for client calls |
+| `authStore.ts` | User and OpenAlgo API key for client calls |
 | `brokerStore.ts` | Active broker capability metadata |
 | `sessionStore.ts` | Active app-session count |
 | `themeStore.ts` | Theme, accent, live/analyzer presentation mode |

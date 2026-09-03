@@ -101,7 +101,7 @@ def transform_data(data, token, auth_token=None):
     add/subtract a slab-based buffer (rounded to tick size), and send a LIMIT
     order at that protected price. This mirrors the Flattrade implementation.
     """
-    get_br_symbol(data["symbol"], data["exchange"])
+    symbol = get_br_symbol(data["symbol"], data["exchange"])
     action = data["action"].upper()
 
     # Default price comes straight from the request (LIMIT / SL orders).
@@ -171,7 +171,9 @@ def transform_data(data, token, auth_token=None):
     trigger_price = float(data.get("trigger_price", "0") or 0)
     if data.get("pricetype") == "SL-M" and trigger_price > 0:
         try:
-            price = _slm_protected_price(data["symbol"], data["exchange"], action, trigger_price)
+            price = _slm_protected_price(
+                data["symbol"], data["exchange"], action, trigger_price
+            )
             logger.info(
                 f"MPP Conversion Complete: Symbol={data['symbol']}, "
                 f"OrderType=SL-M->SL, Trigger={trigger_price}, FinalPrice={price}"

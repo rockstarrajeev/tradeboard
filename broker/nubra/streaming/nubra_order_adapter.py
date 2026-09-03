@@ -37,14 +37,7 @@ NUBRA_ORDER_WS_URL_DEFAULT = "wss://uatapi.nubra.io/ws"
 
 # NubraIntentOrderStatus enum -> OpenAlgo's lowercase order_status vocabulary.
 # GTE (good-till-triggered) is a still-armed working order -> "open".
-_STATUS_MAP = {
-    1: "open",
-    2: "complete",
-    3: "rejected",
-    4: "trigger pending",
-    5: "cancelled",
-    6: "expired",
-}
+_STATUS_MAP = {1: "open", 2: "complete", 3: "rejected", 4: "trigger pending", 5: "cancelled", 6: "expired"}
 
 # OrderSide enum -> OpenAlgo action constants
 _ACTION_MAP = {1: "BUY", 2: "SELL"}
@@ -199,7 +192,7 @@ class NubraOrderUpdateAdapter(BaseOrderUpdateAdapter):
         if isinstance(refdata_bytes, bytes) and refdata_bytes:
             try:
                 refdata = _decode_fields(refdata_bytes)
-                broker_symbol = _first_str(refdata, 5)  # stock_name
+                broker_symbol = _first_str(refdata, 5)   # stock_name
                 nubra_exchange = _first_str(refdata, 10)
                 derivative_type = _first_str(refdata, 11)
                 # RefData field 1 is ref_id, which is what Nubra stores in
@@ -259,9 +252,7 @@ def create_nubra_order_adapter(user_id: str) -> "NubraOrderUpdateAdapter | None"
     """Factory: build a NubraOrderUpdateAdapter for user_id (session token from DB)."""
     session_token = get_auth_token(user_id, bypass_cache=True)
     if not session_token:
-        logger.warning(
-            f"No Nubra session token found for user {user_id}; order-update adapter not started"
-        )
+        logger.warning(f"No Nubra session token found for user {user_id}; order-update adapter not started")
         return None
 
     return NubraOrderUpdateAdapter(user_id=user_id, session_token=session_token)

@@ -52,31 +52,45 @@ class SipBacktestSchema(Schema):
     apikey = fields.Str(required=True, validate=validate.Length(min=1, max=256))
 
     symbol = fields.Str(required=True, validate=validate.Length(min=1, max=64))
-    exchange = fields.Str(load_default="NSE", validate=validate.OneOf(SIP_EXCHANGES))
+    exchange = fields.Str(
+        load_default="NSE", validate=validate.OneOf(SIP_EXCHANGES)
+    )
 
     # The date the SIP starts. The first installment lands on this date or the
     # next trading session after it.
     start_date = fields.Str(required=True, validate=validate.Length(equal=10))
     end_date = fields.Str(required=True, validate=validate.Length(equal=10))
 
-    amount = fields.Float(required=True, validate=validate.Range(min=1, max=MAX_AMOUNT))
-    frequency = fields.Str(load_default="monthly", validate=validate.OneOf(list(FREQUENCIES)))
+    amount = fields.Float(
+        required=True, validate=validate.Range(min=1, max=MAX_AMOUNT)
+    )
+    frequency = fields.Str(
+        load_default="monthly", validate=validate.OneOf(list(FREQUENCIES))
+    )
     # Capped at 28 rather than 31: a SIP on the 31st does not exist in every
     # month, and silently moving it produces a schedule nobody asked for.
-    day_of_month = fields.Int(load_default=1, validate=validate.Range(min=1, max=MAX_DAY_OF_MONTH))
+    day_of_month = fields.Int(
+        load_default=1, validate=validate.Range(min=1, max=MAX_DAY_OF_MONTH)
+    )
     step_up_percent = fields.Float(
         load_default=0.0, validate=validate.Range(min=0, max=MAX_STEP_UP)
     )
 
-    brokerage_percent = fields.Float(load_default=0.0, validate=validate.Range(min=0, max=5))
-    brokerage_flat = fields.Float(load_default=0.0, validate=validate.Range(min=0, max=10_000))
+    brokerage_percent = fields.Float(
+        load_default=0.0, validate=validate.Range(min=0, max=5)
+    )
+    brokerage_flat = fields.Float(
+        load_default=0.0, validate=validate.Range(min=0, max=10_000)
+    )
 
     # Full statutory charge model, matching the portfolio backtester so the
     # same trade costs the same in both tools.
     cost_model = fields.Str(
         load_default="indian_equity", validate=validate.OneOf(["indian_equity", "flat_bps"])
     )
-    cost_exchange = fields.Str(load_default="NSE", validate=validate.OneOf(SIP_EXCHANGES))
+    cost_exchange = fields.Str(
+        load_default="NSE", validate=validate.OneOf(SIP_EXCHANGES)
+    )
     charges = fields.Dict(
         keys=fields.Str(validate=validate.Length(min=1, max=32)),
         values=fields.Dict(),
@@ -89,14 +103,17 @@ class SipBacktestSchema(Schema):
     cost_bps = fields.Float(load_default=0.0, validate=validate.Range(min=0, max=1000))
     slippage = fields.Float(load_default=0.0, validate=validate.Range(min=0, max=0.1))
 
-    benchmark = fields.Str(load_default=None, allow_none=True, validate=validate.Length(max=64))
+    benchmark = fields.Str(load_default=None, allow_none=True,
+                           validate=validate.Length(max=64))
     # Indices only: a benchmark is not something you can hold, and comparing a
     # SIP against a single stock would not mean anything.
     benchmark_exchange = fields.Str(
         load_default="NSE_INDEX", validate=validate.OneOf(BENCHMARK_EXCHANGES)
     )
 
-    source = fields.Str(load_default="db", validate=validate.OneOf(["db", "api"]))
+    source = fields.Str(
+        load_default="db", validate=validate.OneOf(["db", "api"])
+    )
     include_grids = fields.Bool(load_default=True)
 
 
@@ -120,7 +137,9 @@ class SipBacktest(Resource):
         try:
             data = backtest_schema.load(request.json or {})
         except ValidationError as err:
-            return make_response(jsonify({"status": "error", "message": err.messages}), 400)
+            return make_response(
+                jsonify({"status": "error", "message": err.messages}), 400
+            )
 
         api_key = data.pop("apikey")
 
@@ -135,7 +154,9 @@ class SipBacktest(Resource):
 
         auth_token = feed_token = broker = None
         if data["source"] == "api":
-            auth_token, feed_token, broker = get_auth_token_broker(api_key, include_feed_token=True)
+            auth_token, feed_token, broker = get_auth_token_broker(
+                api_key, include_feed_token=True
+            )
             if auth_token is None:
                 return make_response(
                     jsonify(

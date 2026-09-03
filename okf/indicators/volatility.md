@@ -2,7 +2,7 @@
 type: Indicator
 title: Volatility Indicators
 description: Volatility indicators including ATR, Bollinger Bands, Keltner Channel, Donchian Channel, NATR, RVI, Chandelier Exit, Historical Volatility, Ulcer Index and STARC Bands
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/prompt/indicators/volatility%20-%20tradeboard%20indicators.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/prompt/indicators/volatility%20-%20openalgo%20indicators.md
 tags:
 - indicators
 - volatility
@@ -18,6 +18,6 @@ timestamp: '2026-07-03T00:00:00+00:00'
 
 Volatility indicators including ATR, Bollinger Bands, Keltner Channel, Donchian Channel, NATR, RVI, Chandelier Exit, Historical Volatility, Ulcer Index and STARC Bands.
 
-**Source:** [docs/prompt/indicators/volatility - tradeboard indicators.md](<../../docs/prompt/indicators/volatility - tradeboard indicators.md>)
+**Source:** [docs/prompt/indicators/volatility - openalgo indicators.md](<../../docs/prompt/indicators/volatility - openalgo indicators.md>)
 
 **Related:** [overview](../overview.md)

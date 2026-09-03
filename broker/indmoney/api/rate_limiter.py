@@ -184,14 +184,18 @@ def _record_daily(bucket):
             "today. Further calls are likely to be rejected until the IST day rolls over."
         )
     else:
-        logger.warning(f"IndMoney {bucket} API daily usage at {count}/{_DAILY_CAP} requests today.")
+        logger.warning(
+            f"IndMoney {bucket} API daily usage at {count}/{_DAILY_CAP} requests today."
+        )
 
 
 def daily_usage():
     """Current per-bucket request counts for today (diagnostics)."""
     today = datetime.now(_IST).date()
     with _lock:
-        return {bucket: (count if day == today else 0) for bucket, (day, count) in _daily.items()}
+        return {
+            bucket: (count if day == today else 0) for bucket, (day, count) in _daily.items()
+        }
 
 
 def retry_delay(headers, attempt):

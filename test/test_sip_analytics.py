@@ -63,16 +63,9 @@ def result(prices):
     return run_sip(prices, "ICICIBANK", "NSE", date(2019, 1, 1), date(2023, 12, 31), 10000)
 
 
-@pytest.mark.parametrize(
-    "fn",
-    [
-        headline,
-        underwater,
-        drawdown,
-        yearly_breakdown,
-        monthly_value_heatmap,
-    ],
-)
+@pytest.mark.parametrize("fn", [
+    headline, underwater, drawdown, yearly_breakdown, monthly_value_heatmap,
+])
 def test_result_metrics_emit_no_warnings(fn, result):
     with no_warnings():
         fn(result)
@@ -96,9 +89,7 @@ def test_series_stay_numeric_not_object(result):
     float Series to object dtype. Assert the inputs the metrics divide by are
     still numeric, so the promotion cannot creep back."""
     for name, series in (
-        ("value", result.value),
-        ("invested", result.invested),
-        ("units", result.units),
+        ("value", result.value), ("invested", result.invested), ("units", result.units)
     ):
         assert pd.api.types.is_numeric_dtype(series), f"{name} is {series.dtype}"
 
@@ -114,9 +105,11 @@ def test_every_metric_is_json_safe(result, prices):
         "drawdown": drawdown(result),
         "yearly": yearly_breakdown(result),
         "monthly": monthly_value_heatmap(result),
-        "frequency": frequency_comparison(prices, date(2019, 1, 1), date(2023, 12, 31), 10000),
+        "frequency": frequency_comparison(
+            prices, date(2019, 1, 1), date(2023, 12, 31), 10000
+        ),
     }
-    text = json.dumps(payload)  # raises on NaN=False? no -- check explicitly
+    text = json.dumps(payload)          # raises on NaN=False? no -- check explicitly
     assert "NaN" not in text, "NaN leaked into the payload; jsonify would emit invalid JSON"
     assert "Infinity" not in text
 
@@ -139,9 +132,8 @@ def result_with_empty_first_month():
     rng = np.random.default_rng(5)
     idx = pd.DatetimeIndex(pd.bdate_range("2019-01-01", periods=252 * 3))
     px = pd.Series(100 * np.cumprod(1 + rng.normal(0.0004, 0.012, len(idx))), index=idx)
-    return run_sip(
-        px, "ICICIBANK", "NSE", date(2019, 1, 20), date(2021, 12, 31), 10000, day_of_month=1
-    )
+    return run_sip(px, "ICICIBANK", "NSE", date(2019, 1, 20), date(2021, 12, 31),
+                   10000, day_of_month=1)
 
 
 def test_zero_prior_close_does_not_warn(result_with_empty_first_month):
@@ -173,13 +165,15 @@ def test_monthly_return_is_close_to_close(result):
     would diverge.
     """
     grid = monthly_value_heatmap(result)
-    monthly = (
-        pd.DataFrame({"value": result.value, "invested": result.invested}).resample("ME").last()
-    )
+    monthly = pd.DataFrame(
+        {"value": result.value, "invested": result.invested}
+    ).resample("ME").last()
 
     prior_close = monthly["value"].shift(1)
     added = monthly["invested"] - monthly["invested"].shift(1)
-    expected = ((monthly["value"] - prior_close) - added) / prior_close.where(prior_close != 0)
+    expected = ((monthly["value"] - prior_close) - added) / prior_close.where(
+        prior_close != 0
+    )
 
     flat = [v for row in grid["values"] for v in row if v is not None]
     wanted = [float(v) for v in expected.dropna()]

@@ -156,9 +156,7 @@ class _PooledAdapterWrapper:
 
         return self._pool
 
-    def initialize(
-        self, broker_name: str, user_id: str, auth_data: dict = None, force: bool = False
-    ):
+    def initialize(self, broker_name: str, user_id: str, auth_data: dict = None, force: bool = False):
         """Initialize the pool with user credentials
 
         Args:
@@ -290,9 +288,7 @@ class _PooledAdapterWrapper:
             # It only caches broker names which don't affect auth token validation
 
             if caches_cleared:
-                self.logger.info(
-                    f"Cleared auth caches for user {user_id}: {', '.join(caches_cleared)}"
-                )
+                self.logger.info(f"Cleared auth caches for user {user_id}: {', '.join(caches_cleared)}")
             else:
                 self.logger.debug(f"No cached auth data found for user {user_id}")
 

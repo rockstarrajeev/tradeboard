@@ -3,7 +3,7 @@ Feature: Scalping terminal and current analytics tools
 
   # Source: blueprints/scalping.py:267, blueprints/scalping.py:299, blueprints/scalping.py:432
   Scenario: Scalping instrument discovery resolves underlyings expiries and strikes
-    Given a session user has an Tradeboard API key
+    Given a session user has an OpenAlgo API key
     When the terminal selects an F&O exchange and underlying
     Then available expiries and an ATM-centered chain can be returned
     And MCX or CDS can use the current-month future as the underlying reference

@@ -4,7 +4,7 @@
 
 Historify is a session-authenticated Flask blueprint with `url_prefix="/historify"`. Its JSON and file routes therefore begin with `/historify/api`; they are not RESTX `/api/v1` endpoints and do not use the `/api/v1/historify` prefix from older documentation.
 
-All routes below require a valid Tradeboard app session. Download and job creation also require an Tradeboard API key for the logged-in user because they call normalized history services.
+All routes below require a valid OpenAlgo app session. Download and job creation also require an OpenAlgo API key for the logged-in user because they call normalized history services.
 
 ## Complete Route Inventory
 
@@ -42,7 +42,7 @@ Bulk export accepts optional `symbols`, `interval` or `intervals`, `start_date`,
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/historify/api/intervals` | Return intervals available from the Tradeboard API |
+| GET | `/historify/api/intervals` | Return intervals available from the OpenAlgo API |
 | GET | `/historify/api/historify-intervals` | Return intervals supported by local Historify storage/aggregation |
 | GET | `/historify/api/exchanges` | Return supported exchanges |
 | GET | `/historify/api/stats` | Return database statistics |

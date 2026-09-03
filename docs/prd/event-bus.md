@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Tradeboard uses an in-process event bus to separate order and sandbox state changes from logging, live UI updates, and notification delivery. It is not a durable message broker and does not replace the ZeroMQ market-data channel.
+OpenAlgo uses an in-process event bus to separate order and sandbox state changes from logging, live UI updates, and notification delivery. It is not a durable message broker and does not replace the ZeroMQ market-data channel.
 
 ## Runtime Contract
 

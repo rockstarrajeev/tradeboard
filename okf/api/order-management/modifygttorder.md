@@ -2,7 +2,7 @@
 type: API Endpoint
 title: ModifyGTTOrder
 description: Modify an active GTT trigger
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/order-management/modifygttorder.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/order-management/modifygttorder.md
 tags:
 - order
 - gtt

@@ -38,10 +38,7 @@ def get_order_book(auth):
     # Surface rejection reasons for any rejected orders
     if isinstance(response, list):
         for order in response:
-            if (
-                isinstance(order, dict)
-                and normalize_order_status(order.get("status")) == "rejected"
-            ):
+            if isinstance(order, dict) and normalize_order_status(order.get("status")) == "rejected":
                 logger.debug(
                     f"Rejected order {order.get('norenordno', '')} "
                     f"({order.get('tsym', '')}): {order.get('rejreason', 'no reason provided')}"
@@ -161,7 +158,9 @@ def place_smartorder_api(data, auth):
 
     with symbol_lock:
         position_size = int(data.get("position_size", "0"))
-        current_position = int(get_open_position(symbol, exchange, map_product_type(product), auth))
+        current_position = int(
+            get_open_position(symbol, exchange, map_product_type(product), auth)
+        )
 
         logger.debug(f"position_size : {position_size}")
         logger.debug(f"Open Position : {current_position}")

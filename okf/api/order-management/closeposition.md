@@ -2,7 +2,7 @@
 type: API Endpoint
 title: ClosePosition
 description: Close all open positions
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/order-management/closeposition.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/order-management/closeposition.md
 tags:
 - position
 - close

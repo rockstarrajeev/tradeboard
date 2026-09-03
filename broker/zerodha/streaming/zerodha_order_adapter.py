@@ -54,7 +54,10 @@ class ZerodhaOrderUpdateAdapter(BaseOrderUpdateAdapter):
         self.access_token = access_token
 
     def get_ws_url(self) -> str:
-        return f"wss://ws.kite.trade?api_key={self.api_key}&access_token={self.access_token}"
+        return (
+            f"wss://ws.kite.trade?api_key={self.api_key}"
+            f"&access_token={self.access_token}"
+        )
 
     def get_headers(self):
         return None  # auth is in the URL query params
@@ -103,9 +106,7 @@ class ZerodhaOrderUpdateAdapter(BaseOrderUpdateAdapter):
                 data.get("pending_quantity") or data.get("unfilled_quantity") or 0
             ),
             "average_price": float(data.get("average_price") or 0),
-            "rejection_reason": data.get("status_message") or ""
-            if order_status == "rejected"
-            else "",
+            "rejection_reason": data.get("status_message") or "" if order_status == "rejected" else "",
         }
 
 
@@ -117,9 +118,7 @@ def create_zerodha_order_adapter(user_id: str) -> "ZerodhaOrderUpdateAdapter | N
     """
     auth_token = get_auth_token(user_id, bypass_cache=True)
     if not auth_token:
-        logger.warning(
-            f"No Zerodha auth token found for user {user_id}; order-update adapter not started"
-        )
+        logger.warning(f"No Zerodha auth token found for user {user_id}; order-update adapter not started")
         return None
 
     if ":" in auth_token:
@@ -131,9 +130,7 @@ def create_zerodha_order_adapter(user_id: str) -> "ZerodhaOrderUpdateAdapter | N
         access_token = auth_token
 
     if not api_key or not access_token:
-        logger.warning(
-            f"Incomplete Zerodha credentials for user {user_id}; order-update adapter not started"
-        )
+        logger.warning(f"Incomplete Zerodha credentials for user {user_id}; order-update adapter not started")
         return None
 
     return ZerodhaOrderUpdateAdapter(user_id=user_id, api_key=api_key, access_token=access_token)

@@ -2,7 +2,7 @@
 type: API Endpoint
 title: OptionGreeks
 description: Calculate option Greeks and implied volatility
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/options-services/optiongreeks.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/options-services/optiongreeks.md
 tags:
 - options
 - greeks

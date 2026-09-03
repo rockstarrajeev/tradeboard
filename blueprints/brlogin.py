@@ -601,9 +601,7 @@ def broker_callback(broker, para=None):
                     forward_url="broker.html",
                 )
             client_id = parts[1]  # OAuth client_id
-            shoonya_login_url = (
-                f"https://api.shoonya.com/OAuthlogin/authorize/oauth?client_id={client_id}"
-            )
+            shoonya_login_url = f"https://api.shoonya.com/OAuthlogin/authorize/oauth?client_id={client_id}"
             return redirect(shoonya_login_url)
 
     elif broker == "firstock":
@@ -658,11 +656,12 @@ def broker_callback(broker, para=None):
 
     elif broker == "samco":
         if request.method == "GET":
-            # Redirect to Samco multi-step auth wizard
+            # Connect page: exchanges the configured API key/secret for a session
+            # token, then verifies the static IP via /ip/whoami
             return redirect("/broker/samco/auth")
 
         elif request.method == "POST":
-            # Daily login: generate access token + login using stored secret key
+            # Daily login: POST /session/token with the OAuth app's apiKey + apiSecret
             auth_token, error_message = auth_function()
             forward_url = "broker.html"
 
@@ -677,6 +676,9 @@ def broker_callback(broker, para=None):
             totp_code = request.form.get("totp")
             date_of_birth = request.form.get("dob")
 
+            # to store user_id (Motilal client code) in the DB - the market data
+            # feed authenticates with it and dealer calls send it as clientcode
+            user_id = userid
             auth_token, feed_token, error_message = auth_function(
                 userid, password, totp_code, date_of_birth
             )
@@ -907,9 +909,7 @@ def broker_callback(broker, para=None):
                 user_id = session_json.get("userID")
 
                 if not auth_token:
-                    logger.error(
-                        f"RMoney callback - No token in session. Keys: {list(session_json.keys())}"
-                    )
+                    logger.error(f"RMoney callback - No token in session. Keys: {list(session_json.keys())}")
                     return jsonify({"error": "No token found in session data"}), 400
 
                 logger.info(f"RMoney OAuth authentication successful for user: {user_id}")
@@ -976,6 +976,20 @@ def broker_callback(broker, para=None):
         auth_token, error_message = auth_function(code)
         forward_url = "broker.html"
 
+    elif broker == "hdfcsecurities":
+        # InvestRight's docs describe the redirect only as carrying "a Request
+        # Token" without naming the query parameter, so accept every plausible
+        # spelling rather than silently dropping the token.
+        code = (
+            request.args.get("request_token")
+            or request.args.get("requestToken")
+            or request.args.get("request-token")
+            or request.args.get("code")
+        )
+        logger.debug(f"HDFC Securities broker - request token present: {bool(code)}")
+        auth_token, error_message = auth_function(code)
+        forward_url = "broker.html"
+
     else:
         code = request.args.get("code") or request.args.get("request_token")
         logger.debug(f"Generic broker - The code is {code}")
@@ -992,15 +1006,7 @@ def broker_callback(broker, para=None):
             auth_token = f"{auth_token}"
 
         # For brokers that have user_id and feed_token from authenticate_broker
-        if broker in [
-            "angel",
-            "compositedge",
-            "pocketful",
-            "definedge",
-            "dhan",
-            "rmoney",
-            "iiflcapital",
-        ]:
+        if broker in ["angel", "compositedge", "pocketful", "definedge", "dhan", "motilal", "rmoney", "iiflcapital"]:
             # For OAuth brokers, handle missing session user
             if broker in ("compositedge", "rmoney", "iiflcapital") and "user" not in session:
                 # Get the admin user from the database
@@ -1107,169 +1113,48 @@ def dhan_initiate_oauth():
 
 
 # ============================================================
-# Samco 2FA Routes
+# Samco Routes
 # ============================================================
-
-
-@brlogin_bp.route("/samco/generate-otp", methods=["POST"])
-@limiter.limit(LOGIN_RATE_LIMIT_MIN)
-@limiter.limit(LOGIN_RATE_LIMIT_HOUR)
-def samco_generate_otp():
-    """Generate OTP for Samco 2FA setup"""
-    if "user" not in session:
-        return jsonify({"status": "error", "message": "Not logged in"}), 401
-
-    from broker.samco.api.auth_api import generate_otp, get_client_id
-
-    uid = get_client_id()
-    if not uid:
-        return jsonify({"status": "error", "message": "BROKER_API_KEY not configured"}), 400
-
-    data, error = generate_otp(uid)
-    if error:
-        return jsonify({"status": "error", "message": error}), 400
-
-    return jsonify({"status": "success", "message": data.get("statusMessage", "OTP sent")})
-
-
-@brlogin_bp.route("/samco/generate-secret", methods=["POST"])
-@limiter.limit(LOGIN_RATE_LIMIT_MIN)
-@limiter.limit(LOGIN_RATE_LIMIT_HOUR)
-def samco_generate_secret():
-    """Generate Secret API Key using OTP"""
-    if "user" not in session:
-        return jsonify({"status": "error", "message": "Not logged in"}), 401
-
-    from broker.samco.api.auth_api import generate_secret_key, get_client_id
-
-    uid = get_client_id()
-    otp = request.json.get("otp") if request.is_json else request.form.get("otp")
-
-    if not otp:
-        return jsonify({"status": "error", "message": "OTP is required"}), 400
-
-    data, error = generate_secret_key(uid, otp)
-    if error:
-        return jsonify({"status": "error", "message": error}), 400
-
-    return jsonify(
-        {
-            "status": "success",
-            "message": data.get("statusMessage", "Secret key sent to your email"),
-        }
-    )
-
-
-@brlogin_bp.route("/samco/save-secret", methods=["POST"])
-@limiter.limit(LOGIN_RATE_LIMIT_MIN)
-@limiter.limit(LOGIN_RATE_LIMIT_HOUR)
-def samco_save_secret():
-    """Save the secret API key received via email"""
-    if "user" not in session:
-        return jsonify({"status": "error", "message": "Not logged in"}), 401
-
-    from broker.samco.api.auth_api import get_client_id
-    from database.auth_db import samco_save_secret_key as save_secret_key
-
-    uid = get_client_id()
-    secret_key = (
-        request.json.get("secretApiKey") if request.is_json else request.form.get("secretApiKey")
-    )
-
-    if not secret_key:
-        return jsonify({"status": "error", "message": "Secret API key is required"}), 400
-
-    if save_secret_key(uid, secret_key):
-        return jsonify({"status": "success", "message": "Secret API key saved successfully"})
-    else:
-        return jsonify({"status": "error", "message": "Failed to save secret API key"}), 500
 
 
 @brlogin_bp.route("/samco/ip-status", methods=["GET"])
 @limiter.limit(LOGIN_RATE_LIMIT_MIN)
 @limiter.limit(LOGIN_RATE_LIMIT_HOUR)
 def samco_ip_status():
-    """Get IP registration status"""
+    """Report the source IP Samco sees for this host vs the registered static IPs.
+
+    Backed by Samco's GET /ip/whoami diagnostic. There is deliberately no
+    /samco/update-ip counterpart: the password-based /ip/ipRegistration and
+    /ip/ipUpdate endpoints are deprecated in Trade API v3.2, and static IPs are
+    now registered through the Samco Web Dashboard.
+    """
     if "user" not in session:
         return jsonify({"status": "error", "message": "Not logged in"}), 401
 
-    from broker.samco.api.auth_api import get_client_id
-    from database.auth_db import samco_get_ip_status as get_ip_status
-    from database.auth_db import samco_has_secret_key as has_secret_key
+    from broker.samco.api.auth_api import DASHBOARD_URL, get_whoami
+    from database.auth_db import get_auth_token
 
-    uid = get_client_id()
-    ip_status = get_ip_status(uid)
-    ip_status["has_secret_key"] = has_secret_key(uid)
-    ip_status["status"] = "success"
+    session_token = get_auth_token(session["user"])
+    if not session_token:
+        return jsonify({
+            "status": "error",
+            "message": "Not connected to Samco. Log in to the broker first.",
+        }), 400
 
-    return jsonify(ip_status)
-
-
-@brlogin_bp.route("/samco/update-ip", methods=["POST"])
-@limiter.limit(LOGIN_RATE_LIMIT_MIN)
-@limiter.limit(LOGIN_RATE_LIMIT_HOUR)
-def samco_update_ip():
-    """Register or update IP addresses"""
-    if "user" not in session:
-        return jsonify({"status": "error", "message": "Not logged in"}), 401
-
-    from broker.samco.api.auth_api import get_client_id, get_password, register_ip, update_ip
-    from database.auth_db import samco_get_ip_status as get_ip_status
-    from database.auth_db import samco_has_registered_ip as has_registered_ip
-    from database.auth_db import samco_save_ip_info as save_ip_info
-
-    uid = get_client_id()
-    password = get_password()
-
-    primary_ip = request.json.get("primaryIp") if request.is_json else request.form.get("primaryIp")
-    secondary_ip = (
-        request.json.get("secondaryIp") if request.is_json else request.form.get("secondaryIp")
-    )
-
-    if not primary_ip:
-        return jsonify({"status": "error", "message": "Primary IP is required"}), 400
-
-    # Check weekly lock — allow if secondary IP is not yet registered
-    status = get_ip_status(uid)
-    secondary_missing = status["primary_ip"] and not status["secondary_ip"]
-    if not status["editable"] and has_registered_ip(uid) and not secondary_missing:
-        return jsonify(
-            {
-                "status": "error",
-                "message": f"IP can only be updated once per calendar week. Next edit: {status['next_editable_date']}",
-            }
-        ), 400
-
-    # Use register for first time, update for subsequent
-    if has_registered_ip(uid):
-        data, error = update_ip(uid, password, primary_ip, secondary_ip)
-    else:
-        data, error = register_ip(uid, password, primary_ip, secondary_ip)
-
+    data, error = get_whoami(session_token)
     if error:
         return jsonify({"status": "error", "message": error}), 400
 
-    # Parse ip_updated_at from response if available
-    ip_updated_at = None
-    if data and data.get("data") and data["data"].get("ip_updated_at"):
-        from datetime import datetime
-
-        try:
-            ip_updated_at = datetime.fromisoformat(
-                data["data"]["ip_updated_at"].replace("Z", "+00:00")
-            )
-        except (ValueError, TypeError):
-            pass
-
-    # Save to DB
-    save_ip_info(uid, primary_ip, secondary_ip, ip_updated_at)
-
-    return jsonify(
-        {
-            "status": "success",
-            "message": data.get("statusMessage", "IP updated successfully"),
-        }
-    )
+    return jsonify({
+        "status": "success",
+        "src_ip": data.get("srcIp") or "",
+        "primary_ip": data.get("primaryIp") or "",
+        "secondary_ip": data.get("secondaryIp") or "",
+        "matches": bool(data.get("matches")),
+        "matched_as": data.get("matchedAs"),
+        "message": data.get("statusMessage", ""),
+        "dashboard_url": DASHBOARD_URL,
+    })
 
 
 @brlogin_bp.route("/nubra/ip-status", methods=["GET"])
@@ -1291,12 +1176,10 @@ def nubra_ip_status():
 
     session_token = get_auth_token(session["user"])
     if not session_token:
-        return jsonify(
-            {
-                "status": "error",
-                "message": "Not connected to Nubra. Log in to the broker first.",
-            }
-        ), 400
+        return jsonify({
+            "status": "error",
+            "message": "Not connected to Nubra. Log in to the broker first.",
+        }), 400
 
     payload, error = validate_static_ip(session_token)
 
@@ -1304,30 +1187,26 @@ def nubra_ip_status():
         # "No IP addresses registered for user" is the expected answer for an
         # account without static IP access, not a failure to report.
         registered = "no ip addresses registered" not in error.lower()
-        return jsonify(
-            {
-                "status": "error",
-                "message": error,
-                "registered": registered,
-                "editable": False,
-            }
-        ), 200 if not registered else 400
-
-    return jsonify(
-        {
-            "status": "success",
-            "registered": True,
-            "is_matched": payload.get("is_matched", False),
-            "current_ip": payload.get("current_ip_address", ""),
-            "primary_ip": payload.get("primary_ip_address", ""),
-            "secondary_ip": payload.get("secondary_ip_address", ""),
-            # Nubra has no register/update IP API; changes go through Nubra.
+        return jsonify({
+            "status": "error",
+            "message": error,
+            "registered": registered,
             "editable": False,
-            "message": (
-                "Current IP matches a registered static IP."
-                if payload.get("is_matched")
-                else "Current IP does NOT match the registered static IPs. "
-                "Update them with Nubra to restore access."
-            ),
-        }
-    )
+        }), 200 if not registered else 400
+
+    return jsonify({
+        "status": "success",
+        "registered": True,
+        "is_matched": payload.get("is_matched", False),
+        "current_ip": payload.get("current_ip_address", ""),
+        "primary_ip": payload.get("primary_ip_address", ""),
+        "secondary_ip": payload.get("secondary_ip_address", ""),
+        # Nubra has no register/update IP API; changes go through Nubra.
+        "editable": False,
+        "message": (
+            "Current IP matches a registered static IP."
+            if payload.get("is_matched")
+            else "Current IP does NOT match the registered static IPs. "
+                 "Update them with Nubra to restore access."
+        ),
+    })

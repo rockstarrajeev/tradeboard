@@ -1,5 +1,4 @@
 """SIP simulation: units, value curve, cash flows, rupee-cost averaging."""
-
 from datetime import date
 
 import pandas as pd
@@ -57,9 +56,8 @@ def test_flat_prices_give_no_averaging_advantage():
 def test_charges_reduce_units_not_the_invested_amount():
     """Invested is what leaves the investor; charges show up as fewer units."""
     free = run_sip(flat(), "X", "NSE", date(2020, 1, 1), date(2020, 6, 30), 10000)
-    paid = run_sip(
-        flat(), "X", "NSE", date(2020, 1, 1), date(2020, 6, 30), 10000, brokerage_percent=1.0
-    )
+    paid = run_sip(flat(), "X", "NSE", date(2020, 1, 1), date(2020, 6, 30), 10000,
+                   brokerage_percent=1.0)
     assert paid.total_invested == free.total_invested
     assert paid.total_units < free.total_units
     # 1% of the value actually TRADED, not of the installment. At Rs 100 a
@@ -70,7 +68,8 @@ def test_charges_reduce_units_not_the_invested_amount():
 
 
 def test_charges_are_levied_per_installment():
-    s = run_sip(flat(), "X", "NSE", date(2020, 1, 1), date(2020, 6, 30), 10000, brokerage_flat=20.0)
+    s = run_sip(flat(), "X", "NSE", date(2020, 1, 1), date(2020, 6, 30), 10000,
+                brokerage_flat=20.0)
     assert s.charges == pytest.approx(120.0), "20 x 6 installments, not 20 once"
 
 
@@ -81,26 +80,20 @@ def test_invested_curve_is_monotonic_and_ends_at_the_total():
 
 
 def test_step_up_increases_later_installments():
-    s = run_sip(
-        flat(400), "X", "NSE", date(2020, 1, 1), date(2021, 6, 30), 10000, step_up_percent=10.0
-    )
+    s = run_sip(flat(400), "X", "NSE", date(2020, 1, 1), date(2021, 6, 30), 10000,
+                step_up_percent=10.0)
     first = s.installments[0].amount
     last = s.installments[-1].amount
     assert last > first
     assert s.total_invested > 10000 * s.installment_count * 0.99
 
 
-@pytest.mark.parametrize(
-    "freq,expected_min",
-    [
-        ("weekly", 20),
-        ("fortnightly", 10),
-        ("monthly", 5),
-        ("quarterly", 1),
-    ],
-)
+@pytest.mark.parametrize("freq,expected_min", [
+    ("weekly", 20), ("fortnightly", 10), ("monthly", 5), ("quarterly", 1),
+])
 def test_every_frequency_produces_installments(freq, expected_min):
-    s = run_sip(flat(400), "X", "NSE", date(2020, 1, 1), date(2020, 6, 30), 5000, frequency=freq)
+    s = run_sip(flat(400), "X", "NSE", date(2020, 1, 1), date(2020, 6, 30), 5000,
+                frequency=freq)
     assert s.installment_count >= expected_min
 
 
@@ -113,7 +106,7 @@ def test_rejects_a_sip_that_can_never_afford_a_share():
     """With whole shares, an installment too small to buy one is not an error
     on its own -- the cash carries forward and buys later. It is only unusable
     when nothing is ever bought."""
-    px = prices([100_000.0] * 200)  # one share costs more than the whole SIP
+    px = prices([100_000.0] * 200)   # one share costs more than the whole SIP
     with pytest.raises(SipError, match="afford a single share"):
         run_sip(px, "X", "NSE", date(2020, 1, 1), date(2020, 6, 30), 1000)
 
@@ -142,21 +135,17 @@ def india_costs(exchange="NSE"):
     from services.sip_service import _build_costs
 
     return _build_costs(
-        cost_model="indian_equity",
-        brokerage_percent=0,
-        brokerage_flat=0,
-        cost_exchange=exchange,
-        charge_overrides=None,
-        gst_rate=None,
-        cost_bps=0,
-        slippage=0,
+        cost_model="indian_equity", brokerage_percent=0, brokerage_flat=0,
+        cost_exchange=exchange, charge_overrides=None, gst_rate=None,
+        cost_bps=0, slippage=0,
     )
 
 
 def test_statutory_charges_are_levied_per_installment():
     """Not once for the SIP. Over 60 buys the difference is large, and the
     per-installment figure is what a contract note would show."""
-    s = run_sip(flat(), "X", "NSE", date(2020, 1, 1), date(2020, 6, 30), 10000, costs=india_costs())
+    s = run_sip(flat(), "X", "NSE", date(2020, 1, 1), date(2020, 6, 30), 10000,
+                costs=india_costs())
     assert s.installment_count == 6
     # Charged on the value actually traded, which whole shares make slightly
     # less than the installment. Derived, not hardcoded: a fixed number here
@@ -167,31 +156,28 @@ def test_statutory_charges_are_levied_per_installment():
 
 
 def test_charge_breakdown_itemises_every_statutory_line():
-    s = run_sip(flat(), "X", "NSE", date(2020, 1, 1), date(2020, 6, 30), 10000, costs=india_costs())
+    s = run_sip(flat(), "X", "NSE", date(2020, 1, 1), date(2020, 6, 30), 10000,
+                costs=india_costs())
     for line in ("stt", "exchange_txn", "sebi", "stamp_duty", "tax"):
         assert s.charge_breakdown[line] > 0, f"{line} missing from the breakdown"
     traded = s.total_invested - s.cash - s.charges
-    assert s.charge_breakdown["stt"] == pytest.approx(traded * 0.001, rel=1e-6), (
+    assert s.charge_breakdown["stt"] == pytest.approx(traded * 0.001, rel=1e-6), \
         "STT is 0.1% of the value traded, not of the money paid in"
-    )
 
 
 def test_bse_and_nse_differ_only_in_the_exchange_fee():
-    nse = run_sip(
-        flat(), "X", "NSE", date(2020, 1, 1), date(2020, 6, 30), 10000, costs=india_costs("NSE")
-    )
-    bse = run_sip(
-        flat(), "X", "BSE", date(2020, 1, 1), date(2020, 6, 30), 10000, costs=india_costs("BSE")
-    )
+    nse = run_sip(flat(), "X", "NSE", date(2020, 1, 1), date(2020, 6, 30), 10000,
+                  costs=india_costs("NSE"))
+    bse = run_sip(flat(), "X", "BSE", date(2020, 1, 1), date(2020, 6, 30), 10000,
+                  costs=india_costs("BSE"))
     assert bse.charge_breakdown["exchange_txn"] > nse.charge_breakdown["exchange_txn"]
     assert bse.charge_breakdown["stt"] == pytest.approx(nse.charge_breakdown["stt"])
 
 
 def test_charges_reduce_units_so_the_drag_is_real():
     free = run_sip(flat(), "X", "NSE", date(2020, 1, 1), date(2020, 6, 30), 10000)
-    paid = run_sip(
-        flat(), "X", "NSE", date(2020, 1, 1), date(2020, 6, 30), 10000, costs=india_costs()
-    )
+    paid = run_sip(flat(), "X", "NSE", date(2020, 1, 1), date(2020, 6, 30), 10000,
+                   costs=india_costs())
     assert paid.total_invested == free.total_invested, "invested is what left the investor"
     assert paid.total_units < free.total_units
     assert paid.final_value < free.final_value
@@ -199,7 +185,8 @@ def test_charges_reduce_units_so_the_drag_is_real():
 
 def test_lumpsum_uses_the_same_charge_model():
     """Otherwise the SIP-versus-lumpsum comparison would be rigged."""
-    lump = run_lumpsum(flat(), date(2020, 1, 1), date(2020, 6, 30), 60000, costs=india_costs())
+    lump = run_lumpsum(flat(), date(2020, 1, 1), date(2020, 6, 30), 60000,
+                       costs=india_costs())
     traded = lump["units"] * 100.0
     assert traded > 0
     assert lump["units"] == int(lump["units"]), "lumpsum bought fractional shares"
@@ -232,7 +219,9 @@ def test_no_money_is_created_or_lost():
     is either in shares, in charges, or still in cash."""
     px = prices([1500.0] * 200)
     s = run_sip(px, "X", "NSE", date(2020, 1, 1), date(2020, 6, 30), 10000)
-    assert s.total_units * 1500.0 + s.cash + s.charges == pytest.approx(s.total_invested)
+    assert s.total_units * 1500.0 + s.cash + s.charges == pytest.approx(
+        s.total_invested
+    )
 
 
 def test_the_remainder_carries_forward_rather_than_being_lost():

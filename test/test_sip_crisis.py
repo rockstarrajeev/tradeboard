@@ -4,7 +4,6 @@ The claim this panel makes -- that starting into a crash usually beats waiting
 -- is a tendency in the data, not a law. These tests check the mechanics that
 make the comparison fair, not the direction of the result.
 """
-
 from datetime import date
 
 import numpy as np
@@ -93,7 +92,6 @@ def test_empty_history_is_handled():
 
 def test_every_value_is_json_safe():
     import json
-
     px = series()
     text = json.dumps({"periods": crisis_sip_analysis(px, 10000)})
     assert "NaN" not in text and "Infinity" not in text

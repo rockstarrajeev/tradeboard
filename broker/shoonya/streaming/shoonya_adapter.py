@@ -4,7 +4,6 @@ Handles market data streaming from Shoonya broker
 """
 
 import json
-import logging
 import os
 import sys
 import threading
@@ -14,6 +13,7 @@ from collections import Counter
 from typing import Any
 
 from database.auth_db import get_auth_token
+from utils.logging import get_logger
 
 # Add parent directory to path to allow imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
@@ -58,7 +58,7 @@ class MarketDataCache:
         self._cache = {}
         self._initialized_scrips = set()
         self._lock = threading.Lock()
-        self.logger = logging.getLogger("market_cache")
+        self.logger = get_logger("market_cache")
 
     def get(self, scrip: str) -> dict[str, Any]:
         """Get cached data for a scrip"""
@@ -272,7 +272,7 @@ class ShoonyaWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
     def __init__(self):
         super().__init__()
-        self.logger = logging.getLogger("shoonya_websocket")
+        self.logger = get_logger("shoonya_websocket")
         self._setup_adapter()
         self._setup_market_cache()
         self._setup_connection_management()
@@ -487,7 +487,8 @@ class ShoonyaWebSocketAdapter(BaseBrokerWebSocketAdapter):
             with self.lock:
                 # M7 fix: Use trailing underscore in prefix match to avoid false positives
                 already_ws_subscribed = any(
-                    cid.startswith(f"{base_correlation_id}_") for cid in self.subscriptions.keys()
+                    cid.startswith(f"{base_correlation_id}_")
+                    for cid in self.subscriptions.keys()
                 )
 
                 if already_ws_subscribed:
@@ -717,7 +718,9 @@ class ShoonyaWebSocketAdapter(BaseBrokerWebSocketAdapter):
             return True
         if self._unsub_batch_timer is None:
             delay = max(0.0, self._batch_delay - elapsed)
-            self._unsub_batch_timer = threading.Timer(delay, self._flush_unsubscription_batch)
+            self._unsub_batch_timer = threading.Timer(
+                delay, self._flush_unsubscription_batch
+            )
             self._unsub_batch_timer.daemon = True
             self._unsub_batch_timer.start()
         return False
@@ -736,7 +739,9 @@ class ShoonyaWebSocketAdapter(BaseBrokerWebSocketAdapter):
         if not cancel:
             return
 
-        def filter_queue(queue: list[tuple[str, str]], to_cancel: Counter) -> list[tuple[str, str]]:
+        def filter_queue(
+            queue: list[tuple[str, str]], to_cancel: Counter
+        ) -> list[tuple[str, str]]:
             remaining = Counter(to_cancel)
             out: list[tuple[str, str]] = []
             for entry in queue:
@@ -791,7 +796,9 @@ class ShoonyaWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 )
                 ws.subscribe_touchline_scrips(touchline_scrips)
             if depth_scrips:
-                self.logger.info(f"[BATCH_SUBSCRIBE] Sending {len(depth_scrips)} depth scrips")
+                self.logger.info(
+                    f"[BATCH_SUBSCRIBE] Sending {len(depth_scrips)} depth scrips"
+                )
                 ws.subscribe_depth_scrips(depth_scrips)
         except Exception as e:
             self.logger.error(
@@ -873,7 +880,9 @@ class ShoonyaWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 )
                 ws.unsubscribe_touchline_scrips(touchline_scrips)
             if depth_scrips:
-                self.logger.info(f"[BATCH_UNSUBSCRIBE] Sending {len(depth_scrips)} depth scrips")
+                self.logger.info(
+                    f"[BATCH_UNSUBSCRIBE] Sending {len(depth_scrips)} depth scrips"
+                )
                 ws.unsubscribe_depth_scrips(depth_scrips)
         except Exception as e:
             self.logger.error(f"Error queueing batch unsubscription: {e}")
@@ -885,7 +894,9 @@ class ShoonyaWebSocketAdapter(BaseBrokerWebSocketAdapter):
     def _on_open(self, ws):
         """Handle WebSocket connection open — set connected under lock, then resubscribe"""
         self.logger.info("Connected to Shoonya WebSocket")
-        resub = threading.Thread(target=self._resubscribe_all, daemon=True, name="ShoonyaResub")
+        resub = threading.Thread(
+            target=self._resubscribe_all, daemon=True, name="ShoonyaResub"
+        )
         should_start = False
         with self.lock:
             self.connected = True
@@ -982,7 +993,7 @@ class ShoonyaWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 return
 
             delay = min(
-                Config.BASE_RECONNECT_DELAY * (2**self.reconnect_attempts),
+                Config.BASE_RECONNECT_DELAY * (2 ** self.reconnect_attempts),
                 Config.MAX_RECONNECT_DELAY,
             )
 
@@ -1072,7 +1083,9 @@ class ShoonyaWebSocketAdapter(BaseBrokerWebSocketAdapter):
                         self._reconnecting = True
 
                 if connection_lost:
-                    self.logger.warning("Connection lost during reconnection handoff, retrying")
+                    self.logger.warning(
+                        "Connection lost during reconnection handoff, retrying"
+                    )
                     self._schedule_reconnection()
                     scheduled_retry = True
                 else:
@@ -1213,12 +1226,16 @@ class ShoonyaWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 if not cids:
                     return
                 matching_subscriptions = [
-                    self.subscriptions[cid].copy() for cid in cids if cid in self.subscriptions
+                    self.subscriptions[cid].copy()
+                    for cid in cids
+                    if cid in self.subscriptions
                 ]
 
             for subscription in matching_subscriptions:
                 if self._should_process_message(msg_type, subscription["mode"]):
-                    self._process_subscription_message(data, subscription, symbol, exchange, scrip)
+                    self._process_subscription_message(
+                        data, subscription, symbol, exchange, scrip
+                    )
 
         except Exception as e:
             self.logger.error(f"Message processing error: {e}")
@@ -1378,9 +1395,7 @@ class ShoonyaWebSocketAdapter(BaseBrokerWebSocketAdapter):
             )
 
             # SA-R6-10 fix: Include warnings in response when partial failure occurs
-            response_msg = (
-                f"Unsubscribed from all {subscription_count} subscriptions. Connection kept alive."
-            )
+            response_msg = f"Unsubscribed from all {subscription_count} subscriptions. Connection kept alive."
             if unsub_errors:
                 response_msg += f" Warnings: {unsub_errors}"
 

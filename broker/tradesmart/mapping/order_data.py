@@ -42,9 +42,7 @@ def normalize_order_status(raw_status):
 
 def map_order_data(order_data):
     """Normalize raw OrderBook rows: resolve OpenAlgo symbol + product/pricetype."""
-    if order_data is None or (
-        isinstance(order_data, dict) and (order_data.get("stat") == "Not_Ok")
-    ):
+    if order_data is None or (isinstance(order_data, dict) and (order_data.get("stat") == "Not_Ok")):
         logger.warning("No order data available.")
         order_data = {}
 
@@ -64,7 +62,9 @@ def map_order_data(order_data):
             if symbol_from_db:
                 order["tsym"] = symbol_from_db
             else:
-                logger.warning(f"Symbol not found for token {symboltoken} and exchange {exchange}.")
+                logger.warning(
+                    f"Symbol not found for token {symboltoken} and exchange {exchange}."
+                )
 
             # Product, price type and the price preference are independent of the
             # symbol lookup, so map them unconditionally - otherwise a lookup
@@ -144,30 +144,26 @@ def transform_order_data(orders):
             logger.warning(f"Expected dict, found {type(order)}. Skipping.")
             continue
 
-        transformed_orders.append(
-            {
-                "symbol": order.get("tsym", ""),
-                "exchange": order.get("exch", ""),
-                "action": order.get("trantype", ""),
-                "quantity": order.get("qty", 0),
-                "price": order.get("prc", 0.0),
-                "trigger_price": order.get("trgprc", 0.0),
-                "pricetype": order.get("prctyp", ""),
-                "product": order.get("prd", ""),
-                "orderid": order.get("norenordno", ""),
-                "order_status": normalize_order_status(order.get("status")),
-                "timestamp": order.get("norentm", ""),
-            }
-        )
+        transformed_orders.append({
+            "symbol": order.get("tsym", ""),
+            "exchange": order.get("exch", ""),
+            "action": order.get("trantype", ""),
+            "quantity": order.get("qty", 0),
+            "price": order.get("prc", 0.0),
+            "trigger_price": order.get("trgprc", 0.0),
+            "pricetype": order.get("prctyp", ""),
+            "product": order.get("prd", ""),
+            "orderid": order.get("norenordno", ""),
+            "order_status": normalize_order_status(order.get("status")),
+            "timestamp": order.get("norentm", ""),
+        })
 
     return transformed_orders
 
 
 def map_trade_data(trade_data):
     """Normalize raw TradeBook rows."""
-    if trade_data is None or (
-        isinstance(trade_data, dict) and (trade_data.get("stat") == "Not_Ok")
-    ):
+    if trade_data is None or (isinstance(trade_data, dict) and (trade_data.get("stat") == "Not_Ok")):
         logger.warning("No trade data available.")
         trade_data = {}
 
@@ -204,19 +200,17 @@ def transform_tradebook_data(tradebook_data):
         quantity = int(float(trade.get("qty", 0)))
         trade_value = round(avg_price * quantity, 2)
 
-        transformed_data.append(
-            {
-                "symbol": trade.get("tsym", ""),
-                "exchange": trade.get("exch", ""),
-                "product": trade.get("prd", ""),
-                "action": trade.get("trantype", ""),
-                "quantity": quantity,
-                "average_price": avg_price,
-                "trade_value": trade_value,
-                "orderid": trade.get("norenordno", ""),
-                "timestamp": trade.get("norentm", ""),
-            }
-        )
+        transformed_data.append({
+            "symbol": trade.get("tsym", ""),
+            "exchange": trade.get("exch", ""),
+            "product": trade.get("prd", ""),
+            "action": trade.get("trantype", ""),
+            "quantity": quantity,
+            "average_price": avg_price,
+            "trade_value": trade_value,
+            "orderid": trade.get("norenordno", ""),
+            "timestamp": trade.get("norentm", ""),
+        })
     return transformed_data
 
 
@@ -264,19 +258,17 @@ def transform_positions_data(positions_data):
 
         total_pnl = realized_pnl + unrealized_pnl
 
-        transformed_data.append(
-            {
-                "symbol": position.get("tsym", ""),
-                "exchange": position.get("exch", ""),
-                "product": position.get("prd", ""),
-                "quantity": position.get("netqty", 0),
-                "average_price": position.get("netavgprc", 0.0),
-                "realized_pnl": realized_pnl,
-                "unrealized_pnl": unrealized_pnl,
-                "ltp": position.get("lp", 0.0),
-                "pnl": round(total_pnl, 2),
-            }
-        )
+        transformed_data.append({
+            "symbol": position.get("tsym", ""),
+            "exchange": position.get("exch", ""),
+            "product": position.get("prd", ""),
+            "quantity": position.get("netqty", 0),
+            "average_price": position.get("netavgprc", 0.0),
+            "realized_pnl": realized_pnl,
+            "unrealized_pnl": unrealized_pnl,
+            "ltp": position.get("lp", 0.0),
+            "pnl": round(total_pnl, 2),
+        })
     return transformed_data
 
 
@@ -370,16 +362,14 @@ def transform_holdings_data(holdings_data):
                 exch for exch in holding.get("exch_tsym", []) if exch.get("exch") == "NSE"
             ]
             for exch_tsym in nse_entries:
-                transformed_data.append(
-                    {
-                        "symbol": exch_tsym.get("tsym", ""),
-                        "exchange": exch_tsym.get("exch", ""),
-                        "quantity": int(holding.get("holdqty", 0))
-                        + max(int(holding.get("npoadqty", 0)), int(holding.get("dpqty", 0))),
-                        "product": exch_tsym.get("product", "CNC"),
-                        "average_price": float(holding.get("upldprc", 0.0)),
-                        "pnl": 0.0,
-                        "pnlpercent": 0.0,
-                    }
-                )
+                transformed_data.append({
+                    "symbol": exch_tsym.get("tsym", ""),
+                    "exchange": exch_tsym.get("exch", ""),
+                    "quantity": int(holding.get("holdqty", 0))
+                    + max(int(holding.get("npoadqty", 0)), int(holding.get("dpqty", 0))),
+                    "product": exch_tsym.get("product", "CNC"),
+                    "average_price": float(holding.get("upldprc", 0.0)),
+                    "pnl": 0.0,
+                    "pnlpercent": 0.0,
+                })
     return transformed_data

@@ -85,14 +85,14 @@ def get_holdings(auth):
 # --- Per-Symbol Smart Order Lock ---
 # Ensures only one smart order per symbol executes at a time.
 # Others queue and execute sequentially, each getting a fresh position book.
-_symbol_locks = {}  # {symbol_key: threading.Lock}
+_symbol_locks = {}          # {symbol_key: threading.Lock}
 _symbol_locks_lock = threading.Lock()
 
 # --- Position Book Cache ---
 # Caches get_positions() for 1 second. Invalidated after each smart order placement.
-_position_cache = {}  # {auth_token: {"data": ..., "timestamp": ...}}
+_position_cache = {}        # {auth_token: {"data": ..., "timestamp": ...}}
 _position_cache_lock = threading.Lock()
-_POSITION_CACHE_TTL = 1.0  # seconds
+_POSITION_CACHE_TTL = 1.0   # seconds
 
 
 def _get_symbol_lock(symbol, exchange, product):
@@ -125,6 +125,7 @@ def _invalidate_position_cache(auth):
     """Invalidate the position cache so the next queued order fetches fresh data."""
     with _position_cache_lock:
         _position_cache.pop(auth, None)
+
 
 
 def get_open_position(tradingsymbol, exchange, product, auth):
@@ -222,9 +223,7 @@ def place_order_api(data, auth):
         # Prepare headers
         headers = {"Authorization": api_session_key, "Content-Type": "application/json"}
 
-        logger.debug(
-            f"Place order payload being sent to Definedge: {json.dumps(newdata, indent=2)}"
-        )
+        logger.debug(f"Place order payload being sent to Definedge: {json.dumps(newdata, indent=2)}")
 
         # Make the API request
         url = get_url("/placeorder")
@@ -318,9 +317,7 @@ def place_smartorder_api(data, auth):
             position_size = int(data.get("position_size", "0"))
 
             # Get current open position for the symbol
-            current_position = int(
-                get_open_position(symbol, exchange, map_product_type(product), auth)
-            )
+            current_position = int(get_open_position(symbol, exchange, map_product_type(product), auth))
 
             logger.debug("=== SMART ORDER EXECUTION ===")
             logger.debug(f"Symbol: {symbol}, Exchange: {exchange}, Product: {product}")
@@ -727,15 +724,7 @@ def cancel_all_orders_api(data, auth):
 
     # Filter orders that are still cancellable
     # API order_status values: CANCELED / COMPLETE / NEW / OPEN / REJECTED / REPLACED
-    cancellable = [
-        "open",
-        "new",
-        "replaced",
-        "trigger pending",
-        "pending",
-        "open pending",
-        "trigger_pending",
-    ]
+    cancellable = ["open", "new", "replaced", "trigger pending", "pending", "open pending", "trigger_pending"]
     orders_to_cancel = [
         order
         for order in orders_data
@@ -768,7 +757,9 @@ def cancel_all_orders_api(data, auth):
                     logger.debug(f"Successfully cancelled order: {orderid}")
                 else:
                     failed_cancellations.append(orderid)
-                    logger.error(f"Failed to cancel order: {orderid}, Response: {cancel_response}")
+                    logger.error(
+                        f"Failed to cancel order: {orderid}, Response: {cancel_response}"
+                    )
             except Exception as e:
                 failed_cancellations.append(orderid)
                 logger.error(f"Exception while cancelling order {orderid}: {str(e)}")

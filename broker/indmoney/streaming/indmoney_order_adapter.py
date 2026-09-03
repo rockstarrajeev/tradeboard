@@ -262,7 +262,9 @@ class IndmoneyOrderUpdateAdapter(BaseOrderUpdateAdapter):
         frame = self._decode(raw_message)
 
         if frame is None:
-            self.logger.warning(f"Could not decode an order-update frame: {str(raw_message)[:300]}")
+            self.logger.warning(
+                f"Could not decode an order-update frame: {str(raw_message)[:300]}"
+            )
             return None
 
         # The real payload is nested under "data"; the documented sample shows

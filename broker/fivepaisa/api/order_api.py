@@ -344,13 +344,21 @@ def place_order_api(data: dict[str, Any], auth: str) -> dict[str, Any]:
         # body.Status == 0 AND a non-zero BrokerOrderID. Anything else (margin
         # shortfall, market closed, invalid scrip, etc.) is a rejection and must
         # NOT be reported as a phantom success with orderid 0.
-        if head.get("statusDescription") == "Success" and status_ok and broker_order_id:
+        if (
+            head.get("statusDescription") == "Success"
+            and status_ok
+            and broker_order_id
+        ):
             orderid = broker_order_id
             # Add status attribute to make it compatible with place_order.py
             response.status = response.status_code
         else:
             orderid = None
-            reason = broker_message or head.get("statusDescription") or "Order rejected by 5Paisa"
+            reason = (
+                broker_message
+                or head.get("statusDescription")
+                or "Order rejected by 5Paisa"
+            )
             logger.error(
                 f"5Paisa order rejected - Status: {body_status}, "
                 f"BrokerOrderID: {broker_order_id}, "
@@ -374,6 +382,7 @@ def place_smartorder_api(data: dict[str, Any], auth: str) -> dict[str, Any]:
     AUTH_TOKEN = auth
 
     # If no API call is made in this function then res will return None
+    res = None
 
     # Extract necessary info from data
     symbol = data.get("symbol")
@@ -580,7 +589,7 @@ def cancel_order(orderid: str, auth: str) -> dict[str, Any]:
         # Make API request
         headers = {"Authorization": f"bearer {AUTH_TOKEN}", "Content-Type": "application/json"}
 
-        logger.debug(f"Cancel order request: {json.dumps(cancel_data)}")
+        logger.debug(f"Cancel order request body: {json.dumps(cancel_data['body'])}")
         response = client.post(
             f"{BASE_URL}/VendorsAPI/Service1.svc/V1/CancelOrderRequest",  # Official endpoint for cancel
             json=cancel_data,
@@ -654,7 +663,7 @@ def modify_order(data: dict[str, Any], auth: str) -> dict[str, Any]:
         # Prepare request data
         json_data = {"head": {"key": api_key}, "body": transformed_data}
 
-        logger.debug(f"Modify Order Request: {json_data}")
+        logger.debug(f"Modify Order Request body: {json_data['body']}")
 
         # Get the shared httpx client
         client = get_httpx_client()

@@ -35,7 +35,10 @@ import sys
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+# Register the app's SQLite pragmas on this process's engines, so a migration
+# waits the same 15s for a write lock the running app does instead of the
+# sqlite3 default of 5s (GitHub issue #1726).
+import _pragmas  # noqa: F401,E402
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 
@@ -89,7 +92,9 @@ def get_sandbox_db_engine():
 def _constraint_allows_trigger_pending(conn) -> bool:
     """Inspect the live CHECK constraint text on sandbox_orders for 'trigger pending'."""
     result = conn.execute(
-        text("SELECT sql FROM sqlite_master WHERE type='table' AND name='sandbox_orders'")
+        text(
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='sandbox_orders'"
+        )
     )
     row = result.fetchone()
     if not row or not row[0]:

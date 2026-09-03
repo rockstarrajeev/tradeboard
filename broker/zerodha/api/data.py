@@ -205,7 +205,7 @@ class BrokerData:
                     raise Exception(f"Could not find exchange token for {exchange}:{br_symbol}")
 
                 # Split token to get exchange_token for quotes
-                symbol_info.token.split("::::")[1]
+                exchange_token = symbol_info.token.split("::::")[1]
                 row_brexchange = symbol_info.brexchange
 
             exchange = _kite_quote_exchange(exchange, row_brexchange)
@@ -572,7 +572,7 @@ class BrokerData:
                     raise Exception(f"Could not find exchange token for {exchange}:{br_symbol}")
 
                 # Split token to get exchange_token for quotes
-                symbol_info.token.split("::::")[1]
+                exchange_token = symbol_info.token.split("::::")[1]
                 row_brexchange = symbol_info.brexchange
 
             exchange = _kite_quote_exchange(exchange, row_brexchange)

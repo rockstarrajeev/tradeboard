@@ -5,13 +5,12 @@ Upstox V3 WebSocket adapter implementation (synchronous).
 Uses sync websocket-client (same as Angel/Dhan) to avoid asyncio event loop
 conflicts with eventlet in gunicorn+eventlet deployments.
 """
-
 import json
-import logging
 import threading
 from typing import Any
 
 from database.auth_db import get_auth_token
+from utils.logging import get_logger
 from websocket_proxy.base_adapter import BaseBrokerWebSocketAdapter
 from websocket_proxy.mapping import SymbolMapper
 
@@ -41,7 +40,7 @@ class UpstoxWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
     def __init__(self):
         super().__init__()
-        self.logger = logging.getLogger("upstox_websocket")
+        self.logger = get_logger("upstox_websocket")
         self.ws_client: UpstoxWebSocketClient | None = None
         self.user_id: str | None = None
         self.subscriptions: dict[str, dict[str, Any]] = {}
@@ -185,7 +184,9 @@ class UpstoxWebSocketAdapter(BaseBrokerWebSocketAdapter):
         with self.lock:
             if self.batch_timer is not None:
                 self.batch_timer.cancel()
-            self.batch_timer = threading.Timer(self.batch_delay, self._process_batch_subscriptions)
+            self.batch_timer = threading.Timer(
+                self.batch_delay, self._process_batch_subscriptions
+            )
             self.batch_timer.daemon = True
             self.batch_timer.start()
 
@@ -472,9 +473,7 @@ class UpstoxWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 market_data = self._extract_market_data(feed_data, sub_info, current_ts)
 
                 if market_data:
-                    self.logger.debug(
-                        f"Publishing {symbol}.{exchange} mode={mode} topic={topic} ltp={market_data.get('ltp', 'N/A')}"
-                    )
+                    self.logger.debug(f"Publishing {symbol}.{exchange} mode={mode} topic={topic} ltp={market_data.get('ltp', 'N/A')}")
                     if mode == 3:  # Depth mode
                         depth_data = market_data.copy()
                         depth_levels = {

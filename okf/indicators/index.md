@@ -1,6 +1,6 @@
 # Technical Indicators (ta library)
 
-* [Technical Indicators Introduction](introduction.md) - Introduction to the Tradeboard ta technical indicator library and how to use it
+* [Technical Indicators Introduction](introduction.md) - Introduction to the OpenAlgo ta technical indicator library and how to use it
 * [Trend Indicators](trend.md) - Trend indicators including SMA, EMA, WMA, HMA, VWMA, KAMA, ALMA, ZLEMA, DEMA/TEMA, Supertrend and Ichimoku Cloud
 * [Momentum Indicators](momentum.md) - Momentum indicators including RSI, MACD, Stochastic, CCI, Williams %R, Balance of Power, Elder Ray, Fisher Transform and Connors RSI
 * [Volatility Indicators](volatility.md) - Volatility indicators including ATR, Bollinger Bands, Keltner Channel, Donchian Channel, NATR, RVI, Chandelier Exit, Historical Volatility, Ulcer Index and STARC Bands

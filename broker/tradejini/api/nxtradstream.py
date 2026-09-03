@@ -356,6 +356,7 @@ class NxtradStream:
         except Exception:
             pass
 
+
     def isConnected(self):
         return self.isConnected
 
@@ -381,7 +382,7 @@ class NxtradStream:
         return parsed
 
     def __format_values(self, divisor, raw_data, jData):
-        for _key, value in raw_data.items():
+        for key, value in raw_data.items():
             spec = value[0]
             framed = value[1]
             jData[spec["key"]] = spec["fmt"](framed, divisor) if "fmt" in spec else framed
@@ -547,6 +548,7 @@ class NxtradStream:
         lObj = {}
         jData = {}
         idx = 3
+        noOfLen = 0
         exchange_info = None
         list = None
         while idx < data_len:
@@ -555,6 +557,7 @@ class NxtradStream:
             spec = pktSpec[pktKey[0]]
             framed = self.__frame_from_spec(spec, data, idx)
             if spec["key"] == "nLen":
+                noOfLen = framed
                 list = []
             else:
                 lObj[spec["key"]] = framed

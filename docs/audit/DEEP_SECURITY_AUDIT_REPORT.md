@@ -1,11 +1,11 @@
-# Tradeboard Deep Codebase Security Audit Report
+# OpenAlgo Deep Codebase Security Audit Report
 
 ## Metadata
-- **Project:** Tradeboard
-- **PR Context:** https://github.com/rockstarrajeev/tradeboard/pull/947 (Crypto Exchange Integration)
+- **Project:** OpenAlgo
+- **PR Context:** https://github.com/marketcalls/openalgo/pull/947 (Crypto Exchange Integration)
 - **Audit date:** 2026-03-03
 - **Auditor:** Claude Opus 4.6
-- **Scope:** Full codebase audit of `tradeboard/services/`, `tradeboard/blueprints/`, `tradeboard/restx_api/`, `tradeboard/database/`, `tradeboard/sandbox/`, `tradeboard/broker/`, `tradeboard/upgrade/`
+- **Scope:** Full codebase audit of `openalgo/services/`, `openalgo/blueprints/`, `openalgo/restx_api/`, `openalgo/database/`, `openalgo/sandbox/`, `openalgo/broker/`, `openalgo/upgrade/`
 - **Focus:** SQL injection, input validation, security vulnerabilities, crypto integration impact on existing Indian broker functionality
 
 ---

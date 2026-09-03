@@ -2,7 +2,7 @@
 
 ## Overview
 
-Tradeboard's Sandbox/Analyzer mode provides a local walk-forward execution environment with ₹1 Crore default sandbox capital, margin/leverage simulation, auto square-off, and T+1 settlement behavior. It stores trading state separately from live broker state in `db/sandbox.db`.
+OpenAlgo's Sandbox/Analyzer mode provides a local walk-forward execution environment with ₹1 Crore default sandbox capital, margin/leverage simulation, auto square-off, and T+1 settlement behavior. It stores trading state separately from live broker state in `db/sandbox.db`.
 
 Analyzer mode does not implement GTT place, modify, cancel, or orderbook services; those operations currently return 501 even though sandbox GTT tables exist.
 

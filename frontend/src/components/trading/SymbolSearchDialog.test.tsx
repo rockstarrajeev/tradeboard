@@ -12,7 +12,12 @@ const ROWS: SearchRow[] = [
 
 function renderDialog() {
   return render(
-    <SymbolSearchDialog open onOpenChange={() => {}} search={async () => ROWS} onPick={() => {}} />
+    <SymbolSearchDialog
+      open
+      onOpenChange={() => {}}
+      search={async () => ROWS}
+      onPick={() => {}}
+    />
   )
 }
 

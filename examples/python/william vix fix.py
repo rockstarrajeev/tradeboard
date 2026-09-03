@@ -1,11 +1,11 @@
 """
 RELIANCE 5-Minute Chart with Williams Vix Fix (CM_Williams_Vix_Fix)
-Author : Tradeboard GPT
+Author : OpenAlgo GPT
 Description: Plots RELIANCE candlestick with Williams Vix Fix indicator
-             Converted from Pine Script v3 to Python using Tradeboard ta library
+             Converted from Pine Script v3 to Python using OpenAlgo ta library
 """
 
-print("🔁 Tradeboard Python Bot is running.")
+print("OpenAlgo Python Bot is running.")
 
 from datetime import datetime
 
@@ -60,7 +60,7 @@ def fetch_historical_data():
     # Print the raw response
     print(f"History Response: {response}")
 
-    # Tradeboard history() returns DataFrame directly (not a dict)
+    # OpenAlgo history() returns DataFrame directly (not a dict)
     if isinstance(response, pd.DataFrame):
         df = response.copy()
     else:
@@ -210,7 +210,7 @@ def plot_chart(df: pd.DataFrame):
                 x=x_category,
                 y=df["wvf_upper"],
                 name="Upper Band",
-                line={"color": "aqua", "width": 2},
+                line=dict(color="aqua", width=2),
                 showlegend=True,
             ),
             row=2,
@@ -224,7 +224,7 @@ def plot_chart(df: pd.DataFrame):
                 x=x_category,
                 y=df["range_high"],
                 name=f"Range High ({PERCENTILE_HIGH * 100:.0f}%)",
-                line={"color": "orange", "width": 2, "dash": "dash"},
+                line=dict(color="orange", width=2, dash="dash"),
                 showlegend=True,
             ),
             row=2,
@@ -236,7 +236,7 @@ def plot_chart(df: pd.DataFrame):
                 x=x_category,
                 y=df["range_low"],
                 name=f"Range Low ({(PERCENTILE_LOW - 1) * 100:.0f}%)",
-                line={"color": "orange", "width": 2, "dash": "dash"},
+                line=dict(color="orange", width=2, dash="dash"),
                 showlegend=True,
             ),
             row=2,
@@ -245,18 +245,18 @@ def plot_chart(df: pd.DataFrame):
 
     # ───────── LAYOUT ─────────
     fig.update_layout(
-        title={
-            "text": f"{SYMBOL} with CM Williams Vix Fix<br><sup>{START_DATE} to {END_DATE}</sup>",
-            "x": 0.5,
-            "font": {"size": 18},
-        },
+        title=dict(
+            text=f"{SYMBOL} with CM Williams Vix Fix<br><sup>{START_DATE} to {END_DATE}</sup>",
+            x=0.5,
+            font=dict(size=18),
+        ),
         template="plotly_dark",
         height=900,
         width=1400,
         hovermode="x unified",
-        margin={"l": 60, "r": 100, "t": 80, "b": 80},
-        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
-        xaxis2={"rangeslider": {"visible": False}},
+        margin=dict(l=60, r=100, t=80, b=80),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        xaxis2=dict(rangeslider=dict(visible=False)),
     )
 
     # Update x-axes
@@ -267,7 +267,7 @@ def plot_chart(df: pd.DataFrame):
         tickangle=-45,
         showgrid=True,
         gridcolor="rgba(128, 128, 128, 0.2)",
-        rangeslider={"visible": False},
+        rangeslider=dict(visible=False),
         row=1,
         col=1,
     )

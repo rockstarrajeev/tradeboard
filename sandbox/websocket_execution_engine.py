@@ -23,6 +23,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database.sandbox_db import SandboxOrders, db_session
 from services.market_data_service import get_market_data_service
 from services.websocket_service import subscribe_to_symbols, unsubscribe_from_symbols
+from utils import real_threading as _real_threading
 from utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -38,7 +39,15 @@ class WebSocketExecutionEngine:
         self.market_data_service = get_market_data_service()
         self._subscriber_id: str | None = None
         self._running = False
-        self._lock = threading.Lock()
+        # A REAL lock, not eventlet's green semaphore. _on_market_data()
+        # takes it on the websocket client's asyncio loop thread (a real OS
+        # thread) while notify_order_placed(), notify_position_opened() and
+        # the rest take it from greenlets on the request path. Contended
+        # across that boundary a green semaphore wedges the loop thread for
+        # good, which stops every tick this engine needs to trigger pending
+        # SL, LIMIT and GTT orders. Both sections it guards only copy out of
+        # a dict; the database work deliberately happens after the release.
+        self._lock = _real_threading.Lock()
 
         # Index of pending orders by symbol key (exchange:symbol)
         # Maps symbol_key -> list of order IDs
@@ -204,7 +213,9 @@ class WebSocketExecutionEngine:
                 from database.sandbox_db import SandboxPositions
                 from sandbox.position_manager import get_contract_expiry
 
-                open_positions = SandboxPositions.query.filter(SandboxPositions.quantity != 0).all()
+                open_positions = SandboxPositions.query.filter(
+                    SandboxPositions.quantity != 0
+                ).all()
                 pos_subscribed = 0
                 for pos in open_positions:
                     expiry = get_contract_expiry(pos.symbol, pos.exchange)
@@ -324,7 +335,9 @@ class WebSocketExecutionEngine:
             from database.sandbox_db import SandboxPositions
 
             remaining = (
-                SandboxPositions.query.filter_by(user_id=user_id, symbol=symbol, exchange=exchange)
+                SandboxPositions.query.filter_by(
+                    user_id=user_id, symbol=symbol, exchange=exchange
+                )
                 .filter(SandboxPositions.quantity != 0)
                 .count()
             )
@@ -400,9 +413,7 @@ class WebSocketExecutionEngine:
                     self._drop_gtt_leg(symbol_key, leg_id, self._leg_user_id(leg))
                     continue
 
-                if not gtt_manager.leg_is_triggered_by(
-                    leg.trigger_direction, leg.trigger_price, ltp
-                ):
+                if not gtt_manager.leg_is_triggered_by(leg.trigger_direction, leg.trigger_price, ltp):
                     continue
 
                 if gtt_manager.try_claim_trigger(leg_id):
@@ -649,12 +660,16 @@ class WebSocketExecutionEngine:
 
             api_key = get_api_key_for_tradingview(user_id)
             if not api_key:
-                logger.warning(f"WebSocket subscribe skipped: no API key for user {user_id}")
+                logger.warning(
+                    f"WebSocket subscribe skipped: no API key for user {user_id}"
+                )
                 return
             broker = get_broker_name(api_key) if api_key else None
             broker_name = broker or "unknown"
             if broker_name == "unknown":
-                logger.warning(f"WebSocket subscribe may fail: unknown broker for user {user_id}")
+                logger.warning(
+                    f"WebSocket subscribe may fail: unknown broker for user {user_id}"
+                )
 
             symbol_payload = [{"symbol": s, "exchange": e} for s, e in symbols]
             success, response, status_code = subscribe_to_symbols(
@@ -677,12 +692,16 @@ class WebSocketExecutionEngine:
 
             api_key = get_api_key_for_tradingview(user_id)
             if not api_key:
-                logger.warning(f"WebSocket unsubscribe skipped: no API key for user {user_id}")
+                logger.warning(
+                    f"WebSocket unsubscribe skipped: no API key for user {user_id}"
+                )
                 return
             broker = get_broker_name(api_key) if api_key else None
             broker_name = broker or "unknown"
             if broker_name == "unknown":
-                logger.warning(f"WebSocket unsubscribe may fail: unknown broker for user {user_id}")
+                logger.warning(
+                    f"WebSocket unsubscribe may fail: unknown broker for user {user_id}"
+                )
 
             symbol_payload = [{"symbol": s, "exchange": e} for s, e in symbols]
             success, response, status_code = unsubscribe_from_symbols(

@@ -1,7 +1,7 @@
 # WebSocket Keepalive & Reconnection Audit
 
 **Scope:** All 32 broker streaming integrations under `broker/*/streaming/` (and `broker/*/api/*websocket*.py` for adapter-only brokers).
-**Tracking issue:** [#1101 — Standard WebSocket Ping/Heartbeat](https://github.com/rockstarrajeev/tradeboard/issues/1101).
+**Tracking issue:** [#1101 — Standard WebSocket Ping/Heartbeat](https://github.com/marketcalls/openalgo/issues/1101).
 **Audit date:** 2026-04-28.
 **Source of truth:** code, not documentation. Every value below was read directly from the broker's streaming files.
 
@@ -17,7 +17,7 @@ The 32 broker integrations use **five different transport stacks** (websocket-cl
 
 ### What's not
 
-- **9 brokers have no ping configuration at all** at the websocket-client layer (rely purely on TCP keepalive, server-side pings, or app-level heartbeats). Three of those have neither WS-level nor app-level heartbeats: **Wisdom, Tradejini, Compositedge, FivepaisaXTS, Ibulls, IIFL, Jainamxts** (Socket.IO transport hides this concern, but it still means Tradeboard has no visibility into liveness).
+- **9 brokers have no ping configuration at all** at the websocket-client layer (rely purely on TCP keepalive, server-side pings, or app-level heartbeats). Three of those have neither WS-level nor app-level heartbeats: **Wisdom, Tradejini, Compositedge, FivepaisaXTS, Ibulls, IIFL, Jainamxts** (Socket.IO transport hides this concern, but it still means OpenAlgo has no visibility into liveness).
 - **18 brokers have no silent-stall detection.** They rely entirely on the WebSocket library's ping/pong to notice a dead connection. On a sleeping VPS or NAT-translated cloud network, this can leave a "connected" socket delivering zero ticks indefinitely.
 - **Ping intervals across the fleet vary from 10s (Angel, FivePaisa, Fyers TBT) to 295s (RMoney) to "never" (8 brokers).** No reason for the spread other than what each integrator copied from the broker's reference SDK.
 - **No broker reads its keepalive policy from environment variables.** Every interval, every timeout, every retry count is hardcoded in source.
@@ -33,39 +33,39 @@ Legend: **Lib** = transport library. **Ping** = WS-frame ping interval (seconds)
 
 | # | Broker | Lib | Ping | App HB | Health | Data TO | Retries | Backoff | Notes |
 |--|---|---|---|---|---|---|---|---|---|
-| 1 | aliceblue | ws-client | none | 30s `{"k":"","t":"h"}` | ❌ | none | 10 (adapter) | 5×2ⁿ→60 | Heartbeat-only liveness. No stall detection. |
-| 2 | angel | ws-client | 10s `"ping"` | none | ✅ 30s | 90 | 1 (ws) + 10 (adapter) | 10×2ⁿ→60 | Dual reconnect layers. Strongest stall detection. |
-| 3 | compositedge | socketio | engine.io managed | none | ❌ | none | 10 | 5×2ⁿ→60 | Reconnect on disconnect callback only. |
-| 4 | definedge | ws-client | none | 50s `{"t":"h"}` | ❌ | none | 5 (ws) + 10 (adapter) | 5×2ⁿ→60 | 50s heartbeat is unusually long. Dual reconnect. |
-| 5 | deltaexchange | ws-client | 30/10 | none | ❌ | none | 5 | 5×2ⁿ→60 | Sub `_active_sub_msgs` replayed every reconnect. |
-| 6 | dhan | ws-client | 30/10 | none | ❌ | none | 10 | 5×2ⁿ→60 | **Resubscribe NOT automated** — caller must re-call. Fatal-error short-circuit on 429/blocked/expired. |
-| 7 | dhan_sandbox | websockets-async | 30/10 | 15s | ❌ | none | 10+10 | 1×2ⁿ→60 (ws), 5×2ⁿ→300 (adapter) | Async + sync hybrid. Heartbeat (15s) shorter than ping (30s) — wasteful. Dual layer. |
-| 8 | firstock | ws-client | 30/10 | none | ✅ pong-monitor | implicit pong-timeout | 5 | **fixed 5s** | Cleanest supervisor pattern. **Only broker without exponential backoff** (5s flat between retries). |
-| 9 | fivepaisa | ws-client | 10/- | none | ❌ | none | 10 | 5×2ⁿ→60 | No health check, shortest WS-ping interval. |
-| 10 | fivepaisaxts | socketio | engine.io managed | none | ❌ | none | 10 | 5×2ⁿ→60 | XTS family — identical to ibulls/iifl/jainamxts. |
-| 11 | flattrade | ws-client | 30/10 | 30s `{"t":"h"}` | ✅ 30s | **120** | 10 | 5×2ⁿ→60 | Triple-layer keepalive (WS ping + app HB + health). Robust. |
-| 12 | fyers (HSM) | ws-client | server-driven | none | ✅ 30s | 90 | 10 | 5×2ⁿ→60 | Binary HSM protocol; server pings invisible to code. |
-| 13 | fyers (TBT) | ws-client | **disabled (0)** | 10s text `"ping"` | ❌ | none | 10 | 5+/5-attempts→30 | 50-level depth only. Linear-ish backoff. Pong response not validated. |
-| 14 | groww | ws-client + NATS | 30/10 | 10s NATS PING | ❌ | none | **unbounded** | fixed 5s | NATS protocol; **no max-retry cap**, retries forever while running=True. |
-| 15 | ibulls | socketio | engine.io managed | none | ❌ | none | 10 | 5×2ⁿ→60 | XTS family. |
-| 16 | iifl | socketio | engine.io managed | none | ❌ | none | 10 | 5×2ⁿ→60 | XTS family. |
+| 1 | aliceblue | ws-client | none | 30s `{"k":"","t":"h"}` | No | none | 10 (adapter) | 5×2ⁿ→60 | Heartbeat-only liveness. No stall detection. |
+| 2 | angel | ws-client | 10s `"ping"` | none | 30s | 90 | 1 (ws) + 10 (adapter) | 10×2ⁿ→60 | Dual reconnect layers. Strongest stall detection. |
+| 3 | compositedge | socketio | engine.io managed | none | No | none | 10 | 5×2ⁿ→60 | Reconnect on disconnect callback only. |
+| 4 | definedge | ws-client | none | 50s `{"t":"h"}` | No | none | 5 (ws) + 10 (adapter) | 5×2ⁿ→60 | 50s heartbeat is unusually long. Dual reconnect. |
+| 5 | deltaexchange | ws-client | 30/10 | none | No | none | 5 | 5×2ⁿ→60 | Sub `_active_sub_msgs` replayed every reconnect. |
+| 6 | dhan | ws-client | 30/10 | none | No | none | 10 | 5×2ⁿ→60 | **Resubscribe NOT automated** — caller must re-call. Fatal-error short-circuit on 429/blocked/expired. |
+| 7 | dhan_sandbox | websockets-async | 30/10 | 15s | No | none | 10+10 | 1×2ⁿ→60 (ws), 5×2ⁿ→300 (adapter) | Async + sync hybrid. Heartbeat (15s) shorter than ping (30s) — wasteful. Dual layer. |
+| 8 | firstock | ws-client | 30/10 | none | pong-monitor | implicit pong-timeout | 5 | **fixed 5s** | Cleanest supervisor pattern. **Only broker without exponential backoff** (5s flat between retries). |
+| 9 | fivepaisa | ws-client | 10/- | none | No | none | 10 | 5×2ⁿ→60 | No health check, shortest WS-ping interval. |
+| 10 | fivepaisaxts | socketio | engine.io managed | none | No | none | 10 | 5×2ⁿ→60 | XTS family — identical to ibulls/iifl/jainamxts. |
+| 11 | flattrade | ws-client | 30/10 | 30s `{"t":"h"}` | 30s | **120** | 10 | 5×2ⁿ→60 | Triple-layer keepalive (WS ping + app HB + health). Robust. |
+| 12 | fyers (HSM) | ws-client | server-driven | none | 30s | 90 | 10 | 5×2ⁿ→60 | Binary HSM protocol; server pings invisible to code. |
+| 13 | fyers (TBT) | ws-client | **disabled (0)** | 10s text `"ping"` | No | none | 10 | 5+/5-attempts→30 | 50-level depth only. Linear-ish backoff. Pong response not validated. |
+| 14 | groww | ws-client + NATS | 30/10 | 10s NATS PING | No | none | **unbounded** | fixed 5s | NATS protocol; **no max-retry cap**, retries forever while running=True. |
+| 15 | ibulls | socketio | engine.io managed | none | No | none | 10 | 5×2ⁿ→60 | XTS family. |
+| 16 | iifl | socketio | engine.io managed | none | No | none | 10 | 5×2ⁿ→60 | XTS family. |
 | 17 | iiflcapital | **REST polling 0.8s** | n/a | n/a | n/a | n/a | none | n/a | **Not a WebSocket.** Polls REST every 800ms. No reconnect concept. |
 | 18 | indmoney | ws-client | 30/- `"ping"` payload | none | passive (last_pong only) | none | 5 (ws) + 10 (adapter) | 5×2ⁿ→60 | Dual reconnect; effective limit 10. last_pong tracked but not actively monitored. |
-| 19 | jainamxts | socketio | engine.io managed | none | ❌ | none | 10 | 5×2ⁿ→60 | XTS family. Socket.IO auto-reconnect not explicitly disabled — possible double-reconnect race. |
-| 20 | kotak | ws-client (HSWebSocketLib) | 30/10 | none | ❌ | none | 10 (adapter) | 5×2ⁿ→60 | Proprietary HSWebSocket library wrapper. |
-| 21 | motilal | ws-client | none | none | ✅ passive 60s | implicit (returns False if stale) | 5 (ws) + 10 (adapter) | adapter 5×2ⁿ→60, ws 2ⁿ→30 | No active health-check thread; `is_websocket_connected()` is on-demand. Dual reconnect. |
-| 22 | mstock | ws-client | 20/10 | none | ❌ | none | 10 (ws-internal) | 2×1.5ⁿ→60 | Only broker using **1.5× multiplier** (gentler escalation). |
-| 23 | nubra | ws-client | 20/10 | none | ❌ | none | **50** | 2×2ⁿ→60 | Highest retry cap of any broker (tied with Zerodha). |
+| 19 | jainamxts | socketio | engine.io managed | none | No | none | 10 | 5×2ⁿ→60 | XTS family. Socket.IO auto-reconnect not explicitly disabled — possible double-reconnect race. |
+| 20 | kotak | ws-client (HSWebSocketLib) | 30/10 | none | No | none | 10 (adapter) | 5×2ⁿ→60 | Proprietary HSWebSocket library wrapper. |
+| 21 | motilal | ws-client | none | none | passive 60s | implicit (returns False if stale) | 5 (ws) + 10 (adapter) | adapter 5×2ⁿ→60, ws 2ⁿ→30 | No active health-check thread; `is_websocket_connected()` is on-demand. Dual reconnect. |
+| 22 | mstock | ws-client | 20/10 | none | No | none | 10 (ws-internal) | 2×1.5ⁿ→60 | Only broker using **1.5× multiplier** (gentler escalation). |
+| 23 | nubra | ws-client | 20/10 | none | No | none | **50** | 2×2ⁿ→60 | Highest retry cap of any broker (tied with Zerodha). |
 | 24 | paytm | ws-client | 30/- (HEART_BEAT_INTERVAL=30) | none | last_pong tracked | none | 5 (ws) + 10 (adapter) | 5×2ⁿ→60 | Dual reconnect. |
-| 25 | pocketful | ws-client | none | 15s `{"a":"h"}` | ❌ | none | 10 | 5×2ⁿ→60 | App heartbeat is sole keepalive. |
-| 26 | rmoney | socketio + engine.io | **295/295** | none | ❌ | none | 10 (adapter) | 5×2ⁿ→60 | Floor of 300s on engine.io activity timeout. Socket.IO auto-reconnect explicitly **disabled** to prevent double-reconnect. |
-| 27 | samco | ws-client | 30/10 | none | ✅ 30s | **120** | 10 | 5×2ⁿ→60 | Strong stall detection. |
-| 28 | shoonya | ws-client | 30/10 | 30s `{"t":"h"}` | ✅ 30s | **120** | 10 | 5×2ⁿ→60 | Dual heartbeat (WS + app). Timer-based reconnect (not thread-based). |
-| 29 | tradejini | ws-client | none | none (server-initiated only) | ❌ | none | 10 | 5×2ⁿ→60 | No client-initiated keepalive. |
-| 30 | upstox | ws-client | 30/10 | none | ✅ dedicated loop | 90 | 5 | 2×2ⁿ→30 | Lower max-delay cap (30s) than fleet norm. |
-| 31 | wisdom | socketio | engine.io managed | none | ❌ | none | **none** | n/a | No reconnect logic at WS layer. Hybrid HTTP+WS architecture. **Worst keepalive coverage in the fleet.** |
-| 32 | zebu | ws-client | 30/10 | 30s app HB | ✅ 30s | **120** | (config in adapter) | adapter exp | Similar to shoonya pattern. |
-| 33 | zerodha | ws-client | 30/10 + server 1-byte HB | none | ✅ 30s | 90 | **50** | 1.5×→60 | Tracks `last_heartbeat_time` and `last_message_time` separately. Unique 1.5× multiplier. |
+| 25 | pocketful | ws-client | none | 15s `{"a":"h"}` | No | none | 10 | 5×2ⁿ→60 | App heartbeat is sole keepalive. |
+| 26 | rmoney | socketio + engine.io | **295/295** | none | No | none | 10 (adapter) | 5×2ⁿ→60 | Floor of 300s on engine.io activity timeout. Socket.IO auto-reconnect explicitly **disabled** to prevent double-reconnect. |
+| 27 | samco | ws-client | 30/10 | none | 30s | **120** | 10 | 5×2ⁿ→60 | Strong stall detection. |
+| 28 | shoonya | ws-client | 30/10 | 30s `{"t":"h"}` | 30s | **120** | 10 | 5×2ⁿ→60 | Dual heartbeat (WS + app). Timer-based reconnect (not thread-based). |
+| 29 | tradejini | ws-client | none | none (server-initiated only) | No | none | 10 | 5×2ⁿ→60 | No client-initiated keepalive. |
+| 30 | upstox | ws-client | 30/10 | none | dedicated loop | 90 | 5 | 2×2ⁿ→30 | Lower max-delay cap (30s) than fleet norm. |
+| 31 | wisdom | socketio | engine.io managed | none | No | none | **none** | n/a | No reconnect logic at WS layer. Hybrid HTTP+WS architecture. **Worst keepalive coverage in the fleet.** |
+| 32 | zebu | ws-client | 30/10 | 30s app HB | 30s | **120** | (config in adapter) | adapter exp | Similar to shoonya pattern. |
+| 33 | zerodha | ws-client | 30/10 + server 1-byte HB | none | 30s | 90 | **50** | 1.5×→60 | Tracks `last_heartbeat_time` and `last_message_time` separately. Unique 1.5× multiplier. |
 
 (33 rows because Fyers has two distinct WS protocols — HSM and TBT — counted separately.)
 
@@ -90,7 +90,7 @@ Legend: **Lib** = transport library. **Ping** = WS-frame ping interval (seconds)
 | **Tier 2 — Strong** (WS ping + active health check + data-timeout, no app HB) | angel, fyers HSM, upstox, zerodha | Detects TCP-dead and silent-data-stall. |
 | **Tier 3 — Standard** (WS-level ping only, no health check) | dhan, deltaexchange, fivepaisa, kotak, mstock, nubra, paytm | TCP-dead detection only. Will not notice silent stalls. |
 | **Tier 4 — App-heartbeat-only** (no WS-level ping, JSON heartbeat on a timer) | aliceblue, definedge, fyers TBT, pocketful | Liveness depends on a single timer thread. |
-| **Tier 5 — Transport-managed** (Socket.IO / engine.io / NATS handles its own heartbeat invisibly) | compositedge, fivepaisaxts, ibulls, iifl, jainamxts, rmoney, groww | Tradeboard has zero visibility into liveness. |
+| **Tier 5 — Transport-managed** (Socket.IO / engine.io / NATS handles its own heartbeat invisibly) | compositedge, fivepaisaxts, ibulls, iifl, jainamxts, rmoney, groww | OpenAlgo has zero visibility into liveness. |
 | **Tier 6 — Weak / missing** | tradejini (no client-initiated keepalive), motilal (passive on-demand only), wisdom (no reconnect, no health), iiflcapital (REST polling) | Lowest resilience. |
 
 ### 3.3 By reconnect strategy
@@ -170,7 +170,7 @@ Legend: **Lib** = transport library. **Ping** = WS-frame ping interval (seconds)
 - `run_forever()` without ping config — Fyers' binary HSM protocol manages it server-side.
 - `_health_check_thread` runs every 30s; data timeout 90s.
 - Pending subscriptions replayed on reconnect.
-- (Fyers also fixes today's commit `5eb7baaa` that was scrambling HSM↔Tradeboard symbol mappings — see issue #1093.)
+- (Fyers also fixes today's commit `5eb7baaa` that was scrambling HSM↔OpenAlgo symbol mappings — see issue #1093.)
 
 #### Fyers TBT (`broker/fyers/streaming/fyers_tbt_websocket.py`)
 - 50-level depth only, NSE/NFO equity only.
@@ -256,10 +256,10 @@ Legend: **Lib** = transport library. **Ping** = WS-frame ping interval (seconds)
 ### 4.2 Socket.IO cohort (XTS family + others)
 
 #### Compositedge / Fivepaisaxts / Ibulls / IIFL / Jainamxts (XTS family)
-- All use `python-socketio.Client`. No explicit `ping_interval`/`ping_timeout` — engine.io transport-level heartbeat handles it (opaque to Tradeboard).
+- All use `python-socketio.Client`. No explicit `ping_interval`/`ping_timeout` — engine.io transport-level heartbeat handles it (opaque to OpenAlgo).
 - Adapter-layer reconnect: 10 retries, `5 × 2ⁿ → 60s` exponential.
 - Subscriptions stored, replayed via `_resubscribe_all()` after `on_connect`.
-- **Gap:** no health-check thread. No data-timeout. If engine.io's internal heartbeat hangs, Tradeboard learns about it only via `on_disconnect` callback.
+- **Gap:** no health-check thread. No data-timeout. If engine.io's internal heartbeat hangs, OpenAlgo learns about it only via `on_disconnect` callback.
 - **Jainamxts caveat:** Socket.IO's built-in auto-reconnect is **not explicitly disabled**, so two reconnect mechanisms (Socket.IO + adapter) may race.
 
 #### Rmoney
@@ -374,7 +374,7 @@ The same plan from Issue #1101 applies, plus:
 
 ## 7. Out of scope
 
-- The WebSocket Proxy server (`websocket_proxy/server.py`) handles client-initiated `{"action":"ping"}` from SDKs and responds with `{"type":"pong",...}`. That's the *external* keep-alive between SDK clients and Tradeboard, separate from this audit which covers the *internal* keep-alive between Tradeboard and the brokers. Issue #1101 mentions both; this audit only covers the latter.
+- The WebSocket Proxy server (`websocket_proxy/server.py`) handles client-initiated `{"action":"ping"}` from SDKs and responds with `{"type":"pong",...}`. That's the *external* keep-alive between SDK clients and OpenAlgo, separate from this audit which covers the *internal* keep-alive between OpenAlgo and the brokers. Issue #1101 mentions both; this audit only covers the latter.
 - IIFLCapital's REST-polling adapter. Not a WebSocket; separate concern.
 - Today's Fyers fixes (#1093 routing fix `5eb7baaa`, #1243 multiquotes fix `15c2c63b`, batching fix `671b8548`) — those are functional fixes, not keepalive.
 

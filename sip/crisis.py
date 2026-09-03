@@ -60,9 +60,9 @@ def _run(closes: pd.Series, start: date, end: date, amount: float, sip_kw: dict)
         "installments": r.installment_count,
         "xirr": _f(xirr_or_none(r.cash_flows)),
         "multiple": _f(r.final_value / r.total_invested) if r.total_invested else None,
-        "absolute_return": _f((r.final_value - r.total_invested) / r.total_invested)
-        if r.total_invested
-        else None,
+        "absolute_return": _f(
+            (r.final_value - r.total_invested) / r.total_invested
+        ) if r.total_invested else None,
         "average_cost": _f(r.average_cost),
     }
 
@@ -124,28 +124,25 @@ def crisis_sip_analysis(
             move = trough = None
 
         into_x, waited_x = into_it["xirr"], waited["xirr"]
-        out.append(
-            {
-                "key": period.key,
-                "label": period.label,
-                "note": period.note,
-                "scope": period.scope,
-                "crisis_start": period.start,
-                "crisis_end": period.end,
-                "market_move": _f(move),
-                "market_trough": _f(trough),
-                "started_into_it": into_it,
-                "waited_for_the_end": waited,
-                # Positive means starting into the crisis beat waiting -- which is
-                # the usual result, and the point of showing this at all.
-                "xirr_advantage": _f(into_x - waited_x)
-                if (into_x is not None and waited_x is not None)
-                else None,
-                "starting_early_won": bool(
-                    into_x is not None and waited_x is not None and into_x > waited_x
-                ),
-            }
-        )
+        out.append({
+            "key": period.key,
+            "label": period.label,
+            "note": period.note,
+            "scope": period.scope,
+            "crisis_start": period.start,
+            "crisis_end": period.end,
+            "market_move": _f(move),
+            "market_trough": _f(trough),
+            "started_into_it": into_it,
+            "waited_for_the_end": waited,
+            # Positive means starting into the crisis beat waiting -- which is
+            # the usual result, and the point of showing this at all.
+            "xirr_advantage": _f(into_x - waited_x)
+            if (into_x is not None and waited_x is not None) else None,
+            "starting_early_won": bool(
+                into_x is not None and waited_x is not None and into_x > waited_x
+            ),
+        })
 
     out.sort(key=lambda row: row["crisis_start"], reverse=True)
     return out
@@ -165,7 +162,11 @@ def crisis_summary(rows: list[dict]) -> dict:
     wins = sum(1 for r in scored if r["starting_early_won"])
     advantages = sorted(r["xirr_advantage"] for r in scored)
     mid = len(advantages) // 2
-    median = advantages[mid] if len(advantages) % 2 else (advantages[mid - 1] + advantages[mid]) / 2
+    median = (
+        advantages[mid]
+        if len(advantages) % 2
+        else (advantages[mid - 1] + advantages[mid]) / 2
+    )
     return {
         "crises": len(scored),
         "early_wins": wins,

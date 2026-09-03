@@ -1,4 +1,4 @@
-# Tradeboard v2.0 - Comprehensive Manual Testing Guide
+# OpenAlgo v2.0 - Comprehensive Manual Testing Guide
 
 A systematic testing procedure to ensure quality and catch bugs effectively.
 
@@ -8,8 +8,8 @@ A systematic testing procedure to ensure quality and catch bugs effectively.
 
 ```bash
 # 1. Setup
-git clone https://github.com/rockstarrajeev/tradeboard.git
-cd tradeboard
+git clone --filter=blob:none https://github.com/marketcalls/openalgo.git
+cd openalgo
 cp .sample.env .env
 # Edit .env with your broker credentials
 
@@ -558,8 +558,8 @@ open http://127.0.0.1:5000
 ### 13.1 Docker
 | Test | Steps | Expected | Status |
 |------|-------|----------|--------|
-| Build image | `docker build -t tradeboard .` | Image built | [ ] |
-| Run container | `docker run -p 5000:5000 tradeboard` | App accessible | [ ] |
+| Build image | `docker build -t openalgo .` | Image built | [ ] |
+| Run container | `docker run -p 5000:5000 openalgo` | App accessible | [ ] |
 | Volume mount | Mount db folder | Data persists | [ ] |
 | docker-compose | `docker-compose up` | All services up | [ ] |
 
@@ -751,7 +751,7 @@ open http://127.0.0.1:5000
 
 ---
 
-## Appendix: Tradeboard Symbol Format
+## Appendix: OpenAlgo Symbol Format
 
 ### Exchange Codes
 | Code | Description |

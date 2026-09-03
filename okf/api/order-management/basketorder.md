@@ -2,7 +2,7 @@
 type: API Endpoint
 title: BasketOrder
 description: Place multiple orders simultaneously as a basket
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/order-management/basketorder.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/order-management/basketorder.md
 tags:
 - order
 - basket

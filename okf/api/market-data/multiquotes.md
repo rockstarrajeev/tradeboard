@@ -2,7 +2,7 @@
 type: API Endpoint
 title: MultiQuotes
 description: Get quotes for multiple symbols in one call
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/market-data/multiquotes.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/market-data/multiquotes.md
 tags:
 - market-data
 - quotes

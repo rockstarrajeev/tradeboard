@@ -152,9 +152,7 @@ class DhanOrderUpdateAdapter(BaseOrderUpdateAdapter):
             "order_status": order_status,
             "filled_quantity": traded_qty,
             "pending_quantity": max(quantity - traded_qty, 0),
-            "average_price": float(
-                _field(data, "avgTradedPrice", "AvgTradedPrice", default=0) or 0
-            ),
+            "average_price": float(_field(data, "avgTradedPrice", "AvgTradedPrice", default=0) or 0),
             "rejection_reason": (
                 _field(data, "reasonDescription", "ReasonDescription", default="")
                 if raw_status == "REJECTED"
@@ -184,9 +182,7 @@ def create_dhan_order_adapter(user_id: str) -> "DhanOrderUpdateAdapter | None":
 
     access_token = get_auth_token(user_id, bypass_cache=True)
     if not access_token:
-        logger.warning(
-            f"No Dhan access token found for user {user_id}; order-update adapter not started"
-        )
+        logger.warning(f"No Dhan access token found for user {user_id}; order-update adapter not started")
         return None
 
     return DhanOrderUpdateAdapter(user_id=user_id, client_id=client_id, access_token=access_token)

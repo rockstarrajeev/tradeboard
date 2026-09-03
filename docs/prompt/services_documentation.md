@@ -1,15 +1,15 @@
-# Tradeboard Internal Service Layer Reference
+# OpenAlgo Internal Service Layer Reference
 
 ## Purpose and scope
 
-This document is prompt-ready reference material for building Tradeboard features
+This document is prompt-ready reference material for building OpenAlgo features
 that import and call the internal Python modules in `services/`. The service
 folder is the primary scope and source contract. REST and blueprint mappings are
 included only to identify existing callers and integration patterns.
 
 This is not an SDK guide. Internal feature code should import service functions,
 classes, and singleton accessors directly instead of making HTTP calls back into
-the same Tradeboard process. The document does not replace request schemas in
+the same OpenAlgo process. The document does not replace request schemas in
 [`docs/api`](../api/README.md) when a service also has a public endpoint.
 
 The current service layer contains 71 Python modules under `services/`. Some
@@ -18,7 +18,7 @@ streaming, analytics, alerts, or risk management. Do not assume that every
 service:
 
 - has a public REST endpoint;
-- accepts the same arguments as the Tradeboard SDK;
+- accepts the same arguments as the OpenAlgo SDK;
 - supports both API-key and direct broker authentication; or
 - returns the standard three-item service tuple.
 
@@ -92,7 +92,7 @@ Do not apply this contract blindly. Important exceptions include:
 Many broker-facing services accept either:
 
 ```python
-api_key="<tradeboard-api-key>"
+api_key="<openalgo-api-key>"
 ```
 
 or direct internal credentials:
@@ -135,7 +135,7 @@ mean every asynchronous subscriber has completed.
 2. Call the top-level facade, not a `*_with_auth` helper, unless the feature
    deliberately owns already-resolved broker credentials and the helper is the
    established caller contract.
-3. Pass the Tradeboard API key when the facade needs user, broker, analyzer, or
+3. Pass the OpenAlgo API key when the facade needs user, broker, analyzer, or
    Action Center context. Do not substitute a Flask session username.
 4. Use the existing singleton accessor for market data, Flow monitoring,
    schedulers, WebSocket clients, and scalping risk monitoring.
@@ -149,7 +149,7 @@ mean every asynchronous subscriber has completed.
 
 ## Core internal service facades
 
-These are the main stateless or request-scoped functions used by Tradeboard
+These are the main stateless or request-scoped functions used by OpenAlgo
 features. Import the function from the listed `services` module. The REST path
 column identifies an existing caller when one exists; it does not mean internal
 code should make an HTTP request. The active API currently contains 57
@@ -316,7 +316,7 @@ get_instruments(exchange=None, api_key=None, format="json")
 get_option_symbol(underlying, exchange, expiry_date, strike_int, offset,
                   option_type, api_key, underlying_ltp=None)
 get_option_chain(underlying, exchange, expiry_date, strike_count, api_key,
-                 with_quotes=True)
+                 with_quotes=True, with_greeks=False, interest_rate=None)
 get_option_greeks(option_symbol, exchange, interest_rate=None,
                   forward_price=None, underlying_symbol=None,
                   underlying_exchange=None, expiry_time=None, api_key=None)
@@ -332,6 +332,14 @@ get_chart_preferences(api_key)
 update_chart_preferences(api_key, data)
 ```
 
+`get_option_chain(..., with_greeks=True)` attaches `implied_volatility` and
+`delta`/`gamma`/`theta`/`vega` to every leg, computed from the quotes the call has
+already fetched. It costs no extra broker requests and is not bound by the
+50-symbol cap that `get_multi_option_greeks` enforces, so prefer it over a second
+Greeks call whenever a whole chain is involved. The response also carries
+`expiry_ts`, `server_ts` and `forward_price`; the forward comes from the ATM call
+and put via put-call parity, not from spot.
+
 ## Payload rules
 
 Do not duplicate request schemas from memory. Read the corresponding
@@ -340,7 +348,7 @@ Do not duplicate request schemas from memory. Read the corresponding
 | Field | Meaning |
 |---|---|
 | `strategy` | Caller-defined strategy label. |
-| `symbol` | Tradeboard trading symbol. |
+| `symbol` | OpenAlgo trading symbol. |
 | `exchange` | Canonical exchange code from `utils/constants.py`. |
 | `action` | `BUY` or `SELL`. |
 | `pricetype` | `MARKET`, `LIMIT`, `SL`, or `SL-M`. |
@@ -370,6 +378,7 @@ or risk monitor when an accessor already owns the process-wide instance.
 | `pending_order_execution_service.py` | Dispatches approved pending orders. |
 | `sandbox_service.py` | Simulated orders, books, funds, P&L symbols, and square-off controls. |
 | `broker_keepalive_service.py` | Starts broker-session keepalive behavior where configured. |
+| `order_update_service.py` | Lifecycle of the always-on per-broker-session order-update adapter (broker order-WS / polling ingestion → `OrderUpdateEvent` → socketio + websocket_proxy relay). |
 
 Primary internal entry points:
 
@@ -400,7 +409,20 @@ sandbox_get_squareoff_status()
 sandbox_get_pnl_symbols(api_key, original_data)
 
 start_broker_keepalive()
+
+start_order_update_adapter(user_id, broker)
+stop_order_update_adapter(user_id)
+start_order_update_adapters_on_boot()
+stop_all_order_update_adapters()
+get_order_update_status()
 ```
+
+`order_update_service` owns one always-on adapter per broker session
+(never per WebSocket client). It is started at app startup for an existing
+session and restarted/stopped by `database.auth_db.upsert_auth` on a real
+token change or revoke — do not start adapters from feature code. Brokers
+without a push feed use `websocket_proxy.order_adapter.PollingOrderUpdateAdapter`
+automatically. Disable globally with `ORDER_UPDATES_ENABLED=FALSE`.
 
 Feature code normally calls the public order facade and lets it select the
 sandbox or Action Center path. Direct sandbox calls are appropriate for sandbox
@@ -412,7 +434,7 @@ order facade.
 | Files | Responsibility |
 |---|---|
 | `flow_executor_service.py` | Executes workflow nodes and maintains workflow context. |
-| `flow_tradeboard_client.py` | Internal client facade used by Flow nodes. |
+| `flow_openalgo_client.py` | Internal client facade used by Flow nodes. |
 | `flow_scheduler_service.py` | APScheduler-backed workflow schedules. |
 | `flow_price_monitor_service.py` | In-process price-condition alerts for flows. |
 
@@ -428,26 +450,32 @@ get_flow_client(api_key)
 get_flow_price_monitor()
 FlowPriceMonitor.add_alert(workflow_id, symbol, exchange, condition,
                            target_price, price_lower=None, price_upper=None,
-                           percentage=None, api_key=None)
+                           percentage=None, api_key=None, trigger="once",
+                           expiration="none")
 FlowPriceMonitor.remove_alert(workflow_id)
 FlowPriceMonitor.get_alert(workflow_id)
 FlowPriceMonitor.get_status()
 FlowPriceMonitor.shutdown()
+restore_price_alerts()          # re-arm active priceAlert workflows at startup
 
 init_flow_scheduler(db_url=None, api_key=None)
 get_flow_scheduler()
-execute_workflow_scheduled(workflow_id, api_key=None)
+execute_workflow_scheduled(workflow_id, api_key=None, market_hours_only=False)
+# api_key is only for jobs pickled by an older build; the current key is read
+# from the workflow row on every run, and is never stored in the jobstore.
 FlowScheduler.add_workflow_job(workflow_id, schedule_type, time_str="09:15",
                                days=None, execute_at=None,
                                interval_value=None, interval_unit=None,
-                               func=None)
-FlowScheduler.remove_workflow_job(workflow_id)
+                               func=None, market_hours_only=False)
+FlowScheduler.remove_workflow_job(workflow_id, strict=False)
+# strict=True raises on a jobstore failure instead of returning False, so a
+# caller cannot mark a workflow inactive while its job is still armed.
 FlowScheduler.pause_job(job_id)
 FlowScheduler.resume_job(job_id)
 FlowScheduler.shutdown()
 ```
 
-`FlowTradeboardClient`, returned by `get_flow_client(api_key)`, is the preferred
+`FlowOpenAlgoClient`, returned by `get_flow_client(api_key)`, is the preferred
 Flow-facing facade. Its current operation families are:
 
 ```text
@@ -458,12 +486,12 @@ Data:   get_quotes, get_multi_quotes, get_depth, get_history, get_order_status,
         orderbook, tradebook, positionbook, holdings, funds, get_open_position
 Lookup: symbol, search_symbols, get_expiry, get_intervals, optionchain,
         optionsymbol, syntheticfuture, get_option_greeks
-Other:  holidays, timings, margin, telegram
+Other:  holidays, timings, margin, telegram, whatsapp
 ```
 
 Node execution belongs in `NodeExecutor` and `execute_node_chain(...)`. New Flow
 node types must be added to the executor dispatch and to the Flow import schema;
-adding a method only to `FlowTradeboardClient` does not make a node executable.
+adding a method only to `FlowOpenAlgoClient` does not make a node executable.
 
 ### Historify
 
@@ -551,7 +579,7 @@ instance.
 |---|---|
 | `market_data_service.py` | Validated in-memory market-data cache, health state, and priority subscribers. |
 | `websocket_service.py` | Per-user broker WebSocket subscriptions and cached data access. |
-| `websocket_client.py` | Client for the Tradeboard WebSocket proxy. |
+| `websocket_client.py` | Client for the OpenAlgo WebSocket proxy. |
 
 The WebSocket client and server interfaces do not use the standard REST service
 tuple. Subscription mode and symbol validation must match the WebSocket
@@ -764,9 +792,13 @@ get_option_exchange(underlying_exchange)
 check_opengreeks_availability()
 parse_option_symbol(symbol, exchange, custom_expiry_time=None)
 get_underlying_exchange(base_symbol, options_exchange)
+get_exchange_expiry_time(exchange, custom_expiry_time=None)
+get_expiry_datetime(expiry_date, exchange, custom_expiry_time=None)
 calculate_time_to_expiry(expiry)
 calculate_greeks(option_symbol, exchange, spot_price, option_price,
                  interest_rate=None, expiry_time=None, api_key=None)
+calculate_chain_greeks(strikes, ce_prices, pe_prices, forward_price,
+                       time_to_expiry_years, interest_rate=None)
 
 # WhatsApp identity and attachment validation
 normalize_phone(raw)
@@ -774,6 +806,13 @@ phone_to_jid(phone_digits)
 jid_to_phone(jid)
 validate_attachment_path(path)
 ```
+
+`calculate_chain_greeks` solves a whole strike ladder in one vectorized pass using
+the `opengreeks.black76` `*_array` batch functions, rather than calling
+`calculate_greeks` per leg. Use it for anything chain-wide. `get_exchange_expiry_time`
+and `get_expiry_datetime` are the single source of truth for expiry cut-off times
+(NFO and BFO 15:30, CDS 12:30, MCX 23:30) — read them instead of re-deriving the
+policy, so time to expiry stays consistent across services.
 
 The following public-named functions are implementation helpers, not stable
 feature contracts: `import_broker_module`, `import_broker_gtt_module`,
@@ -802,7 +841,7 @@ success, response, status_code = place_order(
         "trigger_price": 0,
         "disclosed_quantity": 0,
     },
-    api_key="<tradeboard-api-key>",
+    api_key="<openalgo-api-key>",
 )
 
 if not success:
@@ -831,7 +870,7 @@ from services.search_service import search_symbols
 success, response, status_code = search_symbols(
     query="NIFTY",
     exchange="NFO",
-    api_key="<tradeboard-api-key>",
+    api_key="<openalgo-api-key>",
 )
 ```
 

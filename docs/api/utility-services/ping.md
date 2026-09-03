@@ -1,6 +1,6 @@
 # Authenticated Ping
 
-Verify that the Tradeboard API key resolves to an active broker session.
+Verify that the OpenAlgo API key resolves to an active broker session.
 
 ## Endpoint
 

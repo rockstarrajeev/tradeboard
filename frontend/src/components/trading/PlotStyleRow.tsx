@@ -10,31 +10,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { IndicatorField } from '@/lib/trading/terminal'
 import { cn } from '@/lib/utils'
+import { TickBox } from './TickBox'
 
 /** 10x10 palette: a greyscale row, then hue columns light→dark. */
 const HUES = [
-  '#f23645',
-  '#ff9800',
-  '#ffd700',
-  '#4caf50',
-  '#00bcd4',
-  '#2196f3',
-  '#3f51b5',
-  '#673ab7',
-  '#9c27b0',
-  '#e91e63',
+  '#f23645', '#ff9800', '#ffd700', '#4caf50', '#00bcd4',
+  '#2196f3', '#3f51b5', '#673ab7', '#9c27b0', '#e91e63',
 ]
 const GREYS = [
-  '#ffffff',
-  '#e0e0e0',
-  '#c7c7c7',
-  '#adadad',
-  '#949494',
-  '#7a7a7a',
-  '#616161',
-  '#474747',
-  '#2e2e2e',
-  '#000000',
+  '#ffffff', '#e0e0e0', '#c7c7c7', '#adadad', '#949494',
+  '#7a7a7a', '#616161', '#474747', '#2e2e2e', '#000000',
 ]
 /** Mix a hue toward white (t<0) or black (t>0). */
 function shade(hex: string, t: number): string {
@@ -129,13 +114,7 @@ export function PlotStyleRow({ title, fields, values, onChange }: Props) {
 
   return (
     <div className="flex items-center gap-2.5" ref={ref}>
-      <input
-        type="checkbox"
-        checked={enabled}
-        onChange={toggle}
-        aria-label={`${title} visible`}
-        className="h-3.5 w-3.5 accent-[hsl(var(--primary))]"
-      />
+      <TickBox checked={enabled} onChange={toggle} label={`${title} visible`} />
       <span className="flex-1 truncate text-[13px]">{title}</span>
 
       <div className="relative">
@@ -158,10 +137,7 @@ export function PlotStyleRow({ title, fields, values, onChange }: Props) {
           />
           <svg viewBox="0 0 40 12" className="h-3 flex-1" aria-hidden="true">
             <line
-              x1="1"
-              y1="6"
-              x2="39"
-              y2="6"
+              x1="1" y1="6" x2="39" y2="6"
               stroke={color}
               strokeWidth={Math.min(4, width)}
               strokeDasharray={dashArray}
@@ -213,7 +189,7 @@ export function PlotStyleRow({ title, fields, values, onChange }: Props) {
                     value={opacity}
                     onChange={(e) => onChange(opacityF.key, Number(e.target.value))}
                     aria-label="Opacity"
-                    className="h-1 flex-1 accent-[hsl(var(--primary))]"
+                    className="h-1 flex-1 accent-primary"
                     style={{
                       background: `linear-gradient(to right, transparent, ${color})`,
                       borderRadius: 999,
@@ -265,13 +241,8 @@ export function PlotStyleRow({ title, fields, values, onChange }: Props) {
                     >
                       <svg viewBox="0 0 40 8" className="h-2 w-9" aria-hidden="true">
                         <line
-                          x1="1"
-                          y1="4"
-                          x2="39"
-                          y2="4"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                          strokeDasharray={d.dash}
+                          x1="1" y1="4" x2="39" y2="4"
+                          stroke="currentColor" strokeWidth={2} strokeDasharray={d.dash}
                         />
                       </svg>
                     </button>
@@ -293,10 +264,7 @@ function Swatch({ c, on, pick }: { c: string; on: boolean; pick(): void }) {
       onClick={pick}
       aria-label={c}
       style={{ background: c }}
-      className={cn(
-        'h-4 w-4 rounded-[3px]',
-        on ? 'ring-2 ring-primary ring-offset-1 ring-offset-popover' : ''
-      )}
+      className={cn('h-4 w-4 rounded-[3px]', on ? 'ring-2 ring-primary ring-offset-1 ring-offset-popover' : '')}
     />
   )
 }

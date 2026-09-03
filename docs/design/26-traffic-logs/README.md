@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Tradeboard records HTTP request metadata for monitoring, latency review, and security analysis. It does not store request bodies, response bodies, headers, user agents, or a per-request processing timeline in the traffic table.
+OpenAlgo records HTTP request metadata for monitoring, latency review, and security analysis. It does not store request bodies, response bodies, headers, user agents, or a per-request processing timeline in the traffic table.
 
 ## Capture Flow
 
@@ -47,7 +47,7 @@ The table displays timestamp, method, path, status, duration, client IP, and hos
 - Proxy-derived IP headers are trusted only when `TRUST_PROXY_HEADERS` is enabled for a controlled reverse proxy.
 - API keys and tokens are not captured because traffic logging stores metadata only.
 - Dashboard, stats, logs, and export routes require a valid application session and have explicit rate limits.
-- `logs.db` also contains IP-ban and invalid-attempt security data; it is separate from `tradeboard.db`.
+- `logs.db` also contains IP-ban and invalid-attempt security data; it is separate from `openalgo.db`.
 
 ## Key Files
 

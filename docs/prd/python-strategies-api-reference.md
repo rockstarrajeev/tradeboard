@@ -402,11 +402,11 @@ When a strategy runs, these environment variables are available:
 
 | Variable | Description |
 |----------|-------------|
-| `OPENALGO_APIKEY` | API key for Tradeboard requests |
-| `OPENALGO_HOST` | Tradeboard server URL |
+| `OPENALGO_APIKEY` | API key for OpenAlgo requests |
+| `OPENALGO_HOST` | OpenAlgo server URL |
 | `PYTHONUNBUFFERED` | Set to '1' for real-time output |
 
-### Using Tradeboard SDK in Strategy
+### Using OpenAlgo SDK in Strategy
 
 ```python
 #!/usr/bin/env python

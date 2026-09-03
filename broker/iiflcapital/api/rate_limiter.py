@@ -97,4 +97,7 @@ def is_rate_limited(status_code: int, message: str = "") -> bool:
         return True
 
     text = (message or "").lower()
-    return any(hint in text for hint in ("rate limit", "too many request", "try after some time"))
+    return any(
+        hint in text
+        for hint in ("rate limit", "too many request", "try after some time")
+    )

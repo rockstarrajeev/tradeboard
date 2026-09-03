@@ -2,7 +2,7 @@
 type: Reference
 title: WebSocket Protocol
 description: WebSocket subscription and message format for real-time feeds
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/prompt/websockets-format.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/prompt/websockets-format.md
 tags:
 - websocket
 - streaming

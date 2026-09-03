@@ -462,7 +462,9 @@ def _migrate_add_gtt_trigger_direction():
 
     try:
         with engine.connect() as conn:
-            existing = {row[1] for row in conn.execute(text("PRAGMA table_info(sandbox_gtt_legs)"))}
+            existing = {
+                row[1] for row in conn.execute(text("PRAGMA table_info(sandbox_gtt_legs)"))
+            }
             if not existing or "trigger_direction" in existing:
                 return
             conn.execute(

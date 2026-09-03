@@ -69,7 +69,9 @@ def _error_payload(status_code, data):
         message = SESSION_EXPIRED_MESSAGE
     else:
         message = (
-            data.get("error") or data.get("message") or f"Nubra request failed (HTTP {status_code})"
+            data.get("error")
+            or data.get("message")
+            or f"Nubra request failed (HTTP {status_code})"
         )
 
     payload = dict(data)
@@ -125,7 +127,7 @@ def get_api_response(endpoint, auth, method="GET", payload=""):
 
         # Handle rate limiting with exponential backoff
         if response.status_code == 429:
-            delay = _RATE_LIMIT_BASE_DELAY * (2**attempt)
+            delay = _RATE_LIMIT_BASE_DELAY * (2 ** attempt)
             logger.warning(
                 f"Rate limit hit (429) on {endpoint}, retrying in {delay:.1f}s "
                 f"(attempt {attempt + 1}/{_MAX_RETRIES})"
@@ -214,14 +216,14 @@ def get_holdings(auth):
 # --- Per-Symbol Smart Order Lock ---
 # Ensures only one smart order per symbol executes at a time.
 # Others queue and execute sequentially, each getting a fresh position book.
-_symbol_locks = {}  # {symbol_key: threading.Lock}
+_symbol_locks = {}          # {symbol_key: threading.Lock}
 _symbol_locks_lock = threading.Lock()
 
 # --- Position Book Cache ---
 # Caches get_positions() for 1 second. Invalidated after each smart order placement.
-_position_cache = {}  # {auth_token: {"data": ..., "timestamp": ...}}
+_position_cache = {}        # {auth_token: {"data": ..., "timestamp": ...}}
 _position_cache_lock = threading.Lock()
-_POSITION_CACHE_TTL = 1.0  # seconds
+_POSITION_CACHE_TTL = 1.0   # seconds
 
 
 def _get_symbol_lock(symbol, exchange, product):
@@ -300,9 +302,7 @@ def place_order_api(data, auth):
     # Get token (ref_id) for the symbol
     token = get_token(data["symbol"], data["exchange"])
 
-    logger.info(
-        f"Nubra order - Symbol: {data['symbol']}, Exchange: {data['exchange']}, Token: {token}"
-    )
+    logger.info(f"Nubra order - Symbol: {data['symbol']}, Exchange: {data['exchange']}, Token: {token}")
 
     if not token or not str(token).isdigit():
         msg = f"No numeric Nubra ref_id found for {data['symbol']} on {data['exchange']}."
@@ -339,7 +339,7 @@ def place_order_api(data, auth):
             content=payload,
         )
         if response.status_code == 429:
-            delay = _RATE_LIMIT_BASE_DELAY * (2**attempt)
+            delay = _RATE_LIMIT_BASE_DELAY * (2 ** attempt)
             logger.warning(
                 f"Rate limit hit (429) placing order, retrying in {delay:.1f}s "
                 f"(attempt {attempt + 1}/{_MAX_RETRIES})"
@@ -381,9 +381,7 @@ def place_order_api(data, auth):
         orderid = None
         response_data["status"] = False
         if response.status_code == SESSION_EXPIRED_STATUS:
-            logger.error(
-                "Nubra session expired (HTTP 440) placing order; re-authentication required"
-            )
+            logger.error("Nubra session expired (HTTP 440) placing order; re-authentication required")
             response_data["message"] = SESSION_EXPIRED_MESSAGE
         else:
             # V3 puts the human-readable reason in "error"
@@ -415,7 +413,9 @@ def place_smartorder_api(data, auth):
         position_size = int(data.get("position_size", "0"))
 
         # Get current open position for the symbol
-        current_position = int(get_open_position(symbol, exchange, product, AUTH_TOKEN))
+        current_position = int(
+            get_open_position(symbol, exchange, product, AUTH_TOKEN)
+        )
 
         logger.debug(f"position_size : {position_size}")
         logger.debug(f"Open Position : {current_position}")
@@ -532,9 +532,7 @@ def close_all_positions(current_api_key, auth):
             failed_to_close.append(str(position.get("refId", "")))
             continue
 
-        logger.debug(
-            f"Closing position - Symbol: {symbol}, Exchange: {exchange}, Qty: {quantity}, Action: {action}"
-        )
+        logger.debug(f"Closing position - Symbol: {symbol}, Exchange: {exchange}, Qty: {quantity}, Action: {action}")
 
         product = reverse_map_product_type(position.get("deliveryType", ""))
 
@@ -616,7 +614,7 @@ def cancel_order(orderid, auth):
             content=payload,
         )
         if response.status_code == 429:
-            delay = _RATE_LIMIT_BASE_DELAY * (2**attempt)
+            delay = _RATE_LIMIT_BASE_DELAY * (2 ** attempt)
             logger.warning(
                 f"Rate limit hit (429) cancelling order {orderid}, retrying in {delay:.1f}s "
                 f"(attempt {attempt + 1}/{_MAX_RETRIES})"
@@ -691,7 +689,7 @@ def modify_order(data, auth):
             content=payload,
         )
         if response.status_code == 429:
-            delay = _RATE_LIMIT_BASE_DELAY * (2**attempt)
+            delay = _RATE_LIMIT_BASE_DELAY * (2 ** attempt)
             logger.warning(
                 f"Rate limit hit (429) modifying order {orderid}, retrying in {delay:.1f}s "
                 f"(attempt {attempt + 1}/{_MAX_RETRIES})"
@@ -735,9 +733,7 @@ def modify_order(data, auth):
 
     return {
         "status": "error",
-        "message": response_data.get(
-            "message", response_data.get("error", "Failed to modify order")
-        ),
+        "message": response_data.get("message", response_data.get("error", "Failed to modify order")),
     }, response.status_code
 
 

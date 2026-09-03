@@ -15,7 +15,7 @@ from openalgo import api
 
 # Initialize client
 client = api(
-    api_key=os.getenv("TRADEBOARD_API_KEY"),
+    api_key=os.getenv("OPENALGO_API_KEY"),
     host="http://127.0.0.1:5000",
     ws_url="ws://127.0.0.1:8765",
 )
@@ -39,7 +39,7 @@ def load_symbols(csv_path, limit=2340):
         "NSE_SYMBOLS.csv",
         os.path.join(os.path.dirname(__file__), "NSE_SYMBOLS.csv"),
         os.path.join(os.path.dirname(__file__), "../../../NSE_SYMBOLS.csv"),
-        "D:/rockstarrajeev/tradeboard_order_mode/NSE_SYMBOLS.csv",
+        "D:/Marketcalls/Openalgo_order_mode/NSE_SYMBOLS.csv",
     ]
 
     for path in paths:

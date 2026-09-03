@@ -1,18 +1,18 @@
 # Websockets
 
-## Tradeboard WebSocket Protocol Documentation
+## OpenAlgo WebSocket Protocol Documentation
 
 ### Overview
 
-The Tradeboard WebSocket protocol allows clients to receive **real-time market data** using a standardized and broker-agnostic interface. It supports data streaming for **LTP (Last Traded Price)**, **Quotes (OHLC + Volume)**, and **Market Depth** (up to 50 levels depending on broker capability).
+The OpenAlgo WebSocket protocol allows clients to receive **real-time market data** using a standardized and broker-agnostic interface. It supports data streaming for **LTP (Last Traded Price)**, **Quotes (OHLC + Volume)**, and **Market Depth** (up to 50 levels depending on broker capability).
 
-The protocol ensures efficient, scalable, and secure communication between client applications (such as trading bots, dashboards, or analytics tools) and the Tradeboard platform. Authentication is handled using the Tradeboard API key, and subscriptions are maintained per session.
+The protocol ensures efficient, scalable, and secure communication between client applications (such as trading bots, dashboards, or analytics tools) and the OpenAlgo platform. Authentication is handled using the OpenAlgo API key, and subscriptions are maintained per session.
 
 ### Version
 
 * Protocol Version: 1.0
 * Last Updated: May 28, 2025
-* Platform: Tradeboard Trading Framework
+* Platform: OpenAlgo Trading Framework
 
 ### WebSocket URL
 
@@ -20,7 +20,7 @@ The protocol ensures efficient, scalable, and secure communication between clien
 ws://<host>:8765
 ```
 
-Replace `<host>` with the IP/domain of your Tradeboard instance. For local development setups, use thee hostname as`127.0.0.1`
+Replace `<host>` with the IP/domain of your OpenAlgo instance. For local development setups, use thee hostname as`127.0.0.1`
 
 ```
 ws://127.0.0.1:8765
@@ -49,7 +49,7 @@ All WebSocket sessions must begin with API key authentication:
 ```json
 {
   "action": "authenticate", 
-  "api_key": "YOUR_TRADEBOARD_API_KEY"
+  "api_key": "YOUR_OPENALGO_API_KEY"
 }
 ```
 
@@ -199,6 +199,60 @@ If a client requests a depth level not supported by their broker:
 }
 ```
 
+### Order Updates (Account-Level Stream)
+
+Real-time order status changes (fills, partial fills, rejections,
+cancellations) pushed by the broker — or by the sandbox engine in analyze
+mode. No symbols or modes; one subscription covers the whole account.
+
+Subscribe (after authentication):
+
+```json
+{
+  "action": "subscribe_orders"
+}
+```
+
+Unsubscribe with `{"action": "unsubscribe_orders"}`. Each event arrives as:
+
+```json
+{
+  "type": "order_update",
+  "user_id": "openalgo-user",
+  "mode": "live",
+  "broker": "upstox",
+  "orderid": "240221025997024",
+  "symbol": "RELIANCE",
+  "exchange": "NSE",
+  "action": "BUY",
+  "quantity": 10,
+  "price": 1424.0,
+  "trigger_price": 0,
+  "pricetype": "LIMIT",
+  "product": "MIS",
+  "order_status": "complete",
+  "filled_quantity": 10,
+  "pending_quantity": 0,
+  "average_price": 1423.85,
+  "rejection_reason": ""
+}
+```
+
+Fields use OpenAlgo's common order constants: `symbol` is in OpenAlgo symbol
+format (mapped from the broker's own symbology, e.g. `NHPC-EQ` → `NHPC`,
+`NIFTY28JUL26FUT` for NFO futures), `action` BUY/SELL, `pricetype`
+MARKET/LIMIT/SL/SL-M, `product` CNC/NRML/MIS; `order_status` is lowercase
+`open` / `trigger pending` / `complete` / `rejected` / `cancelled` (plus broker extras such as
+`expired`); `rejection_reason` carries the broker's full RMS/OMS text when
+rejected; `mode` is `live` (broker) or `analyze` (sandbox).
+
+Sources: dedicated broker order feeds (Zerodha, Dhan, Fyers, Upstox,
+AliceBlue, Definedge, IndMoney, Angel One, Nubra, Arrow, IIFL Capital, Kotak),
+REST-orderbook polling for brokers without push (Groww), and
+`/postback/<broker>` HTTPS
+webhooks on production deployments. If both a broker feed and a postback are
+configured, deduplicate on `orderid` + `order_status` + `filled_quantity`.
+
 ### Heartbeat and Reconnection
 
 * Server sends `ping` messages every 30 seconds.
@@ -213,7 +267,7 @@ If a client requests a depth level not supported by their broker:
 * Rate limits may apply to prevent abuse.
 * TLS encryption recommended for production deployments.
 
-The Tradeboard WebSocket feed provides a reliable and structured method for receiving real-time trading data. Proper mode selection and parsing allow efficient integration into trading algorithms and monitoring systems.
+The OpenAlgo WebSocket feed provides a reliable and structured method for receiving real-time trading data. Proper mode selection and parsing allow efficient integration into trading algorithms and monitoring systems.
 
 
 ---
@@ -225,7 +279,7 @@ If you need additional information that is not directly available in this page, 
 Perform an HTTP GET request on the current page URL with the `ask` query parameter:
 
 ```
-GET https://docs.rajeevupadhyay.com/api-documentation/v1/websockets.md?ask=<question>
+GET https://docs.openalgo.in/api-documentation/v1/websockets.md?ask=<question>
 ```
 
 The question should be specific, self-contained, and written in natural language.

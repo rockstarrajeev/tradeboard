@@ -319,12 +319,8 @@ class BrokerData:
 
             if exchange in QUOTE_UNSUPPORTED_EXCHANGES:
                 # CDS/BCD/NCO would 400 the entire batch; report, don't send.
-                logger.warning(
-                    f"Skipping {symbol} on {exchange}: exchange not supported by Arrow quotes"
-                )
-                skipped_symbols.append(
-                    self._leg_error(item, "Exchange not supported by Arrow quotes")
-                )
+                logger.warning(f"Skipping {symbol} on {exchange}: exchange not supported by Arrow quotes")
+                skipped_symbols.append(self._leg_error(item, "Exchange not supported by Arrow quotes"))
                 continue
 
             try:
@@ -339,9 +335,7 @@ class BrokerData:
                 # index's quote name first (cached after the first probe).
                 name = self._resolve_index_quote_name(symbol, br_symbol, token)
                 if not name:
-                    skipped_symbols.append(
-                        self._leg_error(item, "Index not served by Arrow quote API")
-                    )
+                    skipped_symbols.append(self._leg_error(item, "Index not served by Arrow quote API"))
                     continue
                 body.append({"exchange": "INDEX", "symbol": name})
             else:
@@ -363,11 +357,7 @@ class BrokerData:
                 results.append(self._leg_error(original, "No quote data available"))
                 continue
             results.append(
-                {
-                    "symbol": original["symbol"],
-                    "exchange": original["exchange"],
-                    "data": self._format_quote(quote),
-                }
+                {"symbol": original["symbol"], "exchange": original["exchange"], "data": self._format_quote(quote)}
             )
 
         # Include skipped symbols in results

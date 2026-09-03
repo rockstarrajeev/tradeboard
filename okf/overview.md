@@ -1,10 +1,10 @@
 ---
 type: Reference
-title: Tradeboard Platform Overview
-description: What Tradeboard is, its four product surfaces, and how the unified broker API is authenticated and organized.
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/CLAUDE.md
+title: OpenAlgo Platform Overview
+description: What OpenAlgo is, its four product surfaces, and how the unified broker API is authenticated and organized.
+resource: https://github.com/marketcalls/openalgo/blob/main/CLAUDE.md
 tags:
-- tradeboard
+- openalgo
 - overview
 - architecture
 - api
@@ -15,7 +15,7 @@ timestamp: '2026-07-03T00:00:00+00:00'
 > source doc linked below; this OKF concept exists only to index, tag, and
 > cross-link it. Edit the source, never this file.
 
-What Tradeboard is, its four product surfaces, and how the unified broker API is authenticated and organized.
+What OpenAlgo is, its four product surfaces, and how the unified broker API is authenticated and organized.
 
 **Repository guide:** [CLAUDE.md](../CLAUDE.md) · **Docs map:** [docs/INDEX.md](../docs/INDEX.md)
 

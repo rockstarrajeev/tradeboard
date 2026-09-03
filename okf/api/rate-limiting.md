@@ -2,7 +2,7 @@
 type: Reference
 title: Rate Limiting
 description: API rate limits for order, smart-order, general, and webhook operations
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/rate-limiting.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/rate-limiting.md
 tags:
 - rate-limiting
 - security

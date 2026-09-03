@@ -94,22 +94,23 @@ def compare(
         step = max(1, len(equity) // 300)
         thinned = equity.iloc[::step]
         curves[variant.label] = [
-            {"date": d.date().isoformat(), "value": round(float(v), 2)} for d, v in thinned.items()
+            {"date": d.date().isoformat(), "value": round(float(v), 2)}
+            for d, v in thinned.items()
         ]
 
     # Rank on risk-adjusted return rather than raw return: the whole reason to
     # compare rebalancing schedules is that the one with the highest return is
     # frequently not the one worth holding.
-    ranked = sorted(
-        rows, key=lambda r: (r["sharpe"] if r["sharpe"] == r["sharpe"] else -9e9), reverse=True
-    )
+    ranked = sorted(rows, key=lambda r: (r["sharpe"] if r["sharpe"] == r["sharpe"] else -9e9), reverse=True)
     best = ranked[0]["label"] if ranked else None
 
     return {
         "variants": rows,
         "curves": curves,
         "best_by_sharpe": best,
-        "best_by_return": (max(rows, key=lambda r: r["total_return"])["label"] if rows else None),
+        "best_by_return": (
+            max(rows, key=lambda r: r["total_return"])["label"] if rows else None
+        ),
         "sessions": prices.sessions,
         "start": str(prices.start),
         "end": str(prices.end),
@@ -145,4 +146,6 @@ def rebalancing_sweep(
         )
         for band in drift_bands
     ]
-    return compare(prices, variants, initial_capital=initial_capital, rf=rf)
+    return compare(
+        prices, variants, initial_capital=initial_capital, rf=rf
+    )

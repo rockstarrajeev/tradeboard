@@ -4,10 +4,8 @@ mstock WebSocket adapter implementation (synchronous).
 Uses sync websocket-client to avoid asyncio event loop conflicts
 with eventlet in gunicorn+eventlet deployments.
 """
-
 import copy
 import json
-import logging
 import os
 import sys
 import threading
@@ -18,6 +16,7 @@ from broker.mstock.api.data import BrokerData
 from broker.mstock.api.mstockwebsocket import MstockWebSocket
 from database.auth_db import get_auth_token
 from database.token_db import get_token
+from utils.logging import get_logger
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
 
@@ -32,7 +31,7 @@ class MstockWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
     def __init__(self):
         super().__init__()
-        self.logger = logging.getLogger("mstock_websocket")
+        self.logger = get_logger("mstock_websocket")
         self.ws_client = None
         self.data_client = None
         self.user_id = None
@@ -111,7 +110,7 @@ class MstockWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
             matching_subscriptions = []
             with self.lock:
-                for _correlation_id, sub in self.subscriptions.items():
+                for correlation_id, sub in self.subscriptions.items():
                     if sub["token"] == token:
                         matching_subscriptions.append(sub)
 
@@ -130,14 +129,12 @@ class MstockWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 topic = f"{exchange}_{symbol}_{mode_str}"
 
                 market_data = copy.deepcopy(market_data_base)
-                market_data.update(
-                    {
-                        "symbol": symbol,
-                        "exchange": exchange,
-                        "mode": mode,
-                        "timestamp": int(time.time() * 1000),
-                    }
-                )
+                market_data.update({
+                    "symbol": symbol,
+                    "exchange": exchange,
+                    "mode": mode,
+                    "timestamp": int(time.time() * 1000),
+                })
 
                 self.publish_market_data(topic, market_data)
                 self.logger.debug(f"Published data for {symbol} on {exchange} mode {mode}")
@@ -247,21 +244,19 @@ class MstockWebSocketAdapter(BaseBrokerWebSocketAdapter):
             normalized = {"ltp": float(quote_data.get("ltp", 0))}
 
             if mode >= 2:
-                normalized.update(
-                    {
-                        "open": float(quote_data.get("open", 0)),
-                        "high": float(quote_data.get("high", 0)),
-                        "low": float(quote_data.get("low", 0)),
-                        "close": float(quote_data.get("close", 0)),
-                        "prev_close": float(quote_data.get("close", 0)),
-                        "volume": int(quote_data.get("volume", 0)),
-                        "oi": int(quote_data.get("oi", 0)),
-                        "last_trade_quantity": int(quote_data.get("last_traded_qty", 0)),
-                        "average_price": float(quote_data.get("avg_price", 0)),
-                        "total_buy_quantity": int(quote_data.get("total_buy_qty", 0)),
-                        "total_sell_quantity": int(quote_data.get("total_sell_qty", 0)),
-                    }
-                )
+                normalized.update({
+                    "open": float(quote_data.get("open", 0)),
+                    "high": float(quote_data.get("high", 0)),
+                    "low": float(quote_data.get("low", 0)),
+                    "close": float(quote_data.get("close", 0)),
+                    "prev_close": float(quote_data.get("close", 0)),
+                    "volume": int(quote_data.get("volume", 0)),
+                    "oi": int(quote_data.get("oi", 0)),
+                    "last_trade_quantity": int(quote_data.get("last_traded_qty", 0)),
+                    "average_price": float(quote_data.get("avg_price", 0)),
+                    "total_buy_quantity": int(quote_data.get("total_buy_qty", 0)),
+                    "total_sell_quantity": int(quote_data.get("total_sell_qty", 0)),
+                })
 
             if mode == 3:
                 bids = quote_data.get("bids", [])[:5]
@@ -270,50 +265,40 @@ class MstockWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 formatted_bids = []
                 for bid in bids:
                     if isinstance(bid, dict):
-                        formatted_bids.append(
-                            {
-                                "price": float(bid.get("price", 0)),
-                                "quantity": int(bid.get("quantity", 0)),
-                                "orders": int(bid.get("orders", 0)),
-                            }
-                        )
+                        formatted_bids.append({
+                            "price": float(bid.get("price", 0)),
+                            "quantity": int(bid.get("quantity", 0)),
+                            "orders": int(bid.get("orders", 0)),
+                        })
                     elif isinstance(bid, (list, tuple)) and len(bid) >= 2:
-                        formatted_bids.append(
-                            {
-                                "price": float(bid[0]),
-                                "quantity": int(bid[1]),
-                                "orders": int(bid[2]) if len(bid) > 2 else 0,
-                            }
-                        )
+                        formatted_bids.append({
+                            "price": float(bid[0]),
+                            "quantity": int(bid[1]),
+                            "orders": int(bid[2]) if len(bid) > 2 else 0,
+                        })
 
                 formatted_asks = []
                 for ask in asks:
                     if isinstance(ask, dict):
-                        formatted_asks.append(
-                            {
-                                "price": float(ask.get("price", 0)),
-                                "quantity": int(ask.get("quantity", 0)),
-                                "orders": int(ask.get("orders", 0)),
-                            }
-                        )
+                        formatted_asks.append({
+                            "price": float(ask.get("price", 0)),
+                            "quantity": int(ask.get("quantity", 0)),
+                            "orders": int(ask.get("orders", 0)),
+                        })
                     elif isinstance(ask, (list, tuple)) and len(ask) >= 2:
-                        formatted_asks.append(
-                            {
-                                "price": float(ask[0]),
-                                "quantity": int(ask[1]),
-                                "orders": int(ask[2]) if len(ask) > 2 else 0,
-                            }
-                        )
+                        formatted_asks.append({
+                            "price": float(ask[0]),
+                            "quantity": int(ask[1]),
+                            "orders": int(ask[2]) if len(ask) > 2 else 0,
+                        })
 
                 normalized["depth"] = {"buy": formatted_bids, "sell": formatted_asks}
-                normalized.update(
-                    {
-                        "total_buy_quantity": int(quote_data.get("total_buy_qty", 0)),
-                        "total_sell_quantity": int(quote_data.get("total_sell_qty", 0)),
-                        "upper_circuit": float(quote_data.get("upper_circuit", 0)),
-                        "lower_circuit": float(quote_data.get("lower_circuit", 0)),
-                    }
-                )
+                normalized.update({
+                    "total_buy_quantity": int(quote_data.get("total_buy_qty", 0)),
+                    "total_sell_quantity": int(quote_data.get("total_sell_qty", 0)),
+                    "upper_circuit": float(quote_data.get("upper_circuit", 0)),
+                    "lower_circuit": float(quote_data.get("lower_circuit", 0)),
+                })
 
             return normalized
 
@@ -365,10 +350,7 @@ class MstockWebSocketAdapter(BaseBrokerWebSocketAdapter):
                         self.ws_client.unsubscribe_stream(current_correlation_id)
                         self.logger.info(f"Unsubscribed token {token} from mstock")
                 else:
-                    if (
-                        current_correlation_id
-                        and current_correlation_id in self.ws_client.subscriptions
-                    ):
+                    if current_correlation_id and current_correlation_id in self.ws_client.subscriptions:
                         self.ws_client.unsubscribe_stream(current_correlation_id)
                         time.sleep(0.2)
 
@@ -377,9 +359,7 @@ class MstockWebSocketAdapter(BaseBrokerWebSocketAdapter):
                         new_correlation_id, token, exchange_type, new_mode
                     )
                     self.token_correlation_ids[token] = new_correlation_id
-                    self.logger.debug(
-                        f"Downgraded subscription for token {token} to mode {new_mode}"
-                    )
+                    self.logger.debug(f"Downgraded subscription for token {token} to mode {new_mode}")
 
             except Exception as e:
                 self.logger.error(f"Error updating WebSocket subscription: {str(e)}")

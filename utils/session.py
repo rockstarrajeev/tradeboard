@@ -217,7 +217,6 @@ def revoke_user_tokens(revoke_db_tokens=True):
                 if current_sid:
                     try:
                         from database.auth_db import remove_session
-
                         remove_session(current_sid)
                     except Exception as session_error:
                         logger.warning(f"Error removing stale session row: {session_error}")
@@ -227,14 +226,11 @@ def revoke_user_tokens(revoke_db_tokens=True):
             # This notifies WebSocket proxy and other processes to clear their stale caches
             try:
                 from database.cache_invalidation import publish_all_cache_invalidation
-
                 publish_all_cache_invalidation(username)
                 logger.debug(f"Published cache invalidation for user: {username}")
             except Exception as invalidation_error:
                 # Don't fail logout if cache invalidation fails
-                logger.warning(
-                    f"Failed to publish cache invalidation for user {username}: {invalidation_error}"
-                )
+                logger.warning(f"Failed to publish cache invalidation for user {username}: {invalidation_error}")
 
             # Clear symbol cache on logout/session expiry
             try:
@@ -279,7 +275,6 @@ def revoke_user_tokens(revoke_db_tokens=True):
                 # Clear all active sessions for this user (tokens are invalid now)
                 try:
                     from database.auth_db import clear_user_sessions
-
                     clear_user_sessions(username)
                     logger.info(f"Auto-expiry: Cleared active sessions for user: {username}")
                 except Exception as session_error:

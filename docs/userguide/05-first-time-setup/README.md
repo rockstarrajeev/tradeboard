@@ -2,11 +2,11 @@
 
 ## Introduction
 
-You've installed Tradeboard. Now let's configure it properly for secure operation and connect it to your broker.
+You've installed OpenAlgo. Now let's configure it properly for secure operation and connect it to your broker.
 
 ## Setup Wizard Overview
 
-When you first access Tradeboard, you'll go through these steps:
+When you first access OpenAlgo, you'll go through these steps:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -26,9 +26,9 @@ When you first access Tradeboard, you'll go through these steps:
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## Step 1: Access Tradeboard
+## Step 1: Access OpenAlgo
 
-1. Start Tradeboard:
+1. Start OpenAlgo:
    ```bash
    uv run app.py
    ```
@@ -63,7 +63,7 @@ Click **Create Account**.
 
 ## Step 3: Configure Security Keys
 
-Before using Tradeboard, you MUST set unique security keys.
+Before using OpenAlgo, you MUST set unique security keys.
 
 ### Generate Security Keys
 
@@ -94,11 +94,11 @@ API_KEY_PEPPER=z7y6x5w4v3u2t1s0r9q8p7o6n5m4l3k2j1i0h9g8f7e6d5c4b3a2
 - Keep these keys SECRET
 - Never share them
 
-### Restart Tradeboard
+### Restart OpenAlgo
 
 After changing `.env`, restart:
 ```bash
-# Stop Tradeboard (Ctrl+C)
+# Stop OpenAlgo (Ctrl+C)
 # Start again
 uv run app.py
 ```
@@ -118,6 +118,7 @@ Each broker has different requirements. Here's a quick reference:
 | Dhan | Client ID, Access Token | [Dhan API](https://api.dhan.co) |
 | Fyers | App ID, Secret | [Fyers API](https://myapi.fyers.in) |
 | Upstox | API Key, Secret | [Upstox Developer](https://api.upstox.com) |
+| IndMoney | Client ID (+ MPIN and TOTP at login) | [INDstocks Access Tokens](https://indstocks.com/app/api-trading/access-tokens) |
 
 ### Update .env with Broker Details
 
@@ -143,9 +144,30 @@ BROKER_PASSWORD=your_password
 BROKER_TOTP_KEY=your_totp_secret
 ```
 
+Example for IndMoney (INDstocks):
+```ini
+# Broker Selection
+BROKER=indmoney
+
+# IndMoney Credentials
+# API Key = the Client ID shown at indstocks.com > API Trading > Access Tokens
+#           after you complete the one-time TOTP setup on that page.
+BROKER_API_KEY=your_indstocks_client_id
+
+# Leave the secret BLANK to log in with MPIN + TOTP (recommended). OpenAlgo then
+# mints a fresh 24-hour access token at each login. Only set it if you prefer to
+# paste a token generated from the dashboard, which you must renew every 24 hours.
+BROKER_API_SECRET=
+```
+
+You enter the **MPIN** and the current **6-digit TOTP** on the OpenAlgo login screen -
+neither is stored in `.env`. Token generation is limited to one request per 60 seconds,
+and 5 wrong codes in 15 minutes locks it for 15 minutes, so keep the server clock synced
+via NTP and never resubmit a code you have already used.
+
 ### Alternative: Configure via Web Interface
 
-1. Login to Tradeboard
+1. Login to OpenAlgo
 2. Go to **Profile** → **Broker Configuration**
 3. Select your broker
 4. Enter credentials
@@ -155,11 +177,11 @@ BROKER_TOTP_KEY=your_totp_secret
 
 ### Login to Your Broker
 
-1. In Tradeboard, click **Login to Broker**
+1. In OpenAlgo, click **Login to Broker**
 2. You'll be redirected to your broker's login page
 3. Enter your broker credentials
-4. Authorize Tradeboard
-5. You'll be redirected back to Tradeboard
+4. Authorize OpenAlgo
+5. You'll be redirected back to OpenAlgo
 
 **Successful connection shows**:
 - Green "Connected" status
@@ -274,7 +296,7 @@ Before proceeding, confirm:
 
 ## What's Next?
 
-Congratulations! Tradeboard is now set up. Your next steps:
+Congratulations! OpenAlgo is now set up. Your next steps:
 
 1. **Learn the Interface**: [Understanding the Interface](../08-understanding-interface/README.md)
 2. **Practice First**: [Analyzer Mode](../15-analyzer-mode/README.md) - Walkforward test with sandbox capital

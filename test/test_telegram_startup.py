@@ -12,7 +12,12 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 os.environ["APP_KEY"] = "test-key"
 
-# Now import the service
+# Monkey patch for eventlet simulation
+import eventlet
+
+eventlet.monkey_patch()
+
+# Now import the service, it will see the patched environment
 from services.telegram_bot_service import TelegramBotService
 
 
@@ -52,9 +57,6 @@ class TestTelegramBotStartup(unittest.TestCase):
         mock_app.stop = AsyncMock(return_value=None)
         mock_app.shutdown = AsyncMock(return_value=None)
         mock_updater.stop = AsyncMock(return_value=None)
-        mock_bot_info = MagicMock()
-        mock_bot_info.username = "TestBot"
-        mock_app.bot.get_me = AsyncMock(return_value=mock_bot_info)
 
         # Mock the synchronous request for token validation
         self.requests_get_patch = patch("requests.get")

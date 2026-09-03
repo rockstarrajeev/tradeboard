@@ -114,7 +114,6 @@ class User(Base):
         plaintext).
         """
         from database.auth_db import safe_decrypt_token
-
         return safe_decrypt_token(self.totp_secret) or self.totp_secret
 
     def set_password(self, password):
@@ -180,7 +179,6 @@ def add_user(username, email, password, is_admin=False):
         # auth_db Fernet (same pattern used for broker tokens, API keys).
         # See _totp_plaintext() for the read path.
         from database.auth_db import encrypt_token
-
         totp_secret = pyotp.random_base32()
         user = User(
             username=username,

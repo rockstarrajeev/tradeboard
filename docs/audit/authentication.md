@@ -2,7 +2,7 @@
 
 ## Overview
 
-Tradeboard implements authentication to protect access to your personal trading dashboard and prevent unauthorized order placement.
+OpenAlgo implements authentication to protect access to your personal trading dashboard and prevent unauthorized order placement.
 
 **Risk Level**: Medium (for single-user context)
 **Status**: Strong
@@ -21,7 +21,7 @@ Even as a single-user application, authentication protects:
 
 **Location**: `database/auth_db.py`, `database/user_db.py`
 
-Tradeboard uses Argon2id - the winner of the Password Hashing Competition and OWASP's top recommendation.
+OpenAlgo uses Argon2id - the winner of the Password Hashing Competition and OWASP's top recommendation.
 
 ```python
 from argon2 import PasswordHasher
@@ -58,7 +58,7 @@ def hash_password(password):
 
 **Location**: `database/auth_db.py`, `blueprints/auth.py`
 
-Tradeboard supports time-based one-time passwords (TOTP) compatible with:
+OpenAlgo supports time-based one-time passwords (TOTP) compatible with:
 - Google Authenticator
 - Authy
 - Microsoft Authenticator

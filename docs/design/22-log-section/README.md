@@ -2,7 +2,7 @@
 
 ## Overview
 
-Tradeboard provides comprehensive log viewing and management through the web interface, supporting both API order logs and general application logs.
+OpenAlgo provides comprehensive log viewing and management through the web interface, supporting both API order logs and general application logs.
 
 ## Architecture Diagram
 
@@ -28,7 +28,7 @@ Tradeboard provides comprehensive log viewing and management through the web int
 │                                │                                             │
 │                                ▼                                             │
 │           ┌─────────────────────────────────────────────────────────┐       │
-│           │               Main Database (tradeboard.db)                │       │
+│           │               Main Database (openalgo.db)                │       │
 │           │               order_logs / analyzer_logs                 │       │
 │           └─────────────────────────────────────────────────────────┘       │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -51,10 +51,10 @@ Displays all API request/response pairs for order operations.
 │ ┌─────────────────────────────────────────────────────────────────────────┐│
 │ │ Time          │ API Type    │ Request          │ Response      │ Status ││
 │ ├───────────────┼─────────────┼──────────────────┼───────────────┼────────┤│
-│ │ 09:30:15 IST  │ placeorder  │ SBIN BUY 100 MIS │ orderid: 123  │ ✓      ││
-│ │ 09:31:20 IST  │ placeorder  │ INFY SELL 50 CNC │ orderid: 124  │ ✓      ││
-│ │ 09:35:45 IST  │ cancelorder │ orderid: 124     │ Cancelled     │ ✓      ││
-│ │ 10:15:00 IST  │ placeorder  │ RELIANCE BUY 25  │ Margin error  │ ✗      ││
+│ │ 09:30:15 IST  │ placeorder  │ SBIN BUY 100 MIS │ orderid: 123  │ ││
+│ │ 09:31:20 IST  │ placeorder  │ INFY SELL 50 CNC │ orderid: 124  │ ││
+│ │ 09:35:45 IST  │ cancelorder │ orderid: 124     │ Cancelled     │ ││
+│ │ 10:15:00 IST  │ placeorder  │ RELIANCE BUY 25  │ Margin error  │ ││
 │ └─────────────────────────────────────────────────────────────────────────┘│
 │                                                                             │
 │ Pagination: [< Prev] Page 1 of 25 [Next >]                                 │
@@ -69,7 +69,7 @@ Logs from sandbox/sandbox trading mode.
 
 ### 3. Application Logs
 
-**Location:** `log/tradeboard.log`
+**Location:** `log/openalgo.log`
 
 File-based logs for debugging and monitoring.
 
@@ -270,13 +270,13 @@ LOG_RETENTION=14
 
 ```bash
 # View current log
-tail -f log/tradeboard.log
+tail -f log/openalgo.log
 
 # Search for errors
-grep ERROR log/tradeboard.log
+grep ERROR log/openalgo.log
 
 # View last 100 lines
-tail -100 log/tradeboard.log
+tail -100 log/openalgo.log
 ```
 
 ## Security Considerations

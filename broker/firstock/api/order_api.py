@@ -1,7 +1,5 @@
 import json
 import os
-import threading
-import time
 
 from broker.firstock.mapping.transform_data import (
     map_product_type,
@@ -13,6 +11,8 @@ from database.auth_db import get_auth_token
 from database.token_db import get_br_symbol, get_symbol, get_token
 from utils.httpx_client import get_httpx_client
 from utils.logging import get_logger
+import threading
+import time
 
 # Initialize logger
 logger = get_logger(__name__)
@@ -135,14 +135,14 @@ def get_holdings(auth):
 # --- Per-Symbol Smart Order Lock ---
 # Ensures only one smart order per symbol executes at a time.
 # Others queue and execute sequentially, each getting a fresh position book.
-_symbol_locks = {}  # {symbol_key: threading.Lock}
+_symbol_locks = {}          # {symbol_key: threading.Lock}
 _symbol_locks_lock = threading.Lock()
 
 # --- Position Book Cache ---
 # Caches get_positions() for 1 second. Invalidated after each smart order placement.
-_position_cache = {}  # {auth_token: {"data": ..., "timestamp": ...}}
+_position_cache = {}        # {auth_token: {"data": ..., "timestamp": ...}}
 _position_cache_lock = threading.Lock()
-_POSITION_CACHE_TTL = 1.0  # seconds
+_POSITION_CACHE_TTL = 1.0   # seconds
 
 
 def _get_symbol_lock(symbol, exchange, product):
@@ -236,7 +236,8 @@ def place_order_api(data, auth):
     transformed_data = transform_data(data, token, auth)
     transformed_data.update({"jKey": auth, "userId": api_key})
 
-    logger.debug(f"{transformed_data}")
+    safe_data = {k: v for k, v in transformed_data.items() if k != "jKey"}
+    logger.debug(f"{safe_data}")
 
     try:
         # Get the shared httpx client with connection pooling

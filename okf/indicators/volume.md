@@ -2,7 +2,7 @@
 type: Indicator
 title: Volume Indicators
 description: Volume indicators including OBV, VWAP, MFI, ADL, CMF, EMV, Force Index, NVI, PVI, Volume Oscillator, VROC, Klinger Volume Oscillator, PVT and RVOL
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/prompt/indicators/volume%20-%20tradeboard%20indicators.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/prompt/indicators/volume%20-%20openalgo%20indicators.md
 tags:
 - indicators
 - volume
@@ -18,6 +18,6 @@ timestamp: '2026-07-03T00:00:00+00:00'
 
 Volume indicators including OBV, VWAP, MFI, ADL, CMF, EMV, Force Index, NVI, PVI, Volume Oscillator, VROC, Klinger Volume Oscillator, PVT and RVOL.
 
-**Source:** [docs/prompt/indicators/volume - tradeboard indicators.md](<../../docs/prompt/indicators/volume - tradeboard indicators.md>)
+**Source:** [docs/prompt/indicators/volume - openalgo indicators.md](<../../docs/prompt/indicators/volume - openalgo indicators.md>)
 
 **Related:** [overview](../overview.md)

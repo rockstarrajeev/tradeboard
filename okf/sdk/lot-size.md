@@ -2,7 +2,7 @@
 type: Reference
 title: Lot Sizes (F&O)
 description: Contract lot sizes for F&O instruments
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/prompt/LotSize.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/prompt/LotSize.md
 tags:
 - lot-size
 - fno

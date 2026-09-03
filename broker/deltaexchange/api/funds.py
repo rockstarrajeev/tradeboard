@@ -10,6 +10,7 @@
 import os
 
 from broker.deltaexchange.api.baseurl import BASE_URL, get_auth_headers
+from broker.deltaexchange.api.rate_limiter import PRIVATE, consume
 from utils.httpx_client import get_httpx_client
 from utils.logging import get_logger
 
@@ -41,6 +42,9 @@ def _get_positions_pnl(api_key, api_secret):
     path = "/v2/positions/margined"
     url = BASE_URL + path
     try:
+        # consume() before signing: it can block on the quota window and Delta
+        # rejects signatures older than 5 seconds ("SignatureExpired").
+        consume(path, method="GET", bucket=PRIVATE)
         headers = get_auth_headers(
             method="GET",
             path=path,
@@ -59,11 +63,17 @@ def _get_positions_pnl(api_key, api_secret):
             return 0.0, 0.0
         data = response.json()
         if not data.get("success"):
-            logger.warning(f"[DeltaExchange] positions/margined API error: {data.get('error', {})}")
+            logger.warning(
+                f"[DeltaExchange] positions/margined API error: {data.get('error', {})}"
+            )
             return 0.0, 0.0
         positions = data.get("result", [])
-        realized = sum(_f(p.get("realized_pnl")) for p in positions if isinstance(p, dict))
-        unrealized = sum(_f(p.get("unrealized_pnl")) for p in positions if isinstance(p, dict))
+        realized = sum(
+            _f(p.get("realized_pnl")) for p in positions if isinstance(p, dict)
+        )
+        unrealized = sum(
+            _f(p.get("unrealized_pnl")) for p in positions if isinstance(p, dict)
+        )
         return realized, unrealized
     except Exception as e:
         logger.warning(f"[DeltaExchange] Could not fetch positions P&L: {e}")
@@ -107,6 +117,9 @@ def get_margin_data(auth_token):
     url = BASE_URL + path
 
     try:
+        # consume() before signing: it can block on the quota window and Delta
+        # rejects signatures older than 5 seconds ("SignatureExpired").
+        consume(path, method="GET", bucket=PRIVATE)
         headers = get_auth_headers(
             method="GET",
             path=path,

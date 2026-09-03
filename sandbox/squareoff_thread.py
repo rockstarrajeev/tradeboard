@@ -190,7 +190,9 @@ def _schedule_square_off_jobs(scheduler):
                 # holidays, and correctly stays False for special sessions
                 # (e.g. Muhurat trading on a Saturday).
                 if is_market_holiday(today):
-                    logger.debug(f"Skipping daily P&L snapshot for {today}: not a trading day")
+                    logger.debug(
+                        f"Skipping daily P&L snapshot for {today}: not a trading day"
+                    )
                     return
 
                 # Get all users with funds

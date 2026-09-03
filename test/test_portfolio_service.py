@@ -41,7 +41,9 @@ def test_negative_charge_override_is_a_client_error(monkeypatch):
 
 def test_service_serializes_realized_costs_and_names_gst(monkeypatch):
     prices = matrix({"A": [100.0] * 21 + [200.0], "B": [100.0] * 22})
-    monkeypatch.setattr(portfolio_service, "load_prices", lambda *_args, **_kwargs: prices)
+    monkeypatch.setattr(
+        portfolio_service, "load_prices", lambda *_args, **_kwargs: prices
+    )
     monkeypatch.setattr(
         portfolio_service,
         "summary",
@@ -54,7 +56,9 @@ def test_service_serializes_realized_costs_and_names_gst(monkeypatch):
     monkeypatch.setattr(portfolio_service, "_series_analytics", lambda *_args: {})
     monkeypatch.setattr(portfolio_service, "walk_forward", lambda *_args, **_kwargs: {})
     monkeypatch.setattr(portfolio_service, "monte_carlo", lambda *_args, **_kwargs: {})
-    monkeypatch.setattr(portfolio_service, "rebalancing_sweep", lambda *_args, **_kwargs: {})
+    monkeypatch.setattr(
+        portfolio_service, "rebalancing_sweep", lambda *_args, **_kwargs: {}
+    )
     monkeypatch.setattr(portfolio_service, "structure", lambda *_args, **_kwargs: {})
     monkeypatch.setattr(portfolio_service, "crisis_analysis", lambda *_args: {})
     monkeypatch.setattr(portfolio_service, "build_findings", lambda *_args: [])
@@ -139,7 +143,9 @@ def test_live_holdings_passes_feed_token_to_history_analysis(monkeypatch):
 
 def test_tearsheet_uses_the_same_nondefault_costs_as_backtest(monkeypatch):
     prices = matrix({"A": [100.0] * 21 + [200.0], "B": [100.0] * 22})
-    monkeypatch.setattr(portfolio_service, "load_prices", lambda *_args, **_kwargs: prices)
+    monkeypatch.setattr(
+        portfolio_service, "load_prices", lambda *_args, **_kwargs: prices
+    )
     captured = {}
 
     def render(returns, **kwargs):
@@ -171,4 +177,6 @@ def test_tearsheet_uses_the_same_nondefault_costs_as_backtest(monkeypatch):
     assert ok is True
     assert status == 200
     assert html == "<html>charged report</html>"
-    assert float((1.0 + captured["returns"]).prod() - 1.0) == pytest.approx(0.463)
+    assert float((1.0 + captured["returns"]).prod() - 1.0) == pytest.approx(
+        0.463
+    )

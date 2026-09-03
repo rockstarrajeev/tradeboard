@@ -34,10 +34,10 @@ class TestTriggerEvaluation:
         "direction,trigger,ltp,expected",
         [
             ("above", 100, 101, True),
-            ("above", 100, 100, True),  # touched exactly counts
+            ("above", 100, 100, True),   # touched exactly counts
             ("above", 100, 99, False),
             ("below", 100, 99, True),
-            ("below", 100, 100, True),  # touched exactly counts
+            ("below", 100, 100, True),   # touched exactly counts
             ("below", 100, 101, False),
         ],
     )
@@ -196,8 +196,8 @@ class TestLegConstruction:
     @pytest.mark.parametrize(
         "payload",
         [
-            {"triggerprice_sl": 96},  # target missing
-            {"triggerprice_tg": 109},  # stoploss missing
+            {"triggerprice_sl": 96},                    # target missing
+            {"triggerprice_tg": 109},                   # stoploss missing
             {"triggerprice_sl": 0, "triggerprice_tg": 0},
         ],
     )
@@ -642,9 +642,8 @@ class TestOCOExclusivity:
 
         ok, response, _ = GTTManager(GTT_TEST_USER).place_gtt(_oco_gtt(), last_price=100)
         assert ok
-        leg_ids = [
-            leg.id for leg in SandboxGTT.query.filter_by(gtt_id=response["trigger_id"]).first().legs
-        ]
+        leg_ids = [leg.id for leg in SandboxGTT.query.filter_by(
+            gtt_id=response["trigger_id"]).first().legs]
 
         results: list[bool] = []
         lock = threading.Lock()
@@ -662,7 +661,9 @@ class TestOCOExclusivity:
         for t in threads:
             t.join(timeout=15)
 
-        assert sum(results) == 1, f"expected one winner across both OCO legs, got {sum(results)}"
+        assert sum(results) == 1, (
+            f"expected one winner across both OCO legs, got {sum(results)}"
+        )
 
 
 class TestCancelledGttCannotFire:
@@ -736,16 +737,8 @@ class TestOrderbookContract:
         entry = response["data"][0]
 
         for field in (
-            "trigger_id",
-            "trigger_type",
-            "status",
-            "symbol",
-            "exchange",
-            "trigger_prices",
-            "last_price",
-            "legs",
-            "created_at",
-            "expires_at",
+            "trigger_id", "trigger_type", "status", "symbol", "exchange",
+            "trigger_prices", "last_price", "legs", "created_at", "expires_at",
         ):
             assert field in entry, f"orderbook entry is missing {field}"
 
@@ -850,7 +843,9 @@ class TestCancelFireRace:
         ok, response, _ = mgr.place_gtt(_single_gtt(), last_price=100)
         assert ok
         trigger_id = response["trigger_id"]
-        assert try_claim_trigger(SandboxGTT.query.filter_by(gtt_id=trigger_id).first().legs[0].id)
+        assert try_claim_trigger(
+            SandboxGTT.query.filter_by(gtt_id=trigger_id).first().legs[0].id
+        )
 
         # Simulate the parent claim fire_leg performs.
         gtt = SandboxGTT.query.filter_by(gtt_id=trigger_id).first()
@@ -979,8 +974,7 @@ class TestAtomicCancel:
         # Fire claims the parent while cancel is parked mid-operation.
         assert try_claim_trigger(leg_id) is True
         db_session.execute(
-            __import__("sqlalchemy")
-            .update(SandboxGTT)
+            __import__("sqlalchemy").update(SandboxGTT)
             .where(SandboxGTT.gtt_id == trigger_id, SandboxGTT.gtt_status == "active")
             .values(gtt_status="triggered")
         )
@@ -1036,10 +1030,8 @@ class TestFireExceptionCompensation:
         leg_id = SandboxGTT.query.filter_by(gtt_id=trigger_id).first().legs[0].id
         assert try_claim_trigger(leg_id) is True
 
-        with (
-            mock.patch.object(OrderManager, "place_order", side_effect=RuntimeError("boom")),
-            mock.patch.object(FundManager, "block_margin", return_value=(False, "no funds")),
-        ):
+        with mock.patch.object(OrderManager, "place_order", side_effect=RuntimeError("boom")), \
+             mock.patch.object(FundManager, "block_margin", return_value=(False, "no funds")):
             assert fire_leg(leg_id, execution_price=94) is False
 
         db_session.expire_all()
@@ -1060,9 +1052,9 @@ class TestCrashRecovery:
         assert ok
         trigger_id = response["trigger_id"]
         gtt = SandboxGTT.query.filter_by(gtt_id=trigger_id).first()
-        gtt.gtt_status = "triggered"  # claimed the parent...
+        gtt.gtt_status = "triggered"          # claimed the parent...
         gtt.margin_blocked = Decimal("0.00")  # ...released the margin...
-        db_session.commit()  # ...then died before placing.
+        db_session.commit()                   # ...then died before placing.
         return trigger_id
 
     def test_crash_before_the_child_order_returns_the_gtt_to_active(self, clean_gtt_user):
@@ -1153,8 +1145,7 @@ class TestDurableOrderCorrelation:
         # the order row is real, the marker never got written, the leg is back
         # to pending and the parent still says triggered.
         db_session.execute(
-            __import__("sqlalchemy")
-            .update(SandboxGTTLeg)
+            __import__("sqlalchemy").update(SandboxGTTLeg)
             .where(SandboxGTTLeg.id == leg_id)
             .values(leg_status="pending", triggered_order_id=None, claimed_at=None)
         )
@@ -1167,9 +1158,9 @@ class TestDurableOrderCorrelation:
         assert gtt.gtt_status == "triggered", "a fired GTT was re-armed"
         assert gtt.legs[0].leg_status == "triggered", "leg was not finalised from the order row"
         assert gtt.legs[0].triggered_order_id, "marker was not repaired from the order row"
-        assert SandboxOrders.query.filter_by(user_id=GTT_TEST_USER).count() == orders_after_fire, (
-            "recovery created a second child order"
-        )
+        assert (
+            SandboxOrders.query.filter_by(user_id=GTT_TEST_USER).count() == orders_after_fire
+        ), "recovery created a second child order"
 
     def test_the_correlation_is_unique(self, clean_gtt_user):
         """The unique index is what stops a replayed claim double-ordering."""
@@ -1319,7 +1310,9 @@ class TestRejectedOrdersDoNotPoisonCorrelation:
         reclaim_stranded_parents()
         db_session.expire_all()
         gtt = SandboxGTT.query.filter_by(gtt_id=trigger_id).first()
-        assert gtt.gtt_status == "active", "a rejected attempt was treated as a completed fire"
+        assert gtt.gtt_status == "active", (
+            "a rejected attempt was treated as a completed fire"
+        )
 
     def test_the_leg_can_fire_again_after_a_rejection(self, clean_gtt_user):
         """The unique index must not permanently block a retried leg."""
@@ -1332,8 +1325,7 @@ class TestRejectedOrdersDoNotPoisonCorrelation:
         # Make the retry succeed by flipping the leg to a BUY, which needs no
         # holdings. The point is that the INSERT is not blocked.
         db_session.execute(
-            __import__("sqlalchemy")
-            .update(SandboxGTTLeg)
+            __import__("sqlalchemy").update(SandboxGTTLeg)
             .where(SandboxGTTLeg.id == leg_id)
             .values(action="BUY")
         )
@@ -1406,7 +1398,9 @@ class TestMarginTransitionsFailClosed:
         assert ok
         trigger_id = response["trigger_id"]
         before_margin = _used_margin(fm)
-        before_row = float(SandboxGTT.query.filter_by(gtt_id=trigger_id).first().margin_blocked)
+        before_row = float(
+            SandboxGTT.query.filter_by(gtt_id=trigger_id).first().margin_blocked
+        )
 
         # Halving the quantity halves the requirement, so this is a decrease.
         smaller = _single_gtt(trigger=95.0, price=95.0, qty=5)
@@ -1416,10 +1410,9 @@ class TestMarginTransitionsFailClosed:
         assert ok2 is False and status == 500
         db_session.expire_all()
         assert _used_margin(fm) == before_margin
-        assert (
-            float(SandboxGTT.query.filter_by(gtt_id=trigger_id).first().margin_blocked)
-            == before_row
-        ), "the row shows a smaller reservation than the ledger holds"
+        assert float(
+            SandboxGTT.query.filter_by(gtt_id=trigger_id).first().margin_blocked
+        ) == before_row, "the row shows a smaller reservation than the ledger holds"
 
     def test_expiry_leaves_the_gtt_active_when_the_release_fails(self, clean_gtt_user):
         from datetime import datetime, timedelta
@@ -1463,10 +1456,9 @@ class TestMarginTransitionsFailClosed:
 
         assert expire_due_gtts() >= 1
         db_session.expire_all()
-        assert (
-            SandboxGTT.query.filter_by(gtt_id=response["trigger_id"]).first().gtt_status
-            == "expired"
-        )
+        assert SandboxGTT.query.filter_by(
+            gtt_id=response["trigger_id"]
+        ).first().gtt_status == "expired"
         assert _used_margin(fm) < before
 
 
@@ -1518,7 +1510,9 @@ class TestFundsAndStateCommitTogether:
             # The invariant, not immutability: an unbroken iteration may
             # legitimately complete. What must never happen is the row and the
             # ledger describing different amounts of the same money.
-            row_now = float(SandboxGTT.query.filter_by(gtt_id=trigger_id).first().margin_blocked)
+            row_now = float(
+                SandboxGTT.query.filter_by(gtt_id=trigger_id).first().margin_blocked
+            )
             assert row_now == float(_used_margin(fm)), (
                 f"commit #{nth}: row says {row_now}, ledger says {_used_margin(fm)}"
             )
@@ -1529,9 +1523,7 @@ class TestFundsAndStateCommitTogether:
 
         fm = clean_gtt_user
         mgr = GTTManager(GTT_TEST_USER)
-        ok, response, _ = mgr.place_gtt(
-            _single_gtt(trigger=95.0, price=95.0, qty=5), last_price=100
-        )
+        ok, response, _ = mgr.place_gtt(_single_gtt(trigger=95.0, price=95.0, qty=5), last_price=100)
         assert ok
         trigger_id = response["trigger_id"]
         ledger_before = _used_margin(fm)
@@ -1549,7 +1541,9 @@ class TestFundsAndStateCommitTogether:
             # The invariant, not immutability: an unbroken iteration may
             # legitimately complete. What must never happen is the row and the
             # ledger describing different amounts of the same money.
-            row_now = float(SandboxGTT.query.filter_by(gtt_id=trigger_id).first().margin_blocked)
+            row_now = float(
+                SandboxGTT.query.filter_by(gtt_id=trigger_id).first().margin_blocked
+            )
             assert row_now == float(_used_margin(fm)), (
                 f"commit #{nth}: row says {row_now}, ledger says {_used_margin(fm)}"
             )
@@ -1619,8 +1613,7 @@ class TestExpiryAndModifyRespectAFire:
         # completed before the update ran. Without the conditional claim the
         # sweep would overwrite the fire and release the order's margin.
         db_session.execute(
-            __import__("sqlalchemy")
-            .update(SandboxGTT)
+            __import__("sqlalchemy").update(SandboxGTT)
             .where(SandboxGTT.gtt_id == trigger_id)
             .values(gtt_status="active")
         )
@@ -1639,8 +1632,7 @@ class TestExpiryAndModifyRespectAFire:
             state["n"] += 1
             if state["n"] == 1:
                 real_execute(
-                    __import__("sqlalchemy")
-                    .update(SandboxGTT)
+                    __import__("sqlalchemy").update(SandboxGTT)
                     .where(SandboxGTT.gtt_id == trigger_id)
                     .values(gtt_status="triggered")
                 )
@@ -1749,7 +1741,9 @@ class TestFireAndCancelCrashConsistency:
         gtt = SandboxGTT.query.filter_by(gtt_id=trigger_id).first()
         row = float(gtt.margin_blocked or 0)
         ledger = float(_used_margin(fm))
-        assert row == ledger, f"GTT records {row} reserved while the ledger holds {ledger}"
+        assert row == ledger, (
+            f"GTT records {row} reserved while the ledger holds {ledger}"
+        )
         return gtt
 
     def test_fire_commit_failure_keeps_funds_and_row_together(self, clean_gtt_user):
@@ -1778,14 +1772,12 @@ class TestFireAndCancelCrashConsistency:
             db_session.rollback()
             db_session.expire_all()
             db_session.execute(
-                __import__("sqlalchemy")
-                .update(SandboxGTT)
+                __import__("sqlalchemy").update(SandboxGTT)
                 .where(SandboxGTT.gtt_id == trigger_id)
                 .values(gtt_status="active")
             )
             db_session.execute(
-                __import__("sqlalchemy")
-                .update(SandboxGTTLeg)
+                __import__("sqlalchemy").update(SandboxGTTLeg)
                 .where(SandboxGTTLeg.gtt_id == trigger_id)
                 .values(leg_status="pending", claimed_at=None, triggered_order_id=None)
             )
@@ -1888,7 +1880,8 @@ class TestFireAndCancelCrashConsistency:
             stored = SandboxGTT.query.filter_by(user_id=GTT_TEST_USER).all()
             row_total = sum(float(g.margin_blocked or 0) for g in stored)
             assert row_total == float(_used_margin(fm)), (
-                f"commit #{nth}: GTTs record {row_total} while the ledger holds {_used_margin(fm)}"
+                f"commit #{nth}: GTTs record {row_total} while the ledger holds "
+                f"{_used_margin(fm)}"
             )
         assert before is not None
 
@@ -1907,7 +1900,9 @@ class TestConcurrentPlacementReservations:
 
         return sum(
             float(g.margin_blocked or 0)
-            for g in SandboxGTT.query.filter_by(user_id=GTT_TEST_USER, gtt_status="active").all()
+            for g in SandboxGTT.query.filter_by(
+                user_id=GTT_TEST_USER, gtt_status="active"
+            ).all()
         )
 
     def test_two_simultaneous_placements_both_reserve(self, clean_gtt_user):
@@ -1936,7 +1931,9 @@ class TestConcurrentPlacementReservations:
 
         def place():
             try:
-                with mock.patch.object(type(fm), "stage_margin_delta", staged_then_wait):
+                with mock.patch.object(
+                    type(fm), "stage_margin_delta", staged_then_wait
+                ):
                     ok, response, _ = GTTManager(GTT_TEST_USER).place_gtt(
                         _single_gtt(), last_price=100
                     )
@@ -1985,7 +1982,8 @@ class TestConcurrentPlacementReservations:
         db_session.expire_all()
         reserved = self._sum_active_reservations()
         assert reserved == float(_used_margin(fm)) - before, (
-            f"reservations total {reserved} but the ledger moved {float(_used_margin(fm)) - before}"
+            f"reservations total {reserved} but the ledger moved "
+            f"{float(_used_margin(fm)) - before}"
         )
 
     def test_a_placement_beyond_available_funds_is_refused(self, clean_gtt_user):

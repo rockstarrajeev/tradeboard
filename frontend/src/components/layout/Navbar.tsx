@@ -95,7 +95,7 @@ export function Navbar() {
                 onClick={() => setMobileOpen(false)}
               >
                 <img src="/logo.png" alt="Tradeboard" className="h-8 w-8" />
-                <span className="font-semibold text-teal-500">Tradeboard</span>
+                <span className="font-semibold">Tradeboard</span>
               </Link>
 
               {/* Secondary nav items (not in bottom nav) */}
@@ -103,22 +103,42 @@ export function Navbar() {
                 <div className="px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Navigation
                 </div>
-                {mobileSheetItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    to={item.href}
-                    onClick={() => setMobileOpen(false)}
-                    className={cn(
-                      'flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors min-h-[44px] touch-manipulation',
-                      isActive(item.href)
-                        ? 'bg-slate-800 text-amber-400'
-                        : 'hover:bg-muted active:bg-muted'
-                    )}
-                  >
-                    <item.icon className="h-4 w-4 text-teal-500" />
-                    {item.label}
-                  </Link>
-                ))}
+                {mobileSheetItems.map((item) => {
+                  const active = isActive(item.href)
+                  const cls = cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors min-h-[44px] touch-manipulation',
+                    active
+                      ? 'bg-primary text-primary-foreground'
+                      : 'hover:bg-muted active:bg-muted'
+                  )
+                  const inner = (
+                    <>
+                      <item.icon className="h-4 w-4" />
+                      {item.label}
+                    </>
+                  )
+                  return item.external ? (
+                    <a
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      className={cls}
+                      aria-current={active ? 'page' : undefined}
+                    >
+                      {inner}
+                    </a>
+                  ) : (
+                    <Link
+                      key={item.href}
+                      to={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      className={cls}
+                      aria-current={active ? 'page' : undefined}
+                    >
+                      {inner}
+                    </Link>
+                  )
+                })}
               </nav>
 
               {/* Profile menu items for mobile access */}
@@ -126,22 +146,26 @@ export function Navbar() {
                 <div className="px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Quick Access
                 </div>
-                {filteredProfileMenuItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    to={item.href}
-                    onClick={() => setMobileOpen(false)}
-                    className={cn(
-                      'flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors min-h-[44px] touch-manipulation',
-                      isActive(item.href)
-                        ? 'bg-slate-800 text-amber-400'
-                        : 'hover:bg-muted active:bg-muted'
-                    )}
-                  >
-                    <item.icon className="h-4 w-4 text-teal-500" />
-                    {item.label}
-                  </Link>
-                ))}
+                {filteredProfileMenuItems.map((item) => {
+                  const active = isActive(item.href)
+                  return (
+                    <Link
+                      key={item.href}
+                      to={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      className={cn(
+                        'flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors min-h-[44px] touch-manipulation',
+                        active
+                          ? 'bg-primary text-primary-foreground'
+                          : 'hover:bg-muted active:bg-muted'
+                      )}
+                      aria-current={active ? 'page' : undefined}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {item.label}
+                    </Link>
+                  )
+                })}
                 <a
                   href="https://docs.rajeevupadhyay.com"
                   target="_blank"
@@ -160,7 +184,7 @@ export function Navbar() {
         {/* Logo */}
         <Link to="/dashboard" className="flex items-center gap-2 mr-6">
           <img src="/logo.png" alt="Tradeboard" className="h-8 w-8" />
-          <span className="hidden font-semibold sm:inline-block text-teal-500">Tradeboard</span>
+          <span className="hidden font-semibold sm:inline-block">Tradeboard</span>
         </Link>
 
         {/* Desktop Navigation.
@@ -168,22 +192,44 @@ export function Navbar() {
             and small laptops (768-1280px wide) without squashing or pushing
             the profile menu off-screen; full labels from xl up (issue #1384). */}
         <nav className="hidden md:flex items-center gap-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              to={item.href}
-              title={item.label}
-              className={cn(
-                'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                isActive(item.href)
-                  ? 'bg-slate-800 text-amber-400'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-              )}
-            >
-              <item.icon className="h-4 w-4 shrink-0 text-teal-500" />
-              <span className="hidden xl:inline text-amber-500">{item.label}</span>
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            const active = isActive(item.href)
+            const className = cn(
+              'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+              active
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            )
+            const content = (
+              <>
+                <item.icon className="h-4 w-4 shrink-0" />
+                <span className="hidden xl:inline">{item.label}</span>
+              </>
+            )
+            // Flask-served pages (e.g. /trading) need a full page load,
+            // not client-side routing.
+            return item.external ? (
+              <a
+                key={item.href}
+                href={item.href}
+                title={item.label}
+                className={className}
+                aria-current={active ? 'page' : undefined}
+              >
+                {content}
+              </a>
+            ) : (
+              <Link
+                key={item.href}
+                to={item.href}
+                title={item.label}
+                className={className}
+                aria-current={active ? 'page' : undefined}
+              >
+                {content}
+              </Link>
+            )
+          })}
         </nav>
 
         {/* Right Side */}
@@ -248,7 +294,7 @@ export function Navbar() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 rounded-full bg-teal-500 text-white"
+                className="h-8 w-8 rounded-full bg-primary text-primary-foreground"
                 aria-label="Open user menu"
               >
                 <span className="text-sm font-medium">
@@ -257,24 +303,33 @@ export function Navbar() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              {filteredProfileMenuItems.map((item) => (
-                <DropdownMenuItem
-                  key={item.href}
-                  onSelect={() => navigate(item.href)}
-                  className="cursor-pointer text-amber-500 focus:text-amber-500"
-                >
-                  <item.icon className="h-4 w-4 mr-2 text-teal-500" />
-                  {item.label}
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuItem asChild className="text-amber-500 focus:text-amber-500">
+              {filteredProfileMenuItems.map((item) =>
+                item.external ? (
+                  <DropdownMenuItem key={item.href} asChild className="cursor-pointer">
+                    <a href={item.href} className="flex items-center">
+                      <item.icon className="h-4 w-4 mr-2" />
+                      {item.label}
+                    </a>
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    key={item.href}
+                    onSelect={() => navigate(item.href)}
+                    className="cursor-pointer"
+                  >
+                    <item.icon className="h-4 w-4 mr-2" />
+                    {item.label}
+                  </DropdownMenuItem>
+                )
+              )}
+              <DropdownMenuItem asChild>
                 <a
                   href="https://docs.rajeevupadhyay.com"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"
                 >
-                  <BookOpen className="h-4 w-4 text-teal-500" />
+                  <BookOpen className="h-4 w-4" />
                   Docs
                 </a>
               </DropdownMenuItem>

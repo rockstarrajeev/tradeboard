@@ -2,7 +2,7 @@
 type: API Endpoint
 title: Intervals
 description: List available historical-data time intervals
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/market-data/intervals.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/market-data/intervals.md
 tags:
 - market-data
 - intervals

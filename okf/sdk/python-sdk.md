@@ -1,8 +1,8 @@
 ---
 type: Reference
-title: Tradeboard Python SDK
-description: Official Tradeboard Python SDK covering install, client setup, and data, order, account, and indicator functions
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/prompt/tradeboard%20python%20sdk.md
+title: OpenAlgo Python SDK
+description: Official OpenAlgo Python SDK covering install, client setup, and data, order, account, and indicator functions
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/prompt/openalgo%20python%20sdk.md
 tags:
 - python
 - sdk
@@ -15,8 +15,8 @@ timestamp: '2026-07-03T00:00:00+00:00'
 > source doc linked below; this OKF concept exists only to index, tag, and
 > cross-link it. Edit the source, never this file.
 
-Official Tradeboard Python SDK covering install, client setup, and data, order, account, and indicator functions.
+Official OpenAlgo Python SDK covering install, client setup, and data, order, account, and indicator functions.
 
-**Source:** [docs/prompt/tradeboard python sdk.md](<../../docs/prompt/tradeboard python sdk.md>)
+**Source:** [docs/prompt/openalgo python sdk.md](<../../docs/prompt/openalgo python sdk.md>)
 
 **Related:** [overview](../overview.md)

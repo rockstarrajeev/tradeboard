@@ -76,12 +76,12 @@ def map_order_data(order_data):
         # Get fields from order - handle both original Groww API and our standardized format
         order_id = order.get("groww_order_id", order.get("orderid", ""))
         symbol = order.get("trading_symbol", order.get("tradingsymbol", ""))
-        order.get("order_status", order.get("status", ""))
-        order.get("remark", order.get("remarks", ""))
+        status = order.get("order_status", order.get("status", ""))
+        remark = order.get("remark", order.get("remarks", ""))
         order_type = order.get("order_type", order.get("pricetype", "MARKET"))
-        order.get("transaction_type", order.get("action", ""))
-        order.get("product", "")
-        order.get("created_at", order.get("timestamp", ""))
+        transaction_type = order.get("transaction_type", order.get("action", ""))
+        product = order.get("product", "")
+        timestamp = order.get("created_at", order.get("timestamp", ""))
 
         # For debugging
         if i == 0:

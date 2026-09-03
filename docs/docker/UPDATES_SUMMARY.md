@@ -10,10 +10,10 @@ All installation scripts have been updated to include numba/llvmlite/scipy suppo
 
 | File | Purpose | Status |
 |------|---------|--------|
-| `docker-run.sh` | macOS/Linux desktop installation | ✅ Updated |
-| `docker-run.bat` | Windows desktop installation | ✅ Updated |
-| `install-docker.sh` | Server installation (Ubuntu/Debian) | ✅ Updated |
-| `DOCKER_SCRIPTS_ANALYSIS.md` | Detailed analysis document | ✅ Created |
+| `docker-run.sh` | macOS/Linux desktop installation | Updated |
+| `docker-run.bat` | Windows desktop installation | Updated |
+| `install-docker.sh` | Server installation (Ubuntu/Debian) | Updated |
+| `DOCKER_SCRIPTS_ANALYSIS.md` | Detailed analysis document | Created |
 
 ---
 
@@ -136,18 +136,18 @@ docker run -d ^
 #### BEFORE:
 ```yaml
 services:
-  tradeboard:
-    container_name: tradeboard-web
+  openalgo:
+    container_name: openalgo-web
     ports:
       - "127.0.0.1:5000:5000"
       - "127.0.0.1:8765:8765"
 
     volumes:
-      - tradeboard_db:/app/db
-      - tradeboard_logs:/app/logs          # ← EXTRA, UNUSED
-      - tradeboard_log:/app/log
-      - tradeboard_strategies:/app/strategies
-      - tradeboard_keys:/app/keys
+      - openalgo_db:/app/db
+      - openalgo_logs:/app/logs          # ← EXTRA, UNUSED
+      - openalgo_log:/app/log
+      - openalgo_strategies:/app/strategies
+      - openalgo_keys:/app/keys
       - ./.env:/app/.env:ro
 
     environment:
@@ -162,29 +162,29 @@ services:
     restart: unless-stopped
 
 volumes:
-  tradeboard_db:
-  tradeboard_logs:                         # ← EXTRA, UNUSED
-  tradeboard_log:
-  tradeboard_strategies:
-  tradeboard_keys:
-  # MISSING: tradeboard_tmp
+  openalgo_db:
+  openalgo_logs:                         # ← EXTRA, UNUSED
+  openalgo_log:
+  openalgo_strategies:
+  openalgo_keys:
+  # MISSING: openalgo_tmp
 ```
 
 #### AFTER:
 ```yaml
 services:
-  tradeboard:
-    container_name: tradeboard-web
+  openalgo:
+    container_name: openalgo-web
     ports:
       - "127.0.0.1:5000:5000"
       - "127.0.0.1:8765:8765"
 
     volumes:
-      - tradeboard_db:/app/db
-      - tradeboard_log:/app/log
-      - tradeboard_strategies:/app/strategies
-      - tradeboard_keys:/app/keys
-      - tradeboard_tmp:/app/tmp              # ← NEW
+      - openalgo_db:/app/db
+      - openalgo_log:/app/log
+      - openalgo_strategies:/app/strategies
+      - openalgo_keys:/app/keys
+      - openalgo_tmp:/app/tmp              # ← NEW
       - ./.env:/app/.env:ro
 
     environment:
@@ -200,11 +200,11 @@ services:
     restart: unless-stopped
 
 volumes:
-  tradeboard_db:
-  tradeboard_log:
-  tradeboard_strategies:
-  tradeboard_keys:
-  tradeboard_tmp:                            # ← NEW
+  openalgo_db:
+  openalgo_log:
+  openalgo_strategies:
+  openalgo_keys:
+  openalgo_tmp:                            # ← NEW
 ```
 
 ---
@@ -216,8 +216,8 @@ volumes:
 **Purpose:** Allocates 2GB of shared memory for the container
 
 **Fixes:**
-- ❌ Before: `OSError: failed to map segment from shared object`
-- ✅ After: scipy/numba can properly allocate memory for operations
+- Before: `OSError: failed to map segment from shared object`
+- After: scipy/numba can properly allocate memory for operations
 
 **Impact:**
 - Enables statistical analysis functions
@@ -231,8 +231,8 @@ volumes:
 **Purpose:** Provides persistent writable storage for temporary files
 
 **Fixes:**
-- ❌ Before: `KeyError: 'LLVMPY_AddSymbol'` and `FileNotFoundError: tmp/NSE_CM.csv`
-- ✅ After: numba JIT cache works, master contract files save correctly
+- Before: `KeyError: 'LLVMPY_AddSymbol'` and `FileNotFoundError: tmp/NSE_CM.csv`
+- After: numba JIT cache works, master contract files save correctly
 
 **Impact:**
 - Enables numba JIT compilation
@@ -246,8 +246,8 @@ volumes:
 **Purpose:** Persistent storage for API keys and certificates
 
 **Fixes:**
-- ⚠️ Before: Keys lost on container restart/rebuild
-- ✅ After: Keys persist across restarts
+- Before: Keys lost on container restart/rebuild
+- After: Keys persist across restarts
 
 **Impact:**
 - No need to reconfigure on restart
@@ -262,10 +262,10 @@ All changes are **100% backward compatible**:
 
 | Scenario | Result |
 |----------|--------|
-| Existing users pull new image | ✅ Works - new volumes created automatically |
-| New installations | ✅ Gets full numba/scipy support |
-| Users who don't update scripts | ⚠️ May experience numba/scipy errors |
-| Docker Hub image users | ✅ Full support (scripts don't affect them) |
+| Existing users pull new image | Works - new volumes created automatically |
+| New installations | Gets full numba/scipy support |
+| Users who don't update scripts | May experience numba/scipy errors |
+| Docker Hub image users | Full support (scripts don't affect them) |
 
 ---
 
@@ -286,8 +286,8 @@ All changes are **100% backward compatible**:
 - [ ] Test docker-run.bat on Windows 10/11
 - [ ] Test install-docker.sh on clean Ubuntu 22.04
 - [ ] Test install-docker.sh on clean Debian 12
-- [ ] Verify numba import works: `docker exec tradeboard python -c "import numba; print('OK')"`
-- [ ] Verify shared memory: `docker inspect tradeboard --format='{{.HostConfig.ShmSize}}'` should show `2147483648`
+- [ ] Verify numba import works: `docker exec openalgo python -c "import numba; print('OK')"`
+- [ ] Verify shared memory: `docker inspect openalgo --format='{{.HostConfig.ShmSize}}'` should show `2147483648`
 - [ ] Run trading strategy with indicators
 - [ ] Check master contract download works
 
@@ -329,7 +329,7 @@ docker-run.bat start
 
 **Update Docker Compose Config:**
 ```bash
-cd /opt/tradeboard
+cd /opt/openalgo
 sudo docker compose down
 # Update docker-compose.yaml manually or re-run installer
 sudo docker compose up -d
@@ -344,7 +344,7 @@ sudo docker compose up -d
 **Solution:**
 ```bash
 # macOS/Linux
-chmod 755 /path/to/tradeboard
+chmod 755 /path/to/openalgo
 
 # Or run with sudo if necessary
 sudo ./docker-run.sh start
@@ -354,13 +354,13 @@ sudo ./docker-run.sh start
 
 **Verify shared memory:**
 ```bash
-docker inspect tradeboard --format='{{.HostConfig.ShmSize}}'
+docker inspect openalgo --format='{{.HostConfig.ShmSize}}'
 # Should show: 2147483648 (2GB in bytes)
 ```
 
 **Verify volumes:**
 ```bash
-docker inspect tradeboard --format='{{range .Mounts}}{{.Destination}} {{end}}'
+docker inspect openalgo --format='{{range .Mounts}}{{.Destination}} {{end}}'
 # Should include: /app/tmp
 ```
 
@@ -375,11 +375,11 @@ docker inspect tradeboard --format='{{range .Mounts}}{{.Destination}} {{end}}'
 
 ## Summary
 
-✅ **3 scripts updated** to support numba/scipy
-✅ **2 documentation files** created
-✅ **100% backward compatible**
-✅ **Ready for production deployment**
-✅ **All client issues resolved**
+**3 scripts updated** to support numba/scipy
+**2 documentation files** created
+**100% backward compatible**
+**Ready for production deployment**
+**All client issues resolved**
 
 **Next Steps:**
 1. Commit changes to repository
@@ -392,9 +392,9 @@ docker inspect tradeboard --format='{{range .Mounts}}{{.Destination}} {{end}}'
 
 ## Related Files
 
-- `Dockerfile` - Already updated ✅
-- `docker-compose.yaml` - Already updated ✅
-- `docker-build.sh` - Created for local testing ✅
-- `docker-build.bat` - Created for local testing ✅
-- `DOCKER_BUILD_GUIDE.md` - Comprehensive build guide ✅
-- `DOCKER_NUMBA_FIX.md` - Troubleshooting guide ✅
+- `Dockerfile` - Already updated
+- `docker-compose.yaml` - Already updated
+- `docker-build.sh` - Created for local testing
+- `docker-build.bat` - Created for local testing
+- `DOCKER_BUILD_GUIDE.md` - Comprehensive build guide
+- `DOCKER_NUMBA_FIX.md` - Troubleshooting guide

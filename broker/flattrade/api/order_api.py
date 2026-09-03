@@ -1,9 +1,9 @@
 import json
 import os
-import threading
-import time
 
 import httpx
+import threading
+import time
 
 from broker.flattrade.mapping.order_data import normalize_order_status
 from broker.flattrade.mapping.transform_data import (
@@ -75,14 +75,14 @@ def get_holdings(auth):
 # --- Per-Symbol Smart Order Lock ---
 # Ensures only one smart order per symbol executes at a time.
 # Others queue and execute sequentially, each getting a fresh position book.
-_symbol_locks = {}  # {symbol_key: threading.Lock}
+_symbol_locks = {}          # {symbol_key: threading.Lock}
 _symbol_locks_lock = threading.Lock()
 
 # --- Position Book Cache ---
 # Caches get_positions() for 1 second. Invalidated after each smart order placement.
-_position_cache = {}  # {auth_token: {"data": ..., "timestamp": ...}}
+_position_cache = {}        # {auth_token: {"data": ..., "timestamp": ...}}
 _position_cache_lock = threading.Lock()
-_POSITION_CACHE_TTL = 1.0  # seconds
+_POSITION_CACHE_TTL = 1.0   # seconds
 
 
 def _get_symbol_lock(symbol, exchange, product):
@@ -115,6 +115,7 @@ def _invalidate_position_cache(auth):
     """Invalidate the position cache so the next queued order fetches fresh data."""
     with _position_cache_lock:
         _position_cache.pop(auth, None)
+
 
 
 def get_open_position(tradingsymbol, exchange, producttype, auth):
@@ -158,7 +159,7 @@ def place_order_api(data, auth):
 
     payload = "jData=" + json.dumps(newdata) + "&jKey=" + AUTH_TOKEN
 
-    logger.debug(f"{payload}")
+    logger.debug(f"{newdata}")
     # Get the shared httpx client
     client = get_httpx_client()
 
@@ -364,7 +365,6 @@ def modify_order(data, auth):
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
     payload = "jData=" + json.dumps(transformed_data) + "&jKey=" + AUTH_TOKEN
 
-    logger.debug(f"Modify Order Payload: {payload}")
     logger.debug(f"Modify Order Data: {transformed_data}")
 
     # Get the shared httpx client

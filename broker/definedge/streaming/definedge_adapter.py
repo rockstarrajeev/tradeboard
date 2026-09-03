@@ -1,4 +1,3 @@
-import logging
 import os
 import sys
 import threading
@@ -12,6 +11,7 @@ from database.auth_db import (
     get_feed_token,
     get_feed_token_dbquery,
 )
+from utils.logging import get_logger
 
 # Add parent directory to path to allow imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
@@ -34,7 +34,7 @@ class MarketDataCache:
         self._cache = {}
         self._initialized_scrips = set()
         self._lock = threading.Lock()
-        self.logger = logging.getLogger("market_cache")
+        self.logger = get_logger("market_cache")
 
     def get(self, scrip: str) -> dict[str, Any]:
         """Get cached data for a scrip"""
@@ -133,7 +133,7 @@ class DefinedgeWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
     def __init__(self):
         super().__init__()
-        self.logger = logging.getLogger("definedge_websocket")
+        self.logger = get_logger("definedge_websocket")
         self.ws_client = None
         self.user_id = None
         self.broker_name = "definedge"
@@ -217,7 +217,9 @@ class DefinedgeWebSocketAdapter(BaseBrokerWebSocketAdapter):
         # Pass a token_provider so the client can re-read a fresh token from
         # the DB before each reconnect (DefinEdge tokens roll over daily at
         # ~3 AM IST; reusing the construction-time token reconnects dead).
-        self.ws_client = DefinedGeWebSocket(auth_data, token_provider=self._fetch_fresh_auth_data)
+        self.ws_client = DefinedGeWebSocket(
+            auth_data, token_provider=self._fetch_fresh_auth_data
+        )
 
         # Set callbacks
         self.ws_client.on_connect = self._on_open
@@ -244,7 +246,9 @@ class DefinedgeWebSocketAdapter(BaseBrokerWebSocketAdapter):
             # cross-process cache-invalidation timing.
             feed_obj = get_feed_token_dbquery(self.user_id)
             feed_token = (
-                decrypt_token(feed_obj.feed_token) if feed_obj and feed_obj.feed_token else None
+                decrypt_token(feed_obj.feed_token)
+                if feed_obj and feed_obj.feed_token
+                else None
             )
             if not auth_token:
                 self.logger.warning(
@@ -711,7 +715,7 @@ class DefinedgeWebSocketAdapter(BaseBrokerWebSocketAdapter):
             tick_scrips = set()
             depth_scrips = set()
 
-            for _correlation_id, sub in self.subscriptions.items():
+            for correlation_id, sub in self.subscriptions.items():
                 definedge_exchange = sub["definedge_exchange"]
                 token = sub["token"]
                 scrip = f"{definedge_exchange}|{token}"
@@ -876,7 +880,7 @@ class DefinedgeWebSocketAdapter(BaseBrokerWebSocketAdapter):
         try:
             # Check if there are Quote or LTP subscriptions for this scrip
             with self.lock:
-                for _correlation_id, sub in self.subscriptions.items():
+                for correlation_id, sub in self.subscriptions.items():
                     if sub["scrip"] == scrip and sub["mode"] in [1, 2]:  # LTP or Quote mode
                         mode = sub["mode"]
                         mode_str = {1: "LTP", 2: "QUOTE"}[mode]
@@ -1012,7 +1016,9 @@ class DefinedgeWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
             # IMPORTANT: Also publish OHLC data for any Quote mode subscriptions
             # This allows Quote mode to get OHLC from Depth data
-            self._publish_for_other_modes(subscription["scrip"], symbol, orig_exchange, market_data)
+            self._publish_for_other_modes(
+                subscription["scrip"], symbol, orig_exchange, market_data
+            )
 
         except Exception as e:
             self.logger.error(f"Error processing depth data: {e}", exc_info=True)

@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 import re
 import sys
@@ -12,6 +11,7 @@ from typing import Any, Dict, List, Optional
 from broker.fivepaisa.streaming.fivepaisa_websocket import FivePaisaWebSocket
 from database.auth_db import get_auth_token
 from database.token_db import get_token
+from utils.logging import get_logger
 
 # Add parent directory to path to allow imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
@@ -47,7 +47,7 @@ class FivepaisaWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
     def __init__(self):
         super().__init__()
-        self.logger = logging.getLogger("fivepaisa_websocket")
+        self.logger = get_logger("fivepaisa_websocket")
         self.ws_client = None
         self.user_id = None
         self.client_code = None
@@ -133,7 +133,9 @@ class FivepaisaWebSocketAdapter(BaseBrokerWebSocketAdapter):
                     client_code = parts[2]  # client_id is the third part
                     self.logger.debug(f"Using client_code from BROKER_API_KEY: {client_code}")
                     return client_code
-                self.logger.warning("BROKER_API_KEY format incorrect, using user_id as client_code")
+                self.logger.warning(
+                    "BROKER_API_KEY format incorrect, using user_id as client_code"
+                )
             except Exception as e:
                 self.logger.error(f"Error parsing BROKER_API_KEY: {e}")
             return user_id
@@ -151,13 +153,17 @@ class FivepaisaWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
         fresh_token = get_auth_token(self.user_id, bypass_cache=True)
         if not fresh_token:
-            self.logger.warning("No fresh auth token found on reconnect; reusing existing token")
+            self.logger.warning(
+                "No fresh auth token found on reconnect; reusing existing token"
+            )
             return
 
         with self.lock:
             client_code = self.client_code or self._resolve_client_code(self.user_id)
             try:
-                new_client = FivePaisaWebSocket(access_token=fresh_token, client_code=client_code)
+                new_client = FivePaisaWebSocket(
+                    access_token=fresh_token, client_code=client_code
+                )
                 new_client.on_open = self._on_open
                 new_client.on_data = self._on_data
                 new_client.on_error = self._on_error
@@ -194,7 +200,9 @@ class FivepaisaWebSocketAdapter(BaseBrokerWebSocketAdapter):
             if self._connect_thread and self._connect_thread.is_alive():
                 self.logger.debug("Connect thread already running; not starting another.")
                 return
-            self._connect_thread = threading.Thread(target=self._connect_with_retry, daemon=True)
+            self._connect_thread = threading.Thread(
+                target=self._connect_with_retry, daemon=True
+            )
             self._connect_thread.start()
 
     def _connect_with_retry(self) -> None:
@@ -431,8 +439,14 @@ class FivepaisaWebSocketAdapter(BaseBrokerWebSocketAdapter):
         if mode == 3:
             correlation_id = f"{correlation_id}_{depth_level}"
 
-        # Store subscription for reconnection
+        # Store subscription for reconnection, and work out what actually needs
+        # sending: a method another subscription on this token already holds is
+        # live on the server, so re-sending it is pure redundant traffic (a
+        # quote subscription upgraded to depth would otherwise re-subscribe
+        # MarketFeedV3). Computed BEFORE inserting, so the new subscription does
+        # not mask itself, and mirrored by _methods_still_needed() on the way out.
         with self.lock:
+            already_live = self._methods_still_needed(token)
             self.subscriptions[correlation_id] = {
                 "symbol": symbol,
                 "exchange": exchange,
@@ -444,16 +458,17 @@ class FivepaisaWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 "methods": methods,
                 "scrip_data": scrip_data,
             }
+        to_send = [m for m in methods if m not in already_live]
 
         # Queue for batched sending when connected. When not connected, _on_open
         # re-queues every stored subscription on (re)connect, so we skip here to
         # avoid double-enqueuing the same scrip.
-        if self.connected and self.ws_client:
+        if self.connected and self.ws_client and to_send:
             self.logger.debug(
                 f"Queueing subscription for {symbol} ({exchange}/{brexchange}) - "
-                f"Token: {token}, Methods: {methods}, Exch: {exch_code}, Type: {exch_type}"
+                f"Token: {token}, Methods: {to_send}, Exch: {exch_code}, Type: {exch_type}"
             )
-            self._enqueue_subscriptions([(m, scrip_data[0]) for m in methods])
+            self._enqueue_subscriptions([(m, scrip_data[0]) for m in to_send])
 
         # Return success
         return self._create_success_response(
@@ -545,11 +560,8 @@ class FivepaisaWebSocketAdapter(BaseBrokerWebSocketAdapter):
         with self.lock:
             # The stored correlation_id carries the depth level for mode 3, so
             # match on the prefix rather than requiring the caller to know it.
-            for key in [
-                k
-                for k in self.subscriptions
-                if k == correlation_id or k.startswith(f"{correlation_id}_")
-            ]:
+            for key in [k for k in self.subscriptions if k == correlation_id
+                        or k.startswith(f"{correlation_id}_")]:
                 del self.subscriptions[key]
 
             # Only drop methods no remaining subscription on this token needs —
@@ -592,11 +604,19 @@ class FivepaisaWebSocketAdapter(BaseBrokerWebSocketAdapter):
             # Depth subscriptions carry two methods (see _methods_for_mode), so
             # resubscribe every one of them or LTP goes back to 0 after a
             # reconnect. Older stored entries only have "method".
-            items = [
-                (m, sub["scrip_data"][0])
-                for sub in self.subscriptions.values()
-                for m in (sub.get("methods") or [sub["method"]])
-            ]
+            #
+            # Deduped on (method, token): several subscriptions can share a
+            # scrip - a quote and a depth stream on the same token both need
+            # MarketFeedV3 - and the server only needs told once.
+            items = []
+            seen = set()
+            for sub in self.subscriptions.values():
+                for m in sub.get("methods") or [sub["method"]]:
+                    key = (m, str(sub["token"]))
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    items.append((m, sub["scrip_data"][0]))
         if items:
             self.logger.info(f"Resubscribing {len(items)} subscription(s) in batches")
             self._enqueue_subscriptions(items)

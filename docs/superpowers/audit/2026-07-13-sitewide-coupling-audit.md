@@ -1,7 +1,7 @@
 # Sitewide Indian-Market Coupling Audit
 
 **Date:** 2026-07-13
-**Scope:** every top-level folder in the Tradeboard repository (manual sweep). The
+**Scope:** every top-level folder in the OpenAlgo repository (manual sweep). The
 reproducible `coupling_inventory.py` currently scans **9 code directories**; P0A
 expands it to an AST/schema suite over all folders + semantic coupling.
 **Goal:** locate every place Indian-market assumptions are baked in, so the
@@ -79,7 +79,7 @@ raw hits.
 
 ### ⑤ Not source — ignore
 
-`db/ · log/ · tmp/ · keys/ · __pycache__/ · .venv/ · tradeboardUI.egg-info/ ·
+`db/ · log/ · tmp/ · keys/ · __pycache__/ · .venv/ · openalgoUI.egg-info/ ·
 audit/ (md notes) · vectorbt-backtesting-skills/`.
 
 ## Key file-level findings

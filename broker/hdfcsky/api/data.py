@@ -225,9 +225,7 @@ class BrokerData:
         try:
             today = datetime.now()
             candles = self._fetch_candles(
-                row,
-                "DAY",
-                (today - timedelta(days=7)).strftime("%Y-%m-%d"),
+                row, "DAY", (today - timedelta(days=7)).strftime("%Y-%m-%d"),
                 today.strftime("%Y-%m-%d"),
             )
             if not candles:
@@ -598,9 +596,7 @@ class BrokerData:
             # Back off and retry rather than failing a multi-chunk request.
             if response.status_code == 429 and attempt < self._HISTORY_MAX_ATTEMPTS - 1:
                 delay = self._HISTORY_RETRY_BACKOFF * (2**attempt)
-                logger.warning(
-                    f"HDFC Sky chart data rate-limited, retrying in {delay:.1f}s: {label}"
-                )
+                logger.warning(f"HDFC Sky chart data rate-limited, retrying in {delay:.1f}s: {label}")
                 time.sleep(delay)
                 continue
             break
@@ -793,8 +789,8 @@ class BrokerData:
             if chart_type == "DAY":
                 stamps = stamps.dt.normalize() + pd.Timedelta(hours=5, minutes=30)
             else:
-                stamps = (
-                    stamps.dt.tz_localize("Asia/Kolkata").dt.tz_convert("UTC").dt.tz_localize(None)
+                stamps = stamps.dt.tz_localize("Asia/Kolkata").dt.tz_convert("UTC").dt.tz_localize(
+                    None
                 )
             df["timestamp"] = stamps.astype("int64") // 10**9
 

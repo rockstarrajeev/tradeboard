@@ -95,7 +95,9 @@ class AliceBlueWebSocket:
             payload = {"source": "API", "userId": self.user_id}
 
             client = get_httpx_client()
-            response = client.post(url, json=payload, headers=self._get_auth_header(), timeout=10)
+            response = client.post(
+                url, json=payload, headers=self._get_auth_header(), timeout=10
+            )
 
             if response.status_code == 200:
                 data = response.json()
@@ -123,7 +125,9 @@ class AliceBlueWebSocket:
             payload = {"source": "API", "userId": self.user_id}
 
             client = get_httpx_client()
-            response = client.post(url, json=payload, headers=self._get_auth_header(), timeout=10)
+            response = client.post(
+                url, json=payload, headers=self._get_auth_header(), timeout=10
+            )
 
             if response.status_code == 200:
                 data = response.json()
@@ -797,7 +801,8 @@ class AliceBlueWebSocket:
         # each freshly spawned loop started its own attempt counter at zero so
         # the cap was never reached.
         logger.info(
-            f"Connection closed (close #{self.reconnect_count}); _connection_loop owns the retry"
+            f"Connection closed (close #{self.reconnect_count}); "
+            f"_connection_loop owns the retry"
         )
 
     def subscribe(self, instruments, is_depth=False):

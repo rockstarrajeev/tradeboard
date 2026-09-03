@@ -390,7 +390,9 @@ class HDFCSkyWebSocket:
                         json.dumps(
                             {
                                 "heart_beat": False,
-                                "subscribe": [{"scripId": s, "type": sub_type} for s in batch],
+                                "subscribe": [
+                                    {"scripId": s, "type": sub_type} for s in batch
+                                ],
                             }
                         )
                     )

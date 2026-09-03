@@ -111,11 +111,9 @@ main_url = db_urls["Main (users, auth)"]
 main_db_path = resolve_sqlite_path(main_url)
 
 if os.path.normcase(os.path.abspath(cwd)) != os.path.normcase(PROJECT_ROOT):
-    from_root = (
-        os.path.abspath(os.path.join(PROJECT_ROOT, main_url.replace("sqlite:///", "", 1)))
-        if main_url.startswith("sqlite:///")
-        else None
-    )
+    from_root = os.path.abspath(
+        os.path.join(PROJECT_ROOT, main_url.replace("sqlite:///", "", 1))
+    ) if main_url.startswith("sqlite:///") else None
     if from_root and from_root != main_db_path:
         problem(
             "You are not running from the project root, and DATABASE_URL is a "
@@ -263,7 +261,9 @@ if main_db_path and os.path.exists(main_db_path):
             if "users" not in tables:
                 problem("The 'users' table does not exist. Table creation did not complete.")
             else:
-                users = list(conn.execute("SELECT username, email, is_admin FROM users"))
+                users = list(
+                    conn.execute("SELECT username, email, is_admin FROM users")
+                )
                 print(f"  User accounts     : {len(users)}")
                 for username, email, is_admin in users:
                     role = "admin" if is_admin else "user"

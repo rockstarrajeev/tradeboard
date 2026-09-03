@@ -117,18 +117,11 @@ def copy_from_dataframe(df, broker="indmoney"):
                         # Overall progress: importing is 60% to 100% of the total task
                         overall_progress = 60 + int(import_pct * 0.4)
 
-                        progress_msg = (
-                            f"Importing: {total_inserted:,} / {total_to_insert:,} symbols"
-                        )
+                        progress_msg = f"Importing: {total_inserted:,} / {total_to_insert:,} symbols"
                         update_status(broker, "downloading", progress_msg)
                         socketio.emit(
                             "master_contract_download",
-                            {
-                                "status": "downloading",
-                                "message": progress_msg,
-                                "progress": overall_progress,
-                                "stages": stages,
-                            },
+                            {"status": "downloading", "message": progress_msg, "progress": overall_progress, "stages": stages},
                         )
 
                     # Log progress every 20 chunks (10,000 records)
@@ -173,11 +166,9 @@ def download_csv_indmoney_data(output_path):
     # Get the access token for Indmoney broker from the database
     try:
         from database.auth_db import Auth, db_session
-
         auth_obj = Auth.query.filter_by(broker="indmoney", is_revoked=False).first()
         if auth_obj:
             from database.auth_db import decrypt_token
-
             auth_token = decrypt_token(auth_obj.auth)
         else:
             auth_token = None
@@ -201,7 +192,7 @@ def download_csv_indmoney_data(output_path):
         # Update status for download progress
         progress_pct = int(((i + 1) / total_segments) * 100)
         stages = {"download": progress_pct, "process": 0, "import": 0}
-        progress_msg = f"Downloading: {segment.upper()} instruments ({i + 1}/{total_segments})"
+        progress_msg = f"Downloading: {segment.upper()} instruments ({i+1}/{total_segments})"
 
         # Overall progress: download is first 30% of the total task
         overall_progress = int(progress_pct * 0.3)
@@ -209,12 +200,7 @@ def download_csv_indmoney_data(output_path):
         update_status("indmoney", "downloading", progress_msg)
         socketio.emit(
             "master_contract_download",
-            {
-                "status": "downloading",
-                "message": progress_msg,
-                "progress": overall_progress,
-                "stages": stages,
-            },
+            {"status": "downloading", "message": progress_msg, "progress": overall_progress, "stages": stages},
         )
 
         try:
@@ -242,9 +228,7 @@ def reformat_symbol(row, file_segment=None):
     instrument_name = str(row.get("INSTRUMENT_NAME", ""))
     option_type = str(row.get("OPTION_TYPE", "")) if pd.notna(row.get("OPTION_TYPE")) else ""
     symbol_name = str(row.get("SYMBOL_NAME", "")) if pd.notna(row.get("SYMBOL_NAME")) else ""
-    trading_symbol = (
-        str(row.get("TRADING_SYMBOL", "")) if pd.notna(row.get("TRADING_SYMBOL")) else ""
-    )
+    trading_symbol = str(row.get("TRADING_SYMBOL", "")) if pd.notna(row.get("TRADING_SYMBOL")) else ""
     expiry_date = str(row.get("EXPIRY_DATE", "")) if pd.notna(row.get("EXPIRY_DATE")) else ""
     strike_price = row.get("STRIKE_PRICE", 0)
 
@@ -410,12 +394,7 @@ def process_indmoney_csv(path):
         update_status("indmoney", "downloading", progress_msg)
         socketio.emit(
             "master_contract_download",
-            {
-                "status": "downloading",
-                "message": progress_msg,
-                "progress": overall_progress,
-                "stages": stages,
-            },
+            {"status": "downloading", "message": progress_msg, "progress": overall_progress, "stages": stages},
         )
 
         df = pd.read_csv(file_path, low_memory=False)
@@ -476,11 +455,11 @@ def process_indmoney_csv(path):
 
         # Apply exchange and instrument type mapping
         df[["exchange", "brexchange", "instrumenttype"]] = df.apply(
-            lambda row, s=segment: assign_values(row, s), axis=1, result_type="expand"
+            lambda row: assign_values(row, segment), axis=1, result_type="expand"
         )
 
         # Generate OpenAlgo formatted symbol
-        df["symbol"] = df.apply(lambda row, s=segment: reformat_symbol(row, s), axis=1)
+        df["symbol"] = df.apply(lambda row: reformat_symbol(row, segment), axis=1)
 
         # Handle special cases
         df["symbol"] = df["symbol"].replace(

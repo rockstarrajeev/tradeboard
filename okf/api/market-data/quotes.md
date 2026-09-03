@@ -2,7 +2,7 @@
 type: API Endpoint
 title: Quotes
 description: Get market quotes for a symbol
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/market-data/quotes.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/market-data/quotes.md
 tags:
 - market-data
 - quotes

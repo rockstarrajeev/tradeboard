@@ -2,7 +2,7 @@
 type: API Endpoint
 title: PlaceOrder
 description: Place a new order with the broker
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/order-management/placeorder.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/order-management/placeorder.md
 tags:
 - order
 - trading

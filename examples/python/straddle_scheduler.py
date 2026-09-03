@@ -5,13 +5,13 @@ import pytz
 from apscheduler.schedulers.background import BackgroundScheduler
 from openalgo import api
 
-print("🔁 Tradeboard Python Bot is running.")
+print("OpenAlgo Python Bot is running.")
 
 # ===============================
-# Tradeboard Client
+# OpenAlgo Client
 # ===============================
 client = api(
-    api_key=os.getenv("TRADEBOARD_API_KEY"),
+    api_key=os.getenv("OPENALGO_API_KEY"),
     host="http://127.0.0.1:5000",
 )
 
@@ -78,7 +78,7 @@ def schedule_straddle():
     )
 
     scheduler.start()
-    print("✅ Scheduled NIFTY 09DEC25 ATM Straddle for 09:20 IST (Mon–Sun).")
+    print("Scheduled NIFTY 09DEC25 ATM Straddle for 09:20 IST (Mon–Sun).")
 
     return scheduler
 

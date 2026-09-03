@@ -2,7 +2,7 @@
 type: API Endpoint
 title: Funds
 description: Get account funds and margin availability
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/account-services/funds.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/account-services/funds.md
 tags:
 - account
 - funds

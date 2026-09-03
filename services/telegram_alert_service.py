@@ -219,9 +219,7 @@ class TelegramAlertService:
                             ]
                         )
                         for result in results[:5]:
-                            status_emoji = (
-                                "[OK]" if result.get("status") == "success" else "[FAILED]"
-                            )
+                            status_emoji = "[OK]" if result.get("status") == "success" else "[FAILED]"
                             details.append(
                                 f"{status_emoji} `{result.get('symbol', 'N/A')}` {result.get('action', '')} → {result.get('orderid', result.get('message', 'N/A'))}"
                             )
@@ -340,7 +338,9 @@ class TelegramAlertService:
                     logger.info(f"Telegram notification sent (plain text) to {telegram_id}")
                     return True
 
-            logger.error(f"Telegram API error {resp.status_code}: {resp.text}")
+            logger.error(
+                f"Telegram API error {resp.status_code}: {resp.text}"
+            )
             add_notification(telegram_id, message, priority=8)
             return False
 

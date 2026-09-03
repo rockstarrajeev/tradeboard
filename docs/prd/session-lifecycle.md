@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Tradeboard separates device-specific application sessions from the installation-wide active broker session. This lets a user reconnect one device without unnecessarily interrupting the shared broker market-data feed used by other devices.
+OpenAlgo separates device-specific application sessions from the installation-wide active broker session. This lets a user reconnect one device without unnecessarily interrupting the shared broker market-data feed used by other devices.
 
 ## Requirements
 

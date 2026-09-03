@@ -37,13 +37,9 @@ def client(monkeypatch):
 
 def body(**overrides):
     out = {
-        "apikey": "key",
-        "symbol": "INFY",
-        "exchange": "NSE",
-        "start_date": "2020-01-01",
-        "end_date": "2024-01-01",
-        "amount": 5000,
-        "source": "db",
+        "apikey": "key", "symbol": "INFY", "exchange": "NSE",
+        "start_date": "2020-01-01", "end_date": "2024-01-01",
+        "amount": 5000, "source": "db",
     }
     out.update(overrides)
     return out
@@ -70,8 +66,7 @@ def test_the_service_is_never_called_without_a_valid_key(client, monkeypatch):
     called = []
     monkeypatch.setattr(sip_api, "verify_api_key", lambda _k: None)
     monkeypatch.setattr(
-        sip_api,
-        "run_sip_backtest",
+        sip_api, "run_sip_backtest",
         lambda **kw: called.append(kw) or (True, {}, 200),
     )
 
@@ -83,8 +78,7 @@ def test_the_service_is_never_called_without_a_valid_key(client, monkeypatch):
 def test_source_api_requires_a_broker_session(client, monkeypatch):
     monkeypatch.setattr(sip_api, "verify_api_key", lambda _k: "user")
     monkeypatch.setattr(
-        sip_api,
-        "get_auth_token_broker",
+        sip_api, "get_auth_token_broker",
         lambda _k, include_feed_token=False: (None, None, None),
     )
 
@@ -97,9 +91,8 @@ def test_source_api_requires_a_broker_session(client, monkeypatch):
 def test_source_db_does_not_require_a_broker_session(client, monkeypatch):
     """Backtesting at the weekend is the normal case."""
     monkeypatch.setattr(sip_api, "verify_api_key", lambda _k: "user")
-    monkeypatch.setattr(
-        sip_api, "run_sip_backtest", lambda **kw: (True, {"status": "success"}, 200)
-    )
+    monkeypatch.setattr(sip_api, "run_sip_backtest",
+                        lambda **kw: (True, {"status": "success"}, 200))
 
     assert client.post("/sip/backtest", json=body(source="db")).status_code == 200
 
@@ -113,9 +106,8 @@ def test_credentials_are_passed_through_for_source_api(client, monkeypatch):
         return ("auth", "feed", "zerodha")
 
     monkeypatch.setattr(sip_api, "get_auth_token_broker", creds)
-    monkeypatch.setattr(
-        sip_api, "run_sip_backtest", lambda **kw: seen.update(kw) or (True, {}, 200)
-    )
+    monkeypatch.setattr(sip_api, "run_sip_backtest",
+                        lambda **kw: seen.update(kw) or (True, {}, 200))
 
     client.post("/sip/backtest", json=body(source="api"))
 
@@ -127,29 +119,25 @@ def test_credentials_are_passed_through_for_source_api(client, monkeypatch):
 # ------------------------------------------------------------------- validation
 
 
-@pytest.mark.parametrize(
-    "field,bad",
-    [
-        ("exchange", "NFO"),  # derivatives cannot be SIP'd
-        ("exchange", "NSE_INDEX"),  # an index cannot be bought
-        ("frequency", "daily"),
-        ("day_of_month", 31),  # does not exist in every month
-        ("day_of_month", 0),
-        ("amount", 0),
-        ("amount", -100),
-        ("step_up_percent", -5),
-        ("brokerage_percent", 99),
-        ("source", "s3"),
-        ("benchmark_exchange", "NSE"),  # must be an index exchange
-        ("symbol", "A" * 500),
-    ],
-)
+@pytest.mark.parametrize("field,bad", [
+    ("exchange", "NFO"),           # derivatives cannot be SIP'd
+    ("exchange", "NSE_INDEX"),     # an index cannot be bought
+    ("frequency", "daily"),
+    ("day_of_month", 31),          # does not exist in every month
+    ("day_of_month", 0),
+    ("amount", 0),
+    ("amount", -100),
+    ("step_up_percent", -5),
+    ("brokerage_percent", 99),
+    ("source", "s3"),
+    ("benchmark_exchange", "NSE"), # must be an index exchange
+    ("symbol", "A" * 500),
+])
 def test_bad_input_is_rejected_with_400(client, monkeypatch, field, bad):
     monkeypatch.setattr(sip_api, "verify_api_key", lambda _k: "user")
     called = []
-    monkeypatch.setattr(
-        sip_api, "run_sip_backtest", lambda **kw: called.append(kw) or (True, {}, 200)
-    )
+    monkeypatch.setattr(sip_api, "run_sip_backtest",
+                        lambda **kw: called.append(kw) or (True, {}, 200))
 
     response = client.post("/sip/backtest", json=body(**{field: bad}))
 
@@ -207,5 +195,5 @@ def test_both_endpoints_are_rate_limited():
     for cls in ("class SipBacktest(", "class SipFrequencies("):
         start = src.index(cls)
         # The decorator sits just above the method inside the class body.
-        block = src[start : start + 600]
+        block = src[start:start + 600]
         assert "@limiter.limit(API_RATE_LIMIT)" in block, f"{cls} is not rate limited"

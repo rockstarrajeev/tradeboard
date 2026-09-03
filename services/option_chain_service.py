@@ -73,6 +73,14 @@ from utils.logging import get_logger
 logger = get_logger(__name__)
 
 
+def _reference_metadata(symbol: str, exchange: str) -> dict[str, str]:
+    """Expose the exact quote identity selected while resolving the chain."""
+    return {
+        "underlying_symbol": symbol,
+        "underlying_exchange": exchange,
+    }
+
+
 def get_strikes_with_labels(
     available_strikes: list[float], atm_strike: float, strike_count: int | None = None
 ) -> list[dict[str, Any]]:
@@ -371,18 +379,12 @@ def get_option_chain(
             # CRYPTO: look up the canonical perpetual symbol from cache (e.g. BTC -> BTCUSDFUT)
             quote_exchange = exchange.upper()
             _perp = fno_search_symbols(
-                query=f"{base_symbol}USDFUT",
-                exchange=exchange,
-                instrumenttype=INSTRUMENT_PERPFUT,
-                limit=1,
+                query=f"{base_symbol}USDFUT", exchange=exchange, instrumenttype=INSTRUMENT_PERPFUT, limit=1
             )
             if not _perp:
                 return (
                     False,
-                    {
-                        "status": "error",
-                        "message": f"No perpetual futures found for {base_symbol} on {exchange}",
-                    },
+                    {"status": "error", "message": f"No perpetual futures found for {base_symbol} on {exchange}"},
                     404,
                 )
             quote_symbol = _perp[0]["symbol"]
@@ -410,7 +412,8 @@ def get_option_chain(
                 )
             quote_symbol, quote_exchange = resolved
             logger.info(
-                f"{exchange.upper()} has no spot; pricing {base_symbol} against {quote_symbol}"
+                f"{exchange.upper()} has no spot; pricing {base_symbol} against "
+                f"{quote_symbol}"
             )
 
         if exchange.upper() not in CRYPTO_EXCHANGES and exchange.upper() not in NO_SPOT_EXCHANGES:
@@ -526,39 +529,27 @@ def get_option_chain(
         # cache/DB and live prices stream over the WebSocket feed, avoiding a slow
         # per-strike broker multiquote (e.g. Flattrade throttles to 10 quotes/sec).
         quotes_map = {}
+        quotes_response: dict = {}
+        success = False
         if with_quotes:
             logger.info(f"Fetching quotes for {len(symbols_to_fetch)} option symbols")
             if exchange.upper() in CRYPTO_EXCHANGES:
-                # Use get_multiquotes for instant bulk quote resolution
+                # Reuse _auth, _bmod, _dh already initialised in Step 3 — no second
+                # DB query or module import needed.
                 try:
-                    if hasattr(_dh, "get_multiquotes"):
-                        _results = _dh.get_multiquotes(symbols_to_fetch)
-                    else:
-                        _results = []
-                        for _item in symbols_to_fetch:
-                            try:
-                                _oq = _dh.get_quotes(_item["symbol"], _item["exchange"])
-                                _results.append(
-                                    {
-                                        "symbol": _item["symbol"],
-                                        "exchange": _item["exchange"],
-                                        "data": _oq,
-                                    }
-                                )
-                            except Exception as _qe:
-                                logger.warning(f"[CRYPTO] Quote error for {_item['symbol']}: {_qe}")
-                                _results.append(
-                                    {
-                                        "symbol": _item["symbol"],
-                                        "exchange": _item["exchange"],
-                                        "error": str(_qe),
-                                    }
-                                )
+                    _results = []
+                    for _item in symbols_to_fetch:
+                        try:
+                            _oq = _dh.get_quotes(_item["symbol"], _item["exchange"])
+                            _results.append(
+                                {"symbol": _item["symbol"], "exchange": _item["exchange"], "data": _oq}
+                            )
+                        except Exception as _qe:
+                            logger.warning(f"[CRYPTO] Quote error for {_item['symbol']}: {_qe}")
+                            _results.append(
+                                {"symbol": _item["symbol"], "exchange": _item["exchange"], "error": str(_qe)}
+                            )
                     quotes_response = {"status": "success", "results": _results}
-                    for _res in _results:
-                        _sym = _res.get("symbol")
-                        if _sym and "data" in _res:
-                            quotes_map[_sym] = _res["data"]
                     success = True
                     status_code = 200
                 except Exception as _e:
@@ -616,16 +607,19 @@ def get_option_chain(
                         symbols=symbols_to_fetch, api_key=api_key
                     )
 
-                    # Build quote lookup map
-                    if success and "results" in quotes_response:
-                        for result in quotes_response["results"]:
-                            symbol = result.get("symbol")
-                            if symbol:
-                                # Handle both formats: direct data or nested data
-                                if "data" in result:
-                                    quotes_map[symbol] = result["data"]
-                                elif "error" not in result:
-                                    quotes_map[symbol] = result
+            # Build the quote lookup map from whichever branch produced results.
+            # The Fyers fast path is the only one that fills quotes_map itself;
+            # both the crypto per-symbol loop and the generic multiquotes call
+            # hand back a results list that still has to be indexed here.
+            if not quotes_map and success and "results" in quotes_response:
+                for result in quotes_response["results"]:
+                    symbol = result.get("symbol")
+                    if symbol:
+                        # Handle both formats: direct data or nested data
+                        if "data" in result:
+                            quotes_map[symbol] = result["data"]
+                        elif "error" not in result:
+                            quotes_map[symbol] = result
         else:
             logger.info(
                 f"Structure-only option chain ({len(symbols_to_fetch)} symbols); skipping live quotes"
@@ -706,6 +700,7 @@ def get_option_chain(
             {
                 "status": "success",
                 "underlying": base_symbol,
+                **_reference_metadata(quote_symbol, quote_exchange),
                 "underlying_ltp": underlying_ltp,
                 "underlying_prev_close": underlying_prev_close,
                 "expiry_date": final_expiry,

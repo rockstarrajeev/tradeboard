@@ -2,7 +2,7 @@
 type: API Endpoint
 title: OptionSymbol
 description: Get an option symbol by strike offset from ATM
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/options-services/optionsymbol.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/options-services/optionsymbol.md
 tags:
 - options
 - option-symbol

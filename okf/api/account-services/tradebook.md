@@ -2,7 +2,7 @@
 type: API Endpoint
 title: TradeBook
 description: Get all executed trades for the day
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/account-services/tradebook.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/account-services/tradebook.md
 tags:
 - trades
 - account

@@ -6,7 +6,7 @@
 
 ## Context
 
-Tradeboard integrates 33 brokers today. The audit confirms this is **already the
+OpenAlgo integrates 33 brokers today. The audit confirms this is **already the
 de-facto practice** — there is no cleanup implied by this decision, only
 formalization:
 
@@ -21,7 +21,7 @@ formalization:
 
 Every broker/exchange adapter — Indian, crypto, US, or any future venue —
 integrates **directly against the venue's own REST and WebSocket endpoints**,
-using Tradeboard's shared generic transport. Tradeboard will **not** depend on:
+using OpenAlgo's shared generic transport. OpenAlgo will **not** depend on:
 
 - **broker/exchange-provided SDKs** (kiteconnect, fyers, dhanhq, upstox, Noren,
   etc.), nor

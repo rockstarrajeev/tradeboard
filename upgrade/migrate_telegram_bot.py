@@ -19,7 +19,10 @@ from pathlib import Path
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+# Register the app's SQLite pragmas on this process's engines, so a migration
+# waits the same 15s for a write lock the running app does instead of the
+# sqlite3 default of 5s (GitHub issue #1726).
+import _pragmas  # noqa: F401,E402
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.exc import IntegrityError, OperationalError
 
@@ -171,7 +174,7 @@ class TelegramBotMigration:
         self.create_migration_history_table()
 
         # Check current status
-        self.check_migration_status()
+        status = self.check_migration_status()
 
         try:
             with self.engine.connect() as conn:
@@ -408,7 +411,7 @@ class TelegramBotMigration:
             logger.info(f"  Applied at: {status['applied_at']}")
 
             # Check table existence
-            with self.engine.connect():
+            with self.engine.connect() as conn:
                 tables = [
                     "telegram_users",
                     "bot_config",

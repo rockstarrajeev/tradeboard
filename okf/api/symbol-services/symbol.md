@@ -2,7 +2,7 @@
 type: API Endpoint
 title: Symbol
 description: Get detailed information for a symbol
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/symbol-services/symbol.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/symbol-services/symbol.md
 tags:
 - symbol
 - reference-data

@@ -125,9 +125,7 @@ class Runner:
             self.record("auth", "Stored broker token authenticates (funds OK)", "PASS")
             return True
         self.record(
-            "auth",
-            "Stored broker token authenticates",
-            "FAIL",
+            "auth", "Stored broker token authenticates", "FAIL",
             f"{data.get('message') or data.get('error') or data}",
         )
         print(f"{R}  Broker not connected / API key invalid — aborting remaining tests.{RST}")
@@ -143,20 +141,10 @@ class Runner:
             self.record("funds", "Fetch funds", "FAIL", str(data)[:160])
             return
         d = data.get("data", {})
-        for field in (
-            "availablecash",
-            "collateral",
-            "m2munrealized",
-            "m2mrealized",
-            "utiliseddebits",
-        ):
+        for field in ("availablecash", "collateral", "m2munrealized", "m2mrealized", "utiliseddebits"):
             present = field in d
-            self.record(
-                "funds",
-                f"funds.{field} present",
-                "PASS" if present else "FAIL",
-                f"={d.get(field)}" if present else "",
-            )
+            self.record("funds", f"funds.{field} present", "PASS" if present else "FAIL",
+                        f"={d.get(field)}" if present else "")
 
     # =======================================================================
     # 3. Master contract + symbol format
@@ -182,12 +170,8 @@ class Runner:
                 self.record("symbols", f"search {sym}@{exch}", "SKIP", "search unsupported")
                 continue
             match = any(str(r.get("symbol", "")).upper() == sym.upper() for r in results)
-            self.record(
-                "symbols",
-                f"equity symbol '{sym}' in OpenAlgo format",
-                "PASS" if match else "FAIL",
-                "" if match else f"got {[r.get('symbol') for r in results[:3]]}",
-            )
+            self.record("symbols", f"equity symbol '{sym}' in OpenAlgo format", "PASS" if match else "FAIL",
+                        "" if match else f"got {[r.get('symbol') for r in results[:3]]}")
 
         # Index normalization
         for sym, exch in [
@@ -201,12 +185,8 @@ class Runner:
                 self.record("symbols", f"index {sym}@{exch}", "SKIP", "search unsupported")
                 continue
             match = any(str(r.get("symbol", "")).upper() == sym.upper() for r in results)
-            self.record(
-                "symbols",
-                f"index '{sym}' normalized on {exch}",
-                "PASS" if match else "FAIL",
-                "" if match else f"got {[r.get('symbol') for r in results[:5]]}",
-            )
+            self.record("symbols", f"index '{sym}' normalized on {exch}", "PASS" if match else "FAIL",
+                        "" if match else f"got {[r.get('symbol') for r in results[:5]]}")
 
     # =======================================================================
     # 4. Order management (Analyzer/sandbox by default)
@@ -221,14 +201,8 @@ class Runner:
         if self._is_success(data):
             return "PASS"
         msg = str(data.get("message") or "").lower()
-        for cond in (
-            "square-off time",
-            "trading resumes",
-            "market closed",
-            "market is closed",
-            "after market",
-            "outside market",
-        ):
+        for cond in ("square-off time", "trading resumes", "market closed",
+                     "market is closed", "after market", "outside market"):
             if cond in msg:
                 return "SKIP"
         return "FAIL"
@@ -253,18 +227,14 @@ class Runner:
         analyzer_set = False
         if not self.live:
             analyzer_set = self._set_analyzer(True)
-            self.record(
-                "orders", "Enable Analyzer (sandbox) mode", "PASS" if analyzer_set else "FAIL"
-            )
+            self.record("orders", "Enable Analyzer (sandbox) mode", "PASS" if analyzer_set else "FAIL")
             if not analyzer_set:
-                print(
-                    f"{Y}  Could not enable sandbox; skipping order tests to avoid live orders.{RST}"
-                )
+                print(f"{Y}  Could not enable sandbox; skipping order tests to avoid live orders.{RST}")
                 return
 
         try:
             ltp = self._quote_ltp(sym, exch) or 25.0
-            buy_limit = round(max(ltp * 0.5, 1), 1)  # far below LTP -> won't fill
+            buy_limit = round(max(ltp * 0.5, 1), 1)   # far below LTP -> won't fill
             trig = round(ltp * 1.2, 1)
 
             # 4.1 Place — price types x products. CNC works any time; MIS is
@@ -278,213 +248,97 @@ class Runner:
             ]
             for pricetype, product, extra in cases:
                 payload = {
-                    "strategy": "itest",
-                    "symbol": sym,
-                    "exchange": exch,
-                    "action": "BUY",
-                    "product": product,
-                    "pricetype": pricetype,
-                    "quantity": "1",
-                    **extra,
+                    "strategy": "itest", "symbol": sym, "exchange": exch, "action": "BUY",
+                    "product": product, "pricetype": pricetype, "quantity": "1", **extra,
                 }
                 ok, data = self.api("placeorder", payload)
                 oid = data.get("orderid") if isinstance(data, dict) else None
                 status = self._order_status(data)
                 if status == "PASS" and not oid:
                     status = "FAIL"
-                self.record(
-                    "orders",
-                    f"place {pricetype}/{product}",
-                    status,
-                    f"orderid={oid}" if oid else str(data.get("message") or data)[:120],
-                )
+                self.record("orders", f"place {pricetype}/{product}", status,
+                            f"orderid={oid}" if oid else str(data.get("message") or data)[:120])
                 if oid:
                     self.placed_orderids.append(oid)
 
             # 4.2/4.3 Modify + Cancel — place a dedicated far-from-market LIMIT
             # order that stays OPEN (matrix MARKET orders fill instantly in sandbox).
-            ok, data = self.api(
-                "placeorder",
-                {
-                    "strategy": "itest",
-                    "symbol": sym,
-                    "exchange": exch,
-                    "action": "BUY",
-                    "product": "CNC",
-                    "pricetype": "LIMIT",
-                    "quantity": "1",
-                    "price": str(buy_limit),
-                },
-            )
+            ok, data = self.api("placeorder", {
+                "strategy": "itest", "symbol": sym, "exchange": exch, "action": "BUY",
+                "product": "CNC", "pricetype": "LIMIT", "quantity": "1", "price": str(buy_limit),
+            })
             mc_oid = data.get("orderid") if isinstance(data, dict) else None
             if mc_oid:
-                ok, data = self.api(
-                    "modifyorder",
-                    {
-                        "strategy": "itest",
-                        "symbol": sym,
-                        "exchange": exch,
-                        "orderid": mc_oid,
-                        "action": "BUY",
-                        "product": "CNC",
-                        "pricetype": "LIMIT",
-                        "quantity": "2",
-                        "price": str(round(max(buy_limit - 0.5, 1), 1)),
-                        "trigger_price": "0",
-                        "disclosed_quantity": "0",
-                    },
-                )
-                self.record(
-                    "orders",
-                    "modify order (qty+price)",
-                    self._order_status(data),
-                    str(data.get("message") or "")[:100],
-                )
+                ok, data = self.api("modifyorder", {
+                    "strategy": "itest", "symbol": sym, "exchange": exch, "orderid": mc_oid,
+                    "action": "BUY", "product": "CNC", "pricetype": "LIMIT",
+                    "quantity": "2", "price": str(round(max(buy_limit - 0.5, 1), 1)),
+                    "trigger_price": "0", "disclosed_quantity": "0",
+                })
+                self.record("orders", "modify order (qty+price)", self._order_status(data),
+                            str(data.get("message") or "")[:100])
                 ok, data = self.api("cancelorder", {"strategy": "itest", "orderid": mc_oid})
-                self.record(
-                    "orders",
-                    "cancel order",
-                    self._order_status(data),
-                    str(data.get("message") or "")[:100],
-                )
+                self.record("orders", "cancel order", self._order_status(data),
+                            str(data.get("message") or "")[:100])
             else:
-                self.record(
-                    "orders",
-                    "modify/cancel order",
-                    "SKIP",
-                    f"no pending order: {str(data.get('message') or '')[:80]}",
-                )
+                self.record("orders", "modify/cancel order", "SKIP",
+                            f"no pending order: {str(data.get('message') or '')[:80]}")
 
             # 4.4 Smart order
-            ok, data = self.api(
-                "placesmartorder",
-                {
-                    "strategy": "itest",
-                    "symbol": sym,
-                    "exchange": exch,
-                    "action": "BUY",
-                    "product": "CNC",
-                    "pricetype": "MARKET",
-                    "quantity": "1",
-                    "position_size": "1",
-                },
-            )
-            self.record(
-                "orders",
-                "smart order (target +1)",
-                self._order_status(data),
-                str(data.get("message") or "")[:100],
-            )
+            ok, data = self.api("placesmartorder", {
+                "strategy": "itest", "symbol": sym, "exchange": exch, "action": "BUY",
+                "product": "CNC", "pricetype": "MARKET", "quantity": "1", "position_size": "1",
+            })
+            self.record("orders", "smart order (target +1)", self._order_status(data),
+                        str(data.get("message") or "")[:100])
 
             # 4.5 Basket order
-            ok, data = self.api(
-                "basketorder",
-                {
-                    "strategy": "itest",
-                    "orders": [
-                        {
-                            "symbol": sym,
-                            "exchange": exch,
-                            "action": "BUY",
-                            "quantity": "1",
-                            "pricetype": "MARKET",
-                            "product": "MIS",
-                        },
-                        {
-                            "symbol": sym,
-                            "exchange": exch,
-                            "action": "SELL",
-                            "quantity": "1",
-                            "pricetype": "LIMIT",
-                            "product": "MIS",
-                            "price": str(round(ltp * 1.5, 1)),
-                        },
-                    ],
-                },
-            )
-            self.record(
-                "orders",
-                "basket order (2 legs)",
-                "PASS" if self._is_success(data) else "FAIL",
-                str(data.get("message") or "")[:100],
-            )
+            ok, data = self.api("basketorder", {
+                "strategy": "itest", "orders": [
+                    {"symbol": sym, "exchange": exch, "action": "BUY", "quantity": "1",
+                     "pricetype": "MARKET", "product": "MIS"},
+                    {"symbol": sym, "exchange": exch, "action": "SELL", "quantity": "1",
+                     "pricetype": "LIMIT", "product": "MIS", "price": str(round(ltp * 1.5, 1))},
+                ],
+            })
+            self.record("orders", "basket order (2 legs)", "PASS" if self._is_success(data) else "FAIL",
+                        str(data.get("message") or "")[:100])
 
             # 4.6 Split order
-            ok, data = self.api(
-                "splitorder",
-                {
-                    "strategy": "itest",
-                    "symbol": sym,
-                    "exchange": exch,
-                    "action": "SELL",
-                    "quantity": "5",
-                    "splitsize": "2",
-                    "pricetype": "MARKET",
-                    "product": "MIS",
-                },
-            )
-            self.record(
-                "orders",
-                "split order (5/2 -> 3 children)",
-                "PASS" if self._is_success(data) else "FAIL",
-                str(data.get("message") or "")[:100],
-            )
+            ok, data = self.api("splitorder", {
+                "strategy": "itest", "symbol": sym, "exchange": exch, "action": "SELL",
+                "quantity": "5", "splitsize": "2", "pricetype": "MARKET", "product": "MIS",
+            })
+            self.record("orders", "split order (5/2 -> 3 children)", "PASS" if self._is_success(data) else "FAIL",
+                        str(data.get("message") or "")[:100])
 
             # 4.7 Books / positions / holdings
             for ep in ("orderbook", "tradebook", "positionbook", "holdings"):
                 ok, data = self.api(ep)
-                self.record(
-                    "orders",
-                    f"{ep}",
-                    "PASS" if self._is_success(data) else "FAIL",
-                    str(data.get("message") or "")[:80],
-                )
+                self.record("orders", f"{ep}", "PASS" if self._is_success(data) else "FAIL",
+                            str(data.get("message") or "")[:80])
 
             # 4.8 Margin (optional)
-            ok, data = self.api(
-                "margin",
-                {
-                    "positions": [
-                        {
-                            "symbol": sym,
-                            "exchange": exch,
-                            "action": "BUY",
-                            "product": "MIS",
-                            "pricetype": "LIMIT",
-                            "quantity": "1",
-                            "price": str(round(ltp, 1)),
-                        },
-                    ]
-                },
-            )
-            if (
-                isinstance(data, dict)
-                and data.get("status") == "error"
-                and "not" in str(data.get("message", "")).lower()
-            ):
+            ok, data = self.api("margin", {"positions": [
+                {"symbol": sym, "exchange": exch, "action": "BUY", "product": "MIS",
+                 "pricetype": "LIMIT", "quantity": "1", "price": str(round(ltp, 1))},
+            ]})
+            if isinstance(data, dict) and data.get("status") == "error" and "not" in str(data.get("message", "")).lower():
                 self.record("orders", "margin", "SKIP", "not implemented for broker")
             else:
-                self.record(
-                    "orders",
-                    "margin (single order)",
-                    "PASS" if self._is_success(data) else "FAIL",
-                    str(data.get("message") or "")[:100],
-                )
+                self.record("orders", "margin (single order)", "PASS" if self._is_success(data) else "FAIL",
+                            str(data.get("message") or "")[:100])
 
             # 4.9 Cancel-all + close-all (cleanup)
             ok, data = self.api("cancelallorder", {"strategy": "itest"})
             self.record("orders", "cancel all orders", "PASS" if self._is_success(data) else "FAIL")
             ok, data = self.api("closeposition", {"strategy": "itest"})
-            self.record(
-                "orders", "close all positions", "PASS" if self._is_success(data) else "FAIL"
-            )
+            self.record("orders", "close all positions", "PASS" if self._is_success(data) else "FAIL")
 
         finally:
             if analyzer_set:
                 restored = self._set_analyzer(False)
-                self.record(
-                    "orders", "Restore Live mode (analyzer off)", "PASS" if restored else "FAIL"
-                )
+                self.record("orders", "Restore Live mode (analyzer off)", "PASS" if restored else "FAIL")
 
     # =======================================================================
     # 5. Market data
@@ -494,9 +348,8 @@ class Runner:
         found = {}  # exchange -> {"option": sym, "future": sym}
 
         def first_expiry(underlying, exch):
-            ok, data = self.api(
-                "expiry", {"symbol": underlying, "exchange": exch, "instrumenttype": "options"}
-            )
+            ok, data = self.api("expiry", {"symbol": underlying, "exchange": exch,
+                                           "instrumenttype": "options"})
             if self._is_success(data):
                 d = data.get("data")
                 if isinstance(d, dict):
@@ -510,15 +363,9 @@ class Runner:
             exp = first_expiry(und, "NFO")
             if not exp:
                 continue
-            ok, data = self.api(
-                "optionchain",
-                {
-                    "underlying": und,
-                    "exchange": "NSE_INDEX",
-                    "expiry_date": self._compact_expiry(exp),
-                    "strike_count": 3,
-                },
-            )
+            ok, data = self.api("optionchain", {"underlying": und, "exchange": "NSE_INDEX",
+                                                "expiry_date": self._compact_expiry(exp),
+                                                "strike_count": 3})
             if self._is_success(data):
                 chain = data.get("data", {})
                 sym = self._first_option_symbol(chain)
@@ -530,32 +377,21 @@ class Runner:
             exp = first_expiry(und, "BFO")
             if not exp:
                 continue
-            ok, data = self.api(
-                "optionchain",
-                {
-                    "underlying": und,
-                    "exchange": "BSE_INDEX",
-                    "expiry_date": self._compact_expiry(exp),
-                    "strike_count": 3,
-                },
-            )
+            ok, data = self.api("optionchain", {"underlying": und, "exchange": "BSE_INDEX",
+                                                "expiry_date": self._compact_expiry(exp),
+                                                "strike_count": 3})
             if self._is_success(data):
                 sym = self._first_option_symbol(data.get("data", {}))
                 if sym:
                     found.setdefault("BFO", {})["option"] = sym
                     break
         # Futures via search
-        for exch, q in (
-            ("NFO", "NIFTY"),
-            ("BFO", "SENSEX"),
-            ("CDS", self.cfg("cds_search")),
-            ("MCX", self.cfg("mcx_search")),
-        ):
+        for exch, q in (("NFO", "NIFTY"), ("BFO", "SENSEX"),
+                        ("CDS", self.cfg("cds_search")), ("MCX", self.cfg("mcx_search"))):
             res = self._search_symbols(q, exch)
             if res:
-                fut = next(
-                    (r.get("symbol") for r in res if str(r.get("symbol", "")).endswith("FUT")), None
-                )
+                fut = next((r.get("symbol") for r in res
+                            if str(r.get("symbol", "")).endswith("FUT")), None)
                 if fut:
                     found.setdefault(exch, {})["future"] = fut
         return found
@@ -599,12 +435,8 @@ class Runner:
 
         # Intervals
         ok, data = self.api("intervals")
-        self.record(
-            "data",
-            "intervals",
-            "PASS" if self._is_success(data) else "FAIL",
-            str(data.get("data"))[:120] if self._is_success(data) else "",
-        )
+        self.record("data", "intervals", "PASS" if self._is_success(data) else "FAIL",
+                    str(data.get("data"))[:120] if self._is_success(data) else "")
 
         targets = self._data_targets()
         self._data_targets_cache = targets  # reused by websocket section
@@ -613,126 +445,71 @@ class Runner:
             ok, data = self.api("quotes", {"symbol": sym, "exchange": exch})
             d = data.get("data", {}) if self._is_success(data) else {}
             good = self._is_success(data) and float(d.get("ltp") or 0) >= 0 and "ltp" in d
-            self.record(
-                "data",
-                f"quotes {label} ({sym})",
-                "PASS" if good else "FAIL",
-                f"ltp={d.get('ltp')}" if good else str(data.get("message") or "")[:80],
-            )
+            self.record("data", f"quotes {label} ({sym})", "PASS" if good else "FAIL",
+                        f"ltp={d.get('ltp')}" if good else str(data.get("message") or "")[:80])
 
             ok, data = self.api("depth", {"symbol": sym, "exchange": exch})
             d = data.get("data", {}) if self._is_success(data) else {}
-            good = (
-                self._is_success(data)
-                and isinstance(d.get("bids"), list)
-                and isinstance(d.get("asks"), list)
-            )
-            self.record(
-                "data",
-                f"depth {label} ({sym})",
-                "PASS" if good else "FAIL",
-                f"{len(d.get('bids', []))}x{len(d.get('asks', []))} levels"
-                if good
-                else str(data.get("message") or "")[:80],
-            )
+            good = self._is_success(data) and isinstance(d.get("bids"), list) and isinstance(d.get("asks"), list)
+            self.record("data", f"depth {label} ({sym})", "PASS" if good else "FAIL",
+                        f"{len(d.get('bids', []))}x{len(d.get('asks', []))} levels" if good
+                        else str(data.get("message") or "")[:80])
 
         # History — intraday + daily on the NSE equity
         sym, exch = self.cfg("equity_nse"), "NSE"
         today = datetime.now()
-        intra = {
-            "symbol": sym,
-            "exchange": exch,
-            "interval": "5m",
-            "start_date": (today - timedelta(days=5)).strftime("%Y-%m-%d"),
-            "end_date": today.strftime("%Y-%m-%d"),
-        }
+        intra = {"symbol": sym, "exchange": exch, "interval": "5m",
+                 "start_date": (today - timedelta(days=5)).strftime("%Y-%m-%d"),
+                 "end_date": today.strftime("%Y-%m-%d")}
         ok, data = self.api("history", intra)
         n = len(data.get("data", [])) if self._is_success(data) else 0
-        self.record(
-            "data",
-            "history intraday (5m)",
-            "PASS" if (self._is_success(data) and n) else "FAIL",
-            f"{n} candles",
-        )
+        self.record("data", "history intraday (5m)", "PASS" if (self._is_success(data) and n) else "FAIL",
+                    f"{n} candles")
 
-        daily = {
-            "symbol": sym,
-            "exchange": exch,
-            "interval": "D",
-            "start_date": (today - timedelta(days=120)).strftime("%Y-%m-%d"),
-            "end_date": today.strftime("%Y-%m-%d"),
-        }
+        daily = {"symbol": sym, "exchange": exch, "interval": "D",
+                 "start_date": (today - timedelta(days=120)).strftime("%Y-%m-%d"),
+                 "end_date": today.strftime("%Y-%m-%d")}
         ok, data = self.api("history", daily)
         n = len(data.get("data", [])) if self._is_success(data) else 0
-        self.record(
-            "data",
-            "history daily (D)",
-            "PASS" if (self._is_success(data) and n) else "FAIL",
-            f"{n} candles",
-        )
+        self.record("data", "history daily (D)", "PASS" if (self._is_success(data) and n) else "FAIL",
+                    f"{n} candles")
 
         # Multiquotes
-        ok, data = self.api(
-            "multiquotes",
-            {
-                "symbols": [
-                    {"symbol": self.cfg("equity_nse"), "exchange": "NSE"},
-                    {"symbol": self.cfg("index_nse"), "exchange": "NSE_INDEX"},
-                    {"symbol": self.cfg("index_bse"), "exchange": "BSE_INDEX"},
-                ]
-            },
-        )
-        self.record(
-            "data",
-            "multiquotes (mixed)",
-            "PASS" if self._is_success(data) else "SKIP",
-            str(data.get("message") or "")[:80] if not self._is_success(data) else "",
-        )
+        ok, data = self.api("multiquotes", {"symbols": [
+            {"symbol": self.cfg("equity_nse"), "exchange": "NSE"},
+            {"symbol": self.cfg("index_nse"), "exchange": "NSE_INDEX"},
+            {"symbol": self.cfg("index_bse"), "exchange": "BSE_INDEX"},
+        ]})
+        self.record("data", "multiquotes (mixed)", "PASS" if self._is_success(data) else "SKIP",
+                    str(data.get("message") or "")[:80] if not self._is_success(data) else "")
 
     # =======================================================================
     # 6. Option tools (expiry + option chain), NFO & BFO
     # =======================================================================
     def test_option_tools(self):
         self.section("6. Option tools (expiry + option chain)")
-        plan = [
-            ("NFO", "NSE_INDEX", self.cfg_list("nfo_underlyings")),
-            ("BFO", "BSE_INDEX", self.cfg_list("bfo_underlyings")),
-        ]
+        plan = [("NFO", "NSE_INDEX", self.cfg_list("nfo_underlyings")),
+                ("BFO", "BSE_INDEX", self.cfg_list("bfo_underlyings"))]
         for fno_exch, idx_exch, unds in plan:
             for und in unds:
-                ok, data = self.api(
-                    "expiry", {"symbol": und, "exchange": fno_exch, "instrumenttype": "options"}
-                )
+                ok, data = self.api("expiry", {"symbol": und, "exchange": fno_exch,
+                                               "instrumenttype": "options"})
                 exps = []
                 if self._is_success(data):
                     d = data.get("data")
                     exps = d.get("expiry") if isinstance(d, dict) else d
                     exps = exps if isinstance(exps, list) else []
-                self.record(
-                    "optiontools",
-                    f"expiry {und}@{fno_exch}",
-                    "PASS" if exps else "FAIL",
-                    f"{len(exps)} expiries",
-                )
+                self.record("optiontools", f"expiry {und}@{fno_exch}",
+                            "PASS" if exps else "FAIL", f"{len(exps)} expiries")
                 if not exps:
                     self.record("optiontools", f"optionchain {und}", "SKIP", "no expiry")
                     continue
                 exp_c = self._compact_expiry(exps[0])
-                ok, data = self.api(
-                    "optionchain",
-                    {
-                        "underlying": und,
-                        "exchange": idx_exch,
-                        "expiry_date": exp_c,
-                        "strike_count": 5,
-                    },
-                )
-                self.record(
-                    "optiontools",
-                    f"optionchain {und} ({exp_c})",
-                    "PASS" if self._is_success(data) else "FAIL",
-                    str(data.get("message") or "")[:80],
-                )
+                ok, data = self.api("optionchain", {"underlying": und, "exchange": idx_exch,
+                                                    "expiry_date": exp_c, "strike_count": 5})
+                self.record("optiontools", f"optionchain {und} ({exp_c})",
+                            "PASS" if self._is_success(data) else "FAIL",
+                            str(data.get("message") or "")[:80])
 
     # =======================================================================
     # 7. WebSocket streaming
@@ -759,12 +536,9 @@ class Runner:
         for label, sym, exch in probe:
             for mode, mname in ((1, "LTP"), (2, "Quote"), (3, "Depth")):
                 got = client.subscribe_and_wait(sym, exch, mode, timeout=8)
-                self.record(
-                    "websocket",
-                    f"{mname} {label} ({sym})",
-                    "PASS" if got else "FAIL",
-                    "tick received" if got else "no tick in 8s (market closed?)",
-                )
+                self.record("websocket", f"{mname} {label} ({sym})",
+                            "PASS" if got else "FAIL",
+                            "tick received" if got else "no tick in 8s (market closed?)")
         client.disconnect()
 
     @staticmethod
@@ -790,15 +564,11 @@ class Runner:
         total = {"PASS": 0, "FAIL": 0, "SKIP": 0}
         print(f"  {'Section':<14} {'PASS':>5} {'FAIL':>5} {'SKIP':>5}")
         for sec, s in sections.items():
-            print(
-                f"  {sec:<14} {G}{s['PASS']:>5}{RST} {R}{s['FAIL']:>5}{RST} {Y}{s['SKIP']:>5}{RST}"
-            )
+            print(f"  {sec:<14} {G}{s['PASS']:>5}{RST} {R}{s['FAIL']:>5}{RST} {Y}{s['SKIP']:>5}{RST}")
             for k in total:
                 total[k] += s.get(k, 0)
         print(f"  {'-' * 32}")
-        print(
-            f"  {'TOTAL':<14} {G}{total['PASS']:>5}{RST} {R}{total['FAIL']:>5}{RST} {Y}{total['SKIP']:>5}{RST}"
-        )
+        print(f"  {'TOTAL':<14} {G}{total['PASS']:>5}{RST} {R}{total['FAIL']:>5}{RST} {Y}{total['SKIP']:>5}{RST}")
         if total["FAIL"]:
             print(f"\n{R}Failures:{RST}")
             for sec, name, status, detail in self.results:
@@ -839,10 +609,7 @@ class _WSClient:
             self.connected = False
 
         self.ws = websocket.WebSocketApp(
-            self.ws_url,
-            on_message=on_message,
-            on_open=on_open,
-            on_close=on_close,
+            self.ws_url, on_message=on_message, on_open=on_open, on_close=on_close,
             on_error=lambda ws, e: None,
         )
         t = threading.Thread(target=self.ws.run_forever, daemon=True)
@@ -857,17 +624,8 @@ class _WSClient:
         with self.lock:
             self.ticks.clear()
         try:
-            self.ws.send(
-                json.dumps(
-                    {
-                        "action": "subscribe",
-                        "symbol": symbol,
-                        "exchange": exchange,
-                        "mode": mode,
-                        "depth": 5,
-                    }
-                )
-            )
+            self.ws.send(json.dumps({"action": "subscribe", "symbol": symbol,
+                                     "exchange": exchange, "mode": mode, "depth": 5}))
         except Exception:
             return False
         deadline = time.time() + timeout
@@ -879,11 +637,8 @@ class _WSClient:
         with self.lock:
             got = any(t[2] == mode and t[1] == symbol for t in self.ticks)
         try:
-            self.ws.send(
-                json.dumps(
-                    {"action": "unsubscribe", "symbol": symbol, "exchange": exchange, "mode": mode}
-                )
-            )
+            self.ws.send(json.dumps({"action": "unsubscribe", "symbol": symbol,
+                                     "exchange": exchange, "mode": mode}))
         except Exception:
             pass
         return got
@@ -901,9 +656,7 @@ def main():
     parser.add_argument("--apikey", default=None, help="OpenAlgo API key (else API_KEY env/.env)")
     parser.add_argument("--base-url", default="http://127.0.0.1:5000")
     parser.add_argument("--ws-url", default="ws://127.0.0.1:8765")
-    parser.add_argument(
-        "--live", action="store_true", help="run order tests against the REAL broker"
-    )
+    parser.add_argument("--live", action="store_true", help="run order tests against the REAL broker")
     parser.add_argument("--no-ws", action="store_true", help="skip WebSocket tests")
     parser.add_argument("--sections", default="1,2,3,4,5,6,7", help="comma list of sections to run")
     parser.add_argument("--equity", default=None, help="override NSE equity test symbol")
@@ -913,7 +666,6 @@ def main():
     if not api_key:
         try:
             from dotenv import load_dotenv
-
             load_dotenv()
             api_key = os.getenv("API_KEY")
         except ImportError:
@@ -929,9 +681,7 @@ def main():
     r = Runner(args.base_url, args.ws_url, api_key, live=args.live, no_ws=args.no_ws)
 
     print(f"{B}OpenAlgo Broker Integration Test Runner{RST}")
-    print(
-        f"  base={args.base_url}  ws={args.ws_url}  order-mode={'LIVE' if args.live else 'SANDBOX'}"
-    )
+    print(f"  base={args.base_url}  ws={args.ws_url}  order-mode={'LIVE' if args.live else 'SANDBOX'}")
     if args.live:
         print(f"{Y}  WARNING: --live places REAL orders (qty 1, limits far from LTP).{RST}")
 

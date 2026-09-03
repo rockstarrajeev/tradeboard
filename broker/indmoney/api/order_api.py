@@ -24,6 +24,8 @@ from utils.logging import get_logger
 logger = get_logger(__name__)
 
 
+
+
 def get_api_response(endpoint, auth, method="GET", payload="", params=None):
     AUTH_TOKEN = auth
 
@@ -41,7 +43,9 @@ def get_api_response(endpoint, auth, method="GET", payload="", params=None):
     try:
         # request_with_retry handles HTTP 429 with backoff and sets .status
         if method == "GET":
-            response = rate_limited_request(client, "GET", url, headers=headers, params=params)
+            response = rate_limited_request(
+                client, "GET", url, headers=headers, params=params
+            )
         elif method == "POST":
             response = rate_limited_request(
                 client, "POST", url, headers=headers, content=payload, params=params
@@ -289,6 +293,7 @@ def _enrich_positions_with_ltp(positions, auth):
         logger.warning(f"Could not enrich positions with LTP: {e}")
 
 
+
 def get_positions(auth, include_ltp=True):
     """
     Fetch all positions for the current trading day.
@@ -377,14 +382,14 @@ def get_holdings(auth):
 # --- Per-Symbol Smart Order Lock ---
 # Ensures only one smart order per symbol executes at a time.
 # Others queue and execute sequentially, each getting a fresh position book.
-_symbol_locks = {}  # {symbol_key: threading.Lock}
+_symbol_locks = {}          # {symbol_key: threading.Lock}
 _symbol_locks_lock = threading.Lock()
 
 # --- Position Book Cache ---
 # Caches get_positions() for 1 second. Invalidated after each smart order placement.
-_position_cache = {}  # {auth_token: {"data": ..., "timestamp": ...}}
+_position_cache = {}        # {auth_token: {"data": ..., "timestamp": ...}}
 _position_cache_lock = threading.Lock()
-_POSITION_CACHE_TTL = 1.0  # seconds
+_POSITION_CACHE_TTL = 1.0   # seconds
 
 
 def _get_symbol_lock(symbol, exchange, product):
@@ -418,6 +423,7 @@ def _invalidate_position_cache(auth):
     """Invalidate the position cache so the next queued order fetches fresh data."""
     with _position_cache_lock:
         _position_cache.pop(auth, None)
+
 
 
 def _position_exchange(position):
@@ -799,7 +805,9 @@ def cancel_order(orderid, auth):
 
     # A stop/GTT order must be cancelled on the smart-order endpoint;
     # /order/cancel does not know about it.
-    endpoint = "/smart/order/cancel" if _is_smart_order(orderid, AUTH_TOKEN) else "/order/cancel"
+    endpoint = (
+        "/smart/order/cancel" if _is_smart_order(orderid, AUTH_TOKEN) else "/order/cancel"
+    )
 
     # Make the POST request to cancel order using httpx
     url = get_url(endpoint)

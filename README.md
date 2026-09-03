@@ -364,6 +364,9 @@ We welcome contributions! To contribute:
 
 ## Community & Support
 
+- **Developer**: Rajeev Upadhyay
+- **Website**: [rajeevupadhyay.com](https://rajeevupadhyay.com)
+- **Contact**: [rajeev.upadhyay@live.in](mailto:rajeev.upadhyay@live.in)
 - **Discord**: [Join our community](https://www.rajeevupadhyay.com/discord)
 - **Twitter/X**: [@tradeboardHQ](https://twitter.com/tradeboardHQ)
 - **YouTube**: [@tradeboard](https://www.youtube.com/@tradeboard)

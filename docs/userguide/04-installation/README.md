@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This guide walks you through installing Tradeboard on your system. We'll cover Windows, Ubuntu, and macOS installations.
+This guide walks you through installing OpenAlgo on your system. We'll cover Windows, Ubuntu, and macOS installations.
 
 ## Quick Install (All Platforms)
 
@@ -10,8 +10,8 @@ If you're comfortable with command line, here's the fastest way:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/rockstarrajeev/tradeboard.git
-cd tradeboard
+git clone --filter=blob:none https://github.com/marketcalls/openalgo.git
+cd openalgo
 
 # 2. Install UV package manager
 pip install uv
@@ -19,9 +19,18 @@ pip install uv
 # 3. Create configuration
 cp .sample.env .env
 
-# 4. Run Tradeboard
+# 4. Run OpenAlgo
 uv run app.py
 ```
+
+> **Why `--filter=blob:none`?** It makes a [partial clone](https://git-scm.com/docs/partial-clone):
+> git downloads the full history of commits but only the file contents the
+> checkout actually needs, fetching anything older on demand. That is about
+> **20 MB instead of 280 MB**, and roughly 8 seconds instead of 36. Everything
+> still works normally: `git pull` to upgrade, checking out any branch or
+> release tag, and rolling back to any commit. Drop the flag if you want the
+> entire history on disk up front, or if you are cloning from a git host that
+> does not support filtering (it will simply fall back to a full clone).
 
 Open `http://127.0.0.1:5000` in your browser. That's it!
 
@@ -53,19 +62,19 @@ git --version
 # Should show: git version 2.x.x
 ```
 
-#### Step 3: Download Tradeboard
+#### Step 3: Download OpenAlgo
 
 Open Command Prompt (search "cmd") and run:
 
 ```cmd
-# Navigate to where you want Tradeboard
+# Navigate to where you want OpenAlgo
 cd C:\Users\YourName\Documents
 
 # Clone the repository
-git clone https://github.com/rockstarrajeev/tradeboard.git
+git clone --filter=blob:none https://github.com/marketcalls/openalgo.git
 
 # Enter the folder
-cd tradeboard
+cd openalgo
 ```
 
 #### Step 4: Install UV Package Manager
@@ -85,7 +94,7 @@ copy .sample.env .env
 - Right-click `.env` → Open with → Notepad
 - We'll configure this in the next chapter
 
-#### Step 6: Run Tradeboard
+#### Step 6: Run OpenAlgo
 
 ```cmd
 uv run app.py
@@ -116,12 +125,12 @@ sudo apt install python3.12 python3.12-venv python3-pip git -y
 python3.12 --version
 ```
 
-#### Step 3: Download Tradeboard
+#### Step 3: Download OpenAlgo
 
 ```bash
 # Clone repository
-git clone https://github.com/rockstarrajeev/tradeboard.git
-cd tradeboard
+git clone --filter=blob:none https://github.com/marketcalls/openalgo.git
+cd openalgo
 ```
 
 #### Step 4: Install UV and Configure
@@ -134,7 +143,7 @@ pip install uv
 cp .sample.env .env
 ```
 
-#### Step 5: Run Tradeboard
+#### Step 5: Run OpenAlgo
 
 ```bash
 uv run app.py
@@ -156,12 +165,12 @@ Access at `http://your-server-ip:5000`
 brew install python@3.12 git
 ```
 
-#### Step 3: Download and Run Tradeboard
+#### Step 3: Download and Run OpenAlgo
 
 ```bash
 # Clone repository
-git clone https://github.com/rockstarrajeev/tradeboard.git
-cd tradeboard
+git clone --filter=blob:none https://github.com/marketcalls/openalgo.git
+cd openalgo
 
 # Install UV
 pip3 install uv
@@ -210,8 +219,8 @@ ZMQ_PORT='5555'
 
 ```bash
 # Clone repository
-git clone https://github.com/rockstarrajeev/tradeboard.git
-cd tradeboard
+git clone --filter=blob:none https://github.com/marketcalls/openalgo.git
+cd openalgo
 
 # Create environment file
 cp .sample.env .env
@@ -280,7 +289,7 @@ docker-compose up
 
 Open browser → Go to `http://127.0.0.1:5000`
 
-You should see the Tradeboard login page.
+You should see the OpenAlgo login page.
 
 ### Check 2: REST API
 
@@ -305,7 +314,7 @@ Solution: Reinstall Python with "Add to PATH" checked
 ## Folder Structure After Installation
 
 ```
-tradeboard/
+openalgo/
 ├── app.py              # Main application
 ├── .env                # Your configuration (edit this)
 ├── .sample.env         # Example configuration
@@ -346,7 +355,7 @@ uv run python -c "import secrets; print(secrets.token_hex(32))"
 
 Run this twice - once for APP_KEY, once for API_KEY_PEPPER.
 
-## Running Tradeboard
+## Running OpenAlgo
 
 ### Development Mode (Default)
 
@@ -358,7 +367,7 @@ Access at `http://127.0.0.1:5000`
 
 ## Production Deployment (Ubuntu Server)
 
-For production use, deploy Tradeboard on an Ubuntu server using the automated `install.sh` script. This is the **recommended approach** for live trading.
+For production use, deploy OpenAlgo on an Ubuntu server using the automated `install.sh` script. This is the **recommended approach** for live trading.
 
 **Important**: The install script configures everything automatically:
 - Nginx reverse proxy with SSL/TLS
@@ -428,10 +437,10 @@ ssh user@your_server_ip
 #### 2. Download Installation Script
 
 ```bash
-mkdir -p ~/tradeboard-install
-cd ~/tradeboard-install
+mkdir -p ~/openalgo-install
+cd ~/openalgo-install
 
-wget https://raw.githubusercontent.com/rockstarrajeev/tradeboard/main/install/install.sh
+wget https://raw.githubusercontent.com/marketcalls/openalgo/main/install/install.sh
 
 chmod +x install.sh
 ```
@@ -464,7 +473,7 @@ sudo ./install.sh
 ```
 
 Each deployment gets:
-- Unique service name (e.g., tradeboard-yourdomain-broker)
+- Unique service name (e.g., openalgo-yourdomain-broker)
 - Separate configuration files and directories
 - Individual log files
 - Independent SSL certificates
@@ -474,7 +483,7 @@ Each deployment gets:
 
 1. **Check Service Status**
    ```bash
-   sudo systemctl status tradeboard-yourdomain-broker
+   sudo systemctl status openalgo-yourdomain-broker
    ```
 
 2. **Verify Nginx Configuration**
@@ -498,17 +507,17 @@ Each deployment gets:
 #### Service Management
 
 ```bash
-# List all Tradeboard services
-systemctl list-units "tradeboard-*"
+# List all OpenAlgo services
+systemctl list-units "openalgo-*"
 
 # Restart specific deployment
-sudo systemctl restart tradeboard-yourdomain-broker
+sudo systemctl restart openalgo-yourdomain-broker
 
 # View real-time logs
-sudo journalctl -f -u tradeboard-yourdomain-broker
+sudo journalctl -f -u openalgo-yourdomain-broker
 
 # View last 100 lines of logs
-sudo journalctl -n 100 -u tradeboard-yourdomain-broker
+sudo journalctl -n 100 -u openalgo-yourdomain-broker
 ```
 
 #### Nginx Management
@@ -540,10 +549,10 @@ sudo certbot --nginx -d yourdomain.com
 
 ```bash
 # View service logs
-sudo journalctl -u tradeboard-yourdomain-broker
+sudo journalctl -u openalgo-yourdomain-broker
 
 # Restart service
-sudo systemctl restart tradeboard-yourdomain-broker
+sudo systemctl restart openalgo-yourdomain-broker
 ```
 
 #### Nginx Issues
@@ -584,7 +593,7 @@ If you need to receive webhooks from TradingView, GoCharting, or ChartInk but do
 | **devtunnel** (Microsoft) | `devtunnel host -p 5000` | [devtunnels.ms](https://aka.ms/devtunnels) |
 | **Cloudflare Tunnel** | `cloudflared tunnel --url http://localhost:5000` | [cloudflare.com](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/) |
 
-**Important**: Tunneling is **only for webhooks**. Always run Tradeboard on your own server with proper domain setup for production use. Don't run the entire application through a tunnel.
+**Important**: Tunneling is **only for webhooks**. Always run OpenAlgo on your own server with proper domain setup for production use. Don't run the entire application through a tunnel.
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
@@ -592,7 +601,7 @@ If you need to receive webhooks from TradingView, GoCharting, or ChartInk but do
 │                                                                 │
 │  Your Ubuntu Server (install.sh)                               │
 │  ┌──────────────────────────────────────────────────────────┐ │
-│  │  Nginx (HTTPS) → Gunicorn → Tradeboard                     │ │
+│  │  Nginx (HTTPS) → Gunicorn → OpenAlgo                     │ │
 │  │  • Dashboard access: https://yourdomain.com              │ │
 │  │  • API access: https://yourdomain.com/api/v1/*           │ │
 │  │  • WebSocket: wss://yourdomain.com/ws                    │ │
@@ -610,12 +619,12 @@ If you need to receive webhooks from TradingView, GoCharting, or ChartInk but do
 
 ## Docker Deployment (Alternative)
 
-Tradeboard can also be deployed using Docker with custom domain and SSL. This is useful if you prefer containerized deployments.
+OpenAlgo can also be deployed using Docker with custom domain and SSL. This is useful if you prefer containerized deployments.
 
 ### Quick Start
 
 ```bash
-wget https://raw.githubusercontent.com/rockstarrajeev/tradeboard/refs/heads/main/install/install-docker.sh
+wget https://raw.githubusercontent.com/marketcalls/openalgo/refs/heads/main/install/install-docker.sh
 chmod +x install-docker.sh
 ./install-docker.sh
 ```
@@ -633,12 +642,12 @@ chmod +x install-docker.sh
 
 ```bash
 # Create a non-root user if running as root
-adduser tradeboard
-usermod -aG sudo tradeboard
-su - tradeboard
+adduser openalgo
+usermod -aG sudo openalgo
+su - openalgo
 
 # Download and run
-wget https://raw.githubusercontent.com/rockstarrajeev/tradeboard/refs/heads/main/install/install-docker.sh
+wget https://raw.githubusercontent.com/marketcalls/openalgo/refs/heads/main/install/install-docker.sh
 chmod +x install-docker.sh
 ./install-docker.sh
 ```
@@ -646,7 +655,7 @@ chmod +x install-docker.sh
 **Option 2: As Root User**
 
 ```bash
-wget https://raw.githubusercontent.com/rockstarrajeev/tradeboard/refs/heads/main/install/install-docker.sh
+wget https://raw.githubusercontent.com/marketcalls/openalgo/refs/heads/main/install/install-docker.sh
 chmod +x install-docker.sh
 ./install-docker.sh
 ```
@@ -663,7 +672,7 @@ The script will prompt you for:
 2. Installs Docker & Docker Compose
 3. Installs Nginx web server
 4. Installs Certbot for SSL
-5. Clones Tradeboard to `/opt/tradeboard`
+5. Clones OpenAlgo to `/opt/openalgo`
 6. Configures environment variables
 7. Sets up firewall (UFW)
 8. Obtains SSL certificate
@@ -674,22 +683,22 @@ The script will prompt you for:
 
 ```bash
 # View application status
-tradeboard-status
+openalgo-status
 
 # View live logs
-tradeboard-logs
+openalgo-logs
 
 # Restart application
-tradeboard-restart
+openalgo-restart
 
 # Create backup
-tradeboard-backup
+openalgo-backup
 ```
 
 ### Docker Commands
 
 ```bash
-cd /opt/tradeboard
+cd /opt/openalgo
 
 # Restart container
 sudo docker compose restart
@@ -707,12 +716,12 @@ sudo docker compose up -d
 
 | Item | Location |
 |------|----------|
-| Installation | `/opt/tradeboard` |
-| Configuration | `/opt/tradeboard/.env` |
-| Database | Docker volume `tradeboard_db` |
+| Installation | `/opt/openalgo` |
+| Configuration | `/opt/openalgo/.env` |
+| Database | Docker volume `openalgo_db` |
 | Nginx Config | `/etc/nginx/sites-available/yourdomain.com` |
 | SSL Certificates | `/etc/letsencrypt/live/yourdomain.com/` |
-| Backups | `/opt/tradeboard-backups/` |
+| Backups | `/opt/openalgo-backups/` |
 
 ### Architecture
 
@@ -731,7 +740,7 @@ sudo docker compose up -d
     ▼         ▼
 ┌───────┐ ┌──────────┐
 │ Flask │ │WebSocket │ ← Docker Container
-│ :5000 │ │  :8765   │   (tradeboard-web)
+│ :5000 │ │  :8765   │   (openalgo-web)
 └───────┘ └──────────┘
     │
     ▼
@@ -744,10 +753,10 @@ sudo docker compose up -d
 ### Updating Docker Deployment
 
 ```bash
-cd /opt/tradeboard
+cd /opt/openalgo
 
 # Create backup first
-tradeboard-backup
+openalgo-backup
 
 # Stop container
 sudo docker compose down
@@ -760,12 +769,12 @@ sudo docker compose build --no-cache
 sudo docker compose up -d
 
 # Verify
-tradeboard-status
+openalgo-status
 ```
 
 ## Raspberry Pi Installation
 
-Tradeboard can run on Raspberry Pi models 3, 4, or 5 (4GB+ RAM), preferably with Ubuntu 24.04+ server edition.
+OpenAlgo can run on Raspberry Pi models 3, 4, or 5 (4GB+ RAM), preferably with Ubuntu 24.04+ server edition.
 
 ### Hardware Requirements
 
@@ -806,9 +815,9 @@ echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 Use the same `install.sh` script as Ubuntu Server:
 
 ```bash
-mkdir -p ~/tradeboard-install
-cd ~/tradeboard-install
-wget https://raw.githubusercontent.com/rockstarrajeev/tradeboard/main/install/install.sh
+mkdir -p ~/openalgo-install
+cd ~/openalgo-install
+wget https://raw.githubusercontent.com/marketcalls/openalgo/main/install/install.sh
 chmod +x install.sh
 sudo ./install.sh
 ```
@@ -825,11 +834,11 @@ sudo sh get-docker.sh
 
 **Clone and Build:**
 ```bash
-git clone https://github.com/rockstarrajeev/tradeboard
-cd tradeboard
+git clone --filter=blob:none https://github.com/marketcalls/openalgo
+cd openalgo
 cp .sample.env .env
 # Edit .env with your broker credentials
-docker build -t tradeboard:latest .
+docker build -t openalgo:latest .
 docker-compose up -d
 ```
 
@@ -861,14 +870,14 @@ For external access:
 4. Configure SSL/TLS to "Full (strict)"
 5. Enable WAF and rate limiting for security
 
-## Updating Tradeboard
+## Updating OpenAlgo
 
 To get the latest version:
 
 ```bash
-cd tradeboard
+cd openalgo
 
-# Stop Tradeboard first
+# Stop OpenAlgo first
 
 # Pull latest changes
 git pull origin main
@@ -876,7 +885,7 @@ git pull origin main
 # Sync dependencies
 uv sync
 
-# Restart Tradeboard
+# Restart OpenAlgo
 uv run app.py
 ```
 
@@ -898,7 +907,7 @@ chmod +x app.py
 
 ### Issue: "Database locked"
 
-Close all Tradeboard instances and restart.
+Close all OpenAlgo instances and restart.
 
 ### Issue: "Port 5000 in use"
 

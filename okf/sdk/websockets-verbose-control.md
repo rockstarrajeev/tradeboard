@@ -2,7 +2,7 @@
 type: Reference
 title: WebSocket Verbose Control
 description: Controlling verbosity and logging of the WebSocket feed
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/prompt/websockets-verbose-control.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/prompt/websockets-verbose-control.md
 tags:
 - websocket
 - logging

@@ -1,5 +1,4 @@
 """SIP schedule generation: holidays, month ends, step-up."""
-
 from datetime import date
 
 import pandas as pd
@@ -21,13 +20,7 @@ def sessions(start="2020-01-01", end="2021-12-31"):
 def test_monthly_dates_land_on_the_requested_day():
     d = requested_dates(date(2020, 1, 1), date(2020, 6, 30), "monthly", 15)
     assert [x.isoformat() for x in d] == [
-        "2020-01-15",
-        "2020-02-15",
-        "2020-03-15",
-        "2020-04-15",
-        "2020-05-15",
-        "2020-06-15",
-    ]
+        "2020-01-15", "2020-02-15", "2020-03-15", "2020-04-15", "2020-05-15", "2020-06-15"]
 
 
 def test_quarterly_steps_three_months():
@@ -65,9 +58,8 @@ def test_zero_step_up_is_a_flat_amount():
 def test_installment_on_a_holiday_moves_to_the_next_session():
     """2020-01-01 was a Wednesday holiday in this calendar (bdate_range starts
     2020-01-01, so use a weekend instead): the 5th is a Sunday."""
-    s = build_schedule(
-        sessions(), date(2020, 1, 1), date(2020, 3, 31), 5000, frequency="monthly", day_of_month=5
-    )
+    s = build_schedule(sessions(), date(2020, 1, 1), date(2020, 3, 31), 5000,
+                       frequency="monthly", day_of_month=5)
     jan = s[0]
     assert jan.requested == date(2020, 1, 5)
     assert jan.executed == date(2020, 1, 6), "Sunday rolls to Monday"
@@ -87,30 +79,21 @@ def test_installments_never_execute_after_the_window():
 
 
 def test_step_up_flows_through_to_installments():
-    s = build_schedule(
-        sessions("2020-01-01", "2022-12-31"),
-        date(2020, 1, 1),
-        date(2022, 12, 31),
-        10000,
-        step_up_percent=10.0,
-    )
+    s = build_schedule(sessions("2020-01-01", "2022-12-31"),
+                       date(2020, 1, 1), date(2022, 12, 31), 10000,
+                       step_up_percent=10.0)
     assert s[0].amount == pytest.approx(10000)
     assert s[-1].amount == pytest.approx(12100), "third year"
 
 
-@pytest.mark.parametrize(
-    "kwargs,match",
-    [
-        ({"amount": 0}, "positive"),
-        ({"frequency": "daily"}, "frequency must be"),
-    ],
-)
+@pytest.mark.parametrize("kwargs,match", [
+    ({"amount": 0}, "positive"),
+    ({"frequency": "daily"}, "frequency must be"),
+])
 def test_invalid_inputs_are_rejected(kwargs, match):
     base = {
-        "sessions": sessions(),
-        "start": date(2020, 1, 1),
-        "end": date(2020, 6, 1),
-        "amount": 5000,
+        "sessions": sessions(), "start": date(2020, 1, 1),
+        "end": date(2020, 6, 1), "amount": 5000,
     }
     base.update(kwargs)
     with pytest.raises(ScheduleError, match=match):
@@ -119,11 +102,5 @@ def test_invalid_inputs_are_rejected(kwargs, match):
 
 def test_window_too_short_for_any_installment():
     with pytest.raises(ScheduleError):
-        build_schedule(
-            sessions(),
-            date(2020, 1, 2),
-            date(2020, 1, 3),
-            5000,
-            frequency="monthly",
-            day_of_month=15,
-        )
+        build_schedule(sessions(), date(2020, 1, 2), date(2020, 1, 3), 5000,
+                       frequency="monthly", day_of_month=15)

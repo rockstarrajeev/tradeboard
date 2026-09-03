@@ -21,15 +21,11 @@ def emit_analyzer_error(request_data: dict[str, Any], error_message: str) -> dic
         del analyzer_request["apikey"]
     analyzer_request["api_type"] = API_TYPE
 
-    bus.publish(
-        AnalyzerErrorEvent(
-            mode="analyze",
-            api_type=API_TYPE,
-            request_data=analyzer_request,
-            response_data=error_response,
-            error_message=error_message,
-        )
-    )
+    bus.publish(AnalyzerErrorEvent(
+        mode="analyze", api_type=API_TYPE,
+        request_data=analyzer_request, response_data=error_response,
+        error_message=error_message,
+    ))
     return error_response
 
 
@@ -55,74 +51,49 @@ def modify_gtt_order_with_auth(
     if get_analyze_mode():
         from services.sandbox_service import sandbox_modify_gtt_order
 
-        success, response, status_code = sandbox_modify_gtt_order(trigger_id, order_data, api_key)
+        success, response, status_code = sandbox_modify_gtt_order(
+            trigger_id, order_data, api_key
+        )
         if success:
-            bus.publish(
-                GTTModifiedEvent(
-                    mode="analyze",
-                    api_type=API_TYPE,
-                    symbol=order_data.get("symbol", ""),
-                    exchange=order_data.get("exchange", ""),
-                    trigger_id=trigger_id,
-                    request_data=order_request_data,
-                    response_data=response,
-                    api_key=api_key,
-                )
-            )
+            bus.publish(GTTModifiedEvent(
+                mode="analyze", api_type=API_TYPE,
+                symbol=order_data.get("symbol", ""), exchange=order_data.get("exchange", ""),
+                trigger_id=trigger_id,
+                request_data=order_request_data, response_data=response, api_key=api_key,
+            ))
         else:
-            bus.publish(
-                GTTModifyFailedEvent(
-                    mode="analyze",
-                    api_type=API_TYPE,
-                    symbol=order_data.get("symbol", ""),
-                    exchange=order_data.get("exchange", ""),
-                    trigger_id=trigger_id,
-                    error_message=response.get("message", "GTT modify failed"),
-                    request_data=order_request_data,
-                    response_data=response,
-                    api_key=api_key,
-                )
-            )
+            bus.publish(GTTModifyFailedEvent(
+                mode="analyze", api_type=API_TYPE,
+                symbol=order_data.get("symbol", ""), exchange=order_data.get("exchange", ""),
+                trigger_id=trigger_id,
+                error_message=response.get("message", "GTT modify failed"),
+                request_data=order_request_data, response_data=response, api_key=api_key,
+            ))
         return success, response, status_code
 
     broker_module = import_broker_gtt_module(broker)
     if broker_module is None:
         message = f"GTT orders are not supported for broker '{broker}' yet"
         error_response = {"status": "error", "message": message}
-        bus.publish(
-            GTTModifyFailedEvent(
-                mode="live",
-                api_type=API_TYPE,
-                symbol=order_data.get("symbol", ""),
-                trigger_id=trigger_id,
-                error_message=message,
-                request_data=order_request_data,
-                response_data=error_response,
-                api_key=api_key,
-            )
-        )
+        bus.publish(GTTModifyFailedEvent(
+            mode="live", api_type=API_TYPE,
+            symbol=order_data.get("symbol", ""), trigger_id=trigger_id,
+            error_message=message,
+            request_data=order_request_data, response_data=error_response, api_key=api_key,
+        ))
         return False, error_response, 501
 
     try:
         response_message, status_code = broker_module.modify_gtt_order(order_data, auth_token)
     except Exception as e:
         logger.exception(f"Error in broker_module.modify_gtt_order: {e}")
-        error_response = {
-            "status": "error",
-            "message": "Failed to modify GTT due to internal error",
-        }
-        bus.publish(
-            GTTModifyFailedEvent(
-                mode="live",
-                api_type=API_TYPE,
-                symbol=order_data.get("symbol", ""),
-                trigger_id=trigger_id,
-                error_message=str(e),
-                request_data=order_request_data,
-                response_data=error_response,
-                api_key=api_key,
-            )
-        )
+        error_response = {"status": "error", "message": "Failed to modify GTT due to internal error"}
+        bus.publish(GTTModifyFailedEvent(
+            mode="live", api_type=API_TYPE,
+            symbol=order_data.get("symbol", ""), trigger_id=trigger_id,
+            error_message=str(e),
+            request_data=order_request_data, response_data=error_response, api_key=api_key,
+        ))
         return False, error_response, 500
 
     if status_code == 200:
@@ -132,18 +103,12 @@ def modify_gtt_order_with_auth(
             if isinstance(response_message, dict)
             else trigger_id,
         }
-        bus.publish(
-            GTTModifiedEvent(
-                mode="live",
-                api_type=API_TYPE,
-                symbol=order_data.get("symbol", ""),
-                exchange=order_data.get("exchange", ""),
-                trigger_id=str(success_response["trigger_id"]),
-                request_data=order_request_data,
-                response_data=success_response,
-                api_key=api_key,
-            )
-        )
+        bus.publish(GTTModifiedEvent(
+            mode="live", api_type=API_TYPE,
+            symbol=order_data.get("symbol", ""), exchange=order_data.get("exchange", ""),
+            trigger_id=str(success_response["trigger_id"]),
+            request_data=order_request_data, response_data=success_response, api_key=api_key,
+        ))
         return True, success_response, 200
 
     message = (
@@ -152,18 +117,12 @@ def modify_gtt_order_with_auth(
         else "Failed to modify GTT"
     )
     error_response = {"status": "error", "message": message}
-    bus.publish(
-        GTTModifyFailedEvent(
-            mode="live",
-            api_type=API_TYPE,
-            symbol=order_data.get("symbol", ""),
-            trigger_id=trigger_id,
-            error_message=message,
-            request_data=order_request_data,
-            response_data=error_response,
-            api_key=api_key,
-        )
-    )
+    bus.publish(GTTModifyFailedEvent(
+        mode="live", api_type=API_TYPE,
+        symbol=order_data.get("symbol", ""), trigger_id=trigger_id,
+        error_message=message,
+        request_data=order_request_data, response_data=error_response, api_key=api_key,
+    ))
     return False, error_response, status_code
 
 
@@ -196,18 +155,14 @@ def modify_gtt_order(
                     logger.warning(f"Modify GTT blocked for user {user_id} (semi-auto mode)")
                     order_request_data = copy.deepcopy(original_data)
                     order_request_data.pop("apikey", None)
-                    bus.publish(
-                        GTTModifyFailedEvent(
-                            mode="live",
-                            api_type=API_TYPE,
-                            symbol=order_data.get("symbol", ""),
-                            trigger_id=order_data.get("trigger_id", ""),
-                            error_message=error_response["message"],
-                            request_data=order_request_data,
-                            response_data=error_response,
-                            api_key=api_key,
-                        )
-                    )
+                    bus.publish(GTTModifyFailedEvent(
+                        mode="live", api_type=API_TYPE,
+                        symbol=order_data.get("symbol", ""),
+                        trigger_id=order_data.get("trigger_id", ""),
+                        error_message=error_response["message"],
+                        request_data=order_request_data, response_data=error_response,
+                        api_key=api_key,
+                    ))
                     return False, error_response, 403
 
         order_data["apikey"] = api_key

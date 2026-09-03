@@ -36,12 +36,12 @@ const faqData = [
       {
         question: 'What is OpenAlgo?',
         answer:
-          'OpenAlgo is an open-source algorithmic trading platform that provides a unified API layer across 35 brokers. It enables seamless integration with TradingView, Amibroker, Excel, Python, and AI agents, allowing traders to automate their trading strategies without being locked into a single broker.',
+          'OpenAlgo is an open-source algorithmic trading platform that provides a unified API layer across 36 broker plugins: 35 securities integrations and Delta Exchange for crypto derivatives. It enables seamless integration with TradingView, Amibroker, Excel, Python, and AI agents, allowing traders to automate their trading strategies without being locked into a single broker.',
       },
       {
         question: 'Which brokers are supported?',
         answer:
-          'OpenAlgo supports 35 brokers: 5 Paisa, 5 Paisa (XTS), Alice Blue, Angel One, Arrow, CompositEdge, Definedge, Delta Exchange, Dhan, Dhan (Sandbox), Firstock, Flattrade, Fyers, Groww, HDFC Sky, Ibulls, IIFL, IIFL Capital, IndMoney, JainamXts, Kotak Securities, Motilal Oswal, mStock by Mirae Asset, Nubra, Paytm Money, Pocketful, RMoney, Samco, Shoonya (Finvasia), TradeSmart, Tradejini, Upstox, Wisdom Capital, Zebu and Zerodha. Delta Exchange is a crypto exchange; the rest are Indian brokers. New brokers are being added regularly.',
+          'OpenAlgo supports 36 broker plugins: 5 Paisa, 5 Paisa (XTS), Alice Blue, Angel One, Arrow, CompositEdge, Definedge, Delta Exchange, Dhan, Dhan (Sandbox), Firstock, Flattrade, Fyers, Groww, HDFC Securities, HDFC Sky, Ibulls, IIFL, IIFL Capital, IndMoney, JainamXts, Kotak Securities, Motilal Oswal, mStock by Mirae Asset, Nubra, Paytm Money, Pocketful, RMoney, Samco, Shoonya (Finvasia), TradeSmart, Tradejini, Upstox, Wisdom Capital, Zebu and Zerodha. Delta Exchange is a crypto exchange; the rest are Indian brokers. New brokers are being added regularly.',
       },
       {
         question: 'What are the system requirements?',
@@ -134,9 +134,9 @@ export default function Faq() {
   const navLinks = [
     { href: '/', label: 'Home', internal: true },
     { href: '/faq', label: 'FAQ', internal: true },
-    { href: 'https://openalgo.in/discord', label: 'Community', internal: false },
-    { href: 'https://openalgo.in/roadmap', label: 'Roadmap', internal: false },
-    { href: 'https://docs.openalgo.in', label: 'Docs', internal: false },
+    { href: 'https://rajeevupadhyay.com/discord', label: 'Community', internal: false },
+    { href: 'https://rajeevupadhyay.com/roadmap', label: 'Roadmap', internal: false },
+    { href: 'https://docs.rajeevupadhyay.com', label: 'Docs', internal: false },
   ]
 
   return (
@@ -201,7 +201,7 @@ export default function Faq() {
                     Download
                   </Link>
                   <a
-                    href="https://openalgo.in/discord"
+                    href="https://rajeevupadhyay.com/discord"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 rounded-md hover:bg-accent"
@@ -210,7 +210,7 @@ export default function Faq() {
                     Community
                   </a>
                   <a
-                    href="https://openalgo.in/roadmap"
+                    href="https://rajeevupadhyay.com/roadmap"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 rounded-md hover:bg-accent"
@@ -219,7 +219,7 @@ export default function Faq() {
                     Roadmap
                   </a>
                   <a
-                    href="https://docs.openalgo.in"
+                    href="https://docs.rajeevupadhyay.com"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 rounded-md hover:bg-accent"
@@ -331,7 +331,7 @@ export default function Faq() {
                     Comprehensive guides and API references
                   </p>
                   <Button variant="outline" asChild>
-                    <a href="https://docs.openalgo.in" target="_blank" rel="noopener noreferrer">
+                    <a href="https://docs.rajeevupadhyay.com" target="_blank" rel="noopener noreferrer">
                       Read Docs
                     </a>
                   </Button>
@@ -348,7 +348,7 @@ export default function Faq() {
                     Join our active community for support
                   </p>
                   <Button variant="outline" asChild>
-                    <a href="https://openalgo.in/discord" target="_blank" rel="noopener noreferrer">
+                    <a href="https://rajeevupadhyay.com/discord" target="_blank" rel="noopener noreferrer">
                       Join Discord
                     </a>
                   </Button>
@@ -372,7 +372,7 @@ export default function Faq() {
                   </p>
                   <Button variant="outline" asChild>
                     <a
-                      href="https://github.com/marketcalls/openalgo"
+                      href="https://github.com/rockstarrajeev/tradeboard"
                       target="_blank"
                       rel="noopener noreferrer"
                     >

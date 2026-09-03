@@ -1,9 +1,10 @@
 """
-Tradeboard WebSocket 20-Level Market Depth Example
+OpenAlgo WebSocket 20-Level Market Depth Example
 For brokers that support 20-level depth (Dhan NSE/NFO)
 """
 
 import logging
+import os
 import time
 
 from openalgo import api
@@ -15,7 +16,7 @@ logging.basicConfig(
 
 # Initialize feed client with explicit parameters
 client = api(
-    api_key=os.getenv("TRADEBOARD_API_KEY"),  # Set TRADEBOARD_API_KEY in your environment
+    api_key=os.getenv("OPENALGO_API_KEY"),  # Set OPENALGO_API_KEY in your environment
     host="http://127.0.0.1:5000",  # Replace with your API host
     ws_url="ws://127.0.0.1:8765",  # Explicit WebSocket URL (can be different from REST API host)
 )

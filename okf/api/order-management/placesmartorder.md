@@ -2,7 +2,7 @@
 type: API Endpoint
 title: PlaceSmartOrder
 description: Place a position-aware smart order that reconciles to a target position size
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/order-management/placesmartorder.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/order-management/placesmartorder.md
 tags:
 - order
 - smart-order

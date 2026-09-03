@@ -1,4 +1,4 @@
-# Tradeboard Quick Test Checklist
+# OpenAlgo Quick Test Checklist
 
 A condensed checklist for rapid testing. Use the full guide for detailed steps.
 
@@ -8,7 +8,7 @@ A condensed checklist for rapid testing. Use the full guide for detailed steps.
 
 ```bash
 # Start fresh
-cd tradeboard
+cd openalgo
 git pull
 uv sync
 cd frontend && npm run build && cd ..
@@ -182,7 +182,7 @@ curl -X POST "$BASE_URL/api/v1/history" \
 
 ---
 
-## Tradeboard Symbol Format Quick Reference
+## OpenAlgo Symbol Format Quick Reference
 
 ### Exchange Codes
 | Code | Description |
@@ -251,8 +251,8 @@ MCX:      CRUDEOIL17JAN26FUT, GOLD05FEB26FUT
 
 ### Docker
 ```bash
-docker build -t tradeboard .
-docker run -p 5000:5000 tradeboard
+docker build -t openalgo .
+docker run -p 5000:5000 openalgo
 ```
 - [ ] Docker build succeeds
 - [ ] Container runs

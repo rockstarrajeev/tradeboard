@@ -213,7 +213,9 @@ class BaseOrderUpdateAdapter(ABC):
             while slept < delay and not self._shutting_down:
                 time.sleep(0.2)
                 slept += 0.2
-        self.logger.info(f"Order-update adapter stopped for {self.broker_name}/{self.user_id}")
+        self.logger.info(
+            f"Order-update adapter stopped for {self.broker_name}/{self.user_id}"
+        )
 
     def _connect_once(self) -> None:
         url = self.get_ws_url()
@@ -224,7 +226,9 @@ class BaseOrderUpdateAdapter(ABC):
             self._handle_message(message)
 
         def on_open(ws):
-            self.logger.info(f"Order-update WS connected: {self.broker_name}/{self.user_id}")
+            self.logger.info(
+                f"Order-update WS connected: {self.broker_name}/{self.user_id}"
+            )
             self.on_open_extra(ws)
             interval = self.heartbeat_interval()
             if interval:

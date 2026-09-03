@@ -1,6 +1,6 @@
 # Remote MCP
 
-Lets hosted AI clients — ChatGPT, Claude.ai, Claude mobile — talk to your Tradeboard install over the internet so you can ask them to fetch quotes, summarise positions, or place orders in plain English.
+Lets hosted AI clients — ChatGPT, Claude.ai, Claude mobile — talk to your OpenAlgo install over the internet so you can ask them to fetch quotes, summarise positions, or place orders in plain English.
 
 Local stdio MCP (Claude Desktop / Cursor / Windsurf on the same machine as your install) keeps working unchanged. Remote MCP is a parallel, opt-in transport that shares the same tool registry but reaches it over HTTPS.
 
@@ -14,9 +14,9 @@ Local stdio MCP (Claude Desktop / Cursor / Windsurf on the same machine as your 
 
 ### What you need
 
-1. **Tradeboard on your own domain with HTTPS.** Dashboard reachable at `https://yourdomain.com`, login + broker auth + orders all working through the web UI. If you're not there yet, start with one of the install scripts: `install/install.sh`, `install/install-multi.sh`, `install/install-docker.sh`, or `install/install-docker-multi-custom-ssl.sh`.
-2. **Tradeboard 2.0.1.0 or later.** The dashboard footer shows the version; `GET https://yourdomain.com/auth/app-info` returns it as JSON. On older builds run `install/update.sh` first.
-3. **An Tradeboard API key.** Generate one at **Profile → API Keys**. The MCP server uses it server-side; hosted clients never see it — they get OAuth tokens instead.
+1. **OpenAlgo on your own domain with HTTPS.** Dashboard reachable at `https://yourdomain.com`, login + broker auth + orders all working through the web UI. If you're not there yet, start with one of the install scripts: `install/install.sh`, `install/install-multi.sh`, `install/install-docker.sh`, or `install/install-docker-multi-custom-ssl.sh`.
+2. **OpenAlgo 2.0.1.0 or later.** The dashboard footer shows the version; `GET https://yourdomain.com/auth/app-info` returns it as JSON. On older builds run `install/update.sh` first.
+3. **An OpenAlgo API key.** Generate one at **Profile → API Keys**. The MCP server uses it server-side; hosted clients never see it — they get OAuth tokens instead.
 4. **A hosted client account that supports custom MCP connectors.** Check the client's current plan and workspace requirements; these are controlled by the client vendor.
 
 ***
@@ -27,23 +27,23 @@ Local stdio MCP (Claude Desktop / Cursor / Windsurf on the same machine as your 
 
 The installer asks at run time whether to enable Remote MCP. If you said **yes**, it's already on at `https://yourdomain.com/mcp` — skip to _Connecting_.
 
-If you said no and want to flip it now, edit `/var/python/tradeboard/.env`:
+If you said no and want to flip it now, edit `/var/python/openalgo/.env`:
 
 ```ini
 MCP_HTTP_ENABLED = 'True'
 MCP_PUBLIC_URL = 'https://yourdomain.com'
 ```
 
-Then `sudo systemctl restart tradeboard`.
+Then `sudo systemctl restart openalgo`.
 
 #### Multi-domain native (`install-multi.sh`)
 
-Edit the per-deploy `.env` (typically `/var/python/tradeboard-flask/<deploy-name>/.env`) with the same two keys, then `sudo systemctl restart tradeboard-<deploy-name>`.
+Edit the per-deploy `.env` (typically `/var/python/openalgo-flask/<deploy-name>/.env`) with the same two keys, then `sudo systemctl restart openalgo-<deploy-name>`.
 
 #### Docker (`install-docker.sh` / `install-docker-multi-custom-ssl.sh`)
 
 ```bash
-cd /path/to/tradeboard
+cd /path/to/openalgo
 sudo ./install/enable-remote-mcp-docker.sh
 ```
 
@@ -76,7 +76,7 @@ With `MCP_OAUTH_REQUIRE_APPROVAL=True`, the first connection pauses until you ap
 
 ***
 
-#### Adding Tradeboard to ChatGPT
+#### Adding OpenAlgo to ChatGPT
 
 > Heads up — ChatGPT recently renamed **Connectors → Apps**. Same feature, new menu name. The in-chat menu still says _Connectors_, so don't be confused.
 
@@ -90,8 +90,8 @@ With `MCP_OAUTH_REQUIRE_APPROVAL=True`, the first connection pauses until you ap
 
 | Field          | Value                                |
 | -------------- | ------------------------------------ |
-| Name           | `Tradeboard`                           |
-| Description    | `Tradeboard trading server` (optional) |
+| Name           | `OpenAlgo`                           |
+| Description    | `OpenAlgo trading server` (optional) |
 | MCP Server URL | `https://yourdomain.com/mcp`         |
 | Authentication | `OAuth`                              |
 
@@ -99,7 +99,7 @@ With `MCP_OAUTH_REQUIRE_APPROVAL=True`, the first connection pauses until you ap
 
 Expand **Advanced OAuth settings** → **Registration method** → `Dynamic Client Registration (DCR)`.
 
-The notice _"CIMD is unavailable…"_ is expected — Tradeboard advertises DCR. DCR is the right pick.
+The notice _"CIMD is unavailable…"_ is expected — OpenAlgo advertises DCR. DCR is the right pick.
 
 Default scopes ChatGPT requests are `read:market read:account`. Add `write:orders` only if you've turned `MCP_OAUTH_WRITE_SCOPE_ENABLED=True` on the server **and** you want this connector to place orders.
 
@@ -115,7 +115,7 @@ ChatGPT will show:
 
 This is expected only when `MCP_OAUTH_REQUIRE_APPROVAL=True`. Your server saw the registration but is holding it until you approve. Don't dismiss the modal.
 
-**Step 6 — Approve in Tradeboard**
+**Step 6 — Approve in OpenAlgo**
 
 1. New tab → `https://yourdomain.com/admin/remote-mcp`
 2. Sign in (TOTP if MCP 2FA is on)
@@ -130,11 +130,11 @@ This is expected only when `MCP_OAUTH_REQUIRE_APPROVAL=True`. Your server saw th
 
 **Step 8 — Use it**
 
-In any new chat, click **+** below the message box → **Connectors** → toggle **Tradeboard** ON.
+In any new chat, click **+** below the message box → **Connectors** → toggle **OpenAlgo** ON.
 
 Try:
 
-> _"Using Tradeboard, give me the LTP of RELIANCE on NSE."_
+> _"Using OpenAlgo, give me the LTP of RELIANCE on NSE."_
 
 ChatGPT calls `get_quote` and shows the price. With `read:account` granted, also try:
 
@@ -142,7 +142,7 @@ ChatGPT calls `get_quote` and shows the price. With `read:account` granted, also
 
 **Client policy and tool availability**
 
-Tradeboard exposes tools allowed by the granted OAuth scopes. ChatGPT can apply additional product policy, confirmation, plan, and connector restrictions, so the tools visible or executable in a client can differ from the server's `tools/list` response. Verify sensitive operations in Analyzer Mode and do not treat a granted `write:orders` scope as a guarantee that a hosted client will execute every write tool.
+OpenAlgo exposes tools allowed by the granted OAuth scopes. ChatGPT can apply additional product policy, confirmation, plan, and connector restrictions, so the tools visible or executable in a client can differ from the server's `tools/list` response. Verify sensitive operations in Analyzer Mode and do not treat a granted `write:orders` scope as a guarantee that a hosted client will execute every write tool.
 
 **Useful ChatGPT prompts**
 
@@ -153,7 +153,7 @@ Tradeboard exposes tools allowed by the granted OAuth scopes. ChatGPT can apply 
 
 ***
 
-#### Adding Tradeboard to Claude.ai
+#### Adding OpenAlgo to Claude.ai
 
 **Step 1 — Connectors page**
 
@@ -167,7 +167,7 @@ Top right **+** → **Add custom connector**.
 
 | Field                 | Value                        |
 | --------------------- | ---------------------------- |
-| Name                  | `Tradeboard`                   |
+| Name                  | `OpenAlgo`                   |
 | Remote MCP server URL | `https://yourdomain.com/mcp` |
 
 Leave **Advanced settings** alone — OAuth is detected automatically. Click **Add**.
@@ -176,17 +176,17 @@ Leave **Advanced settings** alone — OAuth is detected automatically. Click **A
 
 When `MCP_OAUTH_REQUIRE_APPROVAL=True`, the first attempt fails with a pending-approval error. Keep the page open. With approval disabled, continue directly to OAuth consent.
 
-**Step 5 — Approve in Tradeboard**
+**Step 5 — Approve in OpenAlgo**
 
 `https://yourdomain.com/admin/remote-mcp` → **Pending approvals** → **Approve**.
 
 **Step 6 — Complete OAuth**
 
-Back in claude.ai → **Connect** on the connector card → sign in to Tradeboard (+ TOTP if on) → consent screen (verify redirect URI is `claude.ai`) → **Authorize**. Card switches to **Disconnect** when you're live.
+Back in claude.ai → **Connect** on the connector card → sign in to OpenAlgo (+ TOTP if on) → consent screen (verify redirect URI is `claude.ai`) → **Authorize**. Card switches to **Disconnect** when you're live.
 
 **Step 7 — Tool permissions**
 
-Click your **Tradeboard** connector to expand permissions:
+Click your **OpenAlgo** connector to expand permissions:
 
 | Group                                                                  | Recommendation                                                   |
 | ---------------------------------------------------------------------- | ---------------------------------------------------------------- |
@@ -198,7 +198,7 @@ You can override individual tools — e.g. _Always allow_ most things but force 
 
 **Step 8 — Use it**
 
-In any chat, click the **Tools** icon below the message box → toggle **Tradeboard** on.
+In any chat, click the **Tools** icon below the message box → toggle **OpenAlgo** on.
 
 > _"Show me the current LTP of NIFTY 50 and a quick view of my open positions."_
 
@@ -206,7 +206,7 @@ Claude shows expandable tool-call cards. _Ask me_ tools surface a permission pro
 
 **Client policy and tool availability**
 
-Tradeboard exposes the same scoped registry to Claude.ai, but Claude can apply client-side permissions, plan limits, confirmations, or policy restrictions. Check the connector's current tool list and require confirmation for destructive operations.
+OpenAlgo exposes the same scoped registry to Claude.ai, but Claude can apply client-side permissions, plan limits, confirmations, or policy restrictions. Check the connector's current tool list and require confirmation for destructive operations.
 
 **Recommended posture for write tools**
 
@@ -323,9 +323,9 @@ For the implementation boundaries behind these controls, see [MCP Architecture](
 | `unauthorized_client` after Create / Add          | DCR client not approved yet                            | Approve at `/admin/remote-mcp`                                                    |
 | `invalid_client` on retry                         | Client revoked or DB reset; old `client_id` cached     | Disconnect + re-add to force fresh DCR                                            |
 | _"Server doesn't implement OAuth"_                | Old build                                              | Update to 2.0.1.0+                                                                |
-| _"CIMD is unavailable"_ in ChatGPT                | Tradeboard advertises DCR, not CIMD                      | Expected — pick **DCR**                                                           |
+| _"CIMD is unavailable"_ in ChatGPT                | OpenAlgo advertises DCR, not CIMD                      | Expected — pick **DCR**                                                           |
 | Tools missing from chat                           | Connector not toggled on for that chat                 | `+` menu (ChatGPT) or Tools menu (Claude)                                         |
-| `bad_arguments` on a tool call                    | Hosted client guessed parameter names                  | Update Tradeboard (newer builds expose strict tool schemas)                         |
+| `bad_arguments` on a tool call                    | Hosted client guessed parameter names                  | Update OpenAlgo (newer builds expose strict tool schemas)                         |
 | Sudden 401 on every call                          | Refresh token expired or kill switch fired             | **Reconnect** on the connector                                                    |
 | `place_order` blocked on ChatGPT                  | OpenAI's safety policy                                 | Use Claude.ai for order placement                                                 |
 | _"Failed to connect to the server"_ on tool calls | Loopback misconfigured                                 | Confirm `HOST_SERVER` in `.env` matches your dashboard URL; restart               |
@@ -346,8 +346,8 @@ If you want MCP on a separate hostname (e.g. `mcp.yourdomain.com`) so its cookie
 Native:
 
 ```bash
-sudo sed -i "s|MCP_HTTP_ENABLED.*|MCP_HTTP_ENABLED = 'False'|" /var/python/tradeboard/.env
-sudo systemctl restart tradeboard
+sudo sed -i "s|MCP_HTTP_ENABLED.*|MCP_HTTP_ENABLED = 'False'|" /var/python/openalgo/.env
+sudo systemctl restart openalgo
 ```
 
 (`install-multi.sh` users: substitute the per-deploy `.env` and service name.)
@@ -355,8 +355,8 @@ sudo systemctl restart tradeboard
 Docker:
 
 ```bash
-sudo sed -i "s|MCP_HTTP_ENABLED.*|MCP_HTTP_ENABLED = 'False'|" /opt/tradeboard/<domain>/.env
-cd /opt/tradeboard/<domain> && sudo docker compose restart
+sudo sed -i "s|MCP_HTTP_ENABLED.*|MCP_HTTP_ENABLED = 'False'|" /opt/openalgo/<domain>/.env
+cd /opt/openalgo/<domain> && sudo docker compose restart
 ```
 
 OAuth + MCP routes immediately stop responding. Existing tokens hit 404. **Local stdio MCP is unaffected** — it runs over stdin/stdout and doesn't touch the HTTP transport.
@@ -369,7 +369,7 @@ For a softer takedown that keeps Remote MCP enabled, visit `/admin/remote-mcp` �
 
 * MCP Server Setup Guide — local stdio integration with Claude Desktop / Cursor / Windsurf
 * Tool References — every tool with parameters and example prompts (shared across both transports)
-* Tradeboard Symbol Format — how equity / future / option symbols are constructed
+* OpenAlgo Symbol Format — how equity / future / option symbols are constructed
 * `install/Remote-MCP-readme.md` — operator-focused install + threat model in the source tree
 * [MCP Architecture](../design/41-mcp-architecture/README.md) — transport and OAuth implementation boundaries
 

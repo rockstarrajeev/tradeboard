@@ -1,5 +1,5 @@
 Feature: Setup and authenticated user session
-  Tradeboard requires initial setup, session login, optional TOTP, and explicit logout.
+  OpenAlgo requires initial setup, session login, optional TOTP, and explicit logout.
 
   # Source: blueprints/auth.py:131, blueprints/core.py:20
   Scenario: New installation exposes setup state before login
@@ -35,3 +35,17 @@ Feature: Setup and authenticated user session
     When the user requests logout
     Then the session is cleared
     And the logout route is included in CSRF exemptions
+
+  # Source: app.py:261
+  Scenario: React routes are registered before overlapping Flask routes
+    Given the production frontend build is available
+    When the application registers its blueprints
+    Then the React frontend blueprint is registered before the REST and legacy blueprints
+    And migrated page routes resolve to the React application
+
+  # Source: app.py:456, app.py:883
+  Scenario: Requests wait for database setup and release scoped sessions
+    Given background database initialization is still running
+    When a non-static request reaches the application
+    Then request handling waits for database readiness for up to 30 seconds
+    And every registered SQLAlchemy scoped session is removed during application-context teardown

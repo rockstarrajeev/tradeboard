@@ -103,7 +103,9 @@ export function SymbolSearchInput({
             >
               <span className="font-medium">{r.symbol}</span>
               <span className="truncate text-xs text-muted-foreground">{r.name}</span>
-              <span className="ml-auto text-[10px] text-muted-foreground">{r.exchange}</span>
+              <span className="ml-auto text-[10px] text-muted-foreground">
+                {r.exchange}
+              </span>
             </button>
           ))}
         </div>

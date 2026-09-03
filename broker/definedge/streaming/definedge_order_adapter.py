@@ -148,9 +148,7 @@ def create_definedge_order_adapter(user_id: str) -> "DefinedgeOrderUpdateAdapter
 
     definedge_uid = get_user_id(user_id)
     if not definedge_uid:
-        logger.warning(
-            f"No Definedge uid found for user {user_id}; order-update adapter not started"
-        )
+        logger.warning(f"No Definedge uid found for user {user_id}; order-update adapter not started")
         return None
 
     return DefinedgeOrderUpdateAdapter(

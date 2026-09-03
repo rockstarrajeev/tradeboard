@@ -27,7 +27,7 @@ A complete sandbox trading environment that:
 
 | User | Use Case |
 |------|----------|
-| New User | Learn Tradeboard safely |
+| New User | Learn OpenAlgo safely |
 | Strategy Developer | Test before live |
 | Educator | Demonstrate without risk |
 | Debugger | Isolate integration issues |
@@ -184,7 +184,7 @@ sandbox.db (separate from main)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  ⚠️ SANDBOX MODE ACTIVE                                      │
+│ SANDBOX MODE ACTIVE                                      │
 │  Capital: ₹1,00,00,000  │  Used: ₹5,00,000  │  P&L: +₹2,500 │
 ├─────────────────────────────────────────────────────────────┤
 │  Open Positions (3)                                          │
@@ -199,7 +199,7 @@ sandbox.db (separate from main)
 │  ┌─────────┬────────┬─────┬────────┬──────────┐            │
 │  │ Symbol  │ Action │ Qty │ Status │ Time     │            │
 │  ├─────────┼────────┼─────┼────────┼──────────┤            │
-│  │ SBIN    │ BUY    │ 100 │ ✓ Done │ 09:15:32 │            │
+│  │ SBIN    │ BUY    │ 100 │ Done │ 09:15:32 │            │
 │  │ INFY    │ BUY    │ 50  │ Pending│ 09:20:15 │            │
 │  └─────────┴────────┴─────┴────────┴──────────┘            │
 └─────────────────────────────────────────────────────────────┘

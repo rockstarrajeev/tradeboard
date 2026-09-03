@@ -40,7 +40,9 @@ def classify_instrument(symbol: str, name: str | None) -> str:
     return "fund" if any(marker in haystack for marker in _FUND_MARKERS) else "stock"
 
 
-def correlation_clusters(returns: pd.DataFrame, threshold: float = 0.6) -> list[list[str]]:
+def correlation_clusters(
+    returns: pd.DataFrame, threshold: float = 0.6
+) -> list[list[str]]:
     """
     Group holdings that move together above ``threshold``.
 
@@ -129,7 +131,9 @@ def structure(
         "clusters": cluster_rows,
         "threshold": threshold,
         "effective_bets": len(cluster_rows),
-        "largest_cluster_weight": (round(max((r["weight"] for r in cluster_rows), default=0.0), 5)),
+        "largest_cluster_weight": (
+            round(max((r["weight"] for r in cluster_rows), default=0.0), 5)
+        ),
         # Stated rather than silently omitted, so nobody reads the absence of a
         # sector chart as an oversight.
         "sector_note": (

@@ -27,16 +27,16 @@ from portfolio.analytics import average_pairwise_correlation, concentration
 
 # Where each pillar's scale starts and ends. Named so the formula strings can
 # quote them, and so changing a judgement means changing one line.
-EFFECTIVE_HOLDINGS_FLOOR = 1.0  # everything in one name
-EFFECTIVE_HOLDINGS_CEIL = 12.0  # past here, more names add little
-CORRELATION_FLOOR = 0.0  # genuinely unrelated holdings
-CORRELATION_CEIL = 0.9  # one bet wearing several names
+EFFECTIVE_HOLDINGS_FLOOR = 1.0    # everything in one name
+EFFECTIVE_HOLDINGS_CEIL = 12.0    # past here, more names add little
+CORRELATION_FLOOR = 0.0           # genuinely unrelated holdings
+CORRELATION_CEIL = 0.9            # one bet wearing several names
 SHARPE_FLOOR = 0.0
 SHARPE_CEIL = 2.0
-DRAWDOWN_FLOOR = -0.50  # a halving
-DRAWDOWN_CEIL = -0.10  # a normal correction
-COST_DRAG_FLOOR = 0.05  # 5% of capital lost to trading
-TREND_LOOKBACK = 200  # sessions, the conventional long-term filter
+DRAWDOWN_FLOOR = -0.50            # a halving
+DRAWDOWN_CEIL = -0.10             # a normal correction
+COST_DRAG_FLOOR = 0.05            # 5% of capital lost to trading
+TREND_LOOKBACK = 200              # sessions, the conventional long-term filter
 
 GRADES = ((80, "A"), (65, "B"), (50, "C"), (35, "D"), (0, "F"))
 
@@ -143,7 +143,8 @@ def drawdown_pillar(max_drawdown: float) -> Pillar:
         score=score,
         weight=0.20,
         formula=(
-            f"worst peak-to-trough fall, scaled from {DRAWDOWN_FLOOR:.0%} to {DRAWDOWN_CEIL:.0%}"
+            f"worst peak-to-trough fall, scaled from {DRAWDOWN_FLOOR:.0%} to "
+            f"{DRAWDOWN_CEIL:.0%}"
         ),
         inputs={"max_drawdown": None if not np.isfinite(max_drawdown) else round(max_drawdown, 4)},
         comment=(

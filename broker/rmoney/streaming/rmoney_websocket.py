@@ -16,7 +16,6 @@ Exchange Segments (Numeric):
 """
 
 import json
-import logging
 import struct
 from typing import Dict, List
 from urllib.parse import urlencode
@@ -25,6 +24,7 @@ import requests
 import socketio
 
 from broker.rmoney.baseurl import MARKET_DATA_BASE_URL
+from utils.logging import get_logger
 
 
 class RMoneyWebSocketClient:
@@ -46,15 +46,15 @@ class RMoneyWebSocketClient:
     MIN_ENGINEIO_ACTIVITY_TIMEOUT = 300
 
     # Subscription modes (mapped to XTS message codes)
-    MODE_LTP = 1  # Last Traded Price - maps to 1501 (Touchline)
-    MODE_QUOTE = 2  # Full Quote - maps to 1501
-    MODE_DEPTH = 3  # Market Depth - maps to 1502
+    MODE_LTP = 1       # Last Traded Price - maps to 1501 (Touchline)
+    MODE_QUOTE = 2     # Full Quote - maps to 1501
+    MODE_DEPTH = 3     # Market Depth - maps to 1502
 
     # XTS Message Codes
     XTS_MESSAGE_CODES = {
-        "TOUCHLINE": 1501,  # Touchline/Quote data
-        "MARKET_DEPTH": 1502,  # Market depth (5 levels)
-        "CANDLE_DATA": 1505,  # Candle/OHLC data
+        "TOUCHLINE": 1501,      # Touchline/Quote data
+        "MARKET_DEPTH": 1502,   # Market depth (5 levels)
+        "CANDLE_DATA": 1505,    # Candle/OHLC data
         "OPEN_INTEREST": 1510,  # Open interest
         # Symphony market-data spec primarily documents 1501 for touchline
         # (includes LTP), so LTP mode maps to touchline for compatibility.
@@ -72,12 +72,12 @@ class RMoneyWebSocketClient:
 
     # Exchange segments
     EXCHANGE_SEGMENTS = {
-        "NSECM": 1,  # NSE Cash Market
-        "NSEFO": 2,  # NSE Futures & Options
-        "NSECD": 3,  # NSE Currency Derivatives
-        "BSECM": 11,  # BSE Cash Market
-        "BSEFO": 12,  # BSE Futures & Options
-        "MCXFO": 51,  # MCX Futures & Options
+        "NSECM": 1,    # NSE Cash Market
+        "NSEFO": 2,    # NSE Futures & Options
+        "NSECD": 3,    # NSE Currency Derivatives
+        "BSECM": 11,   # BSE Cash Market
+        "BSEFO": 12,   # BSE Futures & Options
+        "MCXFO": 51,   # MCX Futures & Options
     }
 
     def __init__(
@@ -103,7 +103,9 @@ class RMoneyWebSocketClient:
 
         # Dynamic market data API endpoints (avoid hardcoded BASE_URL binding)
         self.login_url = f"{self.base_url}{self.API_ROOT_PATH}/auth/login"
-        self.subscription_url = f"{self.base_url}{self.API_ROOT_PATH}/instruments/subscription"
+        self.subscription_url = (
+            f"{self.base_url}{self.API_ROOT_PATH}/instruments/subscription"
+        )
 
         # Authentication tokens
         self.market_data_token = None
@@ -125,7 +127,7 @@ class RMoneyWebSocketClient:
         self.on_message = None
 
         # Logger
-        self.logger = logging.getLogger("rmoney_websocket")
+        self.logger = get_logger("rmoney_websocket")
 
         # Subscriptions tracking
         self.subscriptions = {}
@@ -155,9 +157,9 @@ class RMoneyWebSocketClient:
         # Pre-set Engine.IO ping timers so the write loop's first cycle
         # uses a safe timeout instead of the server's potentially low value.
         # This prevents "packet queue is empty, aborting" on the first cycle.
-        if hasattr(self.sio, "eio"):
-            self.sio.eio.ping_interval = max(getattr(self.sio.eio, "ping_interval", 0) or 0, 295)
-            self.sio.eio.ping_timeout = max(getattr(self.sio.eio, "ping_timeout", 0) or 0, 295)
+        if hasattr(self.sio, 'eio'):
+            self.sio.eio.ping_interval = max(getattr(self.sio.eio, 'ping_interval', 0) or 0, 295)
+            self.sio.eio.ping_timeout = max(getattr(self.sio.eio, 'ping_timeout', 0) or 0, 295)
 
         # Register connection event handlers
         self.sio.on("connect", self._on_connect)
@@ -257,7 +259,10 @@ class RMoneyWebSocketClient:
             self.logger.info(f"[MARKET DATA LOGIN] Attempting login to: {self.login_url}")
 
             response = self._http_session.post(
-                self.login_url, json=login_payload, headers=headers, timeout=30
+                self.login_url,
+                json=login_payload,
+                headers=headers,
+                timeout=30
             )
             try:
                 if response.status_code == 200:
@@ -277,9 +282,7 @@ class RMoneyWebSocketClient:
                             )
                             return True
                         else:
-                            self.logger.error(
-                                "[MARKET DATA LOGIN] Missing token or userID in response"
-                            )
+                            self.logger.error("[MARKET DATA LOGIN] Missing token or userID in response")
                             return False
                     else:
                         self.logger.error(f"[MARKET DATA LOGIN] API returned error: {result}")
@@ -401,7 +404,7 @@ class RMoneyWebSocketClient:
             self._http_session.close()
             self.logger.info("[CLEANUP] HTTP session closed")
 
-    def subscribe(self, correlation_id: str, mode: int, instruments: list[dict]) -> None:
+    def subscribe(self, correlation_id: str, mode: int, instruments: List[Dict]) -> None:
         """
         Subscribe to market data using XTS HTTP API.
 
@@ -455,9 +458,7 @@ class RMoneyWebSocketClient:
                     result = response.json()
                     self.logger.debug(f"[SUBSCRIBE] Response: {result}")
                     if result.get("type") != "success":
-                        error_desc = (
-                            result.get("description") or result.get("message") or str(result)
-                        )
+                        error_desc = result.get("description") or result.get("message") or str(result)
                         self.logger.error(f"[SUBSCRIBE] API error response: {error_desc}")
                         raise RuntimeError(error_desc)
 
@@ -470,9 +471,7 @@ class RMoneyWebSocketClient:
                         for quote_str in list_quotes:
                             try:
                                 quote_data = (
-                                    json.loads(quote_str)
-                                    if isinstance(quote_str, str)
-                                    else quote_str
+                                    json.loads(quote_str) if isinstance(quote_str, str) else quote_str
                                 )
                                 self.logger.debug(f"[INITIAL QUOTE] {quote_data}")
                                 if isinstance(quote_data, dict) and "MessageCode" not in quote_data:
@@ -489,7 +488,7 @@ class RMoneyWebSocketClient:
                     error_msg = f"[SUBSCRIBE] Failed - Status: {response.status_code}, Response: {response.text}"
                     # "Instrument Already Subscribed" is non-fatal (expected after reconnect)
                     if "Already Subscribed" in response.text or "e-session-0002" in response.text:
-                        self.logger.info("[SUBSCRIBE] Instrument already subscribed (non-fatal)")
+                        self.logger.info(f"[SUBSCRIBE] Instrument already subscribed (non-fatal)")
                         return
                     # Handle Invalid Token by re-authenticating and retrying once.
                     # This happens when data.py refreshes the feed token, which creates
@@ -519,9 +518,7 @@ class RMoneyWebSocketClient:
                                         )
                                         # Process initial quotes from retry
                                         if "result" in retry_result:
-                                            list_quotes = retry_result["result"].get(
-                                                "listQuotes", []
-                                            )
+                                            list_quotes = retry_result["result"].get("listQuotes", [])
                                             for quote_str in list_quotes:
                                                 try:
                                                     quote_data = (
@@ -529,10 +526,7 @@ class RMoneyWebSocketClient:
                                                         if isinstance(quote_str, str)
                                                         else quote_str
                                                     )
-                                                    if (
-                                                        isinstance(quote_data, dict)
-                                                        and "MessageCode" not in quote_data
-                                                    ):
+                                                    if isinstance(quote_data, dict) and "MessageCode" not in quote_data:
                                                         quote_data["MessageCode"] = xts_message_code
                                                     if self.on_data:
                                                         self.on_data(self, quote_data)
@@ -551,7 +545,7 @@ class RMoneyWebSocketClient:
             self.logger.error(f"[SUBSCRIBE] Exception: {e}")
             raise
 
-    def unsubscribe(self, correlation_id: str, mode: int, instruments: list[dict]) -> bool:
+    def unsubscribe(self, correlation_id: str, mode: int, instruments: List[Dict]) -> bool:
         """
         Unsubscribe from market data using XTS HTTP API.
 
@@ -607,7 +601,9 @@ class RMoneyWebSocketClient:
                         self.logger.error(f"[UNSUBSCRIBE] API error response: {result}")
                         return False
                 else:
-                    self.logger.error(f"[UNSUBSCRIBE] Failed - Status: {response.status_code}")
+                    self.logger.error(
+                        f"[UNSUBSCRIBE] Failed - Status: {response.status_code}"
+                    )
                     return False
             finally:
                 response.close()
@@ -768,9 +764,7 @@ class RMoneyWebSocketClient:
 
             if not self._binary_packet_seen:
                 self._binary_packet_seen = True
-                self.logger.info(
-                    "[XTS-BINARY] Received first xts-binary-packet tick stream payload"
-                )
+                self.logger.info("[XTS-BINARY] Received first xts-binary-packet tick stream payload")
 
             packet_type = struct.unpack("<H", data[0:2])[0]
             header_msg_code = struct.unpack("<H", data[2:4])[0]
@@ -808,9 +802,7 @@ class RMoneyWebSocketClient:
                 return
 
             market_data["LastTradedPrice"] = ltp
-            market_data.update(
-                self._extract_quote_fields_from_binary_payload(payload, message_code)
-            )
+            market_data.update(self._extract_quote_fields_from_binary_payload(payload, message_code))
             if self.on_data:
                 self.on_data(self, market_data)
 
@@ -988,9 +980,10 @@ class RMoneyWebSocketClient:
         """Check if an instrument is in the subscription list."""
         for sub in self.subscriptions.values():
             for instrument in sub.get("instruments", []):
-                if instrument.get("exchangeSegment") == exchange_segment and str(
-                    instrument.get("exchangeInstrumentID")
-                ) == str(instrument_id):
+                if (
+                    instrument.get("exchangeSegment") == exchange_segment
+                    and str(instrument.get("exchangeInstrumentID")) == str(instrument_id)
+                ):
                     return True
         return False
 
@@ -1055,9 +1048,7 @@ class RMoneyWebSocketClient:
             self.logger.info(f"[SOCKET.IO EVENT] {event}: {payload}")
             return
 
-        self.logger.debug(
-            f"[CATCH-ALL] Unhandled event: {event}, args: {args[:100] if args else ''}"
-        )
+        self.logger.debug(f"[CATCH-ALL] Unhandled event: {event}, args: {args[:100] if args else ''}")
 
     def resubscribe_all(self):
         """Resubscribe to all stored subscriptions after reconnection."""

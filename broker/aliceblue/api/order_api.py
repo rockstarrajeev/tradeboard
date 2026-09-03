@@ -1,10 +1,10 @@
 import json
 import os
-import threading
-import time
-import weakref
 
 import httpx
+import threading
+import weakref
+import time
 
 from broker.aliceblue.api.error_codes import describe
 from broker.aliceblue.api.rate_limiter import apply_rate_limit
@@ -32,7 +32,6 @@ BASE_URL = "https://a3.aliceblueonline.com"
 
 
 # ─── API request helper ──────────────────────────────────────────────────────
-
 
 def get_api_response(endpoint, auth, method="GET", payload=None):
     """Make API requests to AliceBlue V2 API using shared connection pooling.
@@ -106,7 +105,6 @@ def _extract_result(response_data):
 
 
 # ─── Order book / Trade book / Positions / Holdings ──────────────────────────
-
 
 def get_order_book(auth):
     """Fetch order book from V2 API and normalize to old field names."""
@@ -207,14 +205,16 @@ def get_holdings(auth):
 # twice. Weak references cannot do that: while any caller holds the lock it
 # holds a strong reference, so the entry survives. Same reasoning as
 # services/flow_executor_service._workflow_locks (issue #1739).
-_symbol_locks: "weakref.WeakValueDictionary[str, threading.Lock]" = weakref.WeakValueDictionary()
+_symbol_locks: "weakref.WeakValueDictionary[str, threading.Lock]" = (
+    weakref.WeakValueDictionary()
+)
 _symbol_locks_lock = threading.Lock()
 
 # --- Position Book Cache ---
 # Caches get_positions() for 1 second. Invalidated after each smart order placement.
-_position_cache = {}  # {auth_token: {"data": ..., "timestamp": ...}}
+_position_cache = {}        # {auth_token: {"data": ..., "timestamp": ...}}
 _position_cache_lock = threading.Lock()
-_POSITION_CACHE_TTL = 1.0  # seconds
+_POSITION_CACHE_TTL = 1.0   # seconds
 
 
 def _get_symbol_lock(symbol, exchange, product):
@@ -259,7 +259,6 @@ def _invalidate_position_cache(auth):
 
 # ─── Open position lookup ────────────────────────────────────────────────────
 
-
 def get_open_position(tradingsymbol, exchange, product, auth):
     """Get net quantity for a specific symbol/exchange/product."""
     # Convert Trading Symbol from OpenAlgo Format to Broker Format Before Search
@@ -289,7 +288,6 @@ def get_open_position(tradingsymbol, exchange, product, auth):
 
 
 # ─── Place order ──────────────────────────────────────────────────────────────
-
 
 def place_order_api(data, auth):
     """Place an order using the AliceBlue V2 API."""
@@ -322,15 +320,9 @@ def place_order_api(data, auth):
                 result_item = results[0]
                 # Check for per-result error (AliceBlue may return top-level Ok but result-level error)
                 result_status = result_item.get("status", "")
-                if (
-                    result_status
-                    and result_status != "Ok"
-                    and result_item.get("brokerOrderId", "") == ""
-                ):
+                if result_status and result_status != "Ok" and result_item.get("brokerOrderId", "") == "":
                     error_msg = result_item.get("message", "Unknown error in result")
-                    logger.error(
-                        f"Order placement failed (result error {result_status}): {error_msg}"
-                    )
+                    logger.error(f"Order placement failed (result error {result_status}): {error_msg}")
                 else:
                     orderid = result_item.get("brokerOrderId")
                     logger.debug(f"Order placed successfully: {orderid}")
@@ -357,7 +349,6 @@ def place_order_api(data, auth):
 
 # ─── Smart order ──────────────────────────────────────────────────────────────
 
-
 def place_smartorder_api(data, auth):
     AUTH_TOKEN = auth
 
@@ -376,9 +367,7 @@ def place_smartorder_api(data, auth):
 
         # Get current open position for the symbol
         current_position = int(
-            get_open_position(
-                symbol, exchange, reverse_map_product_type(map_product_type(product)), AUTH_TOKEN
-            )
+            get_open_position(symbol, exchange, reverse_map_product_type(map_product_type(product)), AUTH_TOKEN)
         )
 
         logger.debug(f"position_size : {position_size}")
@@ -439,8 +428,8 @@ def place_smartorder_api(data, auth):
 
             return res, response, orderid
 
-    # ─── Close all positions ──────────────────────────────────────────────────────
 
+    # ─── Close all positions ──────────────────────────────────────────────────────
 
 def close_all_positions(current_api_key, auth):
     AUTH_TOKEN = auth
@@ -493,7 +482,6 @@ def close_all_positions(current_api_key, auth):
 
 # ─── Cancel order ─────────────────────────────────────────────────────────────
 
-
 def cancel_order(orderid, auth):
     """Cancel an order using the AliceBlue V2 API."""
     try:
@@ -539,7 +527,6 @@ def cancel_order(orderid, auth):
 
 # ─── Modify order ─────────────────────────────────────────────────────────────
 
-
 def modify_order(data, auth):
     """Modify an order using the AliceBlue V2 API."""
     try:
@@ -584,7 +571,6 @@ def modify_order(data, auth):
 
 
 # ─── Cancel all orders ────────────────────────────────────────────────────────
-
 
 def cancel_all_orders_api(data, auth):
     AUTH_TOKEN = auth

@@ -2,7 +2,7 @@
 type: API Endpoint
 title: Holdings
 description: Get portfolio holdings
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/account-services/holdings.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/account-services/holdings.md
 tags:
 - holdings
 - portfolio

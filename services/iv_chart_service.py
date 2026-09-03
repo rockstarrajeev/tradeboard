@@ -181,18 +181,12 @@ def get_iv_chart_data(
         # CRYPTO: look up the canonical perpetual symbol from cache (e.g. BTC → BTCUSDFUT)
         if exchange.upper() in CRYPTO_EXCHANGES:
             _perp = fno_search_symbols(
-                query=f"{base_symbol}USDFUT",
-                exchange=exchange,
-                instrumenttype=INSTRUMENT_PERPFUT,
-                limit=1,
+                query=f"{base_symbol}USDFUT", exchange=exchange, instrumenttype=INSTRUMENT_PERPFUT, limit=1
             )
             if not _perp:
                 return (
                     False,
-                    {
-                        "status": "error",
-                        "message": f"No perpetual futures found for {base_symbol} on {exchange}",
-                    },
+                    {"status": "error", "message": f"No perpetual futures found for {base_symbol} on {exchange}"},
                     404,
                 )
             underlying_quote_symbol = _perp[0]["symbol"]
@@ -207,7 +201,8 @@ def get_iv_chart_data(
                     {
                         "status": "error",
                         "message": (
-                            f"No unexpired futures found for {base_symbol} on {exchange.upper()}"
+                            f"No unexpired futures found for {base_symbol} on "
+                            f"{exchange.upper()}"
                         ),
                     },
                     404,
@@ -225,10 +220,7 @@ def get_iv_chart_data(
         if not success:
             return (
                 False,
-                {
-                    "status": "error",
-                    "message": f"Failed to fetch underlying quote: {quote_response.get('message', 'Unknown error')}",
-                },
+                {"status": "error", "message": f"Failed to fetch underlying quote: {quote_response.get('message', 'Unknown error')}"},
                 status_code,
             )
 
@@ -243,10 +235,7 @@ def get_iv_chart_data(
         if not available_strikes:
             return (
                 False,
-                {
-                    "status": "error",
-                    "message": f"No strikes found for {base_symbol} {expiry_date} on {options_exchange}",
-                },
+                {"status": "error", "message": f"No strikes found for {base_symbol} {expiry_date} on {options_exchange}"},
                 404,
             )
 
@@ -254,11 +243,7 @@ def get_iv_chart_data(
         if atm_strike is None:
             return False, {"status": "error", "message": "Could not determine ATM strike"}, 400
 
-        _build_sym = (
-            construct_crypto_option_symbol
-            if exchange.upper() in CRYPTO_EXCHANGES
-            else construct_option_symbol
-        )
+        _build_sym = construct_crypto_option_symbol if exchange.upper() in CRYPTO_EXCHANGES else construct_option_symbol
         ce_symbol = _build_sym(base_symbol, expiry_date.upper(), atm_strike, "CE")
         pe_symbol = _build_sym(base_symbol, expiry_date.upper(), atm_strike, "PE")
 
@@ -303,10 +288,7 @@ def get_iv_chart_data(
         if not success_u:
             return (
                 False,
-                {
-                    "status": "error",
-                    "message": f"Failed to fetch underlying history: {resp_u.get('message', 'Unknown error')}",
-                },
+                {"status": "error", "message": f"Failed to fetch underlying history: {resp_u.get('message', 'Unknown error')}"},
                 400,
             )
 
@@ -316,20 +298,12 @@ def get_iv_chart_data(
         df_pe = pd.DataFrame(resp_pe.get("data", [])) if success_pe else pd.DataFrame()
 
         if df_underlying.empty:
-            return (
-                False,
-                {"status": "error", "message": "No underlying history data available for today"},
-                404,
-            )
+            return False, {"status": "error", "message": "No underlying history data available for today"}, 404
 
         # Convert timestamps to IST
         df_underlying = _convert_timestamp_to_ist(df_underlying)
         if df_underlying is None:
-            return (
-                False,
-                {"status": "error", "message": "Failed to parse underlying timestamps"},
-                500,
-            )
+            return False, {"status": "error", "message": "Failed to parse underlying timestamps"}, 500
 
         series_results = []
 
@@ -345,14 +319,12 @@ def get_iv_chart_data(
                     flag="c",
                     interest_rate=interest_rate_decimal,
                 )
-                series_results.append(
-                    {
-                        "symbol": ce_symbol,
-                        "option_type": "CE",
-                        "strike": strike,
-                        "iv_data": ce_iv_data,
-                    }
-                )
+                series_results.append({
+                    "symbol": ce_symbol,
+                    "option_type": "CE",
+                    "strike": strike,
+                    "iv_data": ce_iv_data,
+                })
 
         # Step 9: Calculate IV for PE
         if not df_pe.empty:
@@ -366,14 +338,12 @@ def get_iv_chart_data(
                     flag="p",
                     interest_rate=interest_rate_decimal,
                 )
-                series_results.append(
-                    {
-                        "symbol": pe_symbol,
-                        "option_type": "PE",
-                        "strike": strike,
-                        "iv_data": pe_iv_data,
-                    }
-                )
+                series_results.append({
+                    "symbol": pe_symbol,
+                    "option_type": "PE",
+                    "strike": strike,
+                    "iv_data": pe_iv_data,
+                })
 
         if not series_results:
             return (
@@ -478,50 +448,10 @@ def _calculate_iv_series(df_option, df_underlying, strike, expiry_dt, flag, inte
                 # Calculate Greeks using the computed IV
                 if iv_decimal > 0:
                     try:
-                        delta_value = round(
-                            black_delta(
-                                flag,
-                                underlying_close,
-                                strike,
-                                years_to_expiry,
-                                interest_rate,
-                                iv_decimal,
-                            ),
-                            4,
-                        )
-                        gamma_value = round(
-                            black_gamma(
-                                flag,
-                                underlying_close,
-                                strike,
-                                years_to_expiry,
-                                interest_rate,
-                                iv_decimal,
-                            ),
-                            6,
-                        )
-                        theta_value = round(
-                            black_theta(
-                                flag,
-                                underlying_close,
-                                strike,
-                                years_to_expiry,
-                                interest_rate,
-                                iv_decimal,
-                            ),
-                            4,
-                        )
-                        vega_value = round(
-                            black_vega(
-                                flag,
-                                underlying_close,
-                                strike,
-                                years_to_expiry,
-                                interest_rate,
-                                iv_decimal,
-                            ),
-                            4,
-                        )
+                        delta_value = round(black_delta(flag, underlying_close, strike, years_to_expiry, interest_rate, iv_decimal), 4)
+                        gamma_value = round(black_gamma(flag, underlying_close, strike, years_to_expiry, interest_rate, iv_decimal), 6)
+                        theta_value = round(black_theta(flag, underlying_close, strike, years_to_expiry, interest_rate, iv_decimal), 4)
+                        vega_value = round(black_vega(flag, underlying_close, strike, years_to_expiry, interest_rate, iv_decimal), 4)
                     except Exception:
                         pass
             except Exception:
@@ -531,18 +461,16 @@ def _calculate_iv_series(df_option, df_underlying, strike, expiry_dt, flag, inte
         # Convert timestamp to Unix seconds (UTC) for lightweight-charts
         unix_seconds = int(ts.timestamp())
 
-        iv_data.append(
-            {
-                "time": unix_seconds,
-                "iv": iv_value,
-                "delta": delta_value,
-                "gamma": gamma_value,
-                "theta": theta_value,
-                "vega": vega_value,
-                "option_price": option_close,
-                "underlying_price": underlying_close,
-            }
-        )
+        iv_data.append({
+            "time": unix_seconds,
+            "iv": iv_value,
+            "delta": delta_value,
+            "gamma": gamma_value,
+            "theta": theta_value,
+            "vega": vega_value,
+            "option_price": option_close,
+            "underlying_price": underlying_close,
+        })
 
     return iv_data
 
@@ -566,18 +494,12 @@ def get_default_symbols(underlying, exchange, expiry_date, api_key):
         options_exchange = get_option_exchange(quote_exchange)
         if exchange.upper() in CRYPTO_EXCHANGES:
             _perp = fno_search_symbols(
-                query=f"{base_symbol}USDFUT",
-                exchange=exchange,
-                instrumenttype=INSTRUMENT_PERPFUT,
-                limit=1,
+                query=f"{base_symbol}USDFUT", exchange=exchange, instrumenttype=INSTRUMENT_PERPFUT, limit=1
             )
             if not _perp:
                 return (
                     False,
-                    {
-                        "status": "error",
-                        "message": f"No perpetual futures found for {base_symbol} on {exchange}",
-                    },
+                    {"status": "error", "message": f"No perpetual futures found for {base_symbol} on {exchange}"},
                     404,
                 )
             underlying_quote_symbol = _perp[0]["symbol"]
@@ -592,7 +514,8 @@ def get_default_symbols(underlying, exchange, expiry_date, api_key):
                     {
                         "status": "error",
                         "message": (
-                            f"No unexpired futures found for {base_symbol} on {exchange.upper()}"
+                            f"No unexpired futures found for {base_symbol} on "
+                            f"{exchange.upper()}"
                         ),
                     },
                     404,
@@ -600,11 +523,7 @@ def get_default_symbols(underlying, exchange, expiry_date, api_key):
             underlying_quote_symbol, quote_exchange = _resolved
         else:
             underlying_quote_symbol = base_symbol
-        _build_sym = (
-            construct_crypto_option_symbol
-            if exchange.upper() in CRYPTO_EXCHANGES
-            else construct_option_symbol
-        )
+        _build_sym = construct_crypto_option_symbol if exchange.upper() in CRYPTO_EXCHANGES else construct_option_symbol
 
         # Get underlying LTP
         success, quote_response, status_code = get_quotes(
@@ -613,11 +532,7 @@ def get_default_symbols(underlying, exchange, expiry_date, api_key):
             api_key=api_key,
         )
         if not success:
-            return (
-                False,
-                {"status": "error", "message": "Failed to fetch underlying quote"},
-                status_code,
-            )
+            return False, {"status": "error", "message": "Failed to fetch underlying quote"}, status_code
 
         underlying_ltp = quote_response.get("data", {}).get("ltp", 0)
         if not underlying_ltp:
@@ -628,11 +543,7 @@ def get_default_symbols(underlying, exchange, expiry_date, api_key):
             base_symbol, expiry_date.upper(), "CE", options_exchange
         )
         if not available_strikes:
-            return (
-                False,
-                {"status": "error", "message": f"No strikes found for {base_symbol} {expiry_date}"},
-                404,
-            )
+            return False, {"status": "error", "message": f"No strikes found for {base_symbol} {expiry_date}"}, 404
 
         atm_strike = find_atm_strike_from_actual(underlying_ltp, available_strikes)
         if atm_strike is None:

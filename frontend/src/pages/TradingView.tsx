@@ -163,48 +163,45 @@ export default function TradingView() {
     setShowResults(false)
   }
 
-  const generateJson = useCallback(
-    (showError = true) => {
-      if (!symbol || !exchange) {
-        if (showError) {
-          showToast.error('Please select a symbol and exchange', 'clipboard')
-        }
-        return
+  const generateJson = useCallback((showError = true) => {
+    if (!symbol || !exchange) {
+      if (showError) {
+        showToast.error('Please select a symbol and exchange', 'clipboard')
       }
+      return
+    }
 
-      let json: Record<string, unknown>
+    let json: Record<string, unknown>
 
-      if (alertMode === 'strategy') {
-        // Strategy Alert mode - uses {{strategy.order.action}} placeholder
-        json = {
-          apikey: apiKey || 'YOUR_API_KEY',
-          strategy: 'TradingView Strategy',
-          symbol: symbol,
-          exchange: exchange,
-          action: '{{strategy.order.action}}',
-          product: product,
-          pricetype: 'MARKET',
-          quantity: '{{strategy.order.contracts}}',
-          position_size: '{{strategy.position_size}}',
-        }
-      } else {
-        // Line Alert mode - uses fixed action and quantity
-        json = {
-          apikey: apiKey || 'YOUR_API_KEY',
-          strategy: 'TradingView Line Alert',
-          symbol: symbol,
-          exchange: exchange,
-          action: action,
-          product: product,
-          pricetype: 'MARKET',
-          quantity: quantity,
-        }
+    if (alertMode === 'strategy') {
+      // Strategy Alert mode - uses {{strategy.order.action}} placeholder
+      json = {
+        apikey: apiKey || 'YOUR_API_KEY',
+        strategy: 'TradingView Strategy',
+        symbol: symbol,
+        exchange: exchange,
+        action: '{{strategy.order.action}}',
+        product: product,
+        pricetype: 'MARKET',
+        quantity: '{{strategy.order.contracts}}',
+        position_size: '{{strategy.position_size}}',
       }
+    } else {
+      // Line Alert mode - uses fixed action and quantity
+      json = {
+        apikey: apiKey || 'YOUR_API_KEY',
+        strategy: 'TradingView Line Alert',
+        symbol: symbol,
+        exchange: exchange,
+        action: action,
+        product: product,
+        pricetype: 'MARKET',
+        quantity: quantity,
+      }
+    }
 
-      setGeneratedJson(JSON.stringify(json, null, 2))
-    },
-    [symbol, exchange, apiKey, alertMode, product, action, quantity]
-  )
+    setGeneratedJson(JSON.stringify(json, null, 2))
+  }, [symbol, exchange, apiKey, alertMode, product, action, quantity])
 
   // Auto-generate JSON when values change
   useEffect(() => {
@@ -451,7 +448,7 @@ export default function TradingView() {
               </p>
               <Button asChild variant="default">
                 <a
-                  href="https://docs.openalgo.in/trading-platform/tradingview"
+                  href="https://docs.rajeevupadhyay.com/trading-platform/tradingview"
                   target="_blank"
                   rel="noopener noreferrer"
                 >

@@ -193,7 +193,9 @@ class SquareOffManager:
                     )
 
             if cancelled_count > 0:
-                logger.info(f"Auto-cancelled {cancelled_count} open orders on expired contracts")
+                logger.info(
+                    f"Auto-cancelled {cancelled_count} open orders on expired contracts"
+                )
         except Exception as e:
             logger.exception(f"Error in _cancel_expired_contract_orders: {e}")
 

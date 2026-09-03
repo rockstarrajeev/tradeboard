@@ -2,7 +2,7 @@
 type: API Endpoint
 title: OptionChain
 description: Get full option chain data for an underlying
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/options-services/optionchain.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/options-services/optionchain.md
 tags:
 - options
 - option-chain

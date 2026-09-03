@@ -8,7 +8,7 @@ earlier design drafts.
 ## Context
 
 Earlier drafts assumed **out-of-tree** installable broker plugins (a published
-`tradeboard-broker-api` package, entry-point discovery, semver gating). The
+`openalgo-broker-api` package, entry-point discovery, semver gating). The
 [Codex deep audit](../reviews/2026-07-13-codex-review-2-response.md) confirmed
 that model is far from the current reality: `pyproject.toml` ships
 `packages = []` (non-distributable), and broker dispatch is hard-coded in several
@@ -16,9 +16,9 @@ core files. All 34 existing adapters (33 Indian + Delta) are already in-tree.
 
 ## Decision
 
-Brokers live **in-tree** — `broker/{name}/` in the Tradeboard repo, contributed via
+Brokers live **in-tree** — `broker/{name}/` in the OpenAlgo repo, contributed via
 **pull request** — implementing the formal `BrokerAdapter` contract as an
-**internal repo module** (not a published package). Tradeboard will **not** support
+**internal repo module** (not a published package). OpenAlgo will **not** support
 out-of-tree/installable broker plugins.
 
 ## What is KEPT (still valuable in-tree)
@@ -39,12 +39,12 @@ out-of-tree/installable broker plugins.
 
 ## What is DROPPED
 
-- The separate, published `tradeboard-broker-api` **contract library**.
+- The separate, published `openalgo-broker-api` **contract library**.
 - **Entry-point discovery** / out-of-tree loader.
 - **Semver `contract_version` gating** for external plugins (in-tree brokers
   version with the app; a lightweight internal contract version may remain for
   documentation, but it is not load-bearing).
-- Making Tradeboard **distributable** / publishing to PyPI.
+- Making OpenAlgo **distributable** / publishing to PyPI.
 
 ## Consequences
 

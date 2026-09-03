@@ -158,7 +158,9 @@ def place_order_api(data, auth):
     client = get_httpx_client()
     headers = get_arrow_headers(auth, with_json=True)
 
-    response = client.post(f"{ROOT_URL}/order/{_ORDER_VARIETY}", headers=headers, json=payload)
+    response = client.post(
+        f"{ROOT_URL}/order/{_ORDER_VARIETY}", headers=headers, json=payload
+    )
     logger.debug(f"Arrow raw response: status={response.status_code}, body={response.text}")
 
     response_data = response.json()
@@ -285,7 +287,9 @@ def cancel_order(orderid, auth):
     try:
         client = get_httpx_client()
         headers = get_arrow_headers(auth)
-        response = client.delete(f"{ROOT_URL}/order/{_ORDER_VARIETY}/{orderid}", headers=headers)
+        response = client.delete(
+            f"{ROOT_URL}/order/{_ORDER_VARIETY}/{orderid}", headers=headers
+        )
         response.raise_for_status()
         logger.debug(f"Arrow cancel order response: {response.text}")
 

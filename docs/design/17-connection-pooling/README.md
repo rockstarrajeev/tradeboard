@@ -2,7 +2,7 @@
 
 ## Overview
 
-Tradeboard pools broker WebSocket adapters per broker and user. A `ConnectionPool` allocates subscriptions across adapter connections while a process-local `SharedZmqPublisher` sends every adapter's normalized ticks to the market-data proxy.
+OpenAlgo pools broker WebSocket adapters per broker and user. A `ConnectionPool` allocates subscriptions across adapter connections while a process-local `SharedZmqPublisher` sends every adapter's normalized ticks to the market-data proxy.
 
 The default pool limits are 1,000 symbols per broker connection and three connections. These are capacity limits, not guarantees; broker-specific limits and capabilities still apply.
 

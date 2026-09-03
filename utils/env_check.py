@@ -40,22 +40,22 @@ def configure_llvmlite_paths() -> None:
         None
     """
     # Only configure on Linux (Windows/macOS don't have this issue)
-    if sys.platform != "linux":
+    if sys.platform != 'linux':
         return
 
     # Get the base directory (project root)
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
     # Create cache directories in project folder
-    numba_cache = os.path.join(base_dir, ".numba_cache")
-    llvm_tmp = os.path.join(base_dir, ".llvm_tmp")
+    numba_cache = os.path.join(base_dir, '.numba_cache')
+    llvm_tmp = os.path.join(base_dir, '.llvm_tmp')
 
     # Set environment variables if not already set
-    if "NUMBA_CACHE_DIR" not in os.environ:
-        os.environ["NUMBA_CACHE_DIR"] = numba_cache
+    if 'NUMBA_CACHE_DIR' not in os.environ:
+        os.environ['NUMBA_CACHE_DIR'] = numba_cache
 
-    if "LLVMLITE_TMPDIR" not in os.environ:
-        os.environ["LLVMLITE_TMPDIR"] = llvm_tmp
+    if 'LLVMLITE_TMPDIR' not in os.environ:
+        os.environ['LLVMLITE_TMPDIR'] = llvm_tmp
 
     # Create directories if they don't exist
     for dir_path in [numba_cache, llvm_tmp]:
@@ -75,34 +75,30 @@ def check_tmp_noexec() -> None:
 
     This helps users understand why llvmlite might fail to load.
     """
-    if sys.platform != "linux":
+    if sys.platform != 'linux':
         return
 
     try:
-        with open("/proc/mounts") as f:
+        with open('/proc/mounts', 'r') as f:
             for line in f:
                 parts = line.split()
-                if len(parts) >= 4 and parts[1] == "/tmp":
-                    mount_options = parts[3].split(",")
-                    if "noexec" in mount_options:
+                if len(parts) >= 4 and parts[1] == '/tmp':
+                    mount_options = parts[3].split(',')
+                    if 'noexec' in mount_options:
                         print("\n" + "=" * 70)
                         print("WARNING: /tmp is mounted with 'noexec' flag")
                         print("   This can cause issues with Python libraries like numba/llvmlite.")
                         print("")
                         print("   OpenAlgo has auto-configured alternative paths:")
-                        print(
-                            f"   - NUMBA_CACHE_DIR={os.environ.get('NUMBA_CACHE_DIR', 'not set')}"
-                        )
-                        print(
-                            f"   - LLVMLITE_TMPDIR={os.environ.get('LLVMLITE_TMPDIR', 'not set')}"
-                        )
+                        print(f"   - NUMBA_CACHE_DIR={os.environ.get('NUMBA_CACHE_DIR', 'not set')}")
+                        print(f"   - LLVMLITE_TMPDIR={os.environ.get('LLVMLITE_TMPDIR', 'not set')}")
                         print("")
                         print("   If you still see 'failed to map segment' errors, either:")
                         print("   1. Remount /tmp: sudo mount -o remount,exec /tmp")
                         print("   2. Or set NUMBA_DISABLE_JIT=1 in your .env file")
                         print("=" * 70 + "\n")
                     return
-    except OSError:
+    except (OSError, IOError):
         pass  # Can't read /proc/mounts, skip the check
 
 
@@ -171,14 +167,14 @@ def check_env_version_compatibility() -> bool:
         def version_tuple(v: str) -> tuple:
             """
             Convert version string to tuple of integers for comparison.
-
+            
             Args:
                 v (str): Version string (e.g. '1.5.0').
-
+            
             Returns:
                 tuple: Tuple of integers (e.g. (1, 5, 0)).
             """
-            return tuple(int(x) for x in v.split("."))
+            return tuple(int(x) for x in v.split('.'))
 
         env_ver = version_tuple(env_version)
         sample_ver = version_tuple(sample_version)
@@ -230,7 +226,9 @@ def check_env_version_compatibility() -> bool:
             flask_debug = os.getenv("FLASK_DEBUG", "").lower() in ("true", "1", "t")
             is_reloader_parent = flask_debug and os.environ.get("WERKZEUG_RUN_MAIN") != "true"
             if not is_reloader_parent:
-                print(f"\nConfiguration version check passed (\033[92m{env_version}\033[0m)")
+                print(
+                    f"\nConfiguration version check passed (\033[92m{env_version}\033[0m)"
+                )
 
     except Exception as e:
         print(f"\nWarning: Could not parse version numbers: {e}")
@@ -275,7 +273,9 @@ def _db_has_user_data(env_dir: str) -> bool:
 
     try:
         with sqlite3.connect(f"file:{db_path}?mode=ro", uri=True) as conn:
-            cur = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='users'")
+            cur = conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='users'"
+            )
             if cur.fetchone() is None:
                 return False
             cur = conn.execute("SELECT 1 FROM users LIMIT 1")
@@ -314,7 +314,7 @@ def _atomic_rewrite_dotenv(env_path: str, pairs: list) -> None:
             file lock on Windows, permission denied, etc.). Caller surfaces
             this with a manual-rotation instruction.
     """
-    with open(env_path, encoding="utf-8", newline="") as f:
+    with open(env_path, "r", encoding="utf-8", newline="") as f:
         content = f.read()
     for old, new in pairs:
         content = content.replace(old, new)
@@ -588,13 +588,15 @@ def _ensure_fernet_salt(env_path: str) -> None:
 
     # Read the .env so we can decide based on placement, not just env value.
     try:
-        with open(env_path, encoding="utf-8", newline="") as f:
+        with open(env_path, "r", encoding="utf-8", newline="") as f:
             content = f.read()
     except OSError:
         return
 
     # Locate the API_KEY_PEPPER line — it's the placement anchor for FERNET_SALT.
-    pepper_pat = re.compile(r"^[ \t]*API_KEY_PEPPER[ \t]*=.*?(?=\r?\n|\Z)", re.MULTILINE)
+    pepper_pat = re.compile(
+        r"^[ \t]*API_KEY_PEPPER[ \t]*=.*?(?=\r?\n|\Z)", re.MULTILINE
+    )
     pepper_m = pepper_pat.search(content)
     if pepper_m is None:
         # PEPPER line missing — required-vars check will surface this.
@@ -666,7 +668,6 @@ def _ensure_fernet_salt(env_path: str) -> None:
     # confirming the DB doesn't look like a previous-rotation orphan.
     try:
         import base64
-
         from cryptography.fernet import Fernet, InvalidToken
         from cryptography.hazmat.primitives import hashes
         from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -691,7 +692,9 @@ def _ensure_fernet_salt(env_path: str) -> None:
     if db_path and os.path.exists(db_path):
         sample_cts = _sample_ciphertexts(db_path, limit=20)
         if sample_cts:
-            decryptable = any(_try_decrypt(old_fernet, ct, InvalidToken) for ct in sample_cts)
+            decryptable = any(
+                _try_decrypt(old_fernet, ct, InvalidToken) for ct in sample_cts
+            )
             if not decryptable:
                 sys.stderr.write(
                     "\n\033[91m\033[1m[OpenAlgo Fernet salt]\033[0m\n"
@@ -801,7 +804,8 @@ def _sample_ciphertexts(db_path: str, limit: int = 20) -> list:
                 if cur.fetchone() is None:
                     continue
                 cur = conn.execute(
-                    f"SELECT {col} FROM {table} WHERE {col} IS NOT NULL AND {col} != '' LIMIT ?",
+                    f"SELECT {col} FROM {table} "
+                    f"WHERE {col} IS NOT NULL AND {col} != '' LIMIT ?",
                     (limit - len(samples),),
                 )
                 samples.extend(r[0] for r in cur.fetchall())
@@ -833,7 +837,6 @@ def _migrate_fernet_db(env_path: str, pepper: str, new_salt: str) -> None:
     """
     try:
         import base64
-
         from cryptography.fernet import Fernet, InvalidToken
         from cryptography.hazmat.primitives import hashes
         from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -882,7 +885,9 @@ def _migrate_fernet_db(env_path: str, pepper: str, new_salt: str) -> None:
                 # present but the column is not — there is nothing to migrate,
                 # so skip it instead of letting the SELECT raise and abort the
                 # whole rotation with a "no such column" warning.
-                existing_cols = {r[1] for r in conn.execute(f"PRAGMA table_info({table})")}
+                existing_cols = {
+                    r[1] for r in conn.execute(f"PRAGMA table_info({table})")
+                }
                 if col not in existing_cols:
                     continue
                 cur = conn.execute(
@@ -1207,7 +1212,7 @@ def load_and_check_env_variables() -> None:
 
     # Special validation for broker-specific API key formats
     broker_api_key = os.getenv("BROKER_API_KEY", "")
-    os.getenv("BROKER_API_SECRET", "")
+    broker_api_secret = os.getenv("BROKER_API_SECRET", "")
     redirect_url = os.getenv("REDIRECT_URL", "")
 
     # Extract broker name from redirect URL for validation
@@ -1324,7 +1329,7 @@ def load_and_check_env_variables() -> None:
         print("The application cannot start without valid broker configuration.")
         sys.exit(1)
 
-    valid_brokers = {broker.strip().lower() for broker in valid_brokers_str.split(",")}
+    valid_brokers = set(broker.strip().lower() for broker in valid_brokers_str.split(","))
 
     try:
         import re
@@ -1364,7 +1369,9 @@ def load_and_check_env_variables() -> None:
     # Single: "10 per second"
     # Compound (Flask-Limiter syntax): "10 per second;40 per minute"
     single_limit = r"\d+\s+per\s+(second|minute|hour|day)"
-    rate_limit_pattern = re.compile(rf"^{single_limit}(;{single_limit})*$")
+    rate_limit_pattern = re.compile(
+        rf"^{single_limit}(;{single_limit})*$"
+    )
 
     for var in rate_limit_vars:
         value = os.getenv(var, "")

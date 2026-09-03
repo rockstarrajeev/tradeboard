@@ -2,7 +2,7 @@
 type: API Endpoint
 title: OrderStatus
 description: Get the current status of an order
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/order-information/orderstatus.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/order-information/orderstatus.md
 tags:
 - order-information
 - orders

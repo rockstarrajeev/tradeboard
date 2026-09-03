@@ -257,7 +257,9 @@ class BrokerData:
         response = get_api_response(f"/data/depth?symbol={encoded}&ohlcv_flag=1", self.auth_token)
 
         if response.get("s") != "ok":
-            logger.debug(f"Depth fetch for OI failed for {br_symbol}: {response.get('message')}")
+            logger.debug(
+                f"Depth fetch for OI failed for {br_symbol}: {response.get('message')}"
+            )
             return 0
 
         depth_data = response.get("d", {}).get(br_symbol, {})
@@ -597,7 +599,9 @@ class BrokerData:
             logger.exception(error_msg)
             raise Exception(f"{error_msg}: {e}")
 
-    def get_option_chain(self, symbol: str, strikecount: int, timestamp: str | None = None) -> dict:
+    def get_option_chain(
+        self, symbol: str, strikecount: int, timestamp: str | None = None
+    ) -> dict:
         """
         Fetch strikes around ATM for `symbol` in a single call via Fyers'
         native /data/options-chain-v3 endpoint (see

@@ -45,7 +45,10 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+# Register the app's SQLite pragmas on this process's engines, so a migration
+# waits the same 15s for a write lock the running app does instead of the
+# sqlite3 default of 5s (GitHub issue #1726).
+import _pragmas  # noqa: F401,E402
 from dotenv import load_dotenv  # noqa: E402
 from sqlalchemy import create_engine, text  # noqa: E402
 
@@ -184,7 +187,9 @@ def migrate_fo_close():
 
         for code in FO_EXCHANGES:
             row = conn.execute(
-                text("SELECT end_offset FROM market_timings WHERE exchange_code = :c"),
+                text(
+                    "SELECT end_offset FROM market_timings WHERE exchange_code = :c"
+                ),
                 {"c": code},
             ).fetchone()
             if row is None:

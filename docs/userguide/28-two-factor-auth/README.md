@@ -2,9 +2,9 @@
 
 ## Overview
 
-Tradeboard supports time-based one-time passwords (TOTP) for the application account. TOTP can be required independently for web login, Remote MCP authorization, and password reset.
+OpenAlgo supports time-based one-time passwords (TOTP) for the application account. TOTP can be required independently for web login, Remote MCP authorization, and password reset.
 
-Tradeboard TOTP is separate from any TOTP or PIN required by a broker adapter.
+OpenAlgo TOTP is separate from any TOTP or PIN required by a broker adapter.
 
 ## Configure TOTP
 
@@ -30,13 +30,13 @@ The master TOTP switch must be enabled for any purpose switch to take effect. Up
 
 1. Submit the username and password.
 2. When the server returns `totp_required`, enter the current six-digit code.
-3. After verification, Tradeboard resumes the normal broker-session check and dashboard flow.
+3. After verification, OpenAlgo resumes the normal broker-session check and dashboard flow.
 
 The pending TOTP login state has a short lifetime. If it expires, restart the password step instead of repeatedly submitting an old code.
 
 ## API and MCP Behavior
 
-Tradeboard REST API keys authenticate independently of web-login TOTP. Protect the API key as a trading credential; enabling login TOTP does not add a TOTP prompt to each `/api/v1` request.
+OpenAlgo REST API keys authenticate independently of web-login TOTP. Protect the API key as a trading credential; enabling login TOTP does not add a TOTP prompt to each `/api/v1` request.
 
 Remote MCP uses OAuth. When MCP TOTP is enabled and a client requests `write:orders`, the authorization page requires a fresh code before granting that scope. Read-only OAuth scopes follow the configured MCP approval policy without an order-write grant.
 
@@ -44,13 +44,13 @@ Remote MCP uses OAuth. When MCP TOTP is enabled and a client requests `write:ord
 
 The current application does **not** generate one-time recovery codes. Do not rely on a recovery-code screen or support workflow that is not implemented.
 
-Before replacing or wiping an authenticator device, transfer the Tradeboard TOTP entry or retain the secret in a protected password manager. If no valid authenticator or secret remains, account recovery requires operator access to the self-hosted installation and should be handled as a privileged database/configuration recovery procedure.
+Before replacing or wiping an authenticator device, transfer the OpenAlgo TOTP entry or retain the secret in a protected password manager. If no valid authenticator or secret remains, account recovery requires operator access to the self-hosted installation and should be handled as a privileged database/configuration recovery procedure.
 
 ## Troubleshooting
 
 | Symptom | Check |
 |---|---|
-| Code rejected | Correct Tradeboard entry, six digits, and automatic device time |
+| Code rejected | Correct OpenAlgo entry, six digits, and automatic device time |
 | Login returns to password | Pending TOTP state may have expired; start again |
 | MCP write scope prompts again | Fresh-TOTP window expired or a new authorization began |
 | Broker asks for another code | Broker authentication is a separate TOTP flow |
@@ -64,7 +64,7 @@ TOTP codes depend on synchronized clocks. Enable automatic network time on the s
 - Never place the QR code or secret in logs, screenshots, or tickets.
 - Enable login TOTP for publicly reachable deployments.
 - Enable MCP TOTP before granting `write:orders` to hosted AI clients.
-- Keep the application password, Tradeboard TOTP, broker TOTP, and REST API key as distinct credentials.
+- Keep the application password, OpenAlgo TOTP, broker TOTP, and REST API key as distinct credentials.
 
 ---
 

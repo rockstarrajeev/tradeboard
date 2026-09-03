@@ -1,8 +1,8 @@
 ---
 type: Reference
 title: Execution Skills (Agentic)
-description: The Tradeboard execution skill package for AI coding agents — order execution, custom algos, scanners, streaming, and alerts.
-resource: https://docs.rajeevupadhyay.com/skills/execution
+description: The OpenAlgo execution skill package for AI coding agents — order execution, custom algos, scanners, streaming, and alerts.
+resource: https://docs.openalgo.in/skills/execution
 tags:
 - skills
 - agentic
@@ -15,8 +15,8 @@ timestamp: '2026-07-03T00:00:00+00:00'
 > source doc linked below; this OKF concept exists only to index, tag, and
 > cross-link it. Edit the source, never this file.
 
-The Tradeboard execution skill package for AI coding agents — order execution, custom algos, scanners, streaming, and alerts.
+The OpenAlgo execution skill package for AI coding agents — order execution, custom algos, scanners, streaming, and alerts.
 
-**Source:** [https://docs.rajeevupadhyay.com/skills/execution](https://docs.rajeevupadhyay.com/skills/execution)
+**Source:** [https://docs.openalgo.in/skills/execution](https://docs.openalgo.in/skills/execution)
 
 **Related:** [overview](../overview.md)

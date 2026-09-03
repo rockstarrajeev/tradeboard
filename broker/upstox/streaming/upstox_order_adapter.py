@@ -86,7 +86,8 @@ class UpstoxOrderUpdateAdapter(BaseOrderUpdateAdapter):
             )
         except Exception as e:
             self.logger.warning(
-                f"Upstox portfolio-stream authorize failed ({e}); falling back to direct endpoint"
+                f"Upstox portfolio-stream authorize failed ({e}); "
+                "falling back to direct endpoint"
             )
         return UPSTOX_PORTFOLIO_DIRECT_WS_URL
 
@@ -137,11 +138,11 @@ class UpstoxOrderUpdateAdapter(BaseOrderUpdateAdapter):
             "product": _PRODUCT_MAP.get(data.get("product", ""), data.get("product", "")),
             "order_status": order_status,
             "filled_quantity": filled_quantity,
-            "pending_quantity": int(
-                data.get("pending_quantity") or max(quantity - filled_quantity, 0)
-            ),
+            "pending_quantity": int(data.get("pending_quantity") or max(quantity - filled_quantity, 0)),
             "average_price": float(data.get("average_price") or 0),
-            "rejection_reason": (data.get("status_message") or data.get("status", ""))
+            "rejection_reason": (
+                data.get("status_message") or data.get("status", "")
+            )
             if order_status == "rejected"
             else "",
         }
@@ -151,9 +152,7 @@ def create_upstox_order_adapter(user_id: str) -> "UpstoxOrderUpdateAdapter | Non
     """Factory: build an UpstoxOrderUpdateAdapter for user_id."""
     access_token = get_auth_token(user_id, bypass_cache=True)
     if not access_token:
-        logger.warning(
-            f"No Upstox access token found for user {user_id}; order-update adapter not started"
-        )
+        logger.warning(f"No Upstox access token found for user {user_id}; order-update adapter not started")
         return None
 
     return UpstoxOrderUpdateAdapter(user_id=user_id, access_token=access_token)

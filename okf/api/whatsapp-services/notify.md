@@ -2,7 +2,7 @@
 type: API Endpoint
 title: WhatsApp Notify
 description: Send text, image, or document alerts to self or up to 5 recipients
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/whatsapp-services/notify.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/whatsapp-services/notify.md
 tags:
 - whatsapp
 - notify

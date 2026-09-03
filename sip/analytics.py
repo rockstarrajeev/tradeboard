@@ -65,7 +65,9 @@ def headline(result: SipResult) -> dict:
         "average_price": _f(result.average_price),
         # Negative means each unit cost less than the average price paid over
         # the same dates -- the rupee-cost-averaging effect, quantified.
-        "cost_advantage": _f((result.average_cost - result.average_price) / result.average_price)
+        "cost_advantage": _f(
+            (result.average_cost - result.average_price) / result.average_price
+        )
         if result.average_price
         else None,
         "charges": _f(result.charges),
@@ -145,7 +147,10 @@ def drawdown(result: SipResult) -> dict:
         "trough_date": str(trough_at.date()) if trough_at is not None else None,
         "recovery_sessions": recovery_sessions,
         "recovered": recovery_sessions is not None,
-        "curve": [{"date": str(d.date()), "value": _f(v)} for d, v in dd.items()],
+        "curve": [
+            {"date": str(d.date()), "value": _f(v)}
+            for d, v in dd.items()
+        ],
     }
 
 
@@ -198,19 +203,16 @@ def rolling_xirr(
         if not points:
             continue
         rates = [p["xirr"] for p in points if p["xirr"] is not None]
-        out.append(
-            {
-                "years": span,
-                "windows": len(points),
-                "points": points,
-                "best": _f(max(rates)) if rates else None,
-                "worst": _f(min(rates)) if rates else None,
-                "median": _f(pd.Series(rates).median()) if rates else None,
-                "positive_share": _f(sum(1 for r in rates if r > 0) / len(rates))
-                if rates
-                else None,
-            }
-        )
+        out.append({
+            "years": span,
+            "windows": len(points),
+            "points": points,
+            "best": _f(max(rates)) if rates else None,
+            "worst": _f(min(rates)) if rates else None,
+            "median": _f(pd.Series(rates).median()) if rates else None,
+            "positive_share": _f(sum(1 for r in rates if r > 0) / len(rates))
+            if rates else None,
+        })
     return out
 
 
@@ -249,9 +251,8 @@ def start_date_heatmap(
             except ValueError:
                 row.append(None)
                 continue
-            row.append(
-                _f(_sip_xirr(closes, s, min(end, last), amount, **sip_kw)) if end <= last else None
-            )
+            row.append(_f(_sip_xirr(closes, s, min(end, last), amount, **sip_kw))
+                       if end <= last else None)
         values.append(row)
 
     return {
@@ -261,7 +262,9 @@ def start_date_heatmap(
     }
 
 
-def sip_date_heatmap(closes: pd.Series, start: date, end: date, amount: float, **sip_kw) -> dict:
+def sip_date_heatmap(
+    closes: pd.Series, start: date, end: date, amount: float, **sip_kw
+) -> dict:
     """XIRR by day-of-month, 1st through 28th.
 
     Settles the "which date should I SIP on?" argument with evidence. The
@@ -306,18 +309,16 @@ def frequency_comparison(
             r = run_sip(closes, "x", "x", start, end, amount, frequency=freq, **kw)
         except Exception:  # noqa: BLE001
             continue
-        out.append(
-            {
-                "frequency": freq,
-                "amount_per_installment": _f(amount),
-                "installments": r.installment_count,
-                "invested": _f(r.total_invested),
-                "final_value": _f(r.final_value),
-                "xirr": _f(xirr_or_none(r.cash_flows)),
-                "average_cost": _f(r.average_cost),
-                "charges": _f(r.charges),
-            }
-        )
+        out.append({
+            "frequency": freq,
+            "amount_per_installment": _f(amount),
+            "installments": r.installment_count,
+            "invested": _f(r.total_invested),
+            "final_value": _f(r.final_value),
+            "xirr": _f(xirr_or_none(r.cash_flows)),
+            "average_cost": _f(r.average_cost),
+            "charges": _f(r.charges),
+        })
     return out
 
 
@@ -334,17 +335,15 @@ def yearly_breakdown(result: SipResult) -> list[dict]:
         closing_value = float(chunk["value"].iloc[-1])
         closing_invested = float(chunk["invested"].iloc[-1])
         added = closing_invested - opening_invested
-        out.append(
-            {
-                "year": int(year),
-                "invested_during_year": _f(added),
-                "invested_to_date": _f(closing_invested),
-                "value": _f(closing_value),
-                "gain": _f(closing_value - closing_invested),
-                # Growth of the money that was already there plus what came in.
-                "change": _f(closing_value - opening_value - added),
-            }
-        )
+        out.append({
+            "year": int(year),
+            "invested_during_year": _f(added),
+            "invested_to_date": _f(closing_invested),
+            "value": _f(closing_value),
+            "gain": _f(closing_value - closing_invested),
+            # Growth of the money that was already there plus what came in.
+            "change": _f(closing_value - opening_value - added),
+        })
     return out
 
 
@@ -392,20 +391,8 @@ def monthly_value_heatmap(result: SipResult) -> dict:
 
     return {
         "years": [str(y) for y in sorted(grid)],
-        "columns": [
-            "Jan",
-            "Feb",
-            "Mar",
-            "Apr",
-            "May",
-            "Jun",
-            "Jul",
-            "Aug",
-            "Sep",
-            "Oct",
-            "Nov",
-            "Dec",
-        ],
+        "columns": ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
         "values": [grid[y] for y in sorted(grid)],
         "basis": "close-to-close, contribution removed",
     }

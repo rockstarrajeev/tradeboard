@@ -2,7 +2,7 @@
 
 ## Overview
 
-Tradeboard implements centralized Python logging with configurable levels, colored console output, and optional retained files. General application logs are not stored in `logs.db`: `logs.db` is the traffic/security store, while order and analyzer audit rows live in the main database.
+OpenAlgo implements centralized Python logging with configurable levels, colored console output, and optional retained files. General application logs are not stored in `logs.db`: `logs.db` is the traffic/security store, while order and analyzer audit rows live in the main database.
 
 ## Architecture Diagram
 
@@ -43,9 +43,9 @@ Tradeboard implements centralized Python logging with configurable levels, color
                                   ┌────────────────────────────┐
                                   │       log/ directory       │
                                   │                            │
-                                  │  - tradeboard.log            │
-                                  │  - tradeboard.log.1          │
-                                  │  - tradeboard.log.2          │
+                                  │  - openalgo.log            │
+                                  │  - openalgo.log.1          │
+                                  │  - openalgo.log.2          │
                                   └────────────────────────────┘
 ```
 
@@ -119,7 +119,7 @@ def get_logger(name):
         # File handler (if enabled)
         if os.getenv('LOG_TO_FILE', 'False').lower() == 'true':
             file_handler = RotatingFileHandler(
-                filename=os.path.join(os.getenv('LOG_DIR', 'log'), 'tradeboard.log'),
+                filename=os.path.join(os.getenv('LOG_DIR', 'log'), 'openalgo.log'),
                 maxBytes=10*1024*1024,  # 10MB
                 backupCount=int(os.getenv('LOG_RETENTION', '14'))
             )
@@ -164,14 +164,14 @@ log_startup_banner(version, web_url, ws_url, ngrok_url)
 Output:
 
 ```
-╭─── Tradeboard v1.3.0 ──────────────────────────────────────────╮
+╭─── OpenAlgo v1.3.0 ──────────────────────────────────────────╮
 │                                                              │
 │             Your Personal Algo Trading Platform              │
 │                                                              │
 │ Endpoints                                                    │
 │ Web App    http://127.0.0.1:5000                            │
 │ WebSocket  ws://127.0.0.1:8765                              │
-│ Docs       https://docs.rajeevupadhyay.com                         │
+│ Docs       https://docs.openalgo.in                         │
 │                                                              │
 │ Status     Ready                                             │
 │                                                              │
@@ -182,11 +182,11 @@ Output:
 
 ```
 log/
-├── tradeboard.log        # Current log file
-├── tradeboard.log.1      # Previous rotation
-├── tradeboard.log.2      # Older rotation
+├── openalgo.log        # Current log file
+├── openalgo.log.1      # Previous rotation
+├── openalgo.log.2      # Older rotation
 ├── ...
-└── tradeboard.log.14     # Oldest (based on LOG_RETENTION)
+└── openalgo.log.14     # Oldest (based on LOG_RETENTION)
 ```
 
 ### Rotation Settings
@@ -203,16 +203,16 @@ log/
 
 ```bash
 # View current log
-cat log/tradeboard.log
+cat log/openalgo.log
 
 # Follow log in real-time
-tail -f log/tradeboard.log
+tail -f log/openalgo.log
 
 # View last 100 lines
-tail -100 log/tradeboard.log
+tail -100 log/openalgo.log
 
 # Search for errors
-grep ERROR log/tradeboard.log
+grep ERROR log/openalgo.log
 ```
 
 ### UI Log Viewer

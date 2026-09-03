@@ -2,7 +2,7 @@
 type: API Endpoint
 title: CancelAllOrder
 description: Cancel all open orders
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/order-management/cancelallorder.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/order-management/cancelallorder.md
 tags:
 - order
 - cancel

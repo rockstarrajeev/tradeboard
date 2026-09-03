@@ -1,4 +1,4 @@
-# Tradeboard MCP — Tool Reference & Prompt Examples
+# OpenAlgo MCP — Tool Reference & Prompt Examples
 
 Companion reference to the main MCP setup guide. Once the MCP server is wired into Claude Desktop, Cursor, Windsurf, Antigravity, or any other MCP-capable client, you can ask for these operations in plain English — the client decides which tool to call.
 
@@ -10,14 +10,23 @@ The currently supported tools are listed below. The live MCP `tools/list` schema
 
 ## Conventions
 
-- **Default strategy tag**: `python mcp` — every MCP-triggered order is tagged so you can filter MCP activity in Tradeboard logs and the Analyzer. Override by saying *"use strategy 'my scalper'"* in the prompt.
+- **Default strategy tag**: `python mcp` — every MCP-triggered order is tagged so you can filter MCP activity in OpenAlgo logs and the Analyzer. Override by saying *"use strategy 'my scalper'"* in the prompt.
 - **Product type defaults**: `MIS` for equity. Use `NRML` for F&O carry; `CNC` for delivery.
 - **Exchange codes**: `NSE`, `BSE`, `NFO`, `BFO`, `CDS`, `BCD`, `MCX` + `NSE_INDEX` / `BSE_INDEX` for index values.
 - **Lot size**: never hardcoded. The model will call `get_option_symbol` / `get_option_chain` / `get_symbol_info` to read the live `lotsize` from the broker master contract, then compute `quantity = lots × lotsize` for you.
 
+## Response Format and Safety Controls
+
+Applies to every tool below. Full detail in the [MCP Server Setup Guide](../mcp/README.md).
+
+- **Annotations**: each tool declares `readOnlyHint` / `destructiveHint`, so your client can tell `get_quote` apart from `cancel_all_orders` before asking you to approve a call.
+- **Trust envelope**: responses arrive as `{"_openalgo_mcp_security": {...}, "data": {...}}`. The payload you care about is under `data`; the wrapper tells the model not to treat broker-relayed text as instructions.
+- **Structured errors**: failures return `{"error": {"message": ..., "error_type": ...}}`. A timed-out write is reported separately from a rejection, with `retry_safe: false`, because an order that timed out may still have reached the broker.
+- **Narrowing the server**: `OPENALGO_MCP_READ_ONLY=1` exposes only the read-only tools; `OPENALGO_MCP_TOOLSETS=marketdata,research` limits it further. Both are enforced at startup, so unlike analyzer mode the assistant cannot switch them off.
+
 ---
 
-## 📦 Order Management
+## Order Management
 
 ### `place_order`
 
@@ -132,7 +141,7 @@ Change price / quantity / type / trigger on a working order.
 
 ---
 
-## 📊 Positions & Holdings
+## Positions & Holdings
 
 ### `close_all_positions`
 
@@ -178,7 +187,7 @@ Cash, collateral, realized/unrealized M2M, utilized margin.
 
 ---
 
-## 📋 Order Tracking
+## Order Tracking
 
 ### `get_order_status`
 
@@ -204,7 +213,7 @@ Only executed fills.
 
 ---
 
-## 📈 Market Data
+## Market Data
 
 ### `get_quote`
 
@@ -255,7 +264,7 @@ Real-time chain with CE/PE data per strike — LTP, bid/ask, OHLC, volume, OI, `
 
 ---
 
-## 🔍 Instrument Search & Symbols
+## Instrument Search & Symbols
 
 ### `search_instruments`
 
@@ -333,7 +342,7 @@ Bulk instrument master download for an exchange (or all exchanges when `exchange
 
 ### `get_index_symbols`
 
-Returns the full standardized Tradeboard index symbol list (57 NSE + 40 BSE), rolled out uniformly across every supported broker.
+Returns the full standardized OpenAlgo index symbol list (57 NSE + 40 BSE), rolled out uniformly across every supported broker.
 
 **Prompts:**
 - *"List all NSE index symbols I can subscribe to"*
@@ -341,7 +350,7 @@ Returns the full standardized Tradeboard index symbol list (57 NSE + 40 BSE), ro
 
 ---
 
-## 💰 Margin
+## Margin
 
 ### `calculate_margin`
 
@@ -353,7 +362,7 @@ SPAN + exposure margin for a hypothetical position set. Accepts an array of legs
 
 ---
 
-## 🧪 Analyzer
+## Analyzer
 
 ### `analyzer_status`
 
@@ -373,7 +382,7 @@ Flip between simulated and live trading. Analyzer mode returns `SB-xxx` pseudo-o
 
 ---
 
-## 📅 Market Calendar
+## Market Calendar
 
 ### `get_holidays`
 
@@ -393,11 +402,11 @@ Exchange open/close epoch timestamps for a given date (date optional → default
 
 ---
 
-## 🛠️ Utilities
+## Utilities
 
-### `get_tradeboard_version`
+### `get_openalgo_version`
 
-**Prompt:** *"What version of the tradeboard library is running?"*
+**Prompt:** *"What version of the openalgo library is running?"*
 
 ---
 
@@ -409,7 +418,7 @@ Quick cheat-sheet of valid exchanges, product types, price types, actions, and i
 
 ### `send_telegram_alert`
 
-Push a Telegram notification via the Tradeboard Telegram bot (must be configured in Tradeboard settings first). Supports `priority` 1–10.
+Push a Telegram notification via the OpenAlgo Telegram bot (must be configured in OpenAlgo settings first). Supports `priority` 1–10.
 
 **Prompts:**
 - *"Send me a Telegram alert: NIFTY crossed 26000, priority 8"*
@@ -419,11 +428,11 @@ Push a Telegram notification via the Tradeboard Telegram bot (must be configured
 
 ## Technical Research
 
-Research tools fetch broker or Historify history and calculate compact results on the Tradeboard server. Common optional controls are `interval`, `start_date`, `end_date`, `lookback_bars`, `lookback_days`, and `source` (`api` or `db`).
+Research tools fetch broker or Historify history and calculate compact results on the OpenAlgo server. Common optional controls are `interval`, `start_date`, `end_date`, `lookback_bars`, `lookback_days`, and `source` (`api` or `db`).
 
 ### `calculate_indicator`
 
-Run an `tradeboard.ta` indicator by name. Supply `symbol`, `exchange`, and `indicator`; use `params` for indicator arguments, `inputs` when automatic OHLCV input detection is insufficient, and `bars` to limit returned rows.
+Run an `openalgo.ta` indicator by name. Supply `symbol`, `exchange`, and `indicator`; use `params` for indicator arguments, `inputs` when automatic OHLCV input detection is insufficient, and `bars` to limit returned rows.
 
 **Prompt:** *"Calculate RSI(14) and the latest 20 values for RELIANCE daily candles"*
 
@@ -477,7 +486,7 @@ Align two symbols on common timestamps and return rolling correlation, rolling b
 
 ---
 
-## 🧠 Worked Multi-Tool Workflows
+## Worked Multi-Tool Workflows
 
 Real strength shows when the assistant chains tools on its own. Example prompts:
 
@@ -522,15 +531,15 @@ Chains: `cancel_all_orders` → `close_all_positions` → `get_trade_book` → `
 
 ## Safety Tips
 
-- Start in **analyzer mode** (`analyzer_toggle True`) while you get comfortable — orders look real but never leave Tradeboard.
+- Start in **analyzer mode** (`analyzer_toggle True`) while you get comfortable — orders look real but never leave OpenAlgo.
 - Use phrases like *"only if margin is under X"* or *"ask me to confirm before placing"* — the assistant will pause for your OK.
 - Use a unique `strategy` name per use-case (e.g., *"use strategy 'nifty scalper'"*) so MCP-driven activity is cleanly separable from manual orders in logs.
-- For live trading, set up the Tradeboard Telegram bot and ask the assistant to *"send a Telegram alert after every order fill"* — you get a realtime feed without staring at the screen.
+- For live trading, set up the OpenAlgo Telegram bot and ask the assistant to *"send a Telegram alert after every order fill"* — you get a realtime feed without staring at the screen.
 
 ---
 
 ## Related
 
 - [MCP Server Setup Guide](../mcp/README.md) — install, configure Claude / Cursor / Windsurf, broker prerequisites
-- [Tradeboard Symbol Format](./userguide/symbol-format/README.md) — how equity / future / option symbols are constructed
+- [OpenAlgo Symbol Format](./userguide/symbol-format/README.md) — how equity / future / option symbols are constructed
 - [API Documentation](./api/README.md) — underlying REST endpoints each MCP tool wraps

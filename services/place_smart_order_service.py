@@ -1,6 +1,6 @@
 import copy
 import importlib
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 from database.auth_db import get_auth_token_broker
 from database.settings_db import get_analyze_mode
@@ -24,6 +24,7 @@ from utils.logging import get_logger
 logger = get_logger(__name__)
 
 
+
 def emit_analyzer_error(request_data: dict[str, Any], error_message: str) -> dict[str, Any]:
     """Publish an analyzer error event and return the error response dict."""
     error_response = {"mode": "analyze", "status": "error", "message": error_message}
@@ -33,15 +34,13 @@ def emit_analyzer_error(request_data: dict[str, Any], error_message: str) -> dic
         del analyzer_request["apikey"]
     analyzer_request["api_type"] = "placesmartorder"
 
-    bus.publish(
-        AnalyzerErrorEvent(
-            mode="analyze",
-            api_type="placesmartorder",
-            request_data=analyzer_request,
-            response_data=error_response,
-            error_message=error_message,
-        )
-    )
+    bus.publish(AnalyzerErrorEvent(
+        mode="analyze",
+        api_type="placesmartorder",
+        request_data=analyzer_request,
+        response_data=error_response,
+        error_message=error_message,
+    ))
 
     return error_response
 
@@ -96,11 +95,11 @@ def validate_smart_order(order_data: dict[str, Any]) -> tuple[bool, str | None]:
             )
 
     # Validate price type if provided
-    if "price_type" in order_data and order_data["price_type"] not in VALID_PRICE_TYPES:
+    if "pricetype" in order_data and order_data["pricetype"] not in VALID_PRICE_TYPES:
         return False, f"Invalid price type. Must be one of: {', '.join(VALID_PRICE_TYPES)}"
 
     # Validate product type if provided
-    if "product_type" in order_data and order_data["product_type"] not in VALID_PRODUCT_TYPES:
+    if "product" in order_data and order_data["product"] not in VALID_PRODUCT_TYPES:
         return False, f"Invalid product type. Must be one of: {', '.join(VALID_PRODUCT_TYPES)}"
 
     return True, None
@@ -139,15 +138,11 @@ def place_smart_order_with_auth(
         if get_analyze_mode():
             return False, emit_analyzer_error(original_data, error_message), 400
         error_response = {"status": "error", "message": error_message}
-        bus.publish(
-            OrderFailedEvent(
-                mode="live",
-                api_type="placesmartorder",
-                request_data=order_request_data,
-                response_data=error_response,
-                error_message=error_message,
-            )
-        )
+        bus.publish(OrderFailedEvent(
+            mode="live", api_type="placesmartorder",
+            request_data=order_request_data, response_data=error_response,
+            error_message=error_message,
+        ))
         return False, error_response, 400
 
     # If in analyze mode, route to sandbox for sandbox trading
@@ -176,36 +171,28 @@ def place_smart_order_with_auth(
         )
 
         if no_action:
-            bus.publish(
-                SmartOrderNoActionEvent(
-                    mode="analyze",
-                    api_type="placesmartorder",
-                    symbol=order_data.get("symbol", ""),
-                    exchange=order_data.get("exchange", ""),
-                    message=response_data.get("message", ""),
-                    request_data=analyzer_request,
-                    response_data=response_data,
-                    api_key=api_key,
-                )
-            )
+            bus.publish(SmartOrderNoActionEvent(
+                mode="analyze", api_type="placesmartorder",
+                symbol=order_data.get("symbol", ""),
+                exchange=order_data.get("exchange", ""),
+                message=response_data.get("message", ""),
+                request_data=analyzer_request, response_data=response_data,
+                api_key=api_key,
+            ))
         else:
-            bus.publish(
-                OrderPlacedEvent(
-                    mode="analyze",
-                    api_type="placesmartorder",
-                    strategy=order_data.get("strategy", ""),
-                    symbol=order_data.get("symbol", ""),
-                    exchange=order_data.get("exchange", ""),
-                    action=order_data.get("action", ""),
-                    quantity=int(order_data.get("quantity", 0)),
-                    pricetype=order_data.get("pricetype", ""),
-                    product=order_data.get("product", ""),
-                    orderid=response_data.get("orderid", ""),
-                    request_data=analyzer_request,
-                    response_data=response_data,
-                    api_key=api_key,
-                )
-            )
+            bus.publish(OrderPlacedEvent(
+                mode="analyze", api_type="placesmartorder",
+                strategy=order_data.get("strategy", ""),
+                symbol=order_data.get("symbol", ""),
+                exchange=order_data.get("exchange", ""),
+                action=order_data.get("action", ""),
+                quantity=int(order_data.get("quantity", 0)),
+                pricetype=order_data.get("pricetype", ""),
+                product=order_data.get("product", ""),
+                orderid=response_data.get("orderid", ""),
+                request_data=analyzer_request, response_data=response_data,
+                api_key=api_key,
+            ))
 
         return success, response_data, status_code
 
@@ -213,16 +200,11 @@ def place_smart_order_with_auth(
     broker_module = import_broker_module(broker)
     if broker_module is None:
         error_response = {"status": "error", "message": "Broker-specific module not found"}
-        bus.publish(
-            OrderFailedEvent(
-                mode="live",
-                api_type="placesmartorder",
-                request_data=order_request_data,
-                response_data=error_response,
-                api_key=api_key,
-                error_message="Broker-specific module not found",
-            )
-        )
+        bus.publish(OrderFailedEvent(
+            mode="live", api_type="placesmartorder",
+            request_data=order_request_data, response_data=error_response,
+            api_key=api_key, error_message="Broker-specific module not found",
+        ))
         return False, error_response, 404
 
     try:
@@ -238,40 +220,32 @@ def place_smart_order_with_auth(
                 "status": "success",
                 "message": "Positions Already Matched. No Action needed.",
             }
-            bus.publish(
-                SmartOrderNoActionEvent(
-                    mode="live",
-                    api_type="placesmartorder",
-                    symbol=order_data.get("symbol", ""),
-                    exchange=order_data.get("exchange", ""),
-                    message=" Positions Already Matched. No Action needed.",
-                    request_data=order_request_data,
-                    response_data=order_response_data,
-                    api_key=api_key,
-                )
-            )
+            bus.publish(SmartOrderNoActionEvent(
+                mode="live", api_type="placesmartorder",
+                symbol=order_data.get("symbol", ""),
+                exchange=order_data.get("exchange", ""),
+                message=" Positions Already Matched. No Action needed.",
+                request_data=order_request_data, response_data=order_response_data,
+                api_key=api_key,
+            ))
             return True, order_response_data, 200
 
         # Log successful order immediately after placement
         if res and res.status == 200:
             order_response_data = {"status": "success", "orderid": order_id}
-            bus.publish(
-                OrderPlacedEvent(
-                    mode="live",
-                    api_type="placesmartorder",
-                    strategy=order_data.get("strategy", ""),
-                    symbol=order_data.get("symbol", ""),
-                    exchange=order_data.get("exchange", ""),
-                    action=order_data.get("action", ""),
-                    quantity=int(order_data.get("quantity", 0)),
-                    pricetype=order_data.get("pricetype", ""),
-                    product=order_data.get("product", ""),
-                    orderid=str(order_id),
-                    request_data=order_request_data,
-                    response_data=order_response_data,
-                    api_key=api_key,
-                )
-            )
+            bus.publish(OrderPlacedEvent(
+                mode="live", api_type="placesmartorder",
+                strategy=order_data.get("strategy", ""),
+                symbol=order_data.get("symbol", ""),
+                exchange=order_data.get("exchange", ""),
+                action=order_data.get("action", ""),
+                quantity=int(order_data.get("quantity", 0)),
+                pricetype=order_data.get("pricetype", ""),
+                product=order_data.get("product", ""),
+                orderid=str(order_id),
+                request_data=order_request_data, response_data=order_response_data,
+                api_key=api_key,
+            ))
 
     except Exception as e:
         logger.exception(f"Error in broker_module.place_smartorder_api: {e}")
@@ -279,16 +253,11 @@ def place_smart_order_with_auth(
             "status": "error",
             "message": "Failed to place smart order due to internal error",
         }
-        bus.publish(
-            OrderFailedEvent(
-                mode="live",
-                api_type="placesmartorder",
-                request_data=order_request_data,
-                response_data=error_response,
-                api_key=api_key,
-                error_message=str(e),
-            )
-        )
+        bus.publish(OrderFailedEvent(
+            mode="live", api_type="placesmartorder",
+            request_data=order_request_data, response_data=error_response,
+            api_key=api_key, error_message=str(e),
+        ))
         return False, error_response, 500
 
     if res and res.status == 200:
@@ -300,16 +269,11 @@ def place_smart_order_with_auth(
             else "Failed to place smart order"
         )
         error_response = {"status": "error", "message": message}
-        bus.publish(
-            OrderFailedEvent(
-                mode="live",
-                api_type="placesmartorder",
-                request_data=order_request_data,
-                response_data=error_response,
-                api_key=api_key,
-                error_message=message,
-            )
-        )
+        bus.publish(OrderFailedEvent(
+            mode="live", api_type="placesmartorder",
+            request_data=order_request_data, response_data=error_response,
+            api_key=api_key, error_message=message,
+        ))
         status_code = res.status if res and hasattr(res, "status") else 500
         return False, error_response, status_code
 
@@ -358,11 +322,15 @@ def place_smart_order(
             # Skip logging for invalid API keys to prevent database flooding
             return False, error_response, 403
 
-        return place_smart_order_with_auth(order_data, AUTH_TOKEN, broker_name, original_data)
+        return place_smart_order_with_auth(
+            order_data, AUTH_TOKEN, broker_name, original_data
+        )
 
     # Case 2: Direct internal call with auth_token and broker
     elif auth_token and broker:
-        return place_smart_order_with_auth(order_data, auth_token, broker, original_data)
+        return place_smart_order_with_auth(
+            order_data, auth_token, broker, original_data
+        )
 
     # Case 3: Invalid parameters
     else:

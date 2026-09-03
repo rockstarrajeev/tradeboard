@@ -121,7 +121,9 @@ def download_security_master():
     """
     client = get_httpx_client()
     # Explicit generous timeout: the archive is ~2.4 MB compressed / 17 MB raw.
-    response = client.get(SECURITY_MASTER_URL, headers={"User-Agent": USER_AGENT}, timeout=180)
+    response = client.get(
+        SECURITY_MASTER_URL, headers={"User-Agent": USER_AGENT}, timeout=180
+    )
     response.raise_for_status()
 
     with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
@@ -165,9 +167,7 @@ def _format_strike_series(strike):
     )
 
 
-def _strip_broker_suffix(
-    trading_symbols, monthly_suffix, weekly_suffix, weekly_alpha_suffix, is_deriv
-):
+def _strip_broker_suffix(trading_symbols, monthly_suffix, weekly_suffix, weekly_alpha_suffix, is_deriv):
     """Recover the underlying by removing the broker's expiry/strike suffix.
 
     Three suffix shapes exist in the live master:

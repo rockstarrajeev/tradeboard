@@ -11,7 +11,7 @@ def transform_data(data, token):
     """
     Transforms the new API request structure to the current expected structure.
     """
-    get_br_symbol(data["symbol"], data["exchange"])
+    symbol = get_br_symbol(data["symbol"], data["exchange"])
     # token = get_token(data['symbol'], data['exchange'])
     # logger.info(f"token: {token}")
     # Basic mapping - ensure correct data types per XTS API spec
@@ -83,12 +83,12 @@ def map_exchange_numeric(exchange):
     - NCDEX = 21 (NCDEX Commodity)
     """
     exchange_numeric_mapping = {
-        "NSE": 1,  # NSECM
-        "NFO": 2,  # NSEFO
-        "CDS": 3,  # NSECD
-        "BSE": 11,  # BSECM
-        "BFO": 12,  # BSEFO
-        "MCX": 51,  # MCXFO
+        "NSE": 1,      # NSECM
+        "NFO": 2,      # NSEFO
+        "CDS": 3,      # NSECD
+        "BSE": 11,     # BSECM
+        "BFO": 12,     # BSEFO
+        "MCX": 51,     # MCXFO
     }
     if exchange not in exchange_numeric_mapping:
         raise ValueError(f"Unsupported exchange: {exchange}")

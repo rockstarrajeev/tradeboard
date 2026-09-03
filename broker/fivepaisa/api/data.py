@@ -604,7 +604,7 @@ class BrokerData:
 
                 if not original:
                     # Try to find by matching broker symbol in values
-                    for _key, info in symbol_map.items():
+                    for key, info in symbol_map.items():
                         if info.get("br_symbol") == scrip_data:
                             original = info
                             break
@@ -652,10 +652,19 @@ class BrokerData:
     def map_interval(self, interval: str) -> str | None:
         """Map an OpenAlgo interval to the 5Paisa Historical Candles path segment.
 
-        Values are the Interval codes from the docs
+        Keys are OpenAlgo's public interval aliases; values are the Interval
+        codes 5Paisa's URL expects
         (broker-api-docs/fivepaisa-api-docs/09-market-data-rest.md): 1m, 5m,
         10m, 15m, 30m, **60m**, 1d. The hourly code is "60m" — sending "1h"
         (as this did) is not a code 5Paisa accepts, so hourly history failed.
+
+        Note the keys deliberately stay in step with `timeframe_map`, which
+        services/intervals_service.py publishes as this broker's supported set:
+        accepting an alias that is never advertised (or vice versa) leaves
+        clients guessing. "1h" is OpenAlgo's public name for hourly across the
+        brokers here, and intervals_service buckets by suffix — so also
+        accepting "60m" would have meant advertising the same timeframe twice,
+        once under minutes and once under hours.
 
         Returns None for anything unsupported so get_history raises instead of
         silently serving daily candles for, say, a 2m request.
@@ -667,7 +676,6 @@ class BrokerData:
             "15m": "15m",
             "30m": "30m",
             "1h": "60m",
-            "60m": "60m",
             # Handle all daily timeframe variants
             "1d": "1d",
             "D": "1d",
@@ -755,6 +763,7 @@ class BrokerData:
 
             # No special handling needed for 10m interval anymore
             # Just use the native 10m interval from the API
+            is_resampling_needed = False
 
             # For intraday, we need to specify both start and end date
             # Convert dates to datetime objects
@@ -980,7 +989,9 @@ class BrokerData:
 
         except Exception as e:
             error_msg = str(e)
-            logger.exception(f"Error in get_history: {error_msg}")  # Debug log
+            logger.exception(
+                f"Error in get_history: {error_msg}"
+            )  # Debug log
 
             # Check if this is the timestamp conversion error with raw_data available
             if (

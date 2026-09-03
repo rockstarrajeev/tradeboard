@@ -2,7 +2,7 @@
 type: API Endpoint
 title: AnalyzerToggle
 description: Toggle analyzer (sandbox) mode on or off
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/analyzer-services/analyzertoggle.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/analyzer-services/analyzertoggle.md
 tags:
 - analyzer
 - sandbox

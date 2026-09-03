@@ -1,5 +1,5 @@
 Feature: Broker sessions and credentials
-  Tradeboard connects user API keys to broker sessions and broker credential metadata.
+  OpenAlgo connects user API keys to broker sessions and broker credential metadata.
 
   # Source: blueprints/auth.py:510, database/auth_db.py:917
   Scenario: User selects and authenticates a broker

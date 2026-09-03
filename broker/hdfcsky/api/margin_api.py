@@ -95,7 +95,9 @@ def _underlying_prices(auth, resolved):
             for underlying_exchange in _underlying_exchanges(row.exchange):
                 match = (
                     session.query(SymToken)
-                    .filter(SymToken.exchange == underlying_exchange, SymToken.symbol == row.name)
+                    .filter(
+                        SymToken.exchange == underlying_exchange, SymToken.symbol == row.name
+                    )
                     .first()
                 )
                 if match:
@@ -191,7 +193,9 @@ def calculate_margin_api(positions, auth, api_key=None):
     error_block = payload.get("error") or {}
     if payload.get("status") == "error" or error_block.get("code"):
         message = (
-            error_block.get("message") or payload.get("message") or "Failed to calculate margin"
+            error_block.get("message")
+            or payload.get("message")
+            or "Failed to calculate margin"
         )
         return _normalise_success_response(response, {"status": "error", "message": message})
 

@@ -38,7 +38,7 @@ def test_price_types_round_trip(pricetype):
 
 
 def test_unknown_pricetype_is_logged_rather_than_silently_becoming_market(caplog):
-    """ "SLM" is AliceBlue's own code - a plausible thing to send by mistake."""
+    """"SLM" is AliceBlue's own code - a plausible thing to send by mistake."""
     with caplog.at_level("WARNING"):
         assert td.map_order_type("SLM") == "MARKET"
 
@@ -51,14 +51,8 @@ def test_sl_carries_both_a_limit_price_and_a_trigger():
     """Stop-limit needs both; losing either changes what the order does."""
     payload = td.transform_data(
         {
-            "symbol": "RELIANCE",
-            "exchange": "NSE",
-            "action": "BUY",
-            "quantity": 1,
-            "product": "MIS",
-            "pricetype": "SL",
-            "price": 1290,
-            "trigger_price": 1295,
+            "symbol": "RELIANCE", "exchange": "NSE", "action": "BUY", "quantity": 1,
+            "product": "MIS", "pricetype": "SL", "price": 1290, "trigger_price": 1295,
         }
     )
     assert payload["orderType"] == "SL"
@@ -69,14 +63,8 @@ def test_sl_carries_both_a_limit_price_and_a_trigger():
 def test_sl_m_carries_a_trigger_and_no_limit_price():
     payload = td.transform_data(
         {
-            "symbol": "RELIANCE",
-            "exchange": "NSE",
-            "action": "BUY",
-            "quantity": 1,
-            "product": "MIS",
-            "pricetype": "SL-M",
-            "price": 0,
-            "trigger_price": 1295,
+            "symbol": "RELIANCE", "exchange": "NSE", "action": "BUY", "quantity": 1,
+            "product": "MIS", "pricetype": "SL-M", "price": 0, "trigger_price": 1295,
         }
     )
     assert payload["orderType"] == "SLM"
@@ -89,11 +77,8 @@ def test_modify_preserves_the_stop_type_and_trigger(pricetype, expected):
     """Modifying a resting stop must not quietly convert it to something else."""
     payload = td.transform_modify_order_data(
         {
-            "orderid": "25080700001",
-            "quantity": 1,
-            "pricetype": pricetype,
-            "price": 1290,
-            "trigger_price": 1295,
+            "orderid": "25080700001", "quantity": 1, "pricetype": pricetype,
+            "price": 1290, "trigger_price": 1295,
         }
     )
     assert payload["orderType"] == expected

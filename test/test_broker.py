@@ -103,8 +103,6 @@ class FinalReport:
 
 # ────────────── tester ──────────────
 class Tester:
-    __test__ = False
-
     def __init__(self, client):
         self.c = client
         self.report = FinalReport()

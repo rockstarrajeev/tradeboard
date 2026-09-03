@@ -53,7 +53,8 @@ class Charge:
     def __post_init__(self) -> None:
         if self.basis not in _CHARGE_BASES:
             raise ValueError(
-                f"unknown charge basis {self.basis!r}; expected one of {sorted(_CHARGE_BASES)}"
+                f"unknown charge basis {self.basis!r}; expected one of "
+                f"{sorted(_CHARGE_BASES)}"
             )
         for name in ("rate", "flat", "cap"):
             value = getattr(self, name)
@@ -102,7 +103,9 @@ class CostSchedule:
             if not isfinite(value) or value < 0:
                 raise ValueError(f"cost schedule {name} must be finite and non-negative")
 
-    def breakdown(self, buy_value: float, sell_value: float, orders: int = 0) -> dict[str, float]:
+    def breakdown(
+        self, buy_value: float, sell_value: float, orders: int = 0
+    ) -> dict[str, float]:
         """Itemise every line, the tax, and the total."""
         out: dict[str, float] = {}
         taxable = 0.0
@@ -121,7 +124,9 @@ class CostSchedule:
     def charge(self, buy_value: float, sell_value: float, orders: int = 0) -> float:
         return self.breakdown(buy_value, sell_value, orders)["total"]
 
-    def effective_rate(self, buy_value: float, sell_value: float, orders: int = 0) -> float:
+    def effective_rate(
+        self, buy_value: float, sell_value: float, orders: int = 0
+    ) -> float:
         turnover = buy_value + sell_value
         if turnover <= 0:
             return 0.0
@@ -164,42 +169,26 @@ def india_delivery(exchange: str = "NSE") -> CostSchedule:
         tax_rate=0.18,
         charges=(
             Charge(
-                key="brokerage",
-                label="Brokerage",
-                basis="order",
-                flat=0.0,
-                cap=20.0,
-                taxed=True,
+                key="brokerage", label="Brokerage", basis="order",
+                flat=0.0, cap=20.0, taxed=True,
                 note="Delivery is free at most discount brokers; flat per order otherwise",
             ),
             Charge(
-                key="stt",
-                label="STT",
-                basis="turnover",
-                rate=0.001,
+                key="stt", label="STT", basis="turnover", rate=0.001,
                 note="0.1% on both legs of a delivery trade",
             ),
             Charge(
-                key="exchange_txn",
-                label="Exchange txn charge",
-                basis="turnover",
-                rate=txn,
-                taxed=True,
+                key="exchange_txn", label="Exchange txn charge", basis="turnover",
+                rate=txn, taxed=True,
                 note="NSE 0.00307%, BSE 0.00375% of turnover",
             ),
             Charge(
-                key="sebi",
-                label="SEBI charges",
-                basis="turnover",
-                rate=10.0 / 1_00_00_000,
-                taxed=True,
+                key="sebi", label="SEBI charges", basis="turnover",
+                rate=10.0 / 1_00_00_000, taxed=True,
                 note="Rs 10 per crore of turnover",
             ),
             Charge(
-                key="stamp_duty",
-                label="Stamp duty",
-                basis="buy",
-                rate=0.00015,
+                key="stamp_duty", label="Stamp duty", basis="buy", rate=0.00015,
                 note="0.015% on the buy leg only",
             ),
         ),
@@ -221,17 +210,11 @@ def us_equity() -> CostSchedule:
         tax_rate=0.0,
         charges=(
             Charge(
-                key="commission",
-                label="Commission",
-                basis="order",
-                flat=0.0,
+                key="commission", label="Commission", basis="order", flat=0.0,
                 note="0 at most US brokers",
             ),
             Charge(
-                key="sec_fee",
-                label="SEC fee",
-                basis="sell",
-                rate=0.0000278,
+                key="sec_fee", label="SEC fee", basis="sell", rate=0.0000278,
                 note="Sell side only",
             ),
         ),

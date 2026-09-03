@@ -1,4 +1,9 @@
-import type { BacktestRequest, PortfolioHolding, PriceSource, RebalanceRule } from '@/api/portfolio'
+import type {
+  BacktestRequest,
+  PortfolioHolding,
+  PriceSource,
+  RebalanceRule,
+} from '@/api/portfolio'
 
 export type BrokerageMode = 'flat' | 'percent'
 
@@ -82,7 +87,9 @@ export function buildPortfolioRequest(form: PortfolioRequestForm): BacktestReque
   }
 }
 
-export function healthGradeTone(grade: string | null | undefined): 'good' | 'bad' | undefined {
+export function healthGradeTone(
+  grade: string | null | undefined
+): 'good' | 'bad' | undefined {
   if (grade && ['A', 'B', 'C'].includes(grade)) return 'good'
   if (grade && ['D', 'F'].includes(grade)) return 'bad'
   return undefined

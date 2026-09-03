@@ -2,7 +2,7 @@
 type: API Endpoint
 title: SyntheticFuture
 description: Calculate the synthetic futures price from options
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/options-services/syntheticfuture.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/options-services/syntheticfuture.md
 tags:
 - options
 - synthetic-future

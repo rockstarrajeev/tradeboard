@@ -2,7 +2,7 @@
 
 ## Two Real-Time Channels
 
-Tradeboard uses two different real-time mechanisms:
+OpenAlgo uses two different real-time mechanisms:
 
 | Channel | Purpose | Client |
 |---|---|---|

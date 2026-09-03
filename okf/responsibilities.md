@@ -1,8 +1,8 @@
 ---
 type: Reference
 title: User Responsibilities
-description: The responsibilities every Tradeboard user accepts — transparency, self-support, compliance, security, and risk ownership.
-resource: https://docs.rajeevupadhyay.com/responsibilities
+description: The responsibilities every OpenAlgo user accepts — transparency, self-support, compliance, security, and risk ownership.
+resource: https://docs.openalgo.in/responsibilities
 tags:
 - responsibilities
 - compliance
@@ -15,8 +15,8 @@ timestamp: '2026-07-03T00:00:00+00:00'
 > source doc linked below; this OKF concept exists only to index, tag, and
 > cross-link it. Edit the source, never this file.
 
-The responsibilities every Tradeboard user accepts — transparency, self-support, compliance, security, and risk ownership.
+The responsibilities every OpenAlgo user accepts — transparency, self-support, compliance, security, and risk ownership.
 
-**Source:** [https://docs.rajeevupadhyay.com/responsibilities](https://docs.rajeevupadhyay.com/responsibilities)
+**Source:** [https://docs.openalgo.in/responsibilities](https://docs.openalgo.in/responsibilities)
 
 **Related:** [overview](overview.md)

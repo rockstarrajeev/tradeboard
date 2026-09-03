@@ -92,7 +92,7 @@ class MockAPI:
         return 200, {"status": "success", "message": "Request processed"}
 
 
-def _check_endpoint(api, endpoint, expected_limit, description):
+def test_endpoint(api, endpoint, expected_limit, description):
     """Test rate limiting for a specific endpoint"""
     print(f"\n{description}")
     print(f"Testing: {endpoint}")
@@ -105,7 +105,7 @@ def _check_endpoint(api, endpoint, expected_limit, description):
     # Make requests up to 20% more than limit
     total_requests = int(expected_limit * 1.2)
 
-    for _i in range(total_requests):
+    for i in range(total_requests):
         status, response = api.make_request(endpoint)
 
         if status == 200:
@@ -118,30 +118,29 @@ def _check_endpoint(api, endpoint, expected_limit, description):
             print("x", end="", flush=True)
 
         # Small delay between requests
-        time.sleep(0.01)
+        if i < expected_limit - 1:
+            time.sleep(0.01)
 
-    print()
-    print(f"Successful requests: {success_count}")
-    print(f"Rate limited requests: {rate_limited_count}")
+    print("\n\nResults:")
+    print(f"  Successful: {success_count}/{total_requests}")
+    print(f"  Rate limited: {rate_limited_count}/{total_requests}")
 
-    # Verify that we got at least some rate limited requests if total > expected
-    if total_requests > expected_limit:
-        if rate_limited_count > 0:
-            print("[PASS] Rate limit was enforced")
-            return True
-        else:
-            print("[FAIL] Rate limit was NOT enforced")
-            return False
-    return True
+    # Verify rate limit was enforced
+    if success_count == expected_limit and rate_limited_count == total_requests - expected_limit:
+        print(f"Rate limit correctly enforced at {expected_limit} requests")
+        return True
+    else:
+        print("Rate limit not properly enforced")
+        return False
 
 
-def _check_rate_limit_reset(api, endpoint, limit):
+def test_rate_limit_reset(api, endpoint, limit):
     """Test that rate limits reset after time window"""
     print(f"\nTesting rate limit reset for {endpoint}")
     print("-" * 50)
 
     # Fill up the rate limit
-    for _i in range(limit):
+    for i in range(limit):
         api.make_request(endpoint)
 
     # This should be rate limited
@@ -166,13 +165,13 @@ def _check_rate_limit_reset(api, endpoint, limit):
         return False
 
 
-def _check_multiple_clients(api, endpoint, limit):
+def test_multiple_clients(api, endpoint, limit):
     """Test that different clients have separate rate limits"""
     print("\nTesting separate rate limits for different clients")
     print("-" * 50)
 
     # Client 1 uses up their limit
-    for _i in range(limit):
+    for i in range(limit):
         api.make_request(endpoint, client_ip="192.168.1.1")
 
     # Client 1 should be rate limited
@@ -212,7 +211,7 @@ def main():
         ("/api/v1/placeorder", 10, "Order Placement API"),
         ("/api/v1/modifyorder", 10, "Order Modification API"),
         ("/api/v1/cancelorder", 10, "Order Cancellation API"),
-        ("/api/v1/placesmartorder", 10, "Smart Order API"),
+        ("/api/v1/placesmartorder", 2, "Smart Order API"),
         ("/api/v1/quotes", 50, "Quotes API (General)"),
         ("/strategy/webhook/test", 100, "Strategy Webhook API"),
         ("/chartink/webhook/test", 100, "ChartInk Webhook API"),
@@ -220,31 +219,32 @@ def main():
     ]
 
     for endpoint, limit, description in tests:
-        if not _check_endpoint(api, endpoint, limit, description):
+        if not test_endpoint(api, endpoint, limit, description):
             all_passed = False
 
     # Test rate limit reset
-    if not _check_rate_limit_reset(api, "/api/v1/placeorder", 10):
+    if not test_rate_limit_reset(api, "/api/v1/placeorder", 10):
         all_passed = False
 
     # Test multiple clients
-    if not _check_multiple_clients(api, "/api/v1/placesmartorder", 10):
+    if not test_multiple_clients(api, "/api/v1/placesmartorder", 2):
         all_passed = False
 
     # Summary
     print("\n" + "=" * 60)
     if all_passed:
         print("All mock tests PASSED!")
+        print("\nRate limiting is correctly configured:")
+        print("- Order APIs: 10 requests/second")
+        print("- Smart Order API: 2 requests/second")
+        print("- General APIs: 50 requests/second")
+        print("- Webhook APIs: 100 requests/minute")
+        print("- Strategy APIs: 200 requests/minute")
     else:
         print("Some tests FAILED!")
     print("=" * 60)
 
     return 0 if all_passed else 1
-
-
-def test_rate_limits_mock():
-    """Pytest test case running rate limits mock validation."""
-    assert main() == 0
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 """
-Tradeboard REST API benchmark.
+OpenAlgo REST API benchmark.
 
 Usage (key from env, not hardcoded):
     OPENALGO_APIKEY=xxxx python benchmark_api.py
@@ -7,7 +7,6 @@ Usage (key from env, not hardcoded):
 Measures per-endpoint latency (min/p50/p95/p99/max), sequential throughput,
 and probes the configured per-IP rate limit (429 ceiling).
 """
-
 import os
 import statistics
 import threading
@@ -26,22 +25,13 @@ end_today = today.strftime("%Y-%m-%d")
 client = httpx.Client(timeout=30.0)
 
 ENDPOINTS = {
-    "intervals": {},
-    "quotes": {"symbol": "RELIANCE", "exchange": "NSE"},
-    "history": {
-        "symbol": "RELIANCE",
-        "exchange": "NSE",
-        "interval": "5m",
-        "start_date": start_5d,
-        "end_date": end_today,
-    },
-    "multiquotes": {
-        "symbols": [
-            {"symbol": "RELIANCE", "exchange": "NSE"},
-            {"symbol": "TCS", "exchange": "NSE"},
-            {"symbol": "INFY", "exchange": "NSE"},
-        ]
-    },
+    "intervals":   {},
+    "quotes":      {"symbol": "RELIANCE", "exchange": "NSE"},
+    "history":     {"symbol": "RELIANCE", "exchange": "NSE", "interval": "5m",
+                    "start_date": start_5d, "end_date": end_today},
+    "multiquotes": {"symbols": [{"symbol": "RELIANCE", "exchange": "NSE"},
+                                {"symbol": "TCS", "exchange": "NSE"},
+                                {"symbol": "INFY", "exchange": "NSE"}]},
 }
 
 
@@ -64,7 +54,7 @@ def pct(vals, p):
 
 
 print("=" * 74)
-print(f"Tradeboard API benchmark   base={BASE}   key=...{APIKEY[-6:]}")
+print(f"OpenAlgo API benchmark   base={BASE}   key=...{APIKEY[-6:]}")
 print(f"history window: {start_5d} .. {end_today}")
 print("=" * 74)
 
@@ -81,10 +71,8 @@ for ep, body in ENDPOINTS.items():
         times.append(dt)
         ok += good
     wall = time.time() - t0
-    print(
-        f"  {ep:<14} {min(times):7.1f} {pct(times, 50):7.1f} {pct(times, 95):7.1f} "
-        f"{pct(times, 99):7.1f} {max(times):7.1f}  {ok:>2}/{n:<2}  {n / wall:5.2f}/s"
-    )
+    print(f"  {ep:<14} {min(times):7.1f} {pct(times,50):7.1f} {pct(times,95):7.1f} "
+          f"{pct(times,99):7.1f} {max(times):7.1f}  {ok:>2}/{n:<2}  {n/wall:5.2f}/s")
 
 # --- Rate-limit probe (against fast JSON endpoint) -------------------------
 print("\nRATE LIMIT  (concurrent burst on /intervals; configured 50/s per IP)")
@@ -111,10 +99,8 @@ def burst(n):
     ok = sum(1 for c in res if c == 200)
     rl = sum(1 for c in res if c == 429)
     other = sorted({str(c) for c in res if c not in (200, 429)})
-    print(
-        f"  burst {n:>3} in {wall:5.3f}s ({n / wall:5.1f} req/s admit) "
-        f"-> 200={ok:>3}  429={rl:>3}" + (f"  other={other}" if other else "")
-    )
+    print(f"  burst {n:>3} in {wall:5.3f}s ({n/wall:5.1f} req/s admit) "
+          f"-> 200={ok:>3}  429={rl:>3}" + (f"  other={other}" if other else ""))
 
 
 for n in (50, 100, 200):

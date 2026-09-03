@@ -465,14 +465,10 @@ class BrokerData:
                             logger.info("Multiquotes retry with refreshed token succeeded")
                         else:
                             retry_error = (
-                                response.get("description", "Unknown error")
-                                if response
-                                else "No response"
+                                response.get("description", "Unknown error") if response else "No response"
                             )
                             logger.error(f"Multiquotes retry also failed: {retry_error}")
-                            raise Exception(
-                                f"Error from RMoney API after token refresh: {retry_error}"
-                            )
+                            raise Exception(f"Error from RMoney API after token refresh: {retry_error}")
                     else:
                         logger.error("Failed to refresh feed token for multiquotes")
                         raise Exception(f"Error from RMoney API: {error_msg}")
@@ -677,9 +673,7 @@ class BrokerData:
                 )
 
                 if not response or response.get("type") != "success":
-                    error_msg = (
-                        response.get("description", "Unknown error") if response else "No response"
-                    )
+                    error_msg = response.get("description", "Unknown error") if response else "No response"
                     logger.error(f"API Response: {response}")
 
                     # Check if token expired and retry with refreshed token
@@ -698,9 +692,7 @@ class BrokerData:
                                 logger.info("History retry with refreshed token succeeded")
                             else:
                                 retry_error = (
-                                    response.get("description", "Unknown error")
-                                    if response
-                                    else "No response"
+                                    response.get("description", "Unknown error") if response else "No response"
                                 )
                                 logger.error(f"History retry also failed: {retry_error}")
                                 raise Exception(
@@ -963,9 +955,9 @@ class BrokerData:
 
             # Get exchange_token from database
             logger.debug("Querying database for symbol token...")
-            with db_session() as db:
+            with db_session() as session:
                 symbol_info = (
-                    db.query(SymToken)
+                    session.query(SymToken)
                     .filter(SymToken.exchange == exchange, SymToken.brsymbol == br_symbol)
                     .first()
                 )
@@ -1044,6 +1036,26 @@ class BrokerData:
                 "oi": 0,
             }
             logger.info("Returning empty market depth structure")
+            return empty_depth
+
+        except Exception as e:
+            logger.error(f"Error in get_market_depth: {str(e)}", exc_info=True)
+            # Return empty structure on error
+            empty_depth = {
+                "bids": [{"price": 0, "quantity": 0} for _ in range(5)],
+                "asks": [{"price": 0, "quantity": 0} for _ in range(5)],
+                "totalbuyqty": 0,
+                "totalsellqty": 0,
+                "ltp": 0,
+                "ltq": 0,
+                "volume": 0,
+                "open": 0,
+                "high": 0,
+                "low": 0,
+                "prev_close": 0,
+                "oi": 0,
+            }
+            logger.info("Returning empty market depth structure due to error")
             return empty_depth
 
     def get_depth(self, symbol: str, exchange: str) -> dict:

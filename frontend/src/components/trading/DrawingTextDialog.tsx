@@ -12,6 +12,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { DrawTextStyle } from '@/lib/trading/terminal'
 import { cn } from '@/lib/utils'
+import { TickBox } from './TickBox'
 
 export interface TextRequest {
   id: string
@@ -77,22 +78,16 @@ export function DrawingTextDialog({ req, onSubmit, onClose }: Props) {
     >
       <div className="w-80 rounded-lg border bg-popover shadow-2xl">
         <div className="flex items-center justify-between border-b px-4 py-2.5">
-          <h3 className="text-[15px] font-semibold tracking-tight">{TITLES[req.tool] ?? 'Text'}</h3>
+          <h3 className="text-[15px] font-semibold tracking-tight">
+            {TITLES[req.tool] ?? 'Text'}
+          </h3>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
             className="-mr-1 rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
-            <svg
-              viewBox="0 0 24 24"
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.8}
-              strokeLinecap="round"
-              aria-hidden="true"
-            >
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden="true">
               <path d="M6 6l12 12M18 6L6 18" />
             </svg>
           </button>
@@ -116,9 +111,7 @@ export function DrawingTextDialog({ req, onSubmit, onClose }: Props) {
                 className="h-7 w-[68px] appearance-none rounded border border-border bg-background pl-2 pr-6 text-[13px] outline-none transition-colors hover:bg-accent focus:border-primary"
               >
                 {SIZES.map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
+                  <option key={n} value={n}>{n}</option>
                 ))}
               </select>
               <svg
@@ -139,11 +132,7 @@ export function DrawingTextDialog({ req, onSubmit, onClose }: Props) {
               aria-label="Bold"
               aria-pressed={v.bold}
               onClick={() => set('bold', !v.bold)}
-              className={cn(
-                tog,
-                'font-bold',
-                v.bold && 'border-primary/50 bg-primary/15 text-primary'
-              )}
+              className={cn(tog, 'font-bold', v.bold && 'border-primary/50 bg-primary/15 text-primary')}
             >
               B
             </button>
@@ -152,11 +141,7 @@ export function DrawingTextDialog({ req, onSubmit, onClose }: Props) {
               aria-label="Italic"
               aria-pressed={v.italic}
               onClick={() => set('italic', !v.italic)}
-              className={cn(
-                tog,
-                'italic',
-                v.italic && 'border-primary/50 bg-primary/15 text-primary'
-              )}
+              className={cn(tog, 'italic', v.italic && 'border-primary/50 bg-primary/15 text-primary')}
             >
               I
             </button>
@@ -183,12 +168,7 @@ export function DrawingTextDialog({ req, onSubmit, onClose }: Props) {
           {/* Each toggle owns its colour, which stays visible but inert while
               the toggle is off — so its value survives being switched off. */}
           <label className="flex items-center gap-2 text-[13px]">
-            <input
-              type="checkbox"
-              checked={v.background}
-              onChange={(e) => set('background', e.target.checked)}
-              className="h-3.5 w-3.5 accent-primary"
-            />
+            <TickBox checked={v.background} onChange={(next) => set('background', next)} />
             <span className="flex-1">Background</span>
             <input
               type="color"
@@ -201,12 +181,7 @@ export function DrawingTextDialog({ req, onSubmit, onClose }: Props) {
           </label>
 
           <label className="flex items-center gap-2 text-[13px]">
-            <input
-              type="checkbox"
-              checked={v.border}
-              onChange={(e) => set('border', e.target.checked)}
-              className="h-3.5 w-3.5 accent-primary"
-            />
+            <TickBox checked={v.border} onChange={(next) => set('border', next)} />
             <span className="flex-1">Border</span>
             <input
               type="color"
@@ -219,12 +194,7 @@ export function DrawingTextDialog({ req, onSubmit, onClose }: Props) {
           </label>
 
           <label className="flex items-center gap-2 text-[13px]">
-            <input
-              type="checkbox"
-              checked={v.wrap}
-              onChange={(e) => set('wrap', e.target.checked)}
-              className="h-3.5 w-3.5 accent-primary"
-            />
+            <TickBox checked={v.wrap} onChange={(next) => set('wrap', next)} />
             <span className="flex-1">Text wrap</span>
           </label>
         </div>

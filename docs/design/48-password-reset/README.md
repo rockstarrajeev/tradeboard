@@ -2,7 +2,7 @@
 
 ## Overview
 
-Tradeboard provides a secure multi-step password reset flow that supports both email-based reset tokens and TOTP verification for accounts with 2FA enabled.
+OpenAlgo provides a secure multi-step password reset flow that supports both email-based reset tokens and TOTP verification for accounts with 2FA enabled.
 
 ## Architecture Diagram
 
@@ -72,11 +72,11 @@ Tradeboard provides a secure multi-step password reset flow that supports both e
 │  │  Confirm Password: [••••••••••••••••                 ]               │   │
 │  │                                                                      │   │
 │  │  Requirements:                                                       │   │
-│  │  ✓ At least 8 characters                                            │   │
-│  │  ✓ Contains uppercase letter                                        │   │
-│  │  ✓ Contains lowercase letter                                        │   │
-│  │  ✓ Contains number                                                  │   │
-│  │  ✓ Contains special character                                       │   │
+│  │ At least 8 characters                                            │   │
+│  │ Contains uppercase letter                                        │   │
+│  │ Contains lowercase letter                                        │   │
+│  │ Contains number                                                  │   │
+│  │ Contains special character                                       │   │
 │  │                                                                      │   │
 │  │  [Reset Password]                                                    │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │

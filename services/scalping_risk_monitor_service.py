@@ -32,6 +32,7 @@ import atexit
 import threading
 import time
 
+from utils import real_threading as _real_threading
 from utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -118,7 +119,10 @@ class ScalpingRiskMonitor:
             return cls._instance
 
     def _init_once(self) -> None:
-        self._lock = threading.RLock()
+        # Real, not green: _on_tick() and _on_auth() are invoked on the
+        # websocket client's asyncio loop thread, while sync() and
+        # _clear_state() take this from greenlets. See utils/real_threading.
+        self._lock = _real_threading.RLock()
         self._states: dict[str, dict] = {}  # slkey -> state (in-memory source of truth)
         self._subscribed: set[str] = set()  # symkey currently subscribed on the feed
         self._ws = None
@@ -208,7 +212,9 @@ class ScalpingRiskMonitor:
         # actual subscribe/unsubscribe (blocking WS calls) happen OUTSIDE the lock so
         # they never block tick processing (_on_tick).
         with self._lock:
-            self._states = {_slkey(r["symbol"], r["exchange"], r["product"]): dict(r) for r in rows}
+            self._states = {
+                _slkey(r["symbol"], r["exchange"], r["product"]): dict(r) for r in rows
+            }
             wanted_syms = {_symkey(r["symbol"], r["exchange"]) for r in rows}
             to_remove = self._subscribed - wanted_syms
 
@@ -415,9 +421,7 @@ class ScalpingRiskMonitor:
                 )
                 return
             exit_api_key, auth_token, broker = auth
-            net_qty = self._live_net_qty(
-                symbol, exchange, product, exit_api_key, auth_token, broker
-            )
+            net_qty = self._live_net_qty(symbol, exchange, product, exit_api_key, auth_token, broker)
             mode = state.get("mode")
             if net_qty == 0:
                 self._clear_state(key, symbol, exchange, product, mode)
@@ -467,13 +471,9 @@ class ScalpingRiskMonitor:
             self._last_exit_attempt.pop(key, None)
             # Drop the feed subscription if no other leg needs this symbol.
             symkey = _symkey(symbol, exchange)
-            if not any(
-                _symkey(s["symbol"], s["exchange"]) == symkey for s in self._states.values()
-            ):
+            if not any(_symkey(s["symbol"], s["exchange"]) == symkey for s in self._states.values()):
                 self._unsubscribe({symkey})
-        self._emit_update(
-            key, None, cleared=True, symbol=symbol, exchange=exchange, product=product
-        )
+        self._emit_update(key, None, cleared=True, symbol=symbol, exchange=exchange, product=product)
 
     # ------------------------------------------------------------------ emit
     def _emit_update(

@@ -6,7 +6,6 @@ Based on official Fyers library analysis
 
 import base64
 import json
-import logging
 import ssl
 import struct
 import threading
@@ -18,6 +17,7 @@ from typing import Any, Dict, List, Optional
 import websocket
 
 from database.auth_db import get_auth_token
+from utils.logging import get_logger
 
 
 class FyersHSMWebSocket:
@@ -135,7 +135,7 @@ class FyersHSMWebSocket:
         """
         self.access_token = access_token
         self.user_id = user_id
-        self.logger = logging.getLogger("fyers_hsm_websocket")
+        self.logger = get_logger("fyers_hsm_websocket")
 
         # Initialize health-check stop event BEFORE the HSM key extraction so
         # cleanup paths can reference it even when __init__ raises (the
@@ -156,7 +156,7 @@ class FyersHSMWebSocket:
                 "access token has expired or is invalid"
             )
 
-        self.logger.debug(f"HSM key extracted: {self.hsm_key[:20]}...")
+        self.logger.debug("HSM key extracted from access token")
 
         # WebSocket connection
         self.ws = None
@@ -848,13 +848,9 @@ class FyersHSMWebSocket:
         self.authenticated = False
 
         if self.running:
-            self.logger.warning(
-                f"HSM WebSocket closed unexpectedly: {close_msg} ({close_status_code})"
-            )
+            self.logger.warning(f"HSM WebSocket closed unexpectedly: {close_msg} ({close_status_code})")
         else:
-            self.logger.debug(
-                f"HSM WebSocket closed during shutdown: {close_msg} ({close_status_code})"
-            )
+            self.logger.debug(f"HSM WebSocket closed during shutdown: {close_msg} ({close_status_code})")
 
         if self.on_close_callback:
             self.on_close_callback()
@@ -982,7 +978,7 @@ class FyersHSMWebSocket:
         self.reconnect_attempts += 1
         delay = min(
             self.BASE_RECONNECT_DELAY * (2 ** (self.reconnect_attempts - 1)),
-            self.MAX_RECONNECT_DELAY,
+            self.MAX_RECONNECT_DELAY
         )
 
         self.logger.info(
@@ -1182,8 +1178,8 @@ class FyersHSMWebSocket:
         self.ws.send(sub_msg, opcode=websocket.ABNF.OPCODE_BINARY)
 
         # self.logger.info(f"\nSent subscription request for {len(hsm_symbols)} HSM symbols")
-        for _i, symbol in enumerate(hsm_symbols, 1):
-            symbol_mappings.get(symbol, "Unknown") if symbol_mappings else "N/A"
+        for i, symbol in enumerate(hsm_symbols, 1):
+            mapped_symbol = symbol_mappings.get(symbol, "Unknown") if symbol_mappings else "N/A"
             # self.logger.info(f"  {i}. {symbol} => {mapped_symbol}")
         self.logger.debug(f"Total active subscriptions in HSM: {len(self._pending_hsm_symbols)}")
 
@@ -1201,9 +1197,7 @@ class FyersHSMWebSocket:
             self.disconnect()
         except Exception as e:
             # Fallback logging if self.logger is not available
-            import logging
-
-            logger = logging.getLogger("fyers_hsm_websocket")
+            logger = get_logger("fyers_hsm_websocket")
             logger.error(f"Error in HSM WebSocket destructor: {e}")
 
     def force_cleanup(self):

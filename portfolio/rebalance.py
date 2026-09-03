@@ -41,7 +41,8 @@ class RebalancePolicy:
     def __post_init__(self) -> None:
         if self.rule not in CALENDAR_RULES:
             raise ValueError(
-                f"unknown rebalance rule {self.rule!r}; expected one of {sorted(CALENDAR_RULES)}"
+                f"unknown rebalance rule {self.rule!r}; "
+                f"expected one of {sorted(CALENDAR_RULES)}"
             )
         if not 0.0 <= self.drift_band < 1.0:
             raise ValueError(

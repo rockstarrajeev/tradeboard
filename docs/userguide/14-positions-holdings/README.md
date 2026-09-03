@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Understanding the difference between positions and holdings is fundamental to trading. This guide explains both concepts and how to manage them in Tradeboard.
+Understanding the difference between positions and holdings is fundamental to trading. This guide explains both concepts and how to manage them in OpenAlgo.
 
 ## Positions vs Holdings
 
@@ -109,7 +109,7 @@ Holdings are stocks you own in your demat account:
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Viewing in Tradeboard
+## Viewing in OpenAlgo
 
 ### Positions Page
 
@@ -326,7 +326,7 @@ Convert intraday to overnight:
 - Additional margin required
 - Check broker-specific rules
 
-Tradeboard does not currently expose a public REST endpoint for product conversion. Use your broker terminal when the broker supports conversion, and follow its current margin and cut-off rules.
+OpenAlgo does not currently expose a public REST endpoint for product conversion. Use your broker terminal when the broker supports conversion, and follow its current margin and cut-off rules.
 
 ## Best Practices
 

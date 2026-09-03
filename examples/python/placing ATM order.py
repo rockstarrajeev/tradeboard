@@ -1,12 +1,14 @@
+import os
+
 from openalgo import api
 
-print("🔁 Tradeboard Python Bot is running.")
+print("OpenAlgo Python Bot is running.")
 
 # ------------------------------------------
 # Initialize API client
 # ------------------------------------------
 client = api(
-    api_key=os.getenv("TRADEBOARD_API_KEY"),
+    api_key=os.getenv("OPENALGO_API_KEY"),
     host="http://127.0.0.1:5000",
 )
 

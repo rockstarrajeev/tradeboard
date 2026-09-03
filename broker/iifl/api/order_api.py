@@ -1,8 +1,8 @@
 import json
 import os
+from tokenize import Token
 import threading
 import time
-from tokenize import Token
 
 import httpx
 
@@ -23,7 +23,7 @@ logger = get_logger(__name__)
 
 def get_api_response(endpoint, auth, method="GET", payload=""):
     AUTH_TOKEN = auth
-    os.getenv("BROKER_API_KEY")
+    api_key = os.getenv("BROKER_API_KEY")
 
     # Get the shared httpx client with connection pooling
     client = get_httpx_client()
@@ -72,14 +72,14 @@ def get_holdings(auth):
 # --- Per-Symbol Smart Order Lock ---
 # Ensures only one smart order per symbol executes at a time.
 # Others queue and execute sequentially, each getting a fresh position book.
-_symbol_locks = {}  # {symbol_key: threading.Lock}
+_symbol_locks = {}          # {symbol_key: threading.Lock}
 _symbol_locks_lock = threading.Lock()
 
 # --- Position Book Cache ---
 # Caches get_positions() for 1 second. Invalidated after each smart order placement.
-_position_cache = {}  # {auth_token: {"data": ..., "timestamp": ...}}
+_position_cache = {}        # {auth_token: {"data": ..., "timestamp": ...}}
 _position_cache_lock = threading.Lock()
-_POSITION_CACHE_TTL = 1.0  # seconds
+_POSITION_CACHE_TTL = 1.0   # seconds
 
 
 def _get_symbol_lock(symbol, exchange, product):
@@ -112,6 +112,7 @@ def _invalidate_position_cache(auth):
     """Invalidate the position cache so the next queued order fetches fresh data."""
     with _position_cache_lock:
         _position_cache.pop(auth, None)
+
 
 
 def get_open_position(tradingsymbol, exchange, producttype, auth):
@@ -338,7 +339,7 @@ def cancel_order(orderid, auth):
     }
 
     # Prepare the payload
-    json.dumps({"appOrderID": orderid, "orderUniqueIdentifier": "openalgo"})
+    payload = json.dumps({"appOrderID": orderid, "orderUniqueIdentifier": "openalgo"})
 
     # Make the request using the shared client
     response = client.delete(f"{INTERACTIVE_URL}/orders?appOrderID={orderid}", headers=headers)

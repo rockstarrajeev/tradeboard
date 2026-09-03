@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Tradeboard ships with **twelve built-in analytical tools** for options trading and market analysis. They live under the `/tools` page and use the active broker's REST and WebSocket market data where each tool requires it.
+OpenAlgo ships with **twelve built-in analytical tools** for options trading and market analysis. They live under the `/tools` page and use the active broker's REST and WebSocket market data where each tool requires it.
 
 Availability depends on the plugin's supported exchanges, broker response fields, account market-data entitlement, and the symbols or expiries requested. A plugin being installed does not guarantee that every analytical page has the data it needs.
 

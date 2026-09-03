@@ -33,6 +33,6 @@ curl -X POST 'http://127.0.0.1:5000/api/v1/chart' \
 
 The POST schema accepts arbitrary preference keys in addition to `apikey`. A request may update at most 50 keys; keys are limited to 50 characters and each JSON-serialized value is limited to 1 MiB. The request must contain at least one preference.
 
-Both methods verify the Tradeboard API key. Invalid keys return HTTP 403.
+Both methods verify the OpenAlgo API key. Invalid keys return HTTP 403.
 
 **Back to**: [API documentation](../README.md)

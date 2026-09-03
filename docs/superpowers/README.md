@@ -1,6 +1,6 @@
-# Tradeboard Global-Market Architecture — Design Initiative
+# OpenAlgo Global-Market Architecture — Design Initiative
 
-This folder holds the design work for evolving Tradeboard from an
+This folder holds the design work for evolving OpenAlgo from an
 Indian-equity-centric platform into one that cleanly supports **all markets and
 asset classes** (Indian equity/F&O, crypto derivatives & spot, US equities &
 options, and any future venue) — **without breaking the ~200,000 existing users**

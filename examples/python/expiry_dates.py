@@ -1,7 +1,7 @@
 """
-Tradeboard Expiry Date Extraction Example
+OpenAlgo Expiry Date Extraction Example
 ----------------------------------------
-Demonstrates how to extract expiry dates using the Tradeboard Python SDK.
+Demonstrates how to extract expiry dates using the OpenAlgo Python SDK.
 
 Weekly: current_week, next_week, current_month, next_month
 Monthly: current_month, next_month, far_month
@@ -9,13 +9,14 @@ Monthly: current_month, next_month, far_month
 Reference: AlgoMirror Strategy Executor implementation
 """
 
+import os
 from datetime import datetime
 
 from openalgo import api
 
 # Initialize client with explicit parameters
 client = api(
-    api_key="7371cc58b9d30204e5fee1d143dc8cd926bcad90c24218201ad81735384d2752",  # Replace with your API key
+    api_key=os.getenv("OPENALGO_API_KEY"),  # Set OPENALGO_API_KEY in your environment
     host="http://127.0.0.1:5000",  # Replace with your API host
 )
 
@@ -28,7 +29,7 @@ expirytype = "weekly"  # Expiry type ("weekly" or "monthly")
 
 def get_expiry_dates(symbol: str, exchange: str, instrumenttype: str, expirytype: str):
     """
-    Fetch and categorize expiry dates from Tradeboard API.
+    Fetch and categorize expiry dates from OpenAlgo API.
 
     Args:
         symbol: Index symbol (NIFTY, BANKNIFTY, SENSEX, etc.)
@@ -40,7 +41,7 @@ def get_expiry_dates(symbol: str, exchange: str, instrumenttype: str, expirytype
         For weekly: dict with current_week, next_week, current_month, next_month
         For monthly: dict with current_month, next_month, far_month
     """
-    # Fetch expiry dates from Tradeboard
+    # Fetch expiry dates from OpenAlgo
     response = client.expiry(symbol=symbol, exchange=exchange, instrumenttype=instrumenttype)
 
     if response.get("status") != "success":

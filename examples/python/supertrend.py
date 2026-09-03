@@ -6,12 +6,12 @@ import numpy as np
 import pandas as pd
 from openalgo import api
 
-# Get API key from tradeboard portal
-api_key = "your-tradeboard-api-key"
+# Get API key from openalgo portal
+api_key = "your-openalgo-api-key"
 
 # Set the strategy details and trading parameters
 strategy = "Supertrend Python"
-symbol = "RELIANCE"  # Tradeboard Symbol
+symbol = "RELIANCE"  # OpenAlgo Symbol
 exchange = "NSE"
 product = "MIS"
 quantity = 1
@@ -39,8 +39,8 @@ def Supertrend(df, atr_period, multiplier):
     atr = true_range.ewm(alpha=1 / atr_period, min_periods=atr_period).mean()
 
     hl2 = (high + low) / 2
-    final_upperband = hl2 + (multiplier * atr)
-    final_lowerband = hl2 - (multiplier * atr)
+    final_upperband = upperband = hl2 + (multiplier * atr)
+    final_lowerband = lowerband = hl2 - (multiplier * atr)
 
     # Initialize supertrend array with boolean values like original code
     supertrend = [True] * len(df)
@@ -55,15 +55,15 @@ def Supertrend(df, atr_period, multiplier):
         else:
             supertrend[curr] = supertrend[prev]
 
-            if supertrend[curr] and final_lowerband.iloc[curr] < final_lowerband.iloc[prev]:
+            if supertrend[curr] == True and final_lowerband.iloc[curr] < final_lowerband.iloc[prev]:
                 final_lowerband.iat[curr] = final_lowerband.iat[prev]
             if (
-                not supertrend[curr]
+                supertrend[curr] == False
                 and final_upperband.iloc[curr] > final_upperband.iloc[prev]
             ):
                 final_upperband.iat[curr] = final_upperband.iat[prev]
 
-        if supertrend[curr]:
+        if supertrend[curr] == True:
             final_upperband.iat[curr] = np.nan
         else:
             final_lowerband.iat[curr] = np.nan
@@ -90,7 +90,7 @@ def supertrend_strategy():
             end_date = datetime.now().strftime("%Y-%m-%d")
             start_date = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
 
-            # Fetch 1-minute historical data using Tradeboard
+            # Fetch 1-minute historical data using OpenAlgo
             df = client.history(
                 symbol=symbol,
                 exchange=exchange,

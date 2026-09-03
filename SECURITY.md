@@ -16,7 +16,7 @@ We recommend always running the latest version.
 
 ## Reporting a Vulnerability
 
-**Email:** rajandran@rajeevupadhyay.com
+**Email:** rajeev.upadhyay@live.in
 
 **Please include:**
 - Description of the vulnerability
@@ -85,6 +85,6 @@ We acknowledge security researchers who responsibly disclose vulnerabilities. Wi
 
 ## Contact
 
-- **Security issues:** rajandran@rajeevupadhyay.com
+- **Security issues:** rajeev.upadhyay@live.in
 - **General issues:** https://github.com/rockstarrajeev/tradeboard/issues
 - **Documentation:** https://docs.rajeevupadhyay.com

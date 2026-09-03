@@ -10,6 +10,7 @@ from utils.logging import get_logger
 logger = get_logger(__name__)
 
 
+
 # Default response format for margin data (OpenAlgo standard format)
 DEFAULT_MARGIN_RESPONSE = {
     "availablecash": "0.00",

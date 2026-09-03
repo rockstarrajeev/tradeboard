@@ -2,7 +2,7 @@
 
 ## Overview
 
-Tradeboard uses WebSockets for real-time market data streaming. When deployed via `install.sh`, WebSocket traffic is secured through Nginx reverse proxy with TLS.
+OpenAlgo uses WebSockets for real-time market data streaming. When deployed via `install.sh`, WebSocket traffic is secured through Nginx reverse proxy with TLS.
 
 **Risk Level**: Low
 **Status**: Good
@@ -196,7 +196,7 @@ sudo nginx -T | grep -A 20 "location = /ws"
 - [x] Proper WebSocket headers
 - [x] Reverse proxy isolation
 
-### Built into Tradeboard
+### Built into OpenAlgo
 
 - [x] Flask-SocketIO session auth
 - [x] Connection limits
@@ -219,12 +219,12 @@ sudo nginx -T | grep -A 20 "location = /ws"
 
 2. **Check WebSocket proxy**:
    ```bash
-   sudo systemctl status tradeboard-*
+   sudo systemctl status openalgo-*
    ```
 
 3. **Check logs**:
    ```bash
-   sudo journalctl -u tradeboard-* | grep -i websocket
+   sudo journalctl -u openalgo-* | grep -i websocket
    ```
 
 ### Connection Drops
@@ -243,7 +243,7 @@ sudo nginx -T | grep -A 20 "location = /ws"
 - Proper WebSocket upgrade handling
 - Reverse proxy isolation
 
-**Built-in (Tradeboard)**:
+**Built-in (OpenAlgo)**:
 - Session authentication for UI updates
 - Connection limits
 - Public market data only

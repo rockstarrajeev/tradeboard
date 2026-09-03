@@ -35,9 +35,7 @@ logger = get_logger(__name__)
 #   a3  + /open-api/order-notify/ws/createWsToken -> 200 JSON, orderToken
 # a3 is used here to match ALICEBLUE_ORDER_UPDATE_WS_URL below - one host for
 # both legs of the same feed.
-ALICEBLUE_CREATE_WS_TOKEN_URL = (
-    "https://a3.aliceblueonline.com/open-api/order-notify/ws/createWsToken"
-)
+ALICEBLUE_CREATE_WS_TOKEN_URL = "https://a3.aliceblueonline.com/open-api/order-notify/ws/createWsToken"
 ALICEBLUE_ORDER_UPDATE_WS_URL = "wss://a3.aliceblueonline.com/open-api/order-notify/websocket"
 ALICEBLUE_HEARTBEAT_INTERVAL_SECONDS = 55  # under the 60s server timeout
 
@@ -217,9 +215,7 @@ def create_aliceblue_order_adapter(user_id: str) -> "AliceBlueOrderUpdateAdapter
     """
     auth_token = get_auth_token(user_id, bypass_cache=True)
     if not auth_token:
-        logger.warning(
-            f"No AliceBlue auth token found for user {user_id}; order-update adapter not started"
-        )
+        logger.warning(f"No AliceBlue auth token found for user {user_id}; order-update adapter not started")
         return None
 
     alice_ucc = get_user_id(user_id)
@@ -233,9 +229,7 @@ def create_aliceblue_order_adapter(user_id: str) -> "AliceBlueOrderUpdateAdapter
             logger.warning(f"Failed to extract UCC from AliceBlue JWT for user {user_id}: {e}")
 
     if not alice_ucc:
-        logger.warning(
-            f"No AliceBlue UCC found for user {user_id}; order-update adapter not started"
-        )
+        logger.warning(f"No AliceBlue UCC found for user {user_id}; order-update adapter not started")
         return None
 
     return AliceBlueOrderUpdateAdapter(user_id=user_id, alice_ucc=alice_ucc, auth_token=auth_token)

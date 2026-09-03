@@ -1,9 +1,9 @@
 import json
 import os
-import threading
-import time
 
 import httpx
+import threading
+import time
 
 from broker.mstock.mapping.transform_data import (
     get_mstock_symbol,
@@ -91,14 +91,14 @@ def get_holdings(auth):
 # --- Per-Symbol Smart Order Lock ---
 # Ensures only one smart order per symbol executes at a time.
 # Others queue and execute sequentially, each getting a fresh position book.
-_symbol_locks = {}  # {symbol_key: threading.Lock}
+_symbol_locks = {}          # {symbol_key: threading.Lock}
 _symbol_locks_lock = threading.Lock()
 
 # --- Position Book Cache ---
 # Caches get_positions() for 1 second. Invalidated after each smart order placement.
-_position_cache = {}  # {auth_token: {"data": ..., "timestamp": ...}}
+_position_cache = {}        # {auth_token: {"data": ..., "timestamp": ...}}
 _position_cache_lock = threading.Lock()
-_POSITION_CACHE_TTL = 1.0  # seconds
+_POSITION_CACHE_TTL = 1.0   # seconds
 
 
 def _get_symbol_lock(symbol, exchange, product):
@@ -131,6 +131,7 @@ def _invalidate_position_cache(auth):
     """Invalidate the position cache so the next queued order fetches fresh data."""
     with _position_cache_lock:
         _position_cache.pop(auth, None)
+
 
 
 def get_open_position(tradingsymbol, exchange, producttype, auth):
@@ -285,7 +286,7 @@ def place_smartorder_api(data, auth):
             action = data["action"]
             quantity = data["quantity"]
             res, response, orderid = place_order_api(data, auth_token)
-            _invalidate_position_cache(auth_token)
+            _invalidate_position_cache(AUTH_TOKEN)
             return res, response, orderid
 
         elif position_size == current_position:
@@ -327,7 +328,7 @@ def place_smartorder_api(data, auth):
 
             # Place the order
             res, response, orderid = place_order_api(order_data, auth)
-            _invalidate_position_cache(auth)
+            _invalidate_position_cache(AUTH_TOKEN)
             logger.debug(f"Smart order response: {response}")
             logger.debug(f"Smart order ID: {orderid}")
 
@@ -618,9 +619,7 @@ def cancel_all_orders_api(data, auth):
         pending_order_ids = [
             order.get("orderid") for order in pending_orders if order.get("orderid")
         ]
-        logger.debug(
-            f"Found {len(pending_order_ids)} pending orders to cancel: {pending_order_ids}"
-        )
+        logger.debug(f"Found {len(pending_order_ids)} pending orders to cancel: {pending_order_ids}")
     else:
         logger.warning("Failed to fetch order book or no data available")
 

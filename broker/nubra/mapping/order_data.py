@@ -188,7 +188,7 @@ def _parse_timestamp(value):
             if ch.isdigit():
                 digits += ch
             else:
-                tail = tail[len(digits) :]
+                tail = tail[len(digits):]
                 break
         else:
             tail = ""
@@ -336,26 +336,24 @@ def map_order_data(order_data):
 
         strat_tags = order.get("stratTags") or []
 
-        normalized_orders.append(
-            {
-                "orderid": str(order.get("intentOrderId", "")),
-                "exchange_order_id": _exchange_order_id(order),
-                "tradingsymbol": tradingsymbol,
-                "symboltoken": ref_id,
-                "exchange": exchange,
-                "transactiontype": str(order.get("side", "")).upper(),
-                "producttype": reverse_map_product_type(order.get("deliveryType", "")),
-                "ordertype": ordertype,
-                "quantity": order.get("orderQty", 0) or 0,
-                "filledshares": order.get("filledQty", 0) or 0,
-                "averageprice": filled_price_paise / 100 if filled_price_paise else 0.0,
-                "price": order_price_paise / 100 if order_price_paise else 0.0,
-                "triggerprice": trigger_paise / 100 if trigger_paise else 0.0,
-                "status": status,
-                "ordertag": strat_tags[0] if strat_tags else "",
-                "updatetime": _last_timestamp(order),
-            }
-        )
+        normalized_orders.append({
+            "orderid": str(order.get("intentOrderId", "")),
+            "exchange_order_id": _exchange_order_id(order),
+            "tradingsymbol": tradingsymbol,
+            "symboltoken": ref_id,
+            "exchange": exchange,
+            "transactiontype": str(order.get("side", "")).upper(),
+            "producttype": reverse_map_product_type(order.get("deliveryType", "")),
+            "ordertype": ordertype,
+            "quantity": order.get("orderQty", 0) or 0,
+            "filledshares": order.get("filledQty", 0) or 0,
+            "averageprice": filled_price_paise / 100 if filled_price_paise else 0.0,
+            "price": order_price_paise / 100 if order_price_paise else 0.0,
+            "triggerprice": trigger_paise / 100 if trigger_paise else 0.0,
+            "status": status,
+            "ordertag": strat_tags[0] if strat_tags else "",
+            "updatetime": _last_timestamp(order),
+        })
 
     return normalized_orders
 
@@ -435,21 +433,19 @@ def transform_order_data(orders):
             )
             continue
 
-        transformed_orders.append(
-            {
-                "symbol": order.get("tradingsymbol", ""),
-                "exchange": order.get("exchange", ""),
-                "action": order.get("transactiontype", ""),
-                "quantity": order.get("quantity", 0),
-                "price": order.get("price", 0.0),
-                "trigger_price": order.get("triggerprice", 0.0),
-                "pricetype": order.get("ordertype", ""),
-                "product": order.get("producttype", ""),
-                "orderid": order.get("orderid", ""),
-                "order_status": order.get("status", ""),
-                "timestamp": order.get("updatetime", ""),
-            }
-        )
+        transformed_orders.append({
+            "symbol": order.get("tradingsymbol", ""),
+            "exchange": order.get("exchange", ""),
+            "action": order.get("transactiontype", ""),
+            "quantity": order.get("quantity", 0),
+            "price": order.get("price", 0.0),
+            "trigger_price": order.get("triggerprice", 0.0),
+            "pricetype": order.get("ordertype", ""),
+            "product": order.get("producttype", ""),
+            "orderid": order.get("orderid", ""),
+            "order_status": order.get("status", ""),
+            "timestamp": order.get("updatetime", ""),
+        })
 
     return transformed_orders
 
@@ -480,19 +476,17 @@ def map_trade_data(trade_data):
         filled_price = (order.get("filledPrice", 0) or 0) / 100
         trade_value = round(filled_price * filled_qty, 2)
 
-        normalized_trades.append(
-            {
-                "tradingsymbol": tradingsymbol,
-                "exchange": exchange,
-                "producttype": reverse_map_product_type(order.get("deliveryType", "")),
-                "transactiontype": str(order.get("side", "")).upper(),
-                "quantity": filled_qty,
-                "fillprice": round(filled_price, 2),
-                "tradevalue": trade_value,
-                "orderid": str(order.get("intentOrderId", "")),
-                "filltime": _last_timestamp(order),
-            }
-        )
+        normalized_trades.append({
+            "tradingsymbol": tradingsymbol,
+            "exchange": exchange,
+            "producttype": reverse_map_product_type(order.get("deliveryType", "")),
+            "transactiontype": str(order.get("side", "")).upper(),
+            "quantity": filled_qty,
+            "fillprice": round(filled_price, 2),
+            "tradevalue": trade_value,
+            "orderid": str(order.get("intentOrderId", "")),
+            "filltime": _last_timestamp(order),
+        })
 
     return normalized_trades
 
@@ -547,22 +541,20 @@ def map_position_data(position_data):
 
         tradingsymbol, exchange = resolve_position(pos)
 
-        positions.append(
-            {
-                "tradingsymbol": tradingsymbol,
-                "symboltoken": str(pos.get("refId", "")),
-                "exchange": exchange,
-                "producttype": reverse_map_product_type(pos.get("deliveryType", "")),
-                "netqty": net_qty,
-                "quantity": net_qty,
-                "avgnetprice": avg_price_paise / 100 if avg_price_paise else 0.0,
-                "avgbuyprice": (pos.get("avgBuyPrice", 0) or 0) / 100,
-                "avgsellprice": (pos.get("avgSellPrice", 0) or 0) / 100,
-                "ltp": ltp_paise / 100 if ltp_paise else 0.0,
-                "pnl": (pos.get("pnl", 0) or 0) / 100,
-                "pnlpercentage": pos.get("pnlChg", 0) or 0,
-            }
-        )
+        positions.append({
+            "tradingsymbol": tradingsymbol,
+            "symboltoken": str(pos.get("refId", "")),
+            "exchange": exchange,
+            "producttype": reverse_map_product_type(pos.get("deliveryType", "")),
+            "netqty": net_qty,
+            "quantity": net_qty,
+            "avgnetprice": avg_price_paise / 100 if avg_price_paise else 0.0,
+            "avgbuyprice": (pos.get("avgBuyPrice", 0) or 0) / 100,
+            "avgsellprice": (pos.get("avgSellPrice", 0) or 0) / 100,
+            "ltp": ltp_paise / 100 if ltp_paise else 0.0,
+            "pnl": (pos.get("pnl", 0) or 0) / 100,
+            "pnlpercentage": pos.get("pnlChg", 0) or 0,
+        })
 
     logger.info(f"Nubra mapped positions: {len(positions)} positions")
     return positions
@@ -680,25 +672,23 @@ def map_portfolio_data(portfolio_data):
         net_pnl = (h.get("netPnl", 0) or 0) / 100
         day_pnl = (h.get("dayPnl", 0) or 0) / 100
 
-        mapped_holdings.append(
-            {
-                "tradingsymbol": tradingsymbol,
-                "exchange": exchange,
-                "quantity": h.get("quantity", 0) or 0,
-                "product": "CNC",  # Holdings are always delivery
-                "average_price": round(avg_price, 2),
-                "ltp": round(ltp, 2),
-                "prev_close": round(prev_close, 2),
-                "invested_value": round(invested_value, 2),
-                "current_value": round(current_value, 2),
-                "pnl": round(net_pnl, 2),
-                "pnlpercent": round(h.get("netPnlChg", 0) or 0, 2),
-                "day_pnl": round(day_pnl, 2),
-                "day_pnl_chg": round(day_pnl, 2),
-                "ltp_chg": round(h.get("netPnlChg", 0) or 0, 2),
-                "ref_id": ref_id,
-            }
-        )
+        mapped_holdings.append({
+            "tradingsymbol": tradingsymbol,
+            "exchange": exchange,
+            "quantity": h.get("quantity", 0) or 0,
+            "product": "CNC",  # Holdings are always delivery
+            "average_price": round(avg_price, 2),
+            "ltp": round(ltp, 2),
+            "prev_close": round(prev_close, 2),
+            "invested_value": round(invested_value, 2),
+            "current_value": round(current_value, 2),
+            "pnl": round(net_pnl, 2),
+            "pnlpercent": round(h.get("netPnlChg", 0) or 0, 2),
+            "day_pnl": round(day_pnl, 2),
+            "day_pnl_chg": round(day_pnl, 2),
+            "ltp_chg": round(h.get("netPnlChg", 0) or 0, 2),
+            "ref_id": ref_id,
+        })
 
     # Convert holdingStats paise -> rupees
     mapped_stats = {

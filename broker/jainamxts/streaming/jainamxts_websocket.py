@@ -1,5 +1,4 @@
 import json
-import logging
 import threading
 import time
 from collections.abc import Callable
@@ -9,6 +8,7 @@ import requests
 import socketio
 
 from broker.jainamxts.baseurl import BASE_URL, INTERACTIVE_URL, MARKET_DATA_URL
+from utils.logging import get_logger
 
 
 class JainamXTSWebSocketClient:
@@ -77,7 +77,7 @@ class JainamXTSWebSocketClient:
         self.on_message = None
 
         # Logger
-        self.logger = logging.getLogger("jainamxts_websocket")
+        self.logger = get_logger("jainamxts_websocket")
 
         # Subscriptions tracking
         self.subscriptions = {}
@@ -609,9 +609,9 @@ class JainamXTSWebSocketClient:
             header_msg_code = struct.unpack("<H", data[2:4])[0]
             exchange_segment = struct.unpack("<h", data[4:6])[0]
             instrument_id = struct.unpack("<i", data[6:10])[0]
-            struct.unpack("<h", data[10:12])[0]
-            struct.unpack("<h", data[12:14])[0]
-            struct.unpack("<H", data[14:16])[0]
+            book_type = struct.unpack("<h", data[10:12])[0]
+            x_market_type = struct.unpack("<h", data[12:14])[0]
+            uncompressed_size = struct.unpack("<H", data[14:16])[0]
 
             # Check if payload is LZ4 compressed (PktType 260 = 0x104, bit 0x100 indicates compression)
             is_compressed = (packet_type & 0x100) != 0
@@ -872,6 +872,7 @@ class JainamXTSWebSocketClient:
 
             # Scan for LTP within the valid range
             ltp = None
+            ltp_offset = None
 
             # Try common offsets first
             for off in [2, 10, 18, 26, 34, 42, 48, 52]:
@@ -880,6 +881,7 @@ class JainamXTSWebSocketClient:
                         val = struct.unpack("<d", payload[off : off + 8])[0]
                         if min_price < val < max_price:
                             ltp = val
+                            ltp_offset = off
                             self.logger.debug(
                                 f"[XTS-TOUCHLINE] Found LTP={val:.2f} at offset {off}"
                             )
@@ -894,6 +896,7 @@ class JainamXTSWebSocketClient:
                         val = struct.unpack("<d", payload[off : off + 8])[0]
                         if min_price < val < max_price:
                             ltp = val
+                            ltp_offset = off
                             self.logger.debug(
                                 f"[XTS-TOUCHLINE] Scan found LTP={val:.2f} at offset {off}"
                             )

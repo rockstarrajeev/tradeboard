@@ -45,7 +45,8 @@ def get_api_response(endpoint, auth, method="POST", payload=None, custom_timeout
 
         # Debug print
         logger.debug(f"Endpoint: {endpoint}")
-        logger.debug(f"Payload: {json.dumps(data, indent=2)}")
+        safe_data = {k: v for k, v in data.items() if k != "jKey"}
+        logger.debug(f"Payload: {json.dumps(safe_data, indent=2)}")
 
         headers = {"Content-Type": "application/json", "Accept": "application/json"}
 
@@ -831,7 +832,9 @@ class BrokerData:
                 chunk_end_str = current_end.strftime("%Y-%m-%d")
                 chunk_count += 1
 
-                logger.debug(f"Fetching chunk {chunk_count}: {chunk_start_str} to {chunk_end_str}")
+                logger.debug(
+                    f"Fetching chunk {chunk_count}: {chunk_start_str} to {chunk_end_str}"
+                )
 
                 try:
                     # Fetch chunk

@@ -26,7 +26,7 @@ def fixed_calendar(monkeypatch):
     closed = {
         date(2026, 1, 26),  # Republic Day, a Monday
         date(2026, 3, 31),  # a Tuesday, month end
-        date(2026, 4, 1),  # a Wednesday, quarter start
+        date(2026, 4, 1),   # a Wednesday, quarter start
     }
     special = {date(2026, 11, 8)}  # a Sunday - Muhurat trading
     monkeypatch.setattr(
@@ -42,7 +42,7 @@ def fixed_calendar(monkeypatch):
 def test_weekends_are_not_trading_days():
     assert not tc.is_trading_day(date(2026, 8, 1))  # Saturday
     assert not tc.is_trading_day(date(2026, 8, 2))  # Sunday
-    assert tc.is_trading_day(date(2026, 8, 3))  # Monday
+    assert tc.is_trading_day(date(2026, 8, 3))      # Monday
 
 
 def test_holidays_are_not_trading_days():
@@ -53,7 +53,7 @@ def test_holidays_are_not_trading_days():
 def test_new_week_survives_a_holiday_monday():
     """The naive `weekday == Monday` test fails this case."""
     assert not tc.is_first_trading_day_of(date(2026, 1, 26), "week")  # holiday Monday
-    assert tc.is_first_trading_day_of(date(2026, 1, 27), "week")  # Tuesday opens the week
+    assert tc.is_first_trading_day_of(date(2026, 1, 27), "week")      # Tuesday opens the week
 
 
 def test_new_month_survives_a_weekend_first():
@@ -110,24 +110,11 @@ def test_quarter_of(day, quarter):
 def test_describe_covers_every_flag_a_workflow_reads():
     info = tc.describe(date(2026, 8, 3))
     for key in (
-        "is_trading_day",
-        "is_trading_holiday",
-        "is_weekend",
-        "weekday",
-        "weekday_num",
-        "quarter",
-        "week_of_year",
-        "day_of_year",
-        "is_new_day",
-        "is_new_week",
-        "is_new_month",
-        "is_new_quarter",
-        "is_new_year",
-        "is_last_day_of_week",
-        "is_last_day_of_month",
-        "is_last_day_of_quarter",
-        "prev_trading_day",
-        "next_trading_day",
+        "is_trading_day", "is_trading_holiday", "is_weekend", "weekday", "weekday_num",
+        "quarter", "week_of_year", "day_of_year",
+        "is_new_day", "is_new_week", "is_new_month", "is_new_quarter", "is_new_year",
+        "is_last_day_of_week", "is_last_day_of_month", "is_last_day_of_quarter",
+        "prev_trading_day", "next_trading_day",
     ):
         assert key in info, key
     assert info["weekday_num"] == 1  # Monday

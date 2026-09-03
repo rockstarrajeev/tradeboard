@@ -130,7 +130,9 @@ class TestAgainstTheMasterContract:
     def _futures(self, base):
         return find_near_month_futures(base, "MCX")
 
-    @pytest.mark.parametrize("base", ["CRUDEOIL", "GOLD", "SILVERM", "GOLDM", "CRUDEOILM"])
+    @pytest.mark.parametrize(
+        "base", ["CRUDEOIL", "GOLD", "SILVERM", "GOLDM", "CRUDEOILM"]
+    )
     def test_each_product_resolves_to_its_own_future(self, base):
         fut = self._futures(base)
         if fut is None:
@@ -150,7 +152,9 @@ class TestAgainstTheMasterContract:
         if fut is None:
             pytest.skip("GOLD has no unexpired future in this master")
         for variant in ("GOLDM", "GOLDPETAL", "GOLDGUINEA", "GOLDTEN"):
-            assert not fut["symbol"].startswith(variant), f"GOLD resolved to {fut['symbol']}"
+            assert not fut["symbol"].startswith(variant), (
+                f"GOLD resolved to {fut['symbol']}"
+            )
 
     def test_variants_resolve_to_themselves(self):
         for base in ("GOLDM", "SILVERM", "CRUDEOILM"):

@@ -2,7 +2,7 @@
 type: API Endpoint
 title: Timings
 description: Get market timings for a date
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/market-calendar/timings.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/market-calendar/timings.md
 tags:
 - calendar
 - timings

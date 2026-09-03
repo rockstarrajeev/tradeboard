@@ -1,8 +1,8 @@
 # Crypto Symbol Format
 
-#### Tradeboard Crypto Symbol Standardization
+#### OpenAlgo Crypto Symbol Standardization
 
-Tradeboard maps every crypto contract to the **same Tradeboard symbology used for
+OpenAlgo maps every crypto contract to the **same OpenAlgo symbology used for
 Indian F&O**, so a strategy written for `NIFTY…FUT` / `…CE` transfers to crypto
 with no new syntax. Crypto instruments live under a single exchange code —
 `CRYPTO` — with the broker identity carried in `brexchange` (e.g.
@@ -27,7 +27,7 @@ Perpetual (no-expiry) futures are the dominant crypto derivative.
 
 **Format:** `[DeltaSymbol]FUT`
 
-| Instrument | Venue native | Tradeboard symbol | Quote (current) |
+| Instrument | Venue native | OpenAlgo symbol | Quote (current) |
 | --- | --- | --- | --- |
 | BTC perpetual | `BTCUSD` | `BTCUSDFUT` | ≈ $62,000 |
 | ETH perpetual | `ETHUSD` | `ETHUSDFUT` | — |
@@ -46,7 +46,7 @@ value (≈ 62,000 USD today) lives in quotes, not the symbol.
 
 **Format:** `[Underlying][ExpiryDate]FUT` — identical to Indian futures.
 
-| Instrument | Venue native | Tradeboard symbol |
+| Instrument | Venue native | OpenAlgo symbol |
 | --- | --- | --- |
 | BTC future, 28 Feb 2025 | `BTCUSD28Feb2025` | `BTC28FEB25FUT` |
 
@@ -61,7 +61,7 @@ options.
 
 With BTC ≈ **$62,000**, the at-the-money strike is `62000`:
 
-| Instrument | Venue native | Tradeboard symbol |
+| Instrument | Venue native | OpenAlgo symbol |
 | --- | --- | --- |
 | BTC 62000 Call (ATM), 28 Feb 2025 | `C-BTC-62000-280225` | `BTC28FEB2562000CE` |
 | BTC 62000 Put (ATM), 28 Feb 2025 | `P-BTC-62000-280225` | `BTC28FEB2562000PE` |
@@ -76,7 +76,7 @@ synth-put (`SYNPE`) → `PE`.
 
 **Format:** `[Base][Quote]` — the venue pair with the underscore removed.
 
-| Instrument | Venue native | Tradeboard symbol | Price (current) |
+| Instrument | Venue native | OpenAlgo symbol | Price (current) |
 | --- | --- | --- | --- |
 | BTC/INR spot | `BTC_INR` | `BTCINR` | ≈ ₹59,52,000 |
 | ETH/USDT spot | `ETH_USDT` | `ETHUSDT` | — |
@@ -98,9 +98,9 @@ a canonical convention is defined.
 
 ### Instrument Type Codes
 
-Delta `contract_type` → Tradeboard `instrumenttype`:
+Delta `contract_type` → OpenAlgo `instrumenttype`:
 
-| Delta `contract_type` | Tradeboard code | Renders as |
+| Delta `contract_type` | OpenAlgo code | Renders as |
 | --- | --- | --- |
 | `perpetual_futures` | `PERPFUT` | `[sym]FUT` |
 | `futures` | `FUT` | `[underlying][expiry]FUT` |
@@ -132,7 +132,7 @@ Same table as Indian instruments:
 
 | Field | Crypto meaning |
 | --- | --- |
-| `symbol` | Tradeboard canonical (e.g. `BTCUSDFUT`) |
+| `symbol` | OpenAlgo canonical (e.g. `BTCUSDFUT`) |
 | `brsymbol` | Delta native (e.g. `BTCUSD`) |
 | `exchange` | `CRYPTO` |
 | `brexchange` | venue (`deltaexchange`) |

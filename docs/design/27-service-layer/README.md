@@ -25,7 +25,7 @@ RESTX or blueprint
 | Market data | `quotes_service.py`, `depth_service.py`, `history_service.py`, `instruments_service.py`, `intervals_service.py`, `search_service.py`, `symbol_service.py`, `expiry_service.py` |
 | Options analytics | `option_chain_service.py`, `option_greeks_service.py`, `option_symbol_service.py`, `synthetic_future_service.py` |
 | Tools | `gex_service.py`, `gamma_density_service.py`, `iv_chart_service.py`, `iv_smile_service.py`, `oi_tracker_service.py`, `oi_profile_service.py`, `vol_surface_service.py`, `straddle_chart_service.py`, `custom_straddle_service.py`, `arbitrage_service.py` |
-| Automation | `flow_executor_service.py`, `flow_scheduler_service.py`, `flow_price_monitor_service.py`, `flow_tradeboard_client.py`, `historify_service.py`, `historify_scheduler_service.py` |
+| Automation | `flow_executor_service.py`, `flow_scheduler_service.py`, `flow_price_monitor_service.py`, `flow_openalgo_client.py`, `historify_service.py`, `historify_scheduler_service.py` |
 | Messaging | `telegram_alert_service.py`, `telegram_bot_service.py`, `whatsapp_alert_service.py`, `whatsapp_bot_service.py` |
 | Runtime | `broker_keepalive_service.py`, `websocket_service.py`, `websocket_client.py`, `scalping_risk_monitor_service.py` |
 

@@ -2,7 +2,7 @@
 
 ## Architecture
 
-Historify is the local historical-data subsystem. The React `/historify` page calls a session-authenticated Flask blueprint under `/historify/api`; download services use the logged-in user's Tradeboard API key to fetch normalized broker history and persist it in DuckDB.
+Historify is the local historical-data subsystem. The React `/historify` page calls a session-authenticated Flask blueprint under `/historify/api`; download services use the logged-in user's OpenAlgo API key to fetch normalized broker history and persist it in DuckDB.
 
 ```text
 React /historify

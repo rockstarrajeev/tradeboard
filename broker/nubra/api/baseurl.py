@@ -34,7 +34,9 @@ DEVICE_ID = "OPENALGO"
 # re-authentication case rather than a retriable trading error, so it must
 # never be retried and never be swallowed into an empty result.
 SESSION_EXPIRED_STATUS = 440
-SESSION_EXPIRED_MESSAGE = "Nubra session expired or invalid (HTTP 440). Log in to Nubra again."
+SESSION_EXPIRED_MESSAGE = (
+    "Nubra session expired or invalid (HTTP 440). Log in to Nubra again."
+)
 
 
 class NubraSessionExpired(Exception):

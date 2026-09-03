@@ -1,39 +1,48 @@
-# Contributing to Tradeboard
+# Contributing to OpenAlgo
 
 ## Let's democratize algorithmic trading, together!
 
-We're thrilled that you're interested in contributing to Tradeboard! This guide will help you get started, whether you're fixing a bug, adding a new broker, improving documentation, or building new features.
+We're thrilled that you're interested in contributing to OpenAlgo! This guide will help you get started, whether you're fixing a bug, adding a new broker, improving documentation, or building new features.
 
-Below you'll find everything you need to set up Tradeboard on your computer and start contributing.
+Below you'll find everything you need to set up OpenAlgo on your computer and start contributing.
 
 ---
 
 ## Our Mission
 
-Tradeboard is built **by traders, for traders**. We believe in democratizing algorithmic trading by providing a broker-agnostic, open-source platform that puts control back in the hands of traders. Every contribution, no matter how small, helps us achieve this mission.
+OpenAlgo is built **by traders, for traders**. We believe in democratizing algorithmic trading by providing a broker-agnostic, open-source platform that puts control back in the hands of traders. Every contribution, no matter how small, helps us achieve this mission.
 
 ---
 
 ## Table of Contents
 
-1. [Technology Stack](#technology-stack)
-2. [Development Setup](#development-setup)
-3. [Local Development](#local-development)
-4. [Project Structure](#project-structure)
-5. [Development Workflow](#development-workflow)
-6. [Contributing Guidelines](#contributing-guidelines)
-7. [Testing](#testing)
-8. [Adding a New Broker](#adding-a-new-broker)
-9. [Frontend Development](#frontend-development)
-10. [Documentation](#documentation)
-11. [Best Practices](#best-practices)
-12. [Getting Help](#getting-help)
+1. [Let's democratize algorithmic trading, together!](#lets-democratize-algorithmic-trading-together)
+2. [Our Mission](#our-mission)
+3. [Table of Contents](#table-of-contents)
+4. [Technology Stack](#technology-stack)
+5. [Development Setup](#development-setup)
+6. [Local Development](#local-development)
+7. [Project Structure](#project-structure)
+8. [Development Workflow](#development-workflow)
+9. [Contributing Guidelines](#contributing-guidelines)
+10. [Testing](#testing)
+11. [Adding a New Broker](#adding-a-new-broker)
+12. [Frontend Development](#frontend-development)
+13. [Documentation](#documentation)
+14. [Best Practices](#best-practices)
+15. [Troubleshooting](#troubleshooting)
+16. [Getting Help](#getting-help)
+17. [Code Review Process](#code-review-process)
+18. [Recognition & Community](#recognition--community)
+19. [Quick Reference Links](#quick-reference-links)
+20. [License](#license)
+21. [Thank You!](#thank-you)
 
 ---
 
 ## Technology Stack
 
-Tradeboard uses a **Python Flask** backend with a **React 19** single-page application frontend.
+OpenAlgo uses a **Python Flask** backend with a **React 19** single-page application frontend.
 
 ### Backend Technologies
 
@@ -82,7 +91,9 @@ Tradeboard uses a **Python Flask** backend with a **React 19** single-page appli
 - **Flask-CORS** - CORS protection
 
 > [!IMPORTANT]
-> You will need **Python 3.12+**, **Node.js 20/22/24**, and the **uv** package manager.
+> You will need **Python 3.12+** and the **uv** package manager. **Node.js is only
+> required if you change frontend code**: `main` ships the built UI, so backend and
+> documentation contributors can skip it entirely.
 
 ---
 
@@ -93,7 +104,7 @@ Tradeboard uses a **Python Flask** backend with a **React 19** single-page appli
 Before you begin, make sure you have the following installed:
 
 - **Python 3.12+** - [Download Python](https://www.python.org/downloads/)
-- **Node.js 20, 22, or 24** - [Download Node.js](https://nodejs.org/)
+- **Node.js (frontend contributors only)** - [Download Node.js](https://nodejs.org/). The `engines` field in `frontend/package.json` is the source of truth: `>=20.20.0 || >=22.22.0 || >=24.13.0`. Node below 20.20.0 will emit an `EBADENGINE` warning on `npm install`. Skip this if you are working on the backend or documentation.
 - **Git** - [Download Git](https://git-scm.com/downloads)
 - **Code Editor** - VS Code recommended with extensions:
   - Python
@@ -106,8 +117,8 @@ Before you begin, make sure you have the following installed:
 
 ```bash
 # Clone the repository
-git clone https://github.com/rockstarrajeev/tradeboard.git
-cd tradeboard
+git clone https://github.com/marketcalls/openalgo.git
+cd openalgo
 
 # Install uv package manager (if not already installed)
 pip install uv
@@ -115,7 +126,10 @@ pip install uv
 # Sync Python dependencies (uv handles virtualenv automatically)
 uv sync
 
-# Build React frontend (required before first run)
+# That is the whole setup for backend and documentation work: a clone of main
+# already contains the built UI at frontend/dist/, so the app runs as-is.
+
+# Only if you are changing frontend code:
 cd frontend
 npm install
 npm run build
@@ -196,8 +210,8 @@ uv run gunicorn --worker-class eventlet -w 1 app:app
 ### Access Points
 
 - **Main app**: http://127.0.0.1:5000
-- **React frontend**: http://127.0.0.1:5000/react
-- **Swagger API docs**: http://127.0.0.1:5000/api/docs
+- **Dashboard**: http://127.0.0.1:5000/dashboard
+- **REST API documentation**: [docs/api/README.md](docs/api/README.md)
 - **API Analyzer**: http://127.0.0.1:5000/analyzer
 
 ---
@@ -207,7 +221,7 @@ uv run gunicorn --worker-class eventlet -w 1 app:app
 Understanding the codebase structure will help you contribute effectively:
 
 ```
-tradeboard/
+openalgo/
 ├── app.py                    # Main Flask application entry point
 ├── pyproject.toml            # Python dependencies & tool config (uv/ruff/pytest)
 ├── frontend/                 # React 19 SPA (TypeScript + Vite)
@@ -223,12 +237,12 @@ tradeboard/
 │   ├── biome.json            # Biome linter/formatter config
 │   ├── tsconfig.json         # TypeScript configuration
 │   ├── vite.config.ts        # Vite build configuration
-│   └── dist/                 # Production build output (gitignored)
+│   └── dist/                 # Production build output (built by CI, tracked on main)
 ├── blueprints/               # Flask blueprints for web routes
 │   ├── auth.py               # Authentication routes
 │   ├── react_app.py          # Serves React SPA from frontend/dist/
 │   └── ...
-├── broker/                   # Broker integrations (24+ brokers)
+├── broker/                   # Broker integrations (36 plugins)
 │   ├── zerodha/              # Reference implementation
 │   ├── dhan/                 # Modern API design
 │   ├── angel/                # AngelOne integration
@@ -248,11 +262,11 @@ tradeboard/
 
 - **`frontend/`**: React 19 SPA with TypeScript, built with Vite and served by Flask via `blueprints/react_app.py`
 - **`broker/`**: Each subdirectory contains a complete broker integration with `api/`, `database/`, `mapping/`, `streaming/`, and `plugin.json`
-- **`restx_api/`**: RESTful API endpoints with automatic Swagger documentation at `/api/docs`
+- **`restx_api/`**: RESTful API endpoints under `/api/v1`; request contracts are maintained in [docs/api/README.md](docs/api/README.md)
 - **`blueprints/`**: Flask route handlers for UI pages and webhooks
 - **`services/`**: Business logic separated from route handlers
 - **`websocket_proxy/`**: Real-time market data streaming via unified WebSocket proxy
-- **`database/`**: 5 separate databases for isolation (main, logs, latency, sandbox, historify)
+- **`database/`**: 6 separate databases for isolation (main, logs, latency, health, sandbox, historify)
 
 ---
 
@@ -263,11 +277,11 @@ tradeboard/
 ```bash
 # Fork the repository on GitHub (click Fork button)
 # Clone your fork
-git clone https://github.com/YOUR_USERNAME/tradeboard.git
-cd tradeboard
+git clone https://github.com/YOUR_USERNAME/openalgo.git
+cd openalgo
 
 # Add upstream remote
-git remote add upstream https://github.com/rockstarrajeev/tradeboard.git
+git remote add upstream https://github.com/marketcalls/openalgo.git
 
 # Verify remotes
 git remote -v
@@ -275,22 +289,29 @@ git remote -v
 
 > **Important: Disable GitHub Actions on Your Fork**
 >
-> After forking, go to your fork's **Settings → Actions → General** (`https://github.com/YOUR_USERNAME/tradeboard/settings/actions`) and select **"Disable actions"** under Actions permissions. This prevents CI workflows (frontend builds, Docker pushes) from running on your fork unnecessarily — those workflows are only meant to run on the upstream repository.
+> After forking, go to your fork's **Settings → Actions → General** (`https://github.com/YOUR_USERNAME/openalgo/settings/actions`) and select **"Disable actions"** under Actions permissions. This prevents CI workflows (frontend builds, Docker pushes) from running on your fork unnecessarily — those workflows are only meant to run on the upstream repository.
 
-### 2. Frontend Build Assets (Auto-Built by CI)
+### 2. Frontend Build Assets (Tracked on `main`, Built by CI)
 
-The `/frontend/dist` directory is **gitignored** and not tracked in the repository. CI automatically builds the frontend when changes are merged to main.
+`frontend/dist/` is listed in `.gitignore` **and is tracked on `main`**. That is not a
+contradiction: Git applies ignore rules only to untracked files, so the ignore entry stops
+only the *new* hashed assets a local build produces, while the copy already tracked on
+`main` keeps being updated by CI. Run `git ls-files frontend/dist` to see the tracked files.
+
+This is deliberate: **a plain `git pull` of `main` gives production servers and
+backend-only contributors a working UI with no Node.js installed.** That is the canonical
+upgrade path for a deployment.
 
 **How it works:**
-- PRs are tested with a fresh frontend build (but not committed)
-- When merged to main, CI automatically:
-  1. Builds the frontend (`cd frontend && npm run build`)
-  2. Pushes Docker image to Docker Hub
+- On a pull request, CI builds the frontend to prove it compiles and uploads the result as a workflow artifact. Nothing is committed to your branch.
+- After a push to `main`, the `commit-dist` job in `.github/workflows/ci.yml` rebuilds the frontend, force-adds it (`git add -f frontend/dist/`) and pushes a `chore: auto-build frontend dist [skip ci]` commit.
+- On a push to `main` the same workflow also builds and pushes the Docker image to Docker Hub. That job is skipped for fork pull requests, since it needs repository secrets.
 
-**For Contributors:**
-- Build locally for development: `cd frontend && npm install && npm run build`
-- Do NOT commit `frontend/dist/` — it is gitignored
-- Focus on source code changes — CI handles production builds
+**For contributors:**
+- **Do not commit `frontend/dist/` yourself.** CI owns that directory. The `.gitignore` entry does not protect you here, because those files are already tracked: a local `npm run build` modifies them and `git add .` stages the result. Check `git status` and run `git restore frontend/dist` before committing. A hand-built `dist/` in a pull request is review noise that conflicts on merge.
+- **Backend and documentation contributors:** nothing to do here. The UI in your clone is already built.
+- **Frontend contributors:** run `cd frontend && npm install && npm run build` (or `npm run dev`) to see your changes locally, and commit only your `frontend/src/` sources.
+- **Feature branches CI has not built** may carry a stale or missing `dist/`. Rebase onto recent `main`, or build locally.
 
 ### 3. Create a Feature Branch
 
@@ -375,21 +396,33 @@ git commit -m "refactor: optimize order processing pipeline"
 
 ### 5. Test Your Changes
 
+For a documentation-only change, see [Documentation-only changes](#documentation-only-changes)
+instead of this checklist.
+
 ```bash
-# Run Python tests
+# Fast backend check (same maintained selection used by CI)
+uv run pytest test/test_log_location.py test/test_navigation_update.py \
+  test/test_python_editor.py test/test_rate_limits_simple.py \
+  test/test_logout_csrf.py test/test_auth_logout.py \
+  test/test_auth_resume.py test/test_auth_upsert_multisession.py \
+  test/sandbox/test_execution_backlog.py test/test_event_bus_bounded.py \
+  test/test_telegram_api_contract.py test/test_multi_option_greeks_regression.py \
+  test/test_history_format.py -v --timeout=60
+
+# Full backend suite (not CI-safe; not green on a clean checkout)
 uv run pytest test/ -v
 
-# Run React tests
+# Run React tests once (CI/completion check)
 cd frontend
-npm test
+npm run test:run
 
 # Run end-to-end tests
 npm run e2e
 
 # Manual testing:
 # 1. Web UI: http://127.0.0.1:5000
-# 2. React UI: http://127.0.0.1:5000/react
-# 3. API Docs: http://127.0.0.1:5000/api/docs
+# 2. Dashboard: http://127.0.0.1:5000/dashboard
+# 3. REST API documentation: docs/api/README.md
 # 4. API Analyzer: http://127.0.0.1:5000/analyzer
 ```
 
@@ -398,9 +431,9 @@ npm run e2e
 - [ ] Application starts without errors (`uv run app.py`)
 - [ ] All existing features still work
 - [ ] New feature works as expected
-- [ ] Python tests pass (`uv run pytest test/ -v`)
-- [ ] Frontend tests pass (`cd frontend && npm test`)
-- [ ] No TypeScript errors (`cd frontend && npm run build`)
+- [ ] CI-safe backend tests pass (the pytest selection above)
+- [ ] Frontend tests pass, if you changed frontend code (`cd frontend && npm run test:run`)
+- [ ] No TypeScript errors, if you changed frontend code (`cd frontend && npm run build`)
 - [ ] No linting errors (Ruff for Python, Biome for frontend)
 - [ ] API endpoints return correct responses
 - [ ] WebSocket connections work (if applicable)
@@ -436,14 +469,14 @@ git push origin feature/your-feature-name
 
 ### Contribution Policy: One Feature or One Fix at a Time
 
-Tradeboard follows a strict **incremental contribution** standard. We require all contributions to be submitted as:
+OpenAlgo follows a strict **incremental contribution** standard. We require all contributions to be submitted as:
 
 - **One feature** per pull request, OR
 - **One fix** per pull request
 
 **Why this matters:**
 
-Tradeboard supports **a growing list of brokers**, and every change must be validated across this broad surface area. Large integrations submitted in a single PR require extensive manual testing and verification that is not practical for the maintainers to review all at once.
+OpenAlgo supports **a growing list of brokers**, and every change must be validated across this broad surface area. Large integrations submitted in a single PR require extensive manual testing and verification that is not practical for the maintainers to review all at once.
 
 Additionally, many contributions today are developed with AI assistance, which can accelerate development substantially but also increases the need for careful human review, testing, and incremental verification before acceptance into a shared upstream project.
 
@@ -455,9 +488,9 @@ Additionally, many contributions today are developed with AI assistance, which c
 - Large monolithic PRs or full-project integrations will not be accepted in their current form
 - **Exception — New broker integrations** may be submitted as a single PR since they are self-contained within their own `broker/` directory and don't modify core platform code
 
-**If you have a large integration or project built on Tradeboard:**
+**If you have a large integration or project built on OpenAlgo:**
 
-We appreciate and encourage projects built on top of Tradeboard (it's why we're open-source!). However, we cannot merge large codebases as a single contribution. Instead, extract individual improvements, fixes, or self-contained features and submit them separately. This gives each contribution a much better chance of being reviewed and accepted.
+We appreciate and encourage projects built on top of OpenAlgo (it's why we're open-source!). However, we cannot merge large codebases as a single contribution. Instead, extract individual improvements, fixes, or self-contained features and submit them separately. This gives each contribution a much better chance of being reviewed and accepted.
 
 ---
 
@@ -473,7 +506,7 @@ Great ways to get started:
    - Add examples and tutorials
 
 2. **Bug Fixes**
-   - Check [issues labeled "good first issue"](https://github.com/rockstarrajeev/tradeboard/labels/good%20first%20issue)
+   - Check [issues labeled "good first issue"](https://github.com/marketcalls/openalgo/labels/good%20first%20issue)
    - Fix minor bugs and edge cases
    - Improve error messages
 
@@ -607,7 +640,7 @@ describe('MyComponent', () => {
 import { test, expect } from '@playwright/test';
 
 test('feature works end to end', async ({ page }) => {
-  await page.goto('/react');
+  await page.goto('/dashboard');
   await expect(page.getByText('Dashboard')).toBeVisible();
 });
 ```
@@ -632,7 +665,7 @@ broker/your_broker_name/
 ├── database/
 │   └── master_contract_db.py # Symbol master contract management
 ├── mapping/
-│   ├── order_data.py         # Transform Tradeboard format to broker format
+│   ├── order_data.py         # Transform OpenAlgo format to broker format
 │   └── transform_data.py     # General data transformations
 ├── streaming/
 │   └── broker_adapter.py     # WebSocket adapter for live data
@@ -743,7 +776,7 @@ def get_historical_data(symbol, interval, start_date, end_date):
 1. Add broker to `VALID_BROKERS` in `.env`
 2. Configure broker credentials in `.env`
 3. Test authentication flow
-4. Test each API endpoint via Swagger UI at `/api/docs`
+4. Test each API endpoint against the request and response contracts in `docs/api/`
 5. Test WebSocket streaming (if supported)
 6. Validate error handling
 
@@ -778,7 +811,7 @@ npm run build
 
 #### Component Library
 
-Tradeboard uses [shadcn/ui](https://ui.shadcn.com/) built on Radix UI primitives with Tailwind CSS:
+OpenAlgo uses [shadcn/ui](https://ui.shadcn.com/) built on Radix UI primitives with Tailwind CSS:
 
 ```tsx
 import { Button } from '@/components/ui/button';
@@ -867,6 +900,58 @@ npm run check
 
 ## Documentation
 
+### Documentation-only changes
+
+Start with [`docs/INDEX.md`](docs/INDEX.md), the map of OpenAlgo's canonical
+documentation. Follow it to the existing source for the topic and update that
+file instead of copying the same guidance into a second page. Use a `docs/`
+branch for a documentation-only change, for example:
+
+```bash
+git checkout -b docs/clarify-order-constants
+```
+
+Keep the pull request focused on one documentation outcome. While editing:
+
+- resolve relative links from the directory containing the changed Markdown
+  file, and preserve the exact case of repository paths;
+- check every changed heading link against the rendered GitHub anchor (for
+  example, `## Order Types` becomes `#order-types`);
+- preview the changed Markdown to catch broken lists, tables, code fences, and
+  callouts; and
+- run any command shown in a changed example when it is safe and does not
+  require broker credentials or other secrets.
+
+Before committing, inspect the working tree so new, untracked Markdown files
+are visible. Stage only the intended documentation, then review and check the
+exact content that will be committed. Open each changed local link and anchor
+as part of that review:
+
+```bash
+git diff --check
+git status --short
+git add docs/prompt/order-constants.md
+git diff --cached --name-only
+git diff --cached --check
+```
+
+When the diff contains only Markdown, the backend pytest suite and frontend
+test/build commands are not required: they do not validate prose, links, or
+anchors. If the documentation changes an executable example, API contract, or
+generated artifact, run the smallest relevant check and record it in the pull
+request instead.
+
+Use a Conventional Commit with the `docs:` type:
+
+```bash
+git commit -m "docs: clarify order constants"
+```
+
+Use the same style for the pull request title. In its description, link the
+issue (for example, `Closes #123`), summarize the reader-visible improvement,
+list the files reviewed, and report validation explicitly, including "code
+tests not run (Markdown-only change)" when applicable.
+
 ### Code Documentation
 
 1. **Python Docstrings** - Use Google-style:
@@ -875,7 +960,7 @@ npm run check
        """Place a trading order.
 
        Args:
-           symbol (str): Trading symbol in Tradeboard format
+           symbol (str): Trading symbol in OpenAlgo format
            quantity (int): Number of shares/contracts
            price (float): Order price (0 for market orders)
            order_type (str): Order type ('MARKET', 'LIMIT', 'SL')
@@ -1024,7 +1109,8 @@ npm run check
 #### Frontend Build Errors
 
 ```bash
-# Ensure correct Node.js version (20, 22, or 24)
+# Ensure a supported Node.js version: >=20.20.0, >=22.22.0 or >=24.13.0
+# (the engines field in frontend/package.json is the source of truth)
 node --version
 
 # Clean install
@@ -1076,14 +1162,14 @@ uv run app.py
 ### Support Channels
 
 - **Discord**: Join our [Discord server](https://discord.com/invite/UPh7QPsNhP) for real-time help
-- **GitHub Discussions**: Ask questions in [GitHub Discussions](https://github.com/rockstarrajeev/tradeboard/discussions)
-- **Documentation**: Check [docs.rajeevupadhyay.com](https://docs.rajeevupadhyay.com)
-- **GitHub Issues**: Report bugs in [Issues](https://github.com/rockstarrajeev/tradeboard/issues)
+- **GitHub Discussions**: Ask questions in [GitHub Discussions](https://github.com/marketcalls/openalgo/discussions)
+- **Documentation**: Check [docs.openalgo.in](https://docs.openalgo.in)
+- **GitHub Issues**: Report bugs in [Issues](https://github.com/marketcalls/openalgo/issues)
 
 ### Before Asking for Help
 
 1. **Search existing issues** — your question might already be answered
-2. **Check documentation** — review docs at docs.rajeevupadhyay.com
+2. **Check documentation** — review docs at docs.openalgo.in
 3. **Review error logs** — include error messages when asking for help
 4. **Provide context** — share your environment (OS, Python version, Node version, broker)
 
@@ -1099,7 +1185,7 @@ When asking for help, include:
    - OS and version
    - Python version (`python --version`)
    - Node.js version (`node --version`)
-   - Tradeboard version
+   - OpenAlgo version
    - Broker being used
 
 ---
@@ -1138,7 +1224,7 @@ We value all contributions! Contributors will be:
 
 - **Listed in contributors section** on GitHub
 - **Mentioned in release notes** for significant contributions
-- **Part of the Tradeboard community** on Discord
+- **Part of the OpenAlgo community** on Discord
 
 ### Community Guidelines
 
@@ -1152,29 +1238,29 @@ We value all contributions! Contributors will be:
 
 ## Quick Reference Links
 
-- **Repository**: [github.com/rockstarrajeev/tradeboard](https://github.com/rockstarrajeev/tradeboard)
-- **Issue Tracker**: [github.com/rockstarrajeev/tradeboard/issues](https://github.com/rockstarrajeev/tradeboard/issues)
-- **Documentation**: [docs.rajeevupadhyay.com](https://docs.rajeevupadhyay.com)
+- **Repository**: [github.com/marketcalls/openalgo](https://github.com/marketcalls/openalgo)
+- **Issue Tracker**: [github.com/marketcalls/openalgo/issues](https://github.com/marketcalls/openalgo/issues)
+- **Documentation**: [docs.openalgo.in](https://docs.openalgo.in)
 - **Discord**: [discord.com/invite/UPh7QPsNhP](https://discord.com/invite/UPh7QPsNhP)
-- **PyPI Package**: [pypi.org/project/tradeboard](https://pypi.org/project/tradeboard)
-- **YouTube**: [youtube.com/@tradeboardHQ](https://youtube.com/@tradeboardHQ)
-- **Twitter/X**: [@tradeboardHQ](https://twitter.com/tradeboardHQ)
+- **PyPI Package**: [pypi.org/project/openalgo](https://pypi.org/project/openalgo)
+- **YouTube**: [youtube.com/@openalgoHQ](https://youtube.com/@openalgoHQ)
+- **Twitter/X**: [@openalgoHQ](https://twitter.com/openalgoHQ)
 
 ---
 
 ## License
 
-Tradeboard is released under the **AGPL v3.0 License**. See the [LICENSE](License.md) file for details.
+OpenAlgo is released under the **AGPL v3.0 License**. See the [LICENSE](License.md) file for details.
 
-By contributing to Tradeboard, you agree that your contributions will be licensed under the AGPL v3.0 License.
+By contributing to OpenAlgo, you agree that your contributions will be licensed under the AGPL v3.0 License.
 
 ---
 
 ## Thank You!
 
-Thank you for contributing to Tradeboard! Your efforts help democratize algorithmic trading and empower traders worldwide. Every line of code, documentation improvement, and bug report makes a difference.
+Thank you for contributing to OpenAlgo! Your efforts help democratize algorithmic trading and empower traders worldwide. Every line of code, documentation improvement, and bug report makes a difference.
 
-**Happy coding, and welcome to the Tradeboard community!**
+**Happy coding, and welcome to the OpenAlgo community!**
 
 ---
 

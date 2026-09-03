@@ -2,7 +2,7 @@
 type: API Endpoint
 title: OpenPosition
 description: Get the open position quantity for a symbol
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/order-information/openposition.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/order-information/openposition.md
 tags:
 - order-information
 - positions

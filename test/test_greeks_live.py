@@ -94,28 +94,20 @@ if __name__ == "__main__":
     summary = result.get("summary", {})
 
     print(f"\n  HTTP: {status} | Time: {elapsed:.3f}s")
-    print(
-        f"  Status: {result.get('status')} | Success: {summary.get('success', 0)}/{summary.get('total', 0)} | Failed: {summary.get('failed', 0)}"
-    )
+    print(f"  Status: {result.get('status')} | Success: {summary.get('success', 0)}/{summary.get('total', 0)} | Failed: {summary.get('failed', 0)}")
 
     data = result.get("data", [])
-    rate_limited = [
-        d
-        for d in data
-        if "429" in str(d.get("message", "")).lower()
-        or "too many" in str(d.get("message", "")).lower()
-    ]
+    rate_limited = [d for d in data if "429" in str(d.get("message", "")).lower()
+                    or "too many" in str(d.get("message", "")).lower()]
     if rate_limited:
         print(f"  WARNING: {len(rate_limited)} symbols hit 429!")
     else:
-        print("  No 429 errors!")
+        print(f"  No 429 errors!")
 
     # Show ATM and nearby
     successful = [d for d in data if d.get("status") == "success"]
     if successful:
-        print(
-            f"\n  {'Symbol':30s} {'Type':>5s} {'Strike':>8s} {'LTP':>8s} {'IV%':>8s} {'Delta':>8s} {'Theta':>8s} {'Vega':>8s}"
-        )
+        print(f"\n  {'Symbol':30s} {'Type':>5s} {'Strike':>8s} {'LTP':>8s} {'IV%':>8s} {'Delta':>8s} {'Theta':>8s} {'Vega':>8s}")
         print(f"  {'-' * 95}")
         for item in successful:
             if abs(item.get("strike", 0) - atm) <= STRIKE_INTERVAL * 2:
@@ -150,9 +142,7 @@ if __name__ == "__main__":
         errs = [d for d in r.get("data", []) if "429" in str(d.get("message", "")).lower()]
         total_429 += len(errs)
         marker = "OK" if not errs else "429!"
-        print(
-            f"  Request {i + 1}: {e:.3f}s | {sm.get('success', 0)}/{sm.get('total', 0)} success | 429: {len(errs)} [{marker}]"
-        )
+        print(f"  Request {i+1}: {e:.3f}s | {sm.get('success', 0)}/{sm.get('total', 0)} success | 429: {len(errs)} [{marker}]")
 
     print(f"\n  Total 429 errors: {total_429}")
 
@@ -161,23 +151,12 @@ if __name__ == "__main__":
 
     test_symbol = f"{UNDERLYING}{EXPIRY}{atm}CE"
 
-    _, s_result, s_elapsed = api_call(
-        "/api/v1/optiongreeks",
-        {
-            "apikey": API_KEY,
-            "symbol": test_symbol,
-            "exchange": OPTIONS_EXCHANGE,
-            "interest_rate": 7.0,
-        },
-    )
-    _, m_result, m_elapsed = api_call(
-        "/api/v1/multioptiongreeks",
-        {
-            "apikey": API_KEY,
-            "symbols": [{"symbol": test_symbol, "exchange": OPTIONS_EXCHANGE}],
-            "interest_rate": 7.0,
-        },
-    )
+    _, s_result, s_elapsed = api_call("/api/v1/optiongreeks", {
+        "apikey": API_KEY, "symbol": test_symbol, "exchange": OPTIONS_EXCHANGE, "interest_rate": 7.0,
+    })
+    _, m_result, m_elapsed = api_call("/api/v1/multioptiongreeks", {
+        "apikey": API_KEY, "symbols": [{"symbol": test_symbol, "exchange": OPTIONS_EXCHANGE}], "interest_rate": 7.0,
+    })
 
     print(f"\n  Symbol: {test_symbol}")
     print(f"  Single: {s_elapsed:.3f}s | Multi: {m_elapsed:.3f}s")
@@ -198,7 +177,7 @@ if __name__ == "__main__":
         ]:
             match = "OK" if abs(sv - mv) < 1.0 else "DIFF"
             print(f"  {name:>12s} {sv:>12.4f} {mv:>12.4f} {match:>8s}")
-        print("\n  Note: Small differences expected due to LTP changes between calls")
+        print(f"\n  Note: Small differences expected due to LTP changes between calls")
     else:
         print(f"  Single: {s_result.get('status')} | Multi: {m_result.get('status')}")
 
@@ -206,9 +185,7 @@ if __name__ == "__main__":
     print_header("VERDICT")
     all_pass = summary.get("success", 0) > 0 and total_429 == 0
     if all_pass:
-        print(
-            f"\n  PASS: {summary.get('success', 0)}/{summary.get('total', 0)} Greeks calculated, zero 429 errors"
-        )
+        print(f"\n  PASS: {summary.get('success', 0)}/{summary.get('total', 0)} Greeks calculated, zero 429 errors")
     else:
         print(f"\n  FAIL: {total_429} rate limit errors detected")
     print("=" * 70)

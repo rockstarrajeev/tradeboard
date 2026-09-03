@@ -2,16 +2,17 @@
 
 ## Overview
 
-Tradeboard loads broker adapters from `broker/<name>/`. The current repository contains 34 plugin directories: 33 securities integrations and Delta Exchange for crypto derivatives. One Tradeboard instance uses one configured broker at a time.
+OpenAlgo loads broker adapters from `broker/<name>/`. The current repository contains 36 plugin directories: 35 securities integrations and Delta Exchange for crypto derivatives. One OpenAlgo instance uses one configured broker at a time.
 
 The installed plugin directories are the authoritative inventory:
 
 ```text
 aliceblue, angel, arrow, compositedge, definedge, deltaexchange,
 dhan, dhan_sandbox, firstock, fivepaisa, fivepaisaxts, flattrade,
-fyers, groww, ibulls, iifl, iiflcapital, indmoney, jainamxts,
-kotak, motilal, mstock, nubra, paytm, pocketful, rmoney, samco,
-shoonya, tradejini, tradesmart, upstox, wisdom, zebu, zerodha
+fyers, groww, hdfcsecurities, hdfcsky, ibulls, iifl, iiflcapital,
+indmoney, jainamxts, kotak, motilal, mstock, nubra, paytm,
+pocketful, rmoney, samco, shoonya, tradejini, tradesmart,
+upstox, wisdom, zebu, zerodha
 ```
 
 Each `plugin.json` declares the adapter's supported exchanges, broker type, and whether leverage configuration is available. The application caches these capabilities at startup and exposes the active broker's values to the frontend.
@@ -35,14 +36,14 @@ Changes made through Profile update `.env` and require an application restart. T
 
 ## Connect the Broker Session
 
-1. Sign in to Tradeboard.
+1. Sign in to OpenAlgo.
 2. Open the broker connection page when prompted.
 3. Complete the adapter-specific login, consent, token, or TOTP flow.
 4. Confirm the dashboard loads account data before starting a strategy.
 
-Tradeboard imports the selected adapter's authentication module only when it is needed. Some adapters redirect to a broker-hosted consent page; others collect a token or TOTP through an Tradeboard form. The broker's current authentication policy determines when another login is required.
+OpenAlgo imports the selected adapter's authentication module only when it is needed. Some adapters redirect to a broker-hosted consent page; others collect a token or TOTP through an OpenAlgo form. The broker's current authentication policy determines when another login is required.
 
-The Tradeboard application session and broker session are separate. If the broker token expires while the application session is still valid, the dashboard sends the user back to `/broker` to reconnect rather than discarding the Tradeboard login.
+The OpenAlgo application session and broker session are separate. If the broker token expires while the application session is still valid, the dashboard sends the user back to `/broker` to reconnect rather than discarding the OpenAlgo login.
 
 ## Verify the Connection
 
@@ -53,11 +54,11 @@ After login, verify at least one read-only account call before placing an order:
 - The active broker's supported exchanges match `/api/broker/capabilities`.
 - WebSocket market data connects if the adapter and account support it.
 
-Use Analyzer Mode for the first order workflow. It isolates order execution from the live broker while preserving the Tradeboard API shape.
+Use Analyzer Mode for the first order workflow. It isolates order execution from the live broker while preserving the OpenAlgo API shape.
 
 ## Switch or Run Multiple Brokers
 
-To switch the configured broker, update the credentials and callback broker name, restart Tradeboard, and authenticate again. To use multiple brokers concurrently, run separate Tradeboard instances with separate `.env` files, ports, databases, and process supervision.
+To switch the configured broker, update the credentials and callback broker name, restart OpenAlgo, and authenticate again. To use multiple brokers concurrently, run separate OpenAlgo instances with separate `.env` files, ports, databases, and process supervision.
 
 ## Troubleshooting
 
@@ -69,7 +70,7 @@ To switch the configured broker, update the credentials and callback broker name
 | Account calls fail after login | Broker session state and server logs; reconnect from `/broker` |
 | Market data unavailable | Adapter exchange capabilities, account entitlement, and WebSocket configuration |
 
-Broker pricing, static-IP requirements, callback rules, and session lifetimes are external policies. Verify them with the broker instead of relying on a fixed value in Tradeboard documentation.
+Broker pricing, static-IP requirements, callback rules, and session lifetimes are external policies. Verify them with the broker instead of relying on a fixed value in OpenAlgo documentation.
 
 ---
 

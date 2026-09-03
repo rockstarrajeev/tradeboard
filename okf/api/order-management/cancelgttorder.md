@@ -2,7 +2,7 @@
 type: API Endpoint
 title: CancelGTTOrder
 description: Cancel an active GTT trigger
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/order-management/cancelgttorder.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/order-management/cancelgttorder.md
 tags:
 - order
 - gtt

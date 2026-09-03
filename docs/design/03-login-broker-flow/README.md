@@ -2,11 +2,11 @@
 
 ## Two Authentication Layers
 
-Tradeboard separates the local application session from the broker session.
+OpenAlgo separates the local application session from the broker session.
 
 1. The user authenticates to the self-hosted app with username/password and optional TOTP.
 2. The user selects a broker and completes that broker's auth flow, or resumes an existing valid broker token.
-3. External `/api/v1` clients use the Tradeboard API key, which resolves the active broker token server-side.
+3. External `/api/v1` clients use the OpenAlgo API key, which resolves the active broker token server-side.
 
 A broker token can expire while the app cookie remains valid. In that state the UI must offer broker reconnect rather than hard-logging the user out.
 
@@ -20,14 +20,14 @@ When login TOTP is required, the password step stores a short-lived `pending_tot
 
 `utils/plugin_loader.py` reads `broker/*/plugin.json` and lazy-loads `broker.<key>.api.auth_api`. Generic callbacks are handled by `blueprints/brlogin.py`; specialized routes support brokers that need extra OTP, TOTP, or credential steps.
 
-The current plugin inventory is 34. Authentication shape varies by broker, and capability metadata is the correct way for UI code to discover supported exchanges and features.
+The current plugin inventory is 36. Authentication shape varies by broker, and capability metadata is the correct way for UI code to discover supported exchanges and features.
 
 ## Token Storage
 
 | Data | Storage behavior |
 |---|---|
 | Password | Argon2 hash in the user database |
-| Tradeboard API key | Argon2+pepper verification hash and encrypted retrievable value |
+| OpenAlgo API key | Argon2+pepper verification hash and encrypted retrievable value |
 | Broker auth/feed tokens | Fernet ciphertext derived from installation secrets |
 | TOTP secret | Encrypted at rest |
 | Browser session | Signed Flask session cookie with host-dependent secure flags |
@@ -36,7 +36,7 @@ The current plugin inventory is 34. Authentication shape varies by broker, and c
 
 ## Multi-Session Model
 
-Tradeboard allows up to five active app sessions for the single configured user. A new row replaces an existing row for the same username and IP; at the cap, the oldest row is removed. Every device shares the installation's one active broker session and server-side market-data feed.
+OpenAlgo allows up to five active app sessions for the single configured user. A new row replaces an existing row for the same username and IP; at the cap, the oldest row is removed. Every device shares the installation's one active broker session and server-side market-data feed.
 
 The SPA polls `/auth/session-status`. That route refreshes the current `active_sessions.last_seen` at most once every 30 seconds and reports the current active-session count.
 

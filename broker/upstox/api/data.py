@@ -419,22 +419,18 @@ class BrokerData:
         for ind_key in indicator_keys:
             original = key_map.pop(ind_key)
             try:
-                indicator_results.append(
-                    {
-                        "symbol": original["symbol"],
-                        "exchange": original["exchange"],
-                        "data": self._get_indicator_ltp(ind_key),
-                    }
-                )
+                indicator_results.append({
+                    "symbol": original["symbol"],
+                    "exchange": original["exchange"],
+                    "data": self._get_indicator_ltp(ind_key),
+                })
             except Exception as e:
                 logger.warning(f"Failed to fetch LTP for indicator {ind_key}: {e}")
-                indicator_results.append(
-                    {
-                        "symbol": original["symbol"],
-                        "exchange": original["exchange"],
-                        "error": str(e),
-                    }
-                )
+                indicator_results.append({
+                    "symbol": original["symbol"],
+                    "exchange": original["exchange"],
+                    "error": str(e),
+                })
 
         # Return early if only indicators were requested
         if not instrument_keys:
@@ -473,7 +469,7 @@ class BrokerData:
             v2_data = v2_response.json()
 
             if v2_data.get("status") == "success":
-                for _key, value in v2_data.get("data", {}).items():
+                for key, value in v2_data.get("data", {}).items():
                     inst_key = value.get("instrument_token")
                     if inst_key:
                         v2_quotes[inst_key] = value
@@ -486,7 +482,7 @@ class BrokerData:
 
         # Build lookup by instrument_token
         quotes_by_key = {}
-        for _key, value in quote_data.items():
+        for key, value in quote_data.items():
             inst_key = value.get("instrument_token")
             if inst_key:
                 quotes_by_key[inst_key] = value
@@ -1069,7 +1065,7 @@ class BrokerData:
 
             # Find the quote data - Upstox uses exchange:symbol format for the key
             quote = None
-            for _key, value in quote_data.items():
+            for key, value in quote_data.items():
                 if value.get("instrument_token") == instrument_key:
                     quote = value
                     break
@@ -1089,7 +1085,7 @@ class BrokerData:
 
                 if v3_response.get("status") == "success":
                     v3_quote_data = v3_response.get("data", {})
-                    for _key, value in v3_quote_data.items():
+                    for key, value in v3_quote_data.items():
                         if value.get("instrument_token") == instrument_key:
                             live_ohlc = value.get("live_ohlc", {})
                             prev_ohlc = value.get("prev_ohlc", {})

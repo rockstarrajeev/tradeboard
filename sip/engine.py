@@ -138,7 +138,9 @@ def run_sip(
 
     window = series[(series.index.date >= start) & (series.index.date <= end)]
     if window.empty:
-        raise SipError(f"no trading sessions between {start} and {end} for {symbol}")
+        raise SipError(
+            f"no trading sessions between {start} and {end} for {symbol}"
+        )
     if (window <= 0).any():
         raise SipError("price series contains non-positive closes")
 
@@ -194,7 +196,9 @@ def run_sip(
         total_invested += inst.amount
         total_charges += charge
         if costs is not None and shares:
-            for key, value in costs.breakdown(buy_value=spent, sell_value=0.0, orders=1).items():
+            for key, value in costs.breakdown(
+                buy_value=spent, sell_value=0.0, orders=1
+            ).items():
                 if key != "orders":
                     breakdown[key] = breakdown.get(key, 0.0) + float(value)
         units_by_date[inst.executed] = total_units
@@ -205,22 +209,16 @@ def run_sip(
 
     # Forward-fill units and invested across every session so the value curve
     # is continuous rather than only defined on installment dates.
-    units = (
-        pd.Series([units_by_date.get(d.date()) for d in window.index], index=window.index)
-        .ffill()
-        .fillna(0.0)
-    )
-    invested = (
-        pd.Series([invested_by_date.get(d.date()) for d in window.index], index=window.index)
-        .ffill()
-        .fillna(0.0)
-    )
+    units = pd.Series(
+        [units_by_date.get(d.date()) for d in window.index], index=window.index
+    ).ffill().fillna(0.0)
+    invested = pd.Series(
+        [invested_by_date.get(d.date()) for d in window.index], index=window.index
+    ).ffill().fillna(0.0)
 
-    cash_held = (
-        pd.Series([cash_by_date.get(d.date()) for d in window.index], index=window.index)
-        .ffill()
-        .fillna(0.0)
-    )
+    cash_held = pd.Series(
+        [cash_by_date.get(d.date()) for d in window.index], index=window.index
+    ).ffill().fillna(0.0)
     value = units * window + cash_held
     final_value = float(value.iloc[-1])
     last_session = window.index[-1].date()

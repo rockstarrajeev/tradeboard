@@ -20,7 +20,7 @@ logging.basicConfig(
 )
 
 
-async def run_bot_test():
+async def test_bot():
     """Test the bot initialization and start"""
     bot_service = TelegramBotService()
 
@@ -67,4 +67,4 @@ async def run_bot_test():
 
 
 if __name__ == "__main__":
-    asyncio.run(run_bot_test())
+    asyncio.run(test_bot())

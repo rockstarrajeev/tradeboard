@@ -2,7 +2,7 @@
 type: API Endpoint
 title: Depth
 description: Get market depth (Level 2) order book data
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/market-data/depth.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/market-data/depth.md
 tags:
 - market-data
 - depth

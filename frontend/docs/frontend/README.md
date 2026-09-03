@@ -1,6 +1,6 @@
-# Tradeboard Frontend Documentation
+# OpenAlgo Frontend Documentation
 
-Welcome to the Tradeboard React frontend documentation. This guide covers everything you need to know to develop, test, and maintain the frontend application.
+Welcome to the OpenAlgo React frontend documentation. This guide covers everything you need to know to develop, test, and maintain the frontend application.
 
 ## Table of Contents
 
@@ -42,7 +42,7 @@ npm run build
 
 ## Project Overview
 
-Tradeboard frontend is a single-page application (SPA) that provides:
+OpenAlgo frontend is a single-page application (SPA) that provides:
 
 - **Dashboard** - Real-time trading overview
 - **Order Management** - Orderbook, tradebook, positions

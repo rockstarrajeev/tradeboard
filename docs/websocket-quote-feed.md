@@ -1,10 +1,10 @@
 # WebSocket Quote Feed - Integration Guide
 
-This guide demonstrates how to integrate with Tradeboard's WebSocket quote feed for real-time market data streaming.
+This guide demonstrates how to integrate with OpenAlgo's WebSocket quote feed for real-time market data streaming.
 
 ## Overview
 
-Tradeboard provides a unified WebSocket server (port 8765 by default) that normalizes market data from the active broker plugin. Clients can subscribe to LTP, Quote, or Depth modes.
+OpenAlgo provides a unified WebSocket server (port 8765 by default) that normalizes market data from the active broker plugin. Clients can subscribe to LTP, Quote, or Depth modes.
 
 ## Connection Details
 
@@ -29,7 +29,7 @@ Tradeboard provides a unified WebSocket server (port 8765 by default) that norma
 // Response
 {
     "status": "authenticated",
-    "message": "Connected to Tradeboard WebSocket"
+    "message": "Connected to OpenAlgo WebSocket"
 }
 ```
 

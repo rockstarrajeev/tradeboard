@@ -148,9 +148,7 @@ def create_fyers_order_adapter(user_id: str) -> "FyersOrderUpdateAdapter | None"
 
     access_token = get_auth_token(user_id, bypass_cache=True)
     if not access_token:
-        logger.warning(
-            f"No Fyers access token found for user {user_id}; order-update adapter not started"
-        )
+        logger.warning(f"No Fyers access token found for user {user_id}; order-update adapter not started")
         return None
 
     return FyersOrderUpdateAdapter(user_id=user_id, app_id=app_id, access_token=access_token)

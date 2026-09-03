@@ -137,7 +137,8 @@ def test_partial_holdings_sell():
     holding = _holding()
     assert holding is not None, "the holding disappeared"
     assert holding.quantity == 200, (
-        f"the holding moved to {holding.quantity} on the sell; only T+1 settlement should reduce it"
+        f"the holding moved to {holding.quantity} on the sell; only T+1 settlement "
+        "should reduce it"
     )
 
     day = _short_position()
@@ -147,7 +148,9 @@ def test_partial_holdings_sell():
     # Proceeds arrive at settlement, not on the sell, so the balance is
     # unchanged here. Asserted rather than ignored: a credit appearing now
     # would mean the same shares could fund another trade before they settle.
-    assert _balance() == START_BALANCE, f"balance moved to {_balance()} before settlement"
+    assert _balance() == START_BALANCE, (
+        f"balance moved to {_balance()} before settlement"
+    )
 
 
 def test_full_holdings_sell():

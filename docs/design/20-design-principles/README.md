@@ -8,7 +8,7 @@ Examples in design pages explain boundaries; they are not substitute implementat
 
 ## Broker-Agnostic Contract
 
-The public API remains stable across the current 34 broker plugins. Each plugin maps Tradeboard symbols, products, actions, and price types into its broker's contract, then normalizes broker responses back into Tradeboard shapes.
+The public API remains stable across the current 36 broker plugins. Each plugin maps OpenAlgo symbols, products, actions, and price types into its broker's contract, then normalizes broker responses back into OpenAlgo shapes.
 
 Plugin presence does not imply that every optional operation, exchange, or WebSocket depth level is supported. `plugin.json` capability metadata and the broker implementation determine the available subset.
 
@@ -40,13 +40,13 @@ Risk-reducing workflows must not create exposure. Close-position and scalping ex
 
 ## Process-Aware State
 
-Tradeboard's production deployment uses Gunicorn with one eventlet worker per instance, while some components run in a child process or OS thread. Process-local caches, singletons, and the EventBus are not cross-process coordination mechanisms.
+OpenAlgo's production deployment uses Gunicorn with one eventlet worker per instance, while some components run in a child process or OS thread. Process-local caches, singletons, and the EventBus are not cross-process coordination mechanisms.
 
 Cross-process market data and selected cache invalidation use a fixed ZeroMQ fan-in topology: the proxy SUB socket binds, and publisher sockets connect. Persisted state is used when behavior must survive navigation, restart, or process boundaries.
 
 ## Persistence Discipline
 
-Tradeboard uses six primary configured stores: five SQLite workloads and Historify DuckDB. SQLAlchemy engines use `NullPool`, and known scoped sessions are removed during request teardown. New persistence modules must either join that teardown inventory or use a context-managed lifecycle that closes every connection.
+OpenAlgo uses six primary configured stores: five SQLite workloads and Historify DuckDB. SQLAlchemy engines use `NullPool`, and known scoped sessions are removed during request teardown. New persistence modules must either join that teardown inventory or use a context-managed lifecycle that closes every connection.
 
 Schema changes use idempotent initialization and targeted migrations rather than a general Alembic layer. Changes must work for both fresh and existing databases.
 
@@ -54,7 +54,7 @@ Schema changes use idempotent initialization and targeted migrations rather than
 
 - API keys are verified with Argon2 plus `API_KEY_PEPPER`; retrievable key material and broker tokens are encrypted with Fernet-derived helpers.
 - Session routes retain CSRF protection except for reviewed callbacks, webhooks, and health/logout exemptions.
-- Public `/api/v1` routes are CSRF-exempt because they authenticate with the Tradeboard API key.
+- Public `/api/v1` routes are CSRF-exempt because they authenticate with the OpenAlgo API key.
 - CORS, CSP, cookie security, proxy trust, IP bans, and rate limits are explicit configuration boundaries.
 - Secrets, tokens, and full sensitive arguments must not enter normal logs.
 - Remote MCP is opt-in, refuses debug mode, and enforces OAuth scopes for each tool.

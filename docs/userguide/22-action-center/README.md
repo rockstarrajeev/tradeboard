@@ -2,13 +2,13 @@
 
 ## Introduction
 
-The Action Center is Tradeboard's order approval system for managed trading environments. It allows you to review, approve, modify, or reject orders before they're sent to your broker.
+The Action Center is OpenAlgo's order approval system for managed trading environments. It allows you to review, approve, modify, or reject orders before they're sent to your broker.
 
 ## When to Use Action Center
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                    Trading Modes in Tradeboard                                │
+│                    Trading Modes in OpenAlgo                                │
 │                                                                              │
 │  AUTO MODE                              SEMI-AUTO MODE (Action Center)      │
 │  ─────────                              ─────────────────────────────       │
@@ -40,7 +40,7 @@ The Action Center is Tradeboard's order approval system for managed trading envi
 
 ### Step 1: Access Settings
 
-1. Go to **Settings** in Tradeboard
+1. Go to **Settings** in OpenAlgo
 2. Find **Order Mode** section
 
 ### Step 2: Select Semi-Auto Mode
@@ -69,20 +69,20 @@ Navigate to **Action Center** in the sidebar.
 │  Filters: [All ▾]  [All Strategies ▾]  [All Symbols ▾]                     │
 │                                                                              │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │  📥 Pending Orders (3)                                               │   │
+│  │ Pending Orders (3)                                               │   │
 │  ├─────────────────────────────────────────────────────────────────────┤   │
 │  │                                                                      │   │
 │  │  #1 | SBIN | BUY 100 @ MARKET                                       │   │
 │  │  Strategy: MA_Crossover | Time: 10:30:15                            │   │
-│  │  [✓ Approve] [✏ Modify] [✗ Reject]                                  │   │
+│  │  [ Approve] [ Modify] [ Reject]                                  │   │
 │  │                                                                      │   │
 │  │  #2 | HDFCBANK | SELL 50 @ LIMIT 1650                               │   │
 │  │  Strategy: RSI_Strategy | Time: 10:31:22                            │   │
-│  │  [✓ Approve] [✏ Modify] [✗ Reject]                                  │   │
+│  │  [ Approve] [ Modify] [ Reject]                                  │   │
 │  │                                                                      │   │
 │  │  #3 | NIFTY30JAN2521500CE | BUY 50 @ MARKET                         │   │
 │  │  Strategy: Options_Strategy | Time: 10:32:45                         │   │
-│  │  [✓ Approve] [✏ Modify] [✗ Reject]                                  │   │
+│  │  [ Approve] [ Modify] [ Reject]                                  │   │
 │  │                                                                      │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
 │                                                                              │
@@ -296,9 +296,9 @@ Client Strategy Signal
 ┌─────────────────┐
 │  Action Center  │  ← Advisor reviews
 │                 │
-│  ✓ Check risk   │
-│  ✓ Verify size  │
-│  ✓ Confirm fit  │
+│ Check risk   │
+│ Verify size  │
+│ Confirm fit  │
 │                 │
 └─────────────────┘
         │

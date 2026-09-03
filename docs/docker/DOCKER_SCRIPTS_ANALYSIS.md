@@ -6,9 +6,9 @@ All three Docker installation scripts need updates to support the numba/llvmlite
 
 | Script | Status | Issues Found | Priority |
 |--------|--------|--------------|----------|
-| docker-run.sh | ❌ NEEDS UPDATE | Missing shm_size, tmp volume | HIGH |
-| docker-run.bat | ❌ NEEDS UPDATE | Missing shm_size, tmp volume | HIGH |
-| install-docker.sh | ❌ NEEDS UPDATE | docker-compose.yaml missing config | HIGH |
+| docker-run.sh | NEEDS UPDATE | Missing shm_size, tmp volume | HIGH |
+| docker-run.bat | NEEDS UPDATE | Missing shm_size, tmp volume | HIGH |
+| install-docker.sh | NEEDS UPDATE | docker-compose.yaml missing config | HIGH |
 
 ---
 
@@ -31,9 +31,9 @@ docker run -d \
 ```
 
 **Missing:**
-- ❌ `--shm-size=2g` - Required for scipy memory operations
-- ❌ Volume for `/app/tmp` - Required for numba cache
-- ❌ Volume for `/app/keys` - Required for API keys/certificates
+- `--shm-size=2g` - Required for scipy memory operations
+- Volume for `/app/tmp` - Required for numba cache
+- Volume for `/app/keys` - Required for API keys/certificates
 
 **Should be:**
 ```bash
@@ -77,9 +77,9 @@ docker run -d ^
 ```
 
 **Missing:**
-- ❌ `--shm-size=2g` - Required for scipy memory operations
-- ❌ Volume for `/app/tmp` - Required for numba cache
-- ❌ Volume for `/app/keys` - Required for API keys/certificates
+- `--shm-size=2g` - Required for scipy memory operations
+- Volume for `/app/tmp` - Required for numba cache
+- Volume for `/app/keys` - Required for API keys/certificates
 
 **Should be:**
 ```batch
@@ -111,24 +111,24 @@ docker run -d ^
 **Current docker-compose.yaml generation (Lines 298-348):**
 ```yaml
 services:
-  tradeboard:
-    image: tradeboard:latest
+  openalgo:
+    image: openalgo:latest
     build:
       context: .
       dockerfile: Dockerfile
 
-    container_name: tradeboard-web
+    container_name: openalgo-web
 
     ports:
       - "127.0.0.1:5000:5000"
       - "127.0.0.1:8765:8765"
 
     volumes:
-      - tradeboard_db:/app/db
-      - tradeboard_logs:/app/logs
-      - tradeboard_log:/app/log
-      - tradeboard_strategies:/app/strategies
-      - tradeboard_keys:/app/keys
+      - openalgo_db:/app/db
+      - openalgo_logs:/app/logs
+      - openalgo_log:/app/log
+      - openalgo_strategies:/app/strategies
+      - openalgo_keys:/app/keys
       - ./.env:/app/.env:ro
 
     environment:
@@ -146,43 +146,43 @@ services:
     restart: unless-stopped
 
 volumes:
-  tradeboard_db:
+  openalgo_db:
     driver: local
-  tradeboard_logs:
+  openalgo_logs:
     driver: local
-  tradeboard_log:
+  openalgo_log:
     driver: local
-  tradeboard_strategies:
+  openalgo_strategies:
     driver: local
-  tradeboard_keys:
+  openalgo_keys:
     driver: local
 ```
 
 **Missing:**
-- ❌ `shm_size: '2gb'` - Required for scipy/numba memory operations
-- ❌ `tradeboard_tmp` volume and mount - Required for numba cache
+- `shm_size: '2gb'` - Required for scipy/numba memory operations
+- `openalgo_tmp` volume and mount - Required for numba cache
 
 **Should be:**
 ```yaml
 services:
-  tradeboard:
-    image: tradeboard:latest
+  openalgo:
+    image: openalgo:latest
     build:
       context: .
       dockerfile: Dockerfile
 
-    container_name: tradeboard-web
+    container_name: openalgo-web
 
     ports:
       - "127.0.0.1:5000:5000"
       - "127.0.0.1:8765:8765"
 
     volumes:
-      - tradeboard_db:/app/db
-      - tradeboard_log:/app/log
-      - tradeboard_strategies:/app/strategies
-      - tradeboard_keys:/app/keys
-      - tradeboard_tmp:/app/tmp
+      - openalgo_db:/app/db
+      - openalgo_log:/app/log
+      - openalgo_strategies:/app/strategies
+      - openalgo_keys:/app/keys
+      - openalgo_tmp:/app/tmp
       - ./.env:/app/.env:ro
 
     environment:
@@ -203,51 +203,51 @@ services:
     restart: unless-stopped
 
 volumes:
-  tradeboard_db:
+  openalgo_db:
     driver: local
-  tradeboard_log:
+  openalgo_log:
     driver: local
-  tradeboard_strategies:
+  openalgo_strategies:
     driver: local
-  tradeboard_keys:
+  openalgo_keys:
     driver: local
-  tradeboard_tmp:
+  openalgo_tmp:
     driver: local
 ```
 
 **Changes needed:**
 1. Add `shm_size: '2gb'` after environment section
-2. Add `tradeboard_tmp:/app/tmp` volume mount
-3. Add `tradeboard_tmp:` volume definition
-4. Remove duplicate `tradeboard_logs` volume (unused)
+2. Add `openalgo_tmp:/app/tmp` volume mount
+3. Add `openalgo_tmp:` volume definition
+4. Remove duplicate `openalgo_logs` volume (unused)
 
 ---
 
 ## Impact if Not Updated
 
 ### Without `--shm-size=2g`:
-- ❌ scipy operations may fail with memory errors
-- ❌ Option Greeks calculations will fail
-- ❌ Statistical analysis functions will be unreliable
+- scipy operations may fail with memory errors
+- Option Greeks calculations will fail
+- Statistical analysis functions will be unreliable
 
 ### Without `/app/tmp` volume:
-- ❌ numba JIT compilation will fail
-- ❌ Master contract CSV processing errors
-- ❌ Strategy indicators (Supertrend, EMA, TEMA) won't work
+- numba JIT compilation will fail
+- Master contract CSV processing errors
+- Strategy indicators (Supertrend, EMA, TEMA) won't work
 
 ### Without `/app/keys` volume:
-- ⚠️  API keys/certificates not persisted across container rebuilds
-- ⚠️  Need to reconfigure on every restart
+- API keys/certificates not persisted across container rebuilds
+- Need to reconfigure on every restart
 
 ---
 
 ## Backward Compatibility
 
 All changes are **backward compatible**:
-- ✅ Existing installations can pull new image without breaking
-- ✅ New volumes will be created automatically
-- ✅ Shared memory allocation is transparent to application
-- ✅ No database migrations required
+- Existing installations can pull new image without breaking
+- New volumes will be created automatically
+- Shared memory allocation is transparent to application
+- No database migrations required
 
 ---
 
@@ -258,14 +258,14 @@ After updating scripts:
 ### docker-run.sh
 - [ ] Create new installation: `./docker-run.sh start`
 - [ ] Verify directories created: `db/`, `strategies/`, `log/`, `keys/`, `tmp/`
-- [ ] Test numba: `docker exec tradeboard python -c "import numba; print('OK')"`
-- [ ] Check shared memory: `docker inspect tradeboard --format='{{.HostConfig.ShmSize}}'`
+- [ ] Test numba: `docker exec openalgo python -c "import numba; print('OK')"`
+- [ ] Check shared memory: `docker inspect openalgo --format='{{.HostConfig.ShmSize}}'`
 
 ### docker-run.bat
 - [ ] Create new installation: `docker-run.bat start`
 - [ ] Verify directories created: `db\`, `strategies\`, `log\`, `keys\`, `tmp\`
-- [ ] Test numba: `docker exec tradeboard python -c "import numba; print('OK')"`
-- [ ] Check shared memory: `docker inspect tradeboard --format='{{.HostConfig.ShmSize}}'`
+- [ ] Test numba: `docker exec openalgo python -c "import numba; print('OK')"`
+- [ ] Check shared memory: `docker inspect openalgo --format='{{.HostConfig.ShmSize}}'`
 
 ### install-docker.sh
 - [ ] Run full installation on clean Ubuntu/Debian server
@@ -288,11 +288,11 @@ After updating scripts:
 
 ## Recommended Actions
 
-1. ✅ Update all three scripts
-2. ✅ Test each script thoroughly
-3. ✅ Update Docker Hub image with fixes
-4. ✅ Document changes in CHANGELOG
-5. ✅ Notify users to update their installations
+1. Update all three scripts
+2. Test each script thoroughly
+3. Update Docker Hub image with fixes
+4. Document changes in CHANGELOG
+5. Notify users to update their installations
 
 ---
 

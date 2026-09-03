@@ -1,8 +1,8 @@
-# Tradeboard Cache Architecture Audit
+# OpenAlgo Cache Architecture Audit
 
 **Date:** 2026-02-22
 **Scope:** All in-memory caching, persistence, eviction, concurrency, fault tolerance, and security
-**Codebase:** Tradeboard (Flask + React 19 algorithmic trading platform)
+**Codebase:** OpenAlgo (Flask + React 19 algorithmic trading platform)
 
 ---
 
@@ -27,7 +27,7 @@
 
 ## 1. Executive Summary
 
-Tradeboard uses a **multi-layer, all-in-memory caching architecture** built primarily on `cachetools.TTLCache` with one custom singleton cache (`BrokerSymbolCache`) and several broker-specific streaming caches. There are **28+ distinct cache instances** spread across database modules, broker adapters, and utility services. No external cache service (Redis, Memcached) is used.
+OpenAlgo uses a **multi-layer, all-in-memory caching architecture** built primarily on `cachetools.TTLCache` with one custom singleton cache (`BrokerSymbolCache`) and several broker-specific streaming caches. There are **28+ distinct cache instances** spread across database modules, broker adapters, and utility services. No external cache service (Redis, Memcached) is used.
 
 ### Strengths
 - Well-structured TTL-based caching with appropriate expiry times
@@ -310,8 +310,8 @@ However, `cachetools.TTLCache` handles `KeyError` internally for expired items, 
 | TTLCache instances | **Yes** | `maxsize` parameter + TTL eviction |
 | BrokerSymbolCache | **Partially** | No maxsize; bounded by total symbols in DB (~100K) |
 | `_freeze_qty_cache` | **Partially** | No maxsize; bounded by F&O symbols (~5K) |
-| `last_message_time` (WS) | **No** ⚠️ | Grows with unique (symbol, exchange, mode) tuples; periodic cleanup exists but relies on symbol unsubscription |
-| Rate limiter (`memory://`) | **No** ⚠️ | Flask-Limiter's in-memory storage grows with unique IPs |
+| `last_message_time` (WS) | **No** | Grows with unique (symbol, exchange, mode) tuples; periodic cleanup exists but relies on symbol unsubscription |
+| Rate limiter (`memory://`) | **No** | Flask-Limiter's in-memory storage grows with unique IPs |
 
 ---
 
@@ -451,7 +451,7 @@ Logging uses the centralized `utils/logging.py` module with configurable log lev
 | Aspect | Behavior |
 |--------|----------|
 | Workers | Single process via `start.sh` |
-| Volumes | `tradeboard_db` persists SQLite databases across container restarts |
+| Volumes | `openalgo_db` persists SQLite databases across container restarts |
 | Cache persistence | In-memory caches lost; DB survives; caches restored from DB on startup |
 | WebSocket proxy | Started separately by `start.sh` (Docker/standalone mode) |
 | Rate limiter | In-memory; resets on container restart |

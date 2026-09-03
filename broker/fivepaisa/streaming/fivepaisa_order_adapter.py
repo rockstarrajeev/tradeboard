@@ -279,7 +279,9 @@ class FivepaisaOrderUpdateAdapter(BaseOrderUpdateAdapter):
             orderid = self._broker_order_ids.get(exch_order_id, exch_order_id)
 
         exchange = (
-            reverse_map_exchange(data.get("Exch"), data.get("ExchType")) or data.get("Exch") or ""
+            reverse_map_exchange(data.get("Exch"), data.get("ExchType"))
+            or data.get("Exch")
+            or ""
         )
         symbol = to_openalgo_symbol(
             str(_field(data, "Symbol", "ScripName", default="") or ""),

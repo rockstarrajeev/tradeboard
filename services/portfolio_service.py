@@ -68,7 +68,9 @@ def list_benchmarks() -> tuple[bool, dict[str, Any], int]:
         .order_by(SymToken.exchange, SymToken.symbol)
         .all()
     )
-    benchmarks = [{"symbol": r.symbol, "exchange": r.exchange, "name": r.name} for r in rows]
+    benchmarks = [
+        {"symbol": r.symbol, "exchange": r.exchange, "name": r.name} for r in rows
+    ]
     return True, {"status": "success", "data": benchmarks}, 200
 
 
@@ -112,7 +114,9 @@ def _build_costs(
     if cost_model == "flat_bps":
         return Costs(bps=cost_bps, slippage=slippage)
 
-    overrides = {key: dict(values) for key, values in (charge_overrides or {}).items()}
+    overrides = {
+        key: dict(values) for key, values in (charge_overrides or {}).items()
+    }
     if brokerage_pct and "brokerage" not in overrides:
         overrides["brokerage"] = {
             "flat": 0.0,
@@ -208,12 +212,8 @@ def generate_tearsheet(
     if benchmark:
         try:
             bench_prices = load_prices(
-                [benchmark.strip().upper()],
-                benchmark_exchange,
-                start_date,
-                end_date,
-                allowed_exchanges=BENCHMARK_EXCHANGES,
-                **fetch,
+                [benchmark.strip().upper()], benchmark_exchange, start_date, end_date,
+                allowed_exchanges=BENCHMARK_EXCHANGES, **fetch,
             )
             aligned = bench_prices.closes.iloc[:, 0].reindex(prices.closes.index).ffill()
             if aligned.notna().sum() > 1:
@@ -488,7 +488,9 @@ def _series_analytics(
     if benchmark is not None and len(benchmark) > 0:
         joined = pd.concat([returns, benchmark], axis=1, join="inner").dropna()
         if not joined.empty:
-            table = st.compare(joined.iloc[:, 0], joined.iloc[:, 1], "YE", prepare_returns=False)
+            table = st.compare(
+                joined.iloc[:, 0], joined.iloc[:, 1], "YE", prepare_returns=False
+            )
             for year, row in table.iterrows():
                 bench_pct = float(row["Benchmark"])
                 port_pct = float(row["Returns"])
@@ -504,7 +506,9 @@ def _series_analytics(
                         # Meaningless when the benchmark fell -- a negative
                         # denominator makes the ratio unreadable -- so it is
                         # omitted rather than shown as a confusing number.
-                        "multiplier": (_clean(float(row["Multiplier"])) if bench_pct > 0 else None),
+                        "multiplier": (
+                            _clean(float(row["Multiplier"])) if bench_pct > 0 else None
+                        ),
                     }
                 )
     else:
@@ -622,10 +626,8 @@ def run_portfolio_backtest(
     if benchmark:
         try:
             bench_prices = load_prices(
-                [benchmark.strip().upper()],
-                benchmark_exchange,
-                start_date,
-                end_date,
+                [benchmark.strip().upper()], benchmark_exchange,
+                start_date, end_date,
                 # Indices only: you cannot hold one, but it is the right thing
                 # to measure a portfolio against.
                 allowed_exchanges=BENCHMARK_EXCHANGES,
@@ -680,7 +682,9 @@ def run_portfolio_backtest(
         "diversification": _clean(
             {
                 **concentration(target_weights),
-                "diversification_ratio": diversification_ratio(target_weights, holding_returns),
+                "diversification_ratio": diversification_ratio(
+                    target_weights, holding_returns
+                ),
             }
         ),
         # The grade with its working attached, so it can be argued with rather
@@ -691,22 +695,17 @@ def run_portfolio_backtest(
         # user did not pick, and how much of it was sequence luck.
         "walk_forward": _clean(
             walk_forward(
-                prices,
-                weights,
-                policy=policy_used,
-                costs=charged,
+                prices, weights, policy=policy_used, costs=charged,
                 initial_capital=initial_capital,
-                window_years=walk_window_years,
-                step_years=walk_step_years,
+                window_years=walk_window_years, step_years=walk_step_years,
             )
         ),
         "monte_carlo": _clean(monte_carlo(returns, simulations=mc_simulations)),
         # The same allocation under every rebalancing rule. One decision, and
         # the cost of getting it wrong is paid quietly in turnover.
         "rebalancing_sweep": _clean(
-            rebalancing_sweep(
-                prices, weights, costs=charged, initial_capital=initial_capital, rf=risk_free_rate
-            )
+            rebalancing_sweep(prices, weights, costs=charged,
+                              initial_capital=initial_capital, rf=risk_free_rate)
         ),
         # Where the net out- or under-performance came from. The gross path
         # uses lagged realized weights; the difference to the engine's net
@@ -754,7 +753,9 @@ def run_portfolio_backtest(
                     ("gst" if key == "tax" else key): value
                     for key, value in result.cost_breakdown.items()
                 },
-                "schedule": (charged.name if isinstance(charged, CostSchedule) else "flat bps"),
+                "schedule": (
+                    charged.name if isinstance(charged, CostSchedule) else "flat bps"
+                ),
                 "drag": result.cost_drag,
                 "turnover": float(result.turnover.sum()),
             }
@@ -795,13 +796,11 @@ def analyse_live_holdings(
     """
     from services.holdings_service import get_holdings
 
-    ok, payload, status = get_holdings(api_key=api_key, auth_token=auth_token, broker=broker)
+    ok, payload, status = get_holdings(
+        api_key=api_key, auth_token=auth_token, broker=broker
+    )
     if not ok:
-        message = (
-            payload.get("message", "could not fetch holdings")
-            if isinstance(payload, dict)
-            else "could not fetch holdings"
-        )
+        message = payload.get("message", "could not fetch holdings") if isinstance(payload, dict) else "could not fetch holdings"
         return False, {"status": "error", "message": message}, status
 
     rows = []

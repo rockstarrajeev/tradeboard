@@ -1,10 +1,10 @@
 # Docker Documentation
 
-Complete Docker deployment and troubleshooting documentation for Tradeboard.
+Complete Docker deployment and troubleshooting documentation for OpenAlgo.
 
 ---
 
-## 📚 Table of Contents
+## Table of Contents
 
 ### Getting Started
 
@@ -52,31 +52,31 @@ Complete Docker deployment and troubleshooting documentation for Tradeboard.
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Desktop Installation (macOS/Linux)
 ```bash
-curl -O https://raw.githubusercontent.com/rockstarrajeev/tradeboard/main/install/docker-run.sh
+curl -O https://raw.githubusercontent.com/marketcalls/openalgo/main/install/docker-run.sh
 chmod +x docker-run.sh
 ./docker-run.sh
 ```
 
 ### Desktop Installation (Windows)
 ```powershell
-curl.exe -O https://raw.githubusercontent.com/rockstarrajeev/tradeboard/main/install/docker-run.bat
+curl.exe -O https://raw.githubusercontent.com/marketcalls/openalgo/main/install/docker-run.bat
 docker-run.bat
 ```
 
 ### Server Installation (Ubuntu/Debian)
 ```bash
-curl -O https://raw.githubusercontent.com/rockstarrajeev/tradeboard/main/install/install-docker.sh
+curl -O https://raw.githubusercontent.com/marketcalls/openalgo/main/install/install-docker.sh
 chmod +x install-docker.sh
 sudo ./install-docker.sh
 ```
 
 ---
 
-## 🔧 Common Issues
+## Common Issues
 
 ### numba/scipy Errors
 If you see errors like:
@@ -94,7 +94,7 @@ For environment variable issues, see [docker_env_changes.md](docker_env_changes.
 
 ---
 
-## 📖 Document Index
+## Document Index
 
 | Document | Size | Purpose | Audience |
 |----------|------|---------|----------|
@@ -110,28 +110,28 @@ For environment variable issues, see [docker_env_changes.md](docker_env_changes.
 
 ---
 
-## 🐳 Docker Configuration
+## Docker Configuration
 
 ### Current Setup
 
-Tradeboard uses a **multi-stage build** with the following configuration:
+OpenAlgo uses a **multi-stage build** with the following configuration:
 
 ```yaml
 services:
-  tradeboard:
-    image: tradeboard:latest
-    container_name: tradeboard-web
+  openalgo:
+    image: openalgo:latest
+    container_name: openalgo-web
 
     ports:
       - "5000:5000"   # Web UI
       - "8765:8765"   # WebSocket
 
     volumes:
-      - tradeboard_db:/app/db
-      - tradeboard_log:/app/log
-      - tradeboard_strategies:/app/strategies
-      - tradeboard_keys:/app/keys
-      - tradeboard_tmp:/app/tmp
+      - openalgo_db:/app/db
+      - openalgo_log:/app/log
+      - openalgo_strategies:/app/strategies
+      - openalgo_keys:/app/keys
+      - openalgo_tmp:/app/tmp
       - ./.env:/app/.env:ro
 
     shm_size: '2gb'  # For scipy/numba operations
@@ -152,15 +152,15 @@ The Docker image includes:
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ### Verify Installation
 ```bash
 # Check container status
-docker ps --filter "name=tradeboard"
+docker ps --filter "name=openalgo"
 
 # Test numba/scipy
-docker exec tradeboard python -c "import numba, scipy; print('✓ OK')"
+docker exec openalgo python -c "import numba, scipy; print('OK')"
 
 # View logs
 docker-compose logs -f
@@ -168,32 +168,32 @@ docker-compose logs -f
 
 ### Verify Shared Memory
 ```bash
-docker inspect tradeboard --format='{{.HostConfig.ShmSize}}'
+docker inspect openalgo --format='{{.HostConfig.ShmSize}}'
 # Should show: 2147483648 (2GB)
 ```
 
 ### Verify Volumes
 ```bash
-docker inspect tradeboard --format='{{range .Mounts}}{{.Destination}} {{end}}'
+docker inspect openalgo --format='{{range .Mounts}}{{.Destination}} {{end}}'
 # Should include: /app/tmp /app/keys
 ```
 
 ---
 
-## 📝 Recent Updates
+## Recent Updates
 
 ### 2026-01-28 - numba/scipy Support
-- ✅ Added runtime dependencies (libopenblas0, libgomp1, libgfortran5)
-- ✅ Configured TMPDIR and NUMBA_CACHE_DIR environment variables
-- ✅ Added 2GB shared memory allocation
-- ✅ Fixed /app/tmp permissions using named volume
-- ✅ Updated all installation scripts
+- Added runtime dependencies (libopenblas0, libgomp1, libgfortran5)
+- Configured TMPDIR and NUMBA_CACHE_DIR environment variables
+- Added 2GB shared memory allocation
+- Fixed /app/tmp permissions using named volume
+- Updated all installation scripts
 
 **Result:** All numba/scipy/llvmlite errors resolved!
 
 ---
 
-## 🆘 Support
+## Support
 
 If you encounter issues:
 
@@ -209,24 +209,24 @@ If you encounter issues:
 
 3. **Verify Configuration**
    ```bash
-   docker inspect tradeboard
+   docker inspect openalgo
    ```
 
 4. **Community Support**
    - Discord: https://discord.com/invite/UPh7QPsNhP
-   - GitHub Issues: https://github.com/rockstarrajeev/tradeboard/issues
+   - GitHub Issues: https://github.com/marketcalls/openalgo/issues
 
 ---
 
-## 🔗 Related Documentation
+## Related Documentation
 
 - [Installation Scripts](/install/) - Desktop and server installation scripts
-- [Main Documentation](https://docs.rajeevupadhyay.com) - Official documentation site
+- [Main Documentation](https://docs.openalgo.in) - Official documentation site
 - [CLAUDE.md](/CLAUDE.md) - Development guide
 
 ---
 
 **Last Updated:** 2026-01-28
-**Docker Image:** rockstarrajeev/tradeboard:latest
+**Docker Image:** marketcalls/openalgo:latest
 **Python Version:** 3.12+
-**Tradeboard Version:** 2.0.0.0
+**OpenAlgo Version:** 2.0.0.0

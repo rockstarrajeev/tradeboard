@@ -7,7 +7,7 @@
 
 ## The meta-challenge
 
-Tradeboard grew up **Indian-equity-first** and does that job extremely well for
+OpenAlgo grew up **Indian-equity-first** and does that job extremely well for
 ~200,000 users. But global expansion — crypto (Delta live; Binance/CoinDCX/
 Hyperliquid next), US brokers (IBKR/Alpaca), and eventually any venue in any
 country — is blocked by the same strength turned rigid: **Indian-market
@@ -24,7 +24,7 @@ the roadmap it happens.
 | # | Challenge (today) | Why it hurts | How we overcome it | Phase |
 |---|-------------------|--------------|--------------------|-------|
 | 1 | **No *unified full-lifecycle* contract** — REST/auth/data duck-typed via `importlib` (a WS base class exists) | "Plug in your exchange" means reverse-engineering Zerodha; core hard-codes broker dispatch in several spots | An **in-repo `BrokerAdapter` contract** (required + optional protocols, typed errors, idempotency) + **conformance suite** + a **unified registry** replacing the hard-coded dispatch — in-tree, PR-contributed ([ADR-0003](../decisions/2026-07-13-in-tree-broker-model.md)) | P1 |
-| 2 | **Symbol format is Indian-derivative-shaped** (`NIFTY28MAR2420800CE`) | Crypto perps (Tradeboard `BTCUSDFUT`), spot (`BTCINR`), US OCC options, forex need renderers beyond the expiry+CE/PE mold | A structured **Instrument** underneath the flat symbol; the string becomes a deterministic **rendering** — Indian renders byte-identical, US **and crypto dated/options reuse** the same renderers, only perpetual/spot add new ones | P2 |
+| 2 | **Symbol format is Indian-derivative-shaped** (`NIFTY28MAR2420800CE`) | Crypto perps (OpenAlgo `BTCUSDFUT`), spot (`BTCINR`), US OCC options, forex need renderers beyond the expiry+CE/PE mold | A structured **Instrument** underneath the flat symbol; the string becomes a deterministic **rendering** — Indian renders byte-identical, US **and crypto dated/options reuse** the same renderers, only perpetual/spot add new ones | P2 |
 | 3 | **Order constants are Indian vocabulary** (`CNC/NRML/MIS`, `SL/SL-M`) | Can't express crypto `reduce_only`/`post_only`/leverage or US `bracket`/Reg-T | The **Capability Manifest** declares each broker's vocabulary; **append-only** extension; **manifest-driven validation** replaces static enums | P3 |
 | 4 | **Exchange codes are a hardcoded Indian enum** with no abstraction above them | No place to hang "which venue / market / asset class / session / currency" | A **five-axis** model (Venue · Market/Region · Segment · UnderlyingAssetClass · InstrumentKind); the public `exchange` field stays identical and resolves internally to `(Venue, Market, Segment)` | P2 |
 | 5 | **Cross-cutting Indian defaults scattered** — `₹/IST/tick` across dozens of files | Every new market means hunting and editing dozens of files; easy to miss one | Five **Resolvers, each keyed on its own dimension** (Currency · Calendar/TZ = venue+segment · Tick/Lot = instrument · Rate-limit = broker+endpoint · Margin = account+instrument+mode); *data over branches*, no `if broker == …` in core | P4 |

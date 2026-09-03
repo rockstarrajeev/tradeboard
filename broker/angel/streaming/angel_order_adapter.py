@@ -132,9 +132,7 @@ def create_angel_order_adapter(user_id: str) -> "AngelOrderUpdateAdapter | None"
     """Factory: build an AngelOrderUpdateAdapter for user_id."""
     auth_token = get_auth_token(user_id, bypass_cache=True)
     if not auth_token:
-        logger.warning(
-            f"No Angel auth token found for user {user_id}; order-update adapter not started"
-        )
+        logger.warning(f"No Angel auth token found for user {user_id}; order-update adapter not started")
         return None
 
     return AngelOrderUpdateAdapter(user_id=user_id, auth_token=auth_token)

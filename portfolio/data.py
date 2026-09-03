@@ -63,7 +63,6 @@ def clear_price_cache() -> None:
     with _cache_lock:
         _cache.clear()
 
-
 # Benchmarks are indices, which live on their own exchanges and cannot be
 # held. They are allowed as the comparison series only -- never as a holding,
 # since you cannot buy an index, only a fund tracking it. GLOBAL_INDEX is
@@ -153,7 +152,8 @@ def split_artifacts(
         hits = moves[symbol][moves[symbol].abs() > threshold]
         if not hits.empty:
             out[symbol] = [
-                (stamp.date().isoformat(), float(value)) for stamp, value in hits.items()
+                (stamp.date().isoformat(), float(value))
+                for stamp, value in hits.items()
             ]
     return out
 
@@ -227,7 +227,8 @@ def _normalise_exchange(exchange: str, allowed: tuple[str, ...] = SUPPORTED_EXCH
     ex = (exchange or "").strip().upper()
     if ex not in allowed:
         raise UnsupportedExchange(
-            f"{ex or '(blank)'} is not supported here; expected {' or '.join(allowed)}"
+            f"{ex or '(blank)'} is not supported here; expected "
+            f"{' or '.join(allowed)}"
         )
     return ex
 
@@ -253,7 +254,8 @@ def _frame_from_payload(payload: object, symbol: str) -> pd.DataFrame:
     )
     if time_col is None or "close" not in frame.columns:
         raise MissingHistory(
-            f"{symbol}: history rows lack a timestamp or close column (got {sorted(frame.columns)})"
+            f"{symbol}: history rows lack a timestamp or close column "
+            f"(got {sorted(frame.columns)})"
         )
 
     stamps = frame[time_col]
@@ -320,12 +322,7 @@ def load_prices(
     checked = [_normalise_exchange(ex, allowed_exchanges) for ex in exchanges]
 
     key = (
-        tuple(symbols),
-        tuple(checked),
-        start_date,
-        end_date,
-        source,
-        interval,
+        tuple(symbols), tuple(checked), start_date, end_date, source, interval,
         min_sessions,
     )
     if source == "db":
@@ -340,10 +337,10 @@ def load_prices(
         # not go through the history service.
         series = _closes_from_duckdb(symbols, checked, start_date, end_date, interval)
         for symbol in symbols:
-            logger.debug("portfolio.data: %s bars for %s from duckdb", len(series[symbol]), symbol)
-        return _remember(
-            key, _assemble(series, symbols, start_date, end_date, source, min_sessions)
-        )
+            logger.debug(
+                "portfolio.data: %s bars for %s from duckdb", len(series[symbol]), symbol
+            )
+        return _remember(key, _assemble(series, symbols, start_date, end_date, source, min_sessions))
 
     series = {}
     for symbol, ex in zip(symbols, checked, strict=True):
@@ -372,10 +369,7 @@ def load_prices(
         series[symbol] = frame["close"]
         logger.info(
             "portfolio.data: loaded %s bars for %s (%s) from %s",
-            len(frame),
-            symbol,
-            ex,
-            source,
+            len(frame), symbol, ex, source,
         )
 
     return _assemble(series, symbols, start_date, end_date, source, min_sessions)
@@ -423,8 +417,7 @@ def _assemble(
         logger.warning(
             "portfolio.data: %d symbol(s) show moves consistent with an "
             "unadjusted corporate action: %s",
-            len(artifacts),
-            ", ".join(artifacts),
+            len(artifacts), ", ".join(artifacts),
         )
 
     return PriceMatrix(

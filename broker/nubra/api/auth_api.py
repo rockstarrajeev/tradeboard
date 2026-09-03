@@ -131,10 +131,8 @@ def _get_credentials():
     mpin = os.getenv("BROKER_API_SECRET")  # MPIN
 
     if not phone or not mpin:
-        return (
-            None,
-            None,
-            ("Missing BROKER_API_KEY (phone) or BROKER_API_SECRET (mpin) in environment"),
+        return None, None, (
+            "Missing BROKER_API_KEY (phone) or BROKER_API_SECRET (mpin) in environment"
         )
     return phone, mpin, None
 
@@ -219,13 +217,9 @@ def authenticate_broker(otp_code, temp_token=None):
         return None, None, error
 
     if not temp_token:
-        return (
-            None,
-            None,
-            (
-                "Login session expired before the OTP was submitted. "
-                "Start the Nubra login again from the broker page to request a new OTP."
-            ),
+        return None, None, (
+            "Login session expired before the OTP was submitted. "
+            "Start the Nubra login again from the broker page to request a new OTP."
         )
 
     otp_str = str(otp_code or "").strip()
@@ -484,9 +478,7 @@ def generate_totp_secret(session_token, device_id=None):
 
     data = payload.get("data")
     if not isinstance(data, dict) or not data.get("secret_key"):
-        return None, _error_message(
-            payload, f"generate-secret failed (HTTP {response.status_code})"
-        )
+        return None, _error_message(payload, f"generate-secret failed (HTTP {response.status_code})")
 
     return data, None
 
@@ -630,9 +622,7 @@ def validate_static_ip(session_token, device_id=None):
         return None, payload["error"]
 
     if "is_matched" not in payload:
-        return None, _error_message(
-            payload, f"ipaddress/validate failed (HTTP {response.status_code})"
-        )
+        return None, _error_message(payload, f"ipaddress/validate failed (HTTP {response.status_code})")
 
     if not payload.get("is_matched"):
         logger.warning(

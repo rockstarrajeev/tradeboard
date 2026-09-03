@@ -2,7 +2,7 @@
 type: API Endpoint
 title: Margin
 description: Calculate the margin requirement for an order
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/account-services/margin.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/account-services/margin.md
 tags:
 - margin
 - account

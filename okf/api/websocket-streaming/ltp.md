@@ -2,7 +2,7 @@
 type: API Endpoint
 title: LTP (WebSocket)
 description: Subscribe to last traded price (LTP) over WebSocket
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/websocket-streaming/ltp.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/websocket-streaming/ltp.md
 tags:
 - websocket
 - streaming

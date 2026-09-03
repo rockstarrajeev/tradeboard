@@ -2,7 +2,7 @@
 
 ## Surfaces
 
-Tradeboard has two search contracts with different authentication and response shapes.
+OpenAlgo has two search contracts with different authentication and response shapes.
 
 | Surface | Method and path | Auth | Purpose |
 |---|---|---|---|
@@ -19,7 +19,7 @@ The React `/search` page is registered before the legacy template blueprint. `/s
 
 ```json
 {
-  "apikey": "<tradeboard-api-key>",
+  "apikey": "<openalgo-api-key>",
   "query": "NIFTY 26000 DEC CE",
   "exchange": "NFO"
 }
@@ -27,7 +27,7 @@ The React `/search` page is registered before the legacy template blueprint. `/s
 
 `query` and `apikey` are required; `exchange` is optional in the schema. `services/search_service.py` verifies the key, uses the enhanced in-memory token cache when loaded and valid, and falls back to `database.symbol.enhanced_search_symbols()`.
 
-The normalized result includes Tradeboard and broker symbol/exchange values, name, token, expiry, strike, lot size, instrument type, tick size, and option freeze quantity where available.
+The normalized result includes OpenAlgo and broker symbol/exchange values, name, token, expiry, strike, lot size, instrument type, tick size, and option freeze quantity where available.
 
 ## Session Search
 

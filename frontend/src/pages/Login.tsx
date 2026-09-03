@@ -388,7 +388,7 @@ export default function Login() {
             <div className="flex justify-center lg:justify-start gap-4">
               <Button variant="outline" asChild>
                 <a
-                  href="https://github.com/marketcalls/openalgo"
+                  href="https://github.com/rockstarrajeev/tradeboard"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"
@@ -399,7 +399,7 @@ export default function Login() {
               </Button>
               <Button variant="outline" asChild>
                 <a
-                  href="https://openalgo.in/discord"
+                  href="https://rajeevupadhyay.com/discord"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"

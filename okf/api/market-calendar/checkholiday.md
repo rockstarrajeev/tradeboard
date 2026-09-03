@@ -2,7 +2,7 @@
 type: API Endpoint
 title: CheckHoliday
 description: Check whether a given date is a market holiday
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/market-calendar/checkholiday.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/market-calendar/checkholiday.md
 tags:
 - calendar
 - holiday

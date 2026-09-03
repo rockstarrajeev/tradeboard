@@ -13,7 +13,7 @@ Features:
 import os
 import sys
 import time
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from datetime import time as dt_time
 from decimal import Decimal
 
@@ -26,6 +26,7 @@ from database.sandbox_db import SandboxPositions, SandboxTrades, db_session, get
 from database.token_db import get_symbol_info
 from sandbox.fund_manager import FundManager
 from sandbox.holdings_manager import HoldingsManager
+from sandbox.session_boundary import IST, last_session_expiry_utc
 from services.market_data_service import get_market_data_service
 from services.quotes_service import get_multiquotes, get_quotes
 from utils.logging import get_logger
@@ -456,30 +457,18 @@ class PositionManager:
         """
         try:
             import os
-            from datetime import datetime, time, timedelta
+            from datetime import datetime
 
             # Get session expiry time from config (e.g., '03:00')
             session_expiry_str = os.getenv("SESSION_EXPIRY_TIME", "03:00")
-            expiry_hour, expiry_minute = map(int, session_expiry_str.split(":"))
 
-            # Get current time
-            now = datetime.now()
-            today = now.date()
-
-            # Calculate if we're in a new session
-            session_expiry_time = time(expiry_hour, expiry_minute)
-
-            # Determine last session expiry
-            if now.time() < session_expiry_time:
-                # We're before today's session expiry (e.g., before 3 AM)
-                # Last session expired yesterday at 3 AM
-                last_session_expiry = datetime.combine(
-                    today - timedelta(days=1), session_expiry_time
-                )
-            else:
-                # We're after today's session expiry (e.g., after 3 AM)
-                # Last session expired today at 3 AM
-                last_session_expiry = datetime.combine(today, session_expiry_time)
+            # updated_at is stored in the database's clock (UTC on SQLite),
+            # so the boundary must be resolved in UTC too — see
+            # last_session_expiry_utc().
+            last_session_expiry = last_session_expiry_utc(
+                session_expiry_str, datetime.now(IST)
+            )
+            today = datetime.now(UTC).date()
 
             # Get all positions (including zero quantity ones from current session)
             positions_query = SandboxPositions.query.filter(
@@ -595,15 +584,9 @@ class PositionManager:
                 pos_cv = _cv_map.get(position.symbol, 1.0)
                 pos_cv_dec = Decimal(str(pos_cv))
                 if position.quantity != 0:
-                    investment = abs(
-                        Decimal(str(position.average_price))
-                        * Decimal(str(position.quantity))
-                        * pos_cv_dec
-                    )
+                    investment = abs(Decimal(str(position.average_price)) * Decimal(str(position.quantity)) * pos_cv_dec)
                     if investment > 0:
-                        calculated_pnl_percent = (position_total_pnl_today / investment) * Decimal(
-                            "100"
-                        )
+                        calculated_pnl_percent = (position_total_pnl_today / investment) * Decimal("100")
                     else:
                         calculated_pnl_percent = Decimal("0.00")
                     display_avg_price = float(position.average_price)
@@ -623,9 +606,7 @@ class PositionManager:
                         "pnl": float(
                             position_total_pnl_today
                         ),  # Today's total P&L (realized + unrealized)
-                        "pnlpercent": float(
-                            calculated_pnl_percent
-                        ),  # Fixed: use pnlpercent (no underscore) to match frontend
+                        "pnlpercent": float(calculated_pnl_percent),  # Fixed: use pnlpercent (no underscore) to match frontend
                         "unrealized_pnl": float(unrealized_pnl),  # Unrealized only (for reference)
                         "today_realized_pnl": float(today_realized),
                         "total_pnl_today": float(position_total_pnl_today),
@@ -736,9 +717,7 @@ class PositionManager:
                     s for s in missing_symbols if s not in quote_cache or quote_cache[s] is None
                 ]
                 if still_missing:
-                    logger.debug(
-                        f"{len(still_missing)} symbols not available via multiquotes, waiting for WebSocket data"
-                    )
+                    logger.debug(f"{len(still_missing)} symbols not available via multiquotes, waiting for WebSocket data")
             else:
                 logger.debug(f"Positions MTM: All {ws_count} symbols from WebSocket (no API calls)")
 
@@ -1167,10 +1146,11 @@ class PositionManager:
                 if position.product == "MIS":
                     # Auto square-off MIS positions at market close
                     # Create a reverse order to square off
+                    action = "SELL" if position.quantity > 0 else "BUY"
                     quantity = abs(position.quantity)
 
                     # Use last traded price or average price for square-off
-                    float(position.average_price) if position.average_price else 0
+                    price = float(position.average_price) if position.average_price else 0
 
                     # Update position to closed
                     position.quantity = 0
@@ -1263,7 +1243,7 @@ def update_all_positions_mtm():
             logger.debug("No positions to update")
             return
 
-        users = {p.user_id for p in positions}
+        users = set(p.user_id for p in positions)
         logger.info(f"Updating MTM for {len(positions)} positions across {len(users)} users")
 
         for user_id in users:
@@ -1291,7 +1271,7 @@ def process_all_users_settlement():
             logger.info("No positions to settle")
             return
 
-        users = {p.user_id for p in positions}
+        users = set(p.user_id for p in positions)
         logger.debug(f"Processing T+1 settlement for {len(users)} users at midnight")
 
         for user_id in users:
@@ -1447,9 +1427,7 @@ def cleanup_expired_contracts():
 
                     except Exception as e:
                         db_session.rollback()
-                        logger.exception(
-                            f"Error cleaning up expired position {position.symbol}: {e}"
-                        )
+                        logger.exception(f"Error cleaning up expired position {position.symbol}: {e}")
                         continue
 
             except Exception as e:
@@ -1496,7 +1474,7 @@ def catchup_missed_settlements():
 
         logger.info(f"Found {len(cnc_positions)} CNC positions that need catch-up settlement")
 
-        users = {p.user_id for p in cnc_positions}
+        users = set(p.user_id for p in cnc_positions)
 
         for user_id in users:
             try:

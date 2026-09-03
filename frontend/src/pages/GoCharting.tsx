@@ -160,30 +160,27 @@ export default function GoCharting() {
     setShowResults(false)
   }
 
-  const generateJson = useCallback(
-    (showError = true) => {
-      if (!symbol || !exchange) {
-        if (showError) {
-          showToast.error('Please select a symbol and exchange', 'system')
-        }
-        return
+  const generateJson = useCallback((showError = true) => {
+    if (!symbol || !exchange) {
+      if (showError) {
+        showToast.error('Please select a symbol and exchange', 'system')
       }
+      return
+    }
 
-      const json = {
-        apikey: apiKey || 'YOUR_API_KEY',
-        strategy: 'GoCharting Alert',
-        symbol: symbol,
-        exchange: exchange,
-        action: action,
-        product: product,
-        pricetype: 'MARKET',
-        quantity: quantity,
-      }
+    const json = {
+      apikey: apiKey || 'YOUR_API_KEY',
+      strategy: 'GoCharting Alert',
+      symbol: symbol,
+      exchange: exchange,
+      action: action,
+      product: product,
+      pricetype: 'MARKET',
+      quantity: quantity,
+    }
 
-      setGeneratedJson(JSON.stringify(json, null, 2))
-    },
-    [symbol, exchange, apiKey, action, product, quantity]
-  )
+    setGeneratedJson(JSON.stringify(json, null, 2))
+  }, [symbol, exchange, apiKey, action, product, quantity])
 
   // Auto-generate JSON when values change
   useEffect(() => {
@@ -434,7 +431,7 @@ export default function GoCharting() {
                 </Button>
                 <Button asChild variant="default" size="sm">
                   <a
-                    href="https://docs.openalgo.in/trading-platform/gocharting"
+                    href="https://docs.rajeevupadhyay.com/trading-platform/gocharting"
                     target="_blank"
                     rel="noopener noreferrer"
                   >

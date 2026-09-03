@@ -101,7 +101,9 @@ def transform_modify_order_data(data):
     order_type = map_order_type(data["pricetype"])
     modified = {
         "exchange": data.get("exchange"),
-        "symbol": get_br_symbol(data["symbol"], data["exchange"]) if data.get("symbol") else None,
+        "symbol": get_br_symbol(data["symbol"], data["exchange"])
+        if data.get("symbol")
+        else None,
         "quantity": str(data["quantity"]),
         "order": order_type,
         "product": map_product_type(data["product"]),

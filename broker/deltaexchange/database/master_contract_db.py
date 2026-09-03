@@ -8,6 +8,7 @@ from sqlalchemy import Column, Float, Index, Integer, Sequence, String, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker
 
+from broker.deltaexchange.api.rate_limiter import PUBLIC, consume
 from database.engine_factory import create_db_engine
 from extensions import socketio  # Import SocketIO
 from utils.httpx_client import get_httpx_client
@@ -50,9 +51,7 @@ class SymToken(Base):
     lotsize = Column(Integer)
     instrumenttype = Column(String)
     tick_size = Column(Float)
-    contract_value = Column(
-        Float, default=1.0
-    )  # Underlying units per contract (e.g. 0.01 ETH for ETHUSD.P)
+    contract_value = Column(Float, default=1.0)  # Underlying units per contract (e.g. 0.01 ETH for ETHUSD.P)
 
     # Define a composite index on symbol and exchange columns
     __table_args__ = (Index("idx_symbol_exchange", "symbol", "exchange"),)
@@ -66,22 +65,20 @@ def init_db():
     # because the error message for "column already exists" varies across SQLite versions.
     try:
         from sqlalchemy import inspect as sa_inspect
-
         insp = sa_inspect(engine)
         existing_cols = {c["name"] for c in insp.get_columns("symtoken")}
         if "contract_value" not in existing_cols:
             with engine.connect() as conn:
-                conn.execute(
-                    text("ALTER TABLE symtoken ADD COLUMN contract_value REAL DEFAULT 1.0")
-                )
+                conn.execute(text("ALTER TABLE symtoken ADD COLUMN contract_value REAL DEFAULT 1.0"))
                 conn.commit()
                 logger.info("Migrated symtoken table: added contract_value column")
     except Exception as e:
         logger.error(
             f"contract_value migration FAILED — master contract insert will fail until "
             f"the column is added. Run: sqlite3 db/openalgo.db "
-            f'"ALTER TABLE symtoken ADD COLUMN contract_value REAL DEFAULT 1.0" | Error: {e}'
+            f"\"ALTER TABLE symtoken ADD COLUMN contract_value REAL DEFAULT 1.0\" | Error: {e}"
         )
+
 
 
 def delete_symtoken_table():
@@ -100,7 +97,6 @@ def copy_from_dataframe(df):
     # was not added yet, strip it from insert dicts rather than failing every chunk.
     try:
         from sqlalchemy import inspect as sa_inspect
-
         _db_cols = {c["name"] for c in sa_inspect(engine).get_columns("symtoken")}
     except Exception:
         _db_cols = None  # Can't introspect — proceed unfiltered (will fail loudly if needed)
@@ -109,9 +105,7 @@ def copy_from_dataframe(df):
         # Remove any DataFrame columns that don't have a matching DB column
         extra_cols = {k for k in (data_dict[0] if data_dict else {}) if k not in _db_cols}
         if extra_cols:
-            logger.warning(
-                f"Stripping unknown columns from insert (migration pending?): {extra_cols}"
-            )
+            logger.warning(f"Stripping unknown columns from insert (migration pending?): {extra_cols}")
             data_dict = [{k: v for k, v in row.items() if k not in extra_cols} for row in data_dict]
 
     # Retrieve existing tokens to filter them out from the insert
@@ -201,7 +195,7 @@ def _to_canonical_symbol(delta_symbol: str, instrument_type: str, expiry: str) -
         parts = delta_symbol.split("-")
         if len(parts) == 4 and expiry:
             # parts: [C/P, underlying, strike, DDMMYY_from_delta]
-            underlying = parts[1].upper()
+            underlying  = parts[1].upper()
             strike_part = parts[2]
             suffix = "CE" if instrument_type in ("CE", "TCE", "SYNCE") else "PE"
             # expiry is "DD-MON-YY" (e.g. "28-FEB-25") — strip dashes → "28FEB25"
@@ -221,19 +215,19 @@ def _to_canonical_symbol(delta_symbol: str, instrument_type: str, expiry: str) -
         # because the symbol ends with the year digits, not the currency code.
         # Fix: reconstruct the date suffix from the already-parsed expiry and strip
         # it first, leaving only the underlying+quote base (e.g. "BTCUSD").
-        day, mon, yr2 = expiry.split("-")  # ["28", "FEB", "25"]
-        yr4 = "20" + yr2  # "2025" (Delta API uses 4-digit year)
-        date_suffix_in_symbol = day + mon + yr4  # "28FEB2025"
+        day, mon, yr2 = expiry.split("-")        # ["28", "FEB", "25"]
+        yr4 = "20" + yr2                          # "2025" (Delta API uses 4-digit year)
+        date_suffix_in_symbol = day + mon + yr4   # "28FEB2025"
 
         if upper.endswith(date_suffix_in_symbol):
-            base = upper[: -len(date_suffix_in_symbol)]  # "BTCUSD"
+            base = upper[: -len(date_suffix_in_symbol)]   # "BTCUSD"
         else:
-            base = upper  # unexpected format — use full symbol as base
+            base = upper   # unexpected format — use full symbol as base
 
         # Strip common quote-currency suffixes to get the underlying (e.g. BTCUSD → BTC)
         for suffix in ("USDT", "USD", "BTC", "ETH"):
             if base.endswith(suffix) and len(base) > len(suffix):
-                return f"{base[: -len(suffix)]}{expiry_alpha}FUT"
+                return f"{base[:-len(suffix)]}{expiry_alpha}FUT"
 
         # Cannot reliably extract underlying — use the de-dated base to avoid
         # duplicating the expiry date in the canonical symbol.
@@ -279,7 +273,7 @@ CONTRACT_TYPE_MAP = {
 # so partial matches (e.g. "BTCUSD" → finds "BTCUSD.P") work without explicit entries.
 # Only add entries here for genuinely-different ticker names (not convention variants).
 SYMBOL_ALIASES: dict[str, str] = {
-    "NEARBRC": "NEARUSD",  # alternative ticker heard on TradingView
+    "NEARBRC": "NEARUSD",   # alternative ticker heard on TradingView
 }
 
 
@@ -301,9 +295,9 @@ def fetch_delta_products():
     url = "https://api.india.delta.exchange/v2/products"
     headers = {"Accept": "application/json"}
     all_products = []
-    after_cursor = None  # cursor-based pagination — NOT page_num
-    page_num = 0  # only used for logging / safety guard
-    MAX_PAGES = 100  # 100 × 500 = 50,000 products — a very safe ceiling
+    after_cursor = None   # cursor-based pagination — NOT page_num
+    page_num = 0          # only used for logging / safety guard
+    MAX_PAGES = 100       # 100 × 500 = 50,000 products — a very safe ceiling
 
     fetch_success = False  # Only set True when pagination completes without error
 
@@ -319,12 +313,15 @@ def fetch_delta_products():
 
         params = {
             "page_size": 500,
-            "states": "live",  # server-side filter: only live contracts
+            "states": "live",   # server-side filter: only live contracts
         }
         if after_cursor:
             params["after"] = after_cursor
 
         try:
+            # Weight 3 per page against the public (IP) quota; a full master
+            # contract download is several pages.
+            consume("/v2/products", method="GET", bucket=PUBLIC)
             response = get_httpx_client().get(
                 url,
                 params=params,
@@ -388,7 +385,7 @@ def process_delta_products(products):
         token          ← id                    (int → str)
         brsymbol       ← symbol                (Delta-native, e.g. "C-BTC-80000-280225")
         symbol         ← canonical             (OpenAlgo format, e.g. "BTC28FEB2580000CE")
-        name           ← description
+        name           ← underlying_asset.symbol  (underlying root, e.g. "BTC")
         exchange       ← "CRYPTO"              (OpenAlgo exchange abstraction)
         brexchange     ← "DELTAIN"             (broker identifier — Delta Exchange India)
         expiry         ← settlement_time       (None → "" for perpetuals;
@@ -418,7 +415,9 @@ def process_delta_products(products):
         # master contract DB would allow order placement that the API would reject.
         product_specs = p.get("product_specs") or {}
         if product_specs.get("only_reduce_only_orders_allowed", False):
-            logger.debug(f"Skipping {p.get('symbol')} — only_reduce_only_orders_allowed is true")
+            logger.debug(
+                f"Skipping {p.get('symbol')} — only_reduce_only_orders_allowed is true"
+            )
             continue
 
         contract_type = p.get("contract_type", "")
@@ -471,14 +470,24 @@ def process_delta_products(products):
         # Build OpenAlgo canonical symbol (exchange = CRYPTO, broker-agnostic format)
         canonical_symbol = _to_canonical_symbol(symbol_str, instrument_type, expiry)
 
+        # `name` must be the underlying root (BTC, ETH, SOL) — not a human
+        # description. database/symbol.py resolves option-chain expiries with
+        # `SymToken.name.ilike(underlying)`, an exact match, so storing
+        # "BTC call option expiring on 12-8-2026" here leaves the expiry
+        # dropdown empty with no error anywhere. Delta returns the root in
+        # underlying_asset.symbol for every contract type.
+        underlying_name = (p.get("underlying_asset") or {}).get("symbol") or ""
+        if not underlying_name:
+            underlying_name = p.get("description", symbol_str)
+
         rows.append(
             {
                 "token": str(p["id"]),
-                "symbol": canonical_symbol,  # OpenAlgo canonical (e.g. BTC28FEB2580000CE)
-                "brsymbol": symbol_str,  # Delta-native (e.g. C-BTC-80000-280225)
-                "name": p.get("description", symbol_str),
-                "exchange": "CRYPTO",  # OpenAlgo exchange abstraction
-                "brexchange": "DELTAIN",  # Broker identifier (Delta Exchange India)
+                "symbol": canonical_symbol,   # OpenAlgo canonical (e.g. BTC28FEB2580000CE)
+                "brsymbol": symbol_str,        # Delta-native (e.g. C-BTC-80000-280225)
+                "name": underlying_name,       # Underlying root (e.g. BTC)
+                "exchange": "CRYPTO",          # OpenAlgo exchange abstraction
+                "brexchange": "DELTAIN",       # Broker identifier (Delta Exchange India)
                 "expiry": expiry,
                 "strike": strike_val,
                 "lotsize": lotsize,
@@ -563,7 +572,9 @@ def search_symbols(symbol, exchange):
     """
     canonical = SYMBOL_ALIASES.get(symbol.upper())
     if canonical:
-        logger.debug(f"[DeltaExchange] search_symbols: alias '{symbol}' → '{canonical}'")
+        logger.debug(
+            f"[DeltaExchange] search_symbols: alias '{symbol}' → '{canonical}'"
+        )
         symbol = canonical
     return SymToken.query.filter(
         SymToken.symbol.like(f"%{symbol}%"), SymToken.exchange == exchange

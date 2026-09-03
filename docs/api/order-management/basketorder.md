@@ -113,7 +113,7 @@ curl -X POST http://127.0.0.1:5000/api/v1/basketorder \
 
 | Parameter | Description | Mandatory/Optional | Default Value |
 |-----------|-------------|-------------------|---------------|
-| apikey | Your Tradeboard API key | Mandatory | - |
+| apikey | Your OpenAlgo API key | Mandatory | - |
 | strategy | Strategy identifier | Mandatory | - |
 | orders | Array of order objects | Mandatory | - |
 

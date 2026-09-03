@@ -89,7 +89,9 @@ def xirr(cash_flows: list[tuple[object, float]]) -> float:
     has_positive = any(a > 0 for _, a in flows)
     if not (has_negative and has_positive):
         direction = "all outflows" if has_negative else "all inflows"
-        raise XirrError(f"XIRR is undefined for {direction}: the series never crosses zero")
+        raise XirrError(
+            f"XIRR is undefined for {direction}: the series never crosses zero"
+        )
 
     def f(rate: float) -> float:
         return _npv(rate, flows, t0)
@@ -112,6 +114,7 @@ def xirr(cash_flows: list[tuple[object, float]]) -> float:
         raise XirrError(
             f"no rate between {MIN_RATE:.0%} and {MAX_RATE:.0%} zeroes the NPV; the cash flows "
             "are likely degenerate (a very short period, or a near-total loss)"
+
         )
 
     try:

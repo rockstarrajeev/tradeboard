@@ -9,7 +9,7 @@
 
 ## 1. Context & goals
 
-Tradeboard is production software for ~200,000 users, today centered on Indian
+OpenAlgo is production software for ~200,000 users, today centered on Indian
 equity & F&O across 33 brokers. We are adding crypto (Delta Exchange live;
 Binance/CoinDCX/Hyperliquid planned) and US brokers (IBKR/Alpaca planned), and
 want *any* venue in *any* country to be pluggable.
@@ -84,7 +84,7 @@ A structured identity underneath the flat symbol, with **five orthogonal axes**:
 
 ### Symbol rendering (code-verified)
 
-`Instrument → Tradeboard symbol`, deterministic per **InstrumentKind**. Crypto
+`Instrument → OpenAlgo symbol`, deterministic per **InstrumentKind**. Crypto
 values below are verified against the live Delta code — see
 [`docs/prompt/crypto-symbol-format.md`](../../prompt/crypto-symbol-format.md).
 
@@ -204,7 +204,7 @@ manifest**, not an auto-Indian one. No broker rewrites to ship, no published pac
 > (`f"broker.{broker}…"`), `websocket_proxy/__init__.py:30` (eager imports), and
 > `broker_factory.py:53` (fixed naming — the reason Delta needs an alias). This is
 > internal decoupling + one place to register a broker; it does **not** require
-> making Tradeboard distributable (`pyproject.toml` stays `packages = []`).
+> making OpenAlgo distributable (`pyproject.toml` stays `packages = []`).
 
 ## 6. Resolvers (cross-cutting) — each keyed on its OWN dimension (corrected)
 

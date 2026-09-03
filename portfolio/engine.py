@@ -146,8 +146,8 @@ def run_backtest(
     # question an investor asks first; currency can, and weights divide back
     # out of it exactly.
     sleeve = target * float(initial_capital)
-    price_pnl = np.zeros(len(symbols), dtype=float)  # made or lost on price
-    cost_paid = np.zeros(len(symbols), dtype=float)  # costs charged to it
+    price_pnl = np.zeros(len(symbols), dtype=float)   # made or lost on price
+    cost_paid = np.zeros(len(symbols), dtype=float)   # costs charged to it
     gross_sleeve = sleeve.copy()  # the same run with costs off, for the drag
 
     for i, stamp in enumerate(index):

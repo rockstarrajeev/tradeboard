@@ -190,11 +190,11 @@ class IndWebSocket:
             # repeated token isn't sent twice or double-counted against the
             # per-connection cap.
             existing = set(self.input_request_dict[mode])
-            new_instruments = [i for i in dict.fromkeys(instruments) if i not in existing]
+            new_instruments = [
+                i for i in dict.fromkeys(instruments) if i not in existing
+            ]
             if not new_instruments:
-                logger.debug(
-                    f"All {len(instruments)} instruments already subscribed in {mode} mode"
-                )
+                logger.debug(f"All {len(instruments)} instruments already subscribed in {mode} mode")
                 return
 
             # Enforce the per-connection instrument cap
@@ -311,7 +311,9 @@ class IndWebSocket:
                 self.access_token = fresh
                 logger.info("Refreshed INDmoney access token before reconnect")
             else:
-                logger.warning("No fresh INDmoney access token available; reusing existing token")
+                logger.warning(
+                    "No fresh INDmoney access token available; reusing existing token"
+                )
         except Exception as e:
             logger.error(f"Error refreshing access token: {e}")
 

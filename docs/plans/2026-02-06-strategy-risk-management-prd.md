@@ -8,7 +8,7 @@
 
 ## 1. Problem Statement
 
-Currently, Tradeboard strategies (Webhook and Chartink) have no local order/position tracking — everything is delegated to broker APIs. There is no strategy-level stoploss, target, or trailing stop. A trader running multiple strategies on the same symbol has no way to manage or view positions per strategy. All exits rely on `placesmartorder(position_size=0)` which closes ALL positions for a symbol across the entire account, not just the strategy's position.
+Currently, OpenAlgo strategies (Webhook and Chartink) have no local order/position tracking — everything is delegated to broker APIs. There is no strategy-level stoploss, target, or trailing stop. A trader running multiple strategies on the same symbol has no way to manage or view positions per strategy. All exits rely on `placesmartorder(position_size=0)` which closes ALL positions for a symbol across the entire account, not just the strategy's position.
 
 ### What's Missing
 
@@ -1301,9 +1301,9 @@ Single unified page for managing all strategy positions.
 │  │──────────────────────────────────────────────────────│  │
 │  │ Symbol  Qty   Avg      LTP      P&L     SL   TGT TS │  │
 │  │ SBIN    +100  800.00   812.50   +1,250  784  840 792 │  │
-│  │                                          [Close ✕]   │  │
+│  │                                          [Close ]   │  │
 │  │ INFY    +50   1520.00  1498.00  -1,100  1490 1596 —  │  │
-│  │                                          [Close ✕]   │  │
+│  │                                          [Close ]   │  │
 │  │──────────────────────────────────────────────────────│  │
 │  │ [Close All Positions]  [Orders 8] [Trades 4] [P&L]  │  │
 │  └──────────────────────────────────────────────────────┘  │
@@ -1328,7 +1328,7 @@ Single unified page for managing all strategy positions.
 | **[Activate] / [Deactivate]** | Toggle risk monitoring on/off (confirmation dialog) |
 | Strategy summary | Total P&L (live), position count, trade count today, win rate, profit factor |
 | Position table | Symbol, Qty (+/-), Avg, LTP (live), P&L (live), SL, TGT, TS |
-| **[Close ✕]** per position | Close individual position at MARKET. Confirmation dialog. |
+| **[Close ]** per position | Close individual position at MARKET. Confirmation dialog. |
 | **[Close All Positions]** | Close all strategy positions at MARKET. Confirmation dialog. |
 | **[Orders N]** | Opens drawer with strategy orderbook (same format as global /orderbook) |
 | **[Trades N]** | Opens drawer with strategy tradebook (same format as global /tradebook) |
@@ -1377,7 +1377,7 @@ When configuring a symbol mapping, the UI adapts based on the selected `order_mo
 ┌────────────────────────────────────────────────────┐
 │  Order Mode: [Equity ▼] [Futures] [Single Option] [Multi-Leg]  │
 │                                                     │
-│  Underlying:  [🔍 Search underlying... ]           │
+│  Underlying:  [ Search underlying... ]           │
 │               ┌─────────────────────────┐          │
 │               │ NIFTY                    │          │
 │               │ BANKNIFTY                │          │
@@ -2178,7 +2178,7 @@ All risk parameters are optional. A strategy with no SL/target/trailing configur
 
 ## 19. Database Migration
 
-Migration follows the existing Tradeboard pattern: standalone idempotent scripts in `upgrade/`, registered in `migrate_all.py`, run via `uv run upgrade/migrate_all.py`.
+Migration follows the existing OpenAlgo pattern: standalone idempotent scripts in `upgrade/`, registered in `migrate_all.py`, run via `uv run upgrade/migrate_all.py`.
 
 ### 19.1 New Migration Script: `upgrade/migrate_strategy_risk.py`
 
@@ -2187,7 +2187,7 @@ Follows the same conventions as `migrate_sandbox.py`:
 ```python
 #!/usr/bin/env python
 """
-Strategy Risk Management Migration Script for Tradeboard
+Strategy Risk Management Migration Script for OpenAlgo
 
 Creates new tables for strategy-level risk management, position tracking,
 and order tracking. Adds risk columns to existing Strategy/ChartinkStrategy

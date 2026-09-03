@@ -67,7 +67,7 @@ Result: You get 100 shares at approximately ₹625.50
 | Simple to use | May get worse price |
 | Fast | Slippage in volatile markets |
 
-### Tradeboard API
+### OpenAlgo API
 
 ```json
 {
@@ -97,7 +97,7 @@ Current Price: ₹625
 You place: LIMIT BUY 100 at ₹620
 
 Scenario 1: Price drops to ₹620
-Result: Order executes at ₹620 ✓
+Result: Order executes at ₹620
 
 Scenario 2: Price stays above ₹620
 Result: Order remains pending
@@ -123,7 +123,7 @@ Result: Order executes at ₹620 (or better at ₹615)
 | No slippage | Order may expire |
 | Better average price | Requires price monitoring |
 
-### Tradeboard API
+### OpenAlgo API
 
 ```json
 {
@@ -181,7 +181,7 @@ SELL Stop-Loss (for long positions):
   Limit Price: Minimum price you'll accept (equal or lower)
 ```
 
-### Tradeboard API
+### OpenAlgo API
 
 ```json
 {
@@ -239,7 +239,7 @@ Price Movement:
 | Complexity | Two prices needed | One trigger price |
 | Best for | Normal markets | Gap protection |
 
-### Tradeboard API
+### OpenAlgo API
 
 ```json
 {
@@ -295,7 +295,7 @@ Most brokers support:
 | IOC | Immediate or Cancel (execute now or cancel) |
 | GTC | Good Till Cancelled (until manually cancelled) |
 
-**Note**: Tradeboard typically uses DAY validity.
+**Note**: OpenAlgo typically uses DAY validity.
 
 ## Common Order Mistakes
 

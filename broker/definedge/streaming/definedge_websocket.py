@@ -4,14 +4,15 @@ Based on the pyintegrate library and DefinedGe WebSocket API documentation.
 """
 
 import json
-import logging
 import ssl
 import threading
 import time
 
 import websocket
 
-logger = logging.getLogger(__name__)
+from utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class DefinedGeWebSocket:
@@ -103,7 +104,9 @@ class DefinedGeWebSocket:
         try:
             fresh = self.token_provider()
             if not fresh or not isinstance(fresh, dict):
-                logger.warning("Could not fetch fresh tokens on reconnect; using existing tokens")
+                logger.warning(
+                    "Could not fetch fresh tokens on reconnect; using existing tokens"
+                )
                 return
 
             auth_token = fresh.get("auth_token", "")
@@ -335,9 +338,7 @@ class DefinedGeWebSocket:
         exchange = data.get("e")
 
         # Log tick data at debug level to avoid flooding logs
-        logger.debug(
-            f"Tick data for {exchange}|{token}: lp={data.get('lp')}, fields={list(data.keys())}"
-        )
+        logger.debug(f"Tick data for {exchange}|{token}: lp={data.get('lp')}, fields={list(data.keys())}")
 
         if self.on_tick:
             try:

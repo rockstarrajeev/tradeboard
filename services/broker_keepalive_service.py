@@ -175,13 +175,15 @@ def start_broker_keepalive():
     global _thread
 
     if not _ENABLED:
-        logger.info("Broker connection keep-warm disabled via BROKER_CONNECTION_KEEPALIVE")
+        logger.debug("Broker connection keep-warm disabled via BROKER_CONNECTION_KEEPALIVE")
         return
 
     with _thread_lock:
         if _thread is not None and _thread.is_alive():
             return
-        _thread = threading.Thread(target=_keepalive_loop, daemon=True, name="broker-keepalive")
+        _thread = threading.Thread(
+            target=_keepalive_loop, daemon=True, name="broker-keepalive"
+        )
         _thread.start()
         logger.debug(
             f"Broker connection keep-warm started: every {_PING_INTERVAL}s, "

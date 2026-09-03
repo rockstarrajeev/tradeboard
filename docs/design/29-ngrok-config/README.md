@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The optional ngrok manager exposes the local Flask HTTP port for external webhook callbacks during self-hosted development or evaluation. It does not create a second Tradeboard API or bypass normal webhook/API authentication.
+The optional ngrok manager exposes the local Flask HTTP port for external webhook callbacks during self-hosted development or evaluation. It does not create a second OpenAlgo API or bypass normal webhook/API authentication.
 
 ## Configuration
 
@@ -11,7 +11,7 @@ NGROK_ALLOW='TRUE'
 HOST_SERVER='https://your-domain.ngrok.app'
 ```
 
-`NGROK_ALLOW` is the actual enable flag. There are no Tradeboard `NGROK_ENABLED`, `NGROK_AUTH_TOKEN`, or `NGROK_DOMAIN` environment variables in the current application contract. `pyngrok` obtains its ngrok credentials from its normal ngrok configuration.
+`NGROK_ALLOW` is the actual enable flag. There are no OpenAlgo `NGROK_ENABLED`, `NGROK_AUTH_TOKEN`, or `NGROK_DOMAIN` environment variables in the current application contract. `pyngrok` obtains its ngrok credentials from its normal ngrok configuration.
 
 When `HOST_SERVER` is a non-local URL, the manager extracts its host and asks ngrok for that custom domain. With a local `HOST_SERVER`, ngrok allocates a random public URL. A reserved custom domain must already be available to the configured ngrok account.
 

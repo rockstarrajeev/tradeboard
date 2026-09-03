@@ -134,7 +134,9 @@ class HDFCSkyWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
             # HDFC Sky publishes 5-level depth only; advertise the actual depth
             # so the proxy reports it back to the client.
-            actual_depth = HDFCSkyCapabilityRegistry.get_fallback_depth_level(depth_level, exchange)
+            actual_depth = HDFCSkyCapabilityRegistry.get_fallback_depth_level(
+                depth_level, exchange
+            )
             return self._create_success_response(
                 f"Subscribed {exchange}:{symbol}",
                 symbol=symbol,

@@ -7,7 +7,7 @@ import threading
 import time as time_module
 import uuid
 from collections import deque
-from datetime import datetime
+from datetime import datetime, time
 from time import time
 
 import pytz
@@ -111,7 +111,6 @@ def process_orders():
 
                 try:
                     from utils.httpx_client import get_httpx_client
-
                     response = get_httpx_client().post(
                         f"{BASE_URL}/api/v1/placesmartorder", json=smart_order["payload"]
                     )
@@ -149,7 +148,6 @@ def process_orders():
 
                     try:
                         from utils.httpx_client import get_httpx_client
-
                         response = get_httpx_client().post(
                             f"{BASE_URL}/api/v1/placeorder", json=regular_order["payload"]
                         )

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_CHARGES, buildPortfolioRequest, healthGradeTone } from './portfolioRequest'
+import {
+  DEFAULT_CHARGES,
+  buildPortfolioRequest,
+  healthGradeTone,
+} from './portfolioRequest'
 
 describe('buildPortfolioRequest', () => {
   it('builds the complete shared analysis and export contract', () => {

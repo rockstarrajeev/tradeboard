@@ -1,6 +1,5 @@
 import base64
 import json
-import logging
 import os
 import sys
 import threading
@@ -10,6 +9,7 @@ from typing import Any, Dict, List, Optional
 from broker.rmoney.streaming.rmoney_websocket import RMoneyWebSocketClient
 from database.auth_db import get_auth_token, get_feed_token
 from database.token_db import get_token
+from utils.logging import get_logger
 
 # Add parent directory to path to allow imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
@@ -26,7 +26,7 @@ class RMoneyWebSocketAdapter(BaseBrokerWebSocketAdapter):
 
     def __init__(self):
         super().__init__()
-        self.logger = logging.getLogger("rmoney_websocket")
+        self.logger = get_logger("rmoney_websocket")
         self.ws_client = None
         self.user_id = None
         self.broker_name = "rmoney"
@@ -93,12 +93,10 @@ class RMoneyWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 raise ValueError("Missing required authentication data")
 
         if not api_key or not api_secret:
-            self.logger.error(
-                "Missing BROKER_API_KEY_MARKET or BROKER_API_SECRET_MARKET credentials"
-            )
+            self.logger.error("Missing BROKER_API_KEY_MARKET or BROKER_API_SECRET_MARKET credentials")
             raise ValueError("Missing RMoney XTS API credentials")
 
-        self.logger.info(f"Using API Key: {api_key[:10]}... for RMoney XTS connection")
+        self.logger.info("Using configured API key for RMoney XTS connection")
 
         # Close previous client if initialize() is called again
         if self.ws_client is not None:
@@ -582,16 +580,13 @@ class RMoneyWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 except Exception as e:
                     error_str = str(e)
                     # Stop on any session-level error that won't resolve by retrying
-                    if any(
-                        term in error_str
-                        for term in [
-                            "Subscription limit exceeded",
-                            "Invalid Token",
-                            "not connected",
-                            "e-session-0004",
-                            "e-session-0007",
-                        ]
-                    ):
+                    if any(term in error_str for term in [
+                        "Subscription limit exceeded",
+                        "Invalid Token",
+                        "not connected",
+                        "e-session-0004",
+                        "e-session-0007",
+                    ]):
                         self.logger.warning(
                             f"Stopping resubscription after {count} instruments: {error_str[:100]}"
                         )
@@ -676,9 +671,7 @@ class RMoneyWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 if exchange_segment_str.isdigit():
                     exchange_segment = int(exchange_segment_str)
                 else:
-                    exchange_segment = segment_name_to_code.get(
-                        exchange_segment_str, exchange_segment
-                    )
+                    exchange_segment = segment_name_to_code.get(exchange_segment_str, exchange_segment)
 
             self.logger.debug(
                 f"Processing market data: ExchangeSegment={exchange_segment}, ExchangeInstrumentID={exchange_instrument_id}"
@@ -767,9 +760,7 @@ class RMoneyWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 ]
 
             # Determine mode based on MessageCode (support multiple key variants)
-            message_code = data.get(
-                "MessageCode", data.get("messageCode", data.get("xtsMessageCode"))
-            )
+            message_code = data.get("MessageCode", data.get("messageCode", data.get("xtsMessageCode")))
             if isinstance(message_code, str) and message_code.strip().isdigit():
                 message_code = int(message_code.strip())
             if message_code is None:
@@ -792,10 +783,7 @@ class RMoneyWebSocketAdapter(BaseBrokerWebSocketAdapter):
                     # Fallback when no active tracking entry is found.
                     has_quote_fields = any(
                         key in data
-                        or (
-                            isinstance(data.get("Touchline"), dict)
-                            and key in data.get("Touchline", {})
-                        )
+                        or (isinstance(data.get("Touchline"), dict) and key in data.get("Touchline", {}))
                         for key in ["Open", "High", "Low", "Close", "TotalTradedQuantity"]
                     )
                     mode = 2 if has_quote_fields else 1
@@ -807,9 +795,7 @@ class RMoneyWebSocketAdapter(BaseBrokerWebSocketAdapter):
                 self.logger.warning(f"Unknown MessageCode: {message_code}")
                 return
 
-            self.logger.debug(
-                f"Determined mode {mode} ({mode_str}) from MessageCode {message_code}"
-            )
+            self.logger.debug(f"Determined mode {mode} ({mode_str}) from MessageCode {message_code}")
 
             # Check if symbol has active subscription(s). Avoid exact correlation-id checks,
             # since mode upgrades and depth-level suffixes can cause false negatives.
@@ -856,11 +842,7 @@ class RMoneyWebSocketAdapter(BaseBrokerWebSocketAdapter):
             Dict: Normalized market data
         """
         # Some payloads embed quote fields under "Touchline", others send flat keys.
-        source = (
-            message.get("Touchline", message)
-            if isinstance(message.get("Touchline"), dict)
-            else message
-        )
+        source = message.get("Touchline", message) if isinstance(message.get("Touchline"), dict) else message
         ltp = source.get("LastTradedPrice", 0)
         ltt = source.get("LastTradedTime", 0)
         volume = source.get("TotalTradedQuantity", 0)

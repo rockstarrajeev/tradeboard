@@ -1,7 +1,7 @@
 # Broker Integration — Testing Guide (Common)
 
 A **broker-agnostic** end-to-end test plan for validating any broker integration
-in Tradeboard. Use it when adding a new broker or regression-testing an existing
+in OpenAlgo. Use it when adding a new broker or regression-testing an existing
 one. It expands the high-level checklist in
 [`docs/broker-integration-guide.md` §18](../broker-integration-guide.md#18-testing-checklist)
 into concrete, runnable steps.
@@ -35,7 +35,7 @@ BROKER_API_SECRET_MARKET = '<market_secret>'
 
 ### 0.2 Start the app
 ```bash
-cd tradeboard
+cd openalgo
 uv run app.py
 # UI:        http://127.0.0.1:5000
 # REST reference: docs/api/README.md (Swagger is disabled)
@@ -45,7 +45,7 @@ uv run app.py
 
 ### 0.3 API test variables
 ```bash
-API_KEY="<tradeboard_apikey_from_/apikey>"
+API_KEY="<openalgo_apikey_from_/apikey>"
 BASE_URL="http://127.0.0.1:5000"
 ```
 
@@ -76,7 +76,7 @@ Only include segments the broker supports.
 | Currency | CDS | `USDINR<DDMMMYY>FUT` |
 | Commodity | MCX | `CRUDEOIL<DDMMMYY>FUT` |
 
-> ⚠️ Live order tests place **real orders**. Use **qty = 1**, prefer a low-price
+> Live order tests place **real orders**. Use **qty = 1**, prefer a low-price
 > equity (e.g. `YESBANK`), keep LIMIT prices away from LTP to avoid fills, and
 > cancel promptly. Use the **Analyzer (sandbox)** toggle for dry runs that never
 > reach the broker.
@@ -89,7 +89,7 @@ Identify the broker's pattern (`broker-integration-guide.md §13`): A) OAuth
 redirect, B) TOTP/credential, C) XTS key, D) OAuth consent, E) OTP.
 
 ### 1.1 Login flow
-1. Log into Tradeboard → land on `/broker`.
+1. Log into OpenAlgo → land on `/broker`.
 2. Select `<broker>` → **Connect**.
 3. Complete the broker login (redirect/consent, or TOTP/OTP form).
 4. Callback returns to `/<broker>/callback` → token minted & stored.
@@ -153,7 +153,7 @@ curl -s -X POST "$BASE_URL/api/v1/search" -H "Content-Type: application/json" \
 ```
 
 **Equity** — base symbol, broker series suffix stripped:
-| Tradeboard symbol | instrumenttype | Result |
+| OpenAlgo symbol | instrumenttype | Result |
 |---|---|---|
 | `YESBANK`, `INFY`, `SBIN` | EQ | [ ] |
 | **`BAJAJ-AUTO`** (hyphen kept) | EQ | [ ] |
@@ -167,7 +167,7 @@ curl -s -X POST "$BASE_URL/api/v1/search" -H "Content-Type: application/json" \
 | decimal strike `…292.5CE` (decimal kept, `.0` dropped) | CE | [ ] |
 
 **Index normalization** (exchange = `NSE_INDEX`/`BSE_INDEX`):
-| Tradeboard symbol | Exchange | Result |
+| OpenAlgo symbol | Exchange | Result |
 |---|---|---|
 | `NIFTY`, `BANKNIFTY`, `FINNIFTY`, `MIDCPNIFTY`, `NIFTYNXT50` | NSE_INDEX | [ ] |
 | `SENSEX`, `BANKEX` | BSE_INDEX | [ ] |
@@ -213,7 +213,7 @@ curl -s -X POST "$BASE_URL/api/v1/placeorder" -H "Content-Type: application/json
 | SL-M | [ ] | [ ] | [ ] | |
 
 - [ ] Each success returns a real `orderid` (no `orderid: null` with `success`).
-- [ ] Rejections surface the broker reason (check `log/tradeboard_*.log` / `errors.jsonl`).
+- [ ] Rejections surface the broker reason (check `log/openalgo_*.log` / `errors.jsonl`).
 - [ ] Order appears in orderbook with correct symbol/qty/price/product/type.
 
 ### 4.2 Modify Order
@@ -262,7 +262,7 @@ for ep in orderbook tradebook positionbook holdings; do
 | tradebook | symbol/exchange/product/action/quantity/average_price/trade_value/orderid/timestamp | [ ] |
 | positionbook | symbol/exchange/product/quantity/pnl/average_price/ltp | [ ] |
 | holdings | symbol/exchange/quantity/product/average_price/pnl/pnlpercent | [ ] |
-| symbols mapped back to Tradeboard format (e.g. `YESBANK`, not `YESBANK-EQ`) | | [ ] |
+| symbols mapped back to OpenAlgo format (e.g. `YESBANK`, not `YESBANK-EQ`) | | [ ] |
 | openposition (net qty as str) | `/api/v1/openposition` | [ ] |
 | orderstatus by id | `/api/v1/orderstatus` | [ ] |
 
@@ -379,7 +379,7 @@ curl -s -X POST "$BASE_URL/api/v1/expiry"      -H "Content-Type: application/jso
 curl -s -X POST "$BASE_URL/api/v1/optionchain" -H "Content-Type: application/json" -d '{"apikey":"'$API_KEY'","symbol":"NIFTY","exchange":"NFO","expiry":"<DD-MMM-YY>","strikecount":10}'
 ```
 - [ ] Underlying index LTP resolves; expiry dropdown populated.
-- [ ] Strikes + CE/PE legs load with correct Tradeboard symbols.
+- [ ] Strikes + CE/PE legs load with correct OpenAlgo symbols.
 - [ ] Greeks/IV compute without NaN/zero-LTP errors.
 - [ ] No `errors.jsonl` entries (esp. index-quote 400s).
 
@@ -460,7 +460,7 @@ exchanges, per-request caps, special symbol handling, etc.).
 
 ### Example — TradeSmart (Noren v2)
 - **Market orders**: `MKT`/`SL-MKT` are **rejected for API orders** (`ALGO_CHK`);
-  Tradeboard auto-converts `MARKET`→`LIMIT` and `SL-M`→`SL` at a protected price —
+  OpenAlgo auto-converts `MARKET`→`LIMIT` and `SL-M`→`SL` at a protected price —
   so a "MARKET" order shows as `LIMIT` in the broker book (expected).
 - **Login URL**: backend redirects to
   `https://v2api.tradesmartonline.in/OAuthlogin/authorize/oauth?client_id=<API_KEY>`

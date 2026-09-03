@@ -261,7 +261,9 @@ class IiflcapitalWebSocket:
         # when two reconnects fire on the same host within the same microsecond
         # (broker drops the older session with CONNACK rc=2 on collision).
         self.client_id = (
-            "openalgo" + datetime.now().strftime("%d%m%y%H%M%S%f") + os.urandom(4).hex()
+            "openalgo"
+            + datetime.now().strftime("%d%m%y%H%M%S%f")
+            + os.urandom(4).hex()
         )
         self.username = _decode_jwt_username(user_session)
         self.password = f"OPENID~~{user_session}~"  # bridgePy format
@@ -486,7 +488,9 @@ class IiflcapitalWebSocket:
             if not self.is_connected():
                 consecutive_failures += 1
                 if consecutive_failures > 5:
-                    self.logger.error("MQTT not connected — abandoning pending subscriptions")
+                    self.logger.error(
+                        "MQTT not connected — abandoning pending subscriptions"
+                    )
                     with self._lock:
                         self._pending.clear()
                     break
@@ -546,13 +550,13 @@ class IiflcapitalWebSocket:
         """
         try:
             if topic.startswith(self._MW_TOPIC_PREFIX):
-                key = topic[len(self._MW_TOPIC_PREFIX) :]
+                key = topic[len(self._MW_TOPIC_PREFIX):]
                 self._dispatch_feed(key, payload, is_index=False)
             elif topic.startswith(self._IDX_TOPIC_PREFIX):
-                key = topic[len(self._IDX_TOPIC_PREFIX) :]
+                key = topic[len(self._IDX_TOPIC_PREFIX):]
                 self._dispatch_feed(key, payload, is_index=True)
             elif topic.startswith(self._OI_TOPIC_PREFIX):
-                key = topic[len(self._OI_TOPIC_PREFIX) :]
+                key = topic[len(self._OI_TOPIC_PREFIX):]
                 self._dispatch_oi(key, payload)
             else:
                 self.logger.debug(f"Unhandled IIFL topic: {topic}")
@@ -641,7 +645,9 @@ class IiflcapitalWebSocket:
             self.logger.error(f"Error fetching fresh IIFL user_session: {e}")
             return
         if not fresh:
-            self.logger.warning("No fresh IIFL user_session available; reusing existing session")
+            self.logger.warning(
+                "No fresh IIFL user_session available; reusing existing session"
+            )
             return
         try:
             username = _decode_jwt_username(fresh)
@@ -670,8 +676,10 @@ class IiflcapitalWebSocket:
                 self.running = False
                 return
 
-            delay = min(2 * (1.5**self._reconnect_attempts), self.RECONNECT_MAX_DELAY)
-            self.logger.info(f"IIFL reconnect in {delay:.0f}s (attempt {self._reconnect_attempts})")
+            delay = min(2 * (1.5 ** self._reconnect_attempts), self.RECONNECT_MAX_DELAY)
+            self.logger.info(
+                f"IIFL reconnect in {delay:.0f}s (attempt {self._reconnect_attempts})"
+            )
             if self._stop_event.wait(delay):
                 return
 
@@ -680,7 +688,11 @@ class IiflcapitalWebSocket:
             # connect call; without this guard we would open a new TLS
             # socket the caller is actively trying to tear down — leaking
             # both the FD and the reader/keepalive threads tied to it.
-            if not self.running or self._stop_event.is_set() or self._fatal_error:
+            if (
+                not self.running
+                or self._stop_event.is_set()
+                or self._fatal_error
+            ):
                 return
 
             # Re-read a fresh token before each reconnect so a daily-rolled

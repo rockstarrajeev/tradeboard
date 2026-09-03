@@ -2,6 +2,7 @@ import json
 import os
 from datetime import date, datetime, timedelta
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 
@@ -384,10 +385,7 @@ def api_holiday_add():
         # Validate special session has open exchanges with timings
         if holiday_type == "SPECIAL_SESSION" and not open_exchanges:
             return jsonify(
-                {
-                    "status": "error",
-                    "message": "Special session requires at least one exchange with timings",
-                }
+                {"status": "error", "message": "Special session requires at least one exchange with timings"}
             ), 400
 
         holiday_date = datetime.strptime(date_str, "%Y-%m-%d").date()
@@ -858,6 +856,27 @@ _MAX_CLIENT_URL_LEN = 2000
 _MAX_CLIENT_COMPONENT_STACK_LEN = 5000
 _MAX_CLIENT_USER_AGENT_LEN = 500
 _CLIENT_LEVEL_ALLOWLIST = frozenset({"ERROR", "WARN"})
+_REDACTED_CLIENT_URL_VALUE = "[redacted]"
+_SENSITIVE_CLIENT_URL_QUERY_PARAMETER_NAMES = frozenset(
+    {
+        "token",
+        "code",
+        "requesttoken",
+        "accesstoken",
+        "authtoken",
+        "refreshtoken",
+        "resettoken",
+        "apikey",
+        "email",
+        "state",
+        "password",
+        "otp",
+        "secret",
+        "clientsecret",
+        "idtoken",
+        "jwt",
+    }
+)
 
 # Logger dedicated to browser-reported errors. Distinct name so they're easy
 # to filter in errors.jsonl and in the grouped view.
@@ -880,6 +899,32 @@ def _scrub_control_chars(text):
     return "".join(ch for ch in text if ch == "\n" or ch == "\t" or (ch.isprintable()))
 
 
+def _sanitize_client_error_url(url):
+    """Redact sensitive query values and remove fragments before logging a URL."""
+    try:
+        parsed = urlsplit(url)
+    except ValueError:
+        return url.split("?", 1)[0].split("#", 1)[0]
+
+    if parsed.scheme in {"", "http", "https"}:
+        query = urlencode(
+            [
+                (
+                    key,
+                    _REDACTED_CLIENT_URL_VALUE
+                    if key.lower().replace("_", "").replace("-", "")
+                    in _SENSITIVE_CLIENT_URL_QUERY_PARAMETER_NAMES
+                    else value,
+                )
+                for key, value in parse_qsl(parsed.query, keep_blank_values=True)
+            ]
+        )
+        return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, query, ""))
+    if parsed.scheme.endswith("-extension"):
+        return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, "", ""))
+    return f"{parsed.scheme}:"
+
+
 @admin_bp.route("/api/errors/client", methods=["POST"])
 @check_session_validity
 @limiter.limit(_CLIENT_REPORT_RATE)
@@ -900,7 +945,9 @@ def api_errors_client_report():
 
         message = _scrub_control_chars(str(data.get("message") or ""))[:_MAX_CLIENT_MESSAGE_LEN]
         stack = _scrub_control_chars(str(data.get("stack") or ""))[:_MAX_CLIENT_STACK_LEN]
-        url = _scrub_control_chars(str(data.get("url") or ""))[:_MAX_CLIENT_URL_LEN]
+        url = _sanitize_client_error_url(
+            _scrub_control_chars(str(data.get("url") or ""))
+        )[:_MAX_CLIENT_URL_LEN]
         component_stack = _scrub_control_chars(str(data.get("component_stack") or ""))[
             :_MAX_CLIENT_COMPONENT_STACK_LEN
         ]
@@ -1487,12 +1534,16 @@ def _check_db_read():
 def _check_loopback_http():
     """HEAD the local Flask app — measures internal request latency.
 
-    Two candidate targets, because the listening topology differs by install:
+    Candidate targets, because the listening topology differs by install, in
+    the same resolution order as blueprints/mcp_http.py:
+      - MCP_LOOPBACK_URL: explicit override for unusual topologies. Tried
+        first, since an operator who had to set it did so precisely because
+        neither default answers (GitHub issue #1441).
       - Docker / dev server: gunicorn (or Flask) listens on TCP
         127.0.0.1:{FLASK_PORT|PORT}.
       - Ubuntu install.sh: gunicorn binds to a UNIX SOCKET behind nginx — no
         TCP port answers locally, so HOST_SERVER via nginx is the only
-        loopback that works (same resolution as blueprints/mcp_http.py).
+        loopback that works.
     Trying only the TCP port made this check a guaranteed false alarm on
     every native Ubuntu install (GitHub issue #1483).
     """
@@ -1502,19 +1553,23 @@ def _check_loopback_http():
     # FLASK_PORT is the canonical OpenAlgo var; PORT is the Docker/Railway
     # convention (gunicorn binds to ${PORT:-5000} in start.sh).
     port = os.getenv("FLASK_PORT") or os.getenv("PORT") or "5000"
-    targets = [f"http://127.0.0.1:{port}/"]
+
+    targets = []
+    override = (os.getenv("MCP_LOOPBACK_URL") or "").strip().rstrip("/")
+    if override:
+        targets.append((f"{override}/", "MCP_LOOPBACK_URL"))
+    targets.append((f"http://127.0.0.1:{port}/", "direct"))
     host_server = (os.getenv("HOST_SERVER") or "").strip().rstrip("/")
     if host_server and "127.0.0.1" not in host_server and "localhost" not in host_server:
-        targets.append(f"{host_server}/")
+        targets.append((f"{host_server}/", "via nginx (unix-socket bind)"))
 
     last_error = "no target answered"
-    for target in targets:
+    for target, label in targets:
         started = time.perf_counter()
         try:
             req = urllib.request.Request(target, method="HEAD")
             with urllib.request.urlopen(req, timeout=3.0) as resp:
                 elapsed = round((time.perf_counter() - started) * 1000, 1)
-                label = "direct" if "127.0.0.1" in target else "via nginx (unix-socket bind)"
                 return {
                     "name": "Loopback HTTP",
                     "ok": resp.status < 500,
@@ -1672,11 +1727,7 @@ def _render_report(payload, errors_summary, errors_recent, fmt):
     lines = []
     lines.append(f"{h1}OpenAlgo System Report")
     lines.append("")
-    lines.append(
-        _md_kv("Generated", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        if is_md
-        else f"Generated: {datetime.now()}"
-    )
+    lines.append(_md_kv("Generated", datetime.now().strftime("%Y-%m-%d %H:%M:%S")) if is_md else f"Generated: {datetime.now()}")
     lines.append("")
 
     mode = payload.get("mode") or {}
@@ -1720,16 +1771,11 @@ def _render_report(payload, errors_summary, errors_recent, fmt):
     lines.append(_md_kv("Memory used (%)", hw.get("memory_percent")))
     if hw.get("disk_log"):
         lines.append(
-            _md_kv(
-                "Disk log",
-                f"{hw['disk_log']['free_gb']} GB free of {hw['disk_log']['total_gb']} GB",
-            )
+            _md_kv("Disk log", f"{hw['disk_log']['free_gb']} GB free of {hw['disk_log']['total_gb']} GB")
         )
     if hw.get("disk_db"):
         lines.append(
-            _md_kv(
-                "Disk db", f"{hw['disk_db']['free_gb']} GB free of {hw['disk_db']['total_gb']} GB"
-            )
+            _md_kv("Disk db", f"{hw['disk_db']['free_gb']} GB free of {hw['disk_db']['total_gb']} GB")
         )
     lines.append("")
 
@@ -1768,9 +1814,7 @@ def _render_report(payload, errors_summary, errors_recent, fmt):
     lines.append(f"{h2}Brokers")
     lines.append(_md_kv("Active broker", brokers.get("active_broker")))
     lines.append(_md_kv("User logged in", brokers.get("user_logged_in")))
-    lines.append(
-        _md_kv("Configured", ", ".join(brokers.get("configured_brokers") or []) or "_none_")
-    )
+    lines.append(_md_kv("Configured", ", ".join(brokers.get("configured_brokers") or []) or "_none_"))
     lines.append("")
 
     dbs = payload.get("databases") or []
@@ -1807,11 +1851,7 @@ def _render_report(payload, errors_summary, errors_recent, fmt):
             lvl = entry.get("level", "?")
             mod = entry.get("module", "?")
             msg = _strip_ansi(entry.get("message", ""))[:500]
-            lines.append(
-                f"{bullet}`{ts}` **{lvl}** in `{mod}`: {msg}"
-                if is_md
-                else f"  - [{ts}] {lvl} in {mod}: {msg}"
-            )
+            lines.append(f"{bullet}`{ts}` **{lvl}** in `{mod}`: {msg}" if is_md else f"  - [{ts}] {lvl} in {mod}: {msg}")
         lines.append("")
 
     body = "\n".join(lines)
@@ -2014,7 +2054,9 @@ def api_oauth_client_approve(client_id):
             f"[OAuth admin] approved client_id={client_id} "
             f"by user={request.headers.get('X-Forwarded-User') or 'session'}"
         )
-        return jsonify({"status": "success", "client": _serialize_oauth_client(client)})
+        return jsonify(
+            {"status": "success", "client": _serialize_oauth_client(client)}
+        )
     except Exception as e:
         logger.exception(f"Error approving OAuth client: {e}")
         return jsonify({"status": "error", "message": "Failed to approve."}), 500
@@ -2052,7 +2094,8 @@ def api_oauth_client_revoke(client_id):
 
         revoked_count = revoke_client(client_id, "admin_revoke")
         logger.warning(
-            f"[OAuth admin] REVOKE client_id={client_id} ({revoked_count} tokens) by session"
+            f"[OAuth admin] REVOKE client_id={client_id} "
+            f"({revoked_count} tokens) by session"
         )
         return jsonify(
             {
@@ -2128,17 +2171,8 @@ def api_mcp_audit():
         # whitelist stops it from leaking through this endpoint
         # (security review finding M-3).
         _AUDIT_KEYS = frozenset(
-            {
-                "ts",
-                "jti",
-                "client_id",
-                "tool",
-                "scope",
-                "params_hash",
-                "duration_ms",
-                "outcome",
-                "request_ip",
-            }
+            {"ts", "jti", "client_id", "tool", "scope", "params_hash",
+             "duration_ms", "outcome", "request_ip"}
         )
 
         def _sanitize_audit(entry: dict) -> dict:
@@ -2202,7 +2236,7 @@ def api_mcp_kill_switch():
         return jsonify(
             {
                 "status": "error",
-                "message": 'Kill switch requires confirm="REVOKE_ALL_MCP_TOKENS".',
+                "message": "Kill switch requires confirm=\"REVOKE_ALL_MCP_TOKENS\".",
             }
         ), 400
 
@@ -2351,10 +2385,7 @@ def api_mcp_settings_put():
         public_url = public_url.strip().rstrip("/")
         if public_url and not re.match(r"^https://[A-Za-z0-9.\-]+(:\d+)?(/.*)?$", public_url):
             return jsonify(
-                {
-                    "status": "error",
-                    "message": "public_url must be HTTPS (e.g. https://yourdomain.com).",
-                }
+                {"status": "error", "message": "public_url must be HTTPS (e.g. https://yourdomain.com)."}
             ), 400
 
     # Pre-flight: enabling MCP must not produce a config that refuses to boot.
@@ -2370,9 +2401,7 @@ def api_mcp_settings_put():
                     ),
                 }
             ), 400
-        effective_url = (
-            public_url if public_url is not None else (os.getenv("MCP_PUBLIC_URL") or "").strip()
-        )
+        effective_url = public_url if public_url is not None else (os.getenv("MCP_PUBLIC_URL") or "").strip()
         if not effective_url:
             return jsonify(
                 {
@@ -2387,20 +2416,18 @@ def api_mcp_settings_put():
     env_path = _resolve_env_path()
     if not env_path.exists():
         logger.error(f"[MCP admin] .env not found at {env_path}")
-        return jsonify({"status": "error", "message": f".env not found at {env_path}"}), 500
+        return jsonify(
+            {"status": "error", "message": f".env not found at {env_path}"}
+        ), 500
 
     try:
         if "http_enabled" in data:
-            _set_env_value(
-                env_path, "MCP_HTTP_ENABLED", "True" if data["http_enabled"] else "False"
-            )
+            _set_env_value(env_path, "MCP_HTTP_ENABLED", "True" if data["http_enabled"] else "False")
         if public_url is not None:
             _set_env_value(env_path, "MCP_PUBLIC_URL", public_url)
         if "require_approval" in data:
             _set_env_value(
-                env_path,
-                "MCP_OAUTH_REQUIRE_APPROVAL",
-                "True" if data["require_approval"] else "False",
+                env_path, "MCP_OAUTH_REQUIRE_APPROVAL", "True" if data["require_approval"] else "False"
             )
         if "write_scope_enabled" in data:
             _set_env_value(

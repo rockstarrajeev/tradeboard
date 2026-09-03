@@ -2,7 +2,7 @@
 type: Reference
 title: Order Constants
 description: Exchange, product, price-type, and action code constants used by all order APIs
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/prompt/order-constants.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/prompt/order-constants.md
 tags:
 - constants
 - order

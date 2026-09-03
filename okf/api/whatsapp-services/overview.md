@@ -2,7 +2,7 @@
 type: API Endpoint
 title: WhatsApp Services Overview
 description: "WhatsApp alerts: architecture, security model, and command reference"
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/whatsapp-services/README.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/whatsapp-services/README.md
 tags:
 - whatsapp
 - alerts

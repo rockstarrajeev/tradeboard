@@ -87,7 +87,6 @@ load_dotenv(ENV_PATH)
 
 # ---------- Fernet key derivations (must match the three modules) ----------
 
-
 def _auth_db_fernet(pepper: str) -> Fernet:
     """Match database/auth_db.py:get_encryption_key()."""
     kdf = PBKDF2HMAC(
@@ -137,7 +136,6 @@ def _legacy_settings_db_fernet(pepper: str) -> Fernet:
 
 # ---------- Helpers ----------
 
-
 def _resolve_db_path() -> str:
     """Resolve DATABASE_URL to an absolute SQLite path."""
     db_url = os.getenv("DATABASE_URL", "sqlite:///db/openalgo.db")
@@ -158,7 +156,7 @@ def _atomic_rewrite_env_pepper(env_path: str, old_pepper: str, new_pepper: str) 
     """Replace API_KEY_PEPPER in .env atomically, preserving all other
     content and line endings. Same pattern as utils/env_check.py.
     """
-    with open(env_path, encoding="utf-8", newline="") as f:
+    with open(env_path, "r", encoding="utf-8", newline="") as f:
         content = f.read()
 
     if old_pepper not in content:
@@ -173,7 +171,8 @@ def _atomic_rewrite_env_pepper(env_path: str, old_pepper: str, new_pepper: str) 
         )
         if n != 1:
             raise RuntimeError(
-                "Could not locate API_KEY_PEPPER line in .env to update. Manual edit required."
+                "Could not locate API_KEY_PEPPER line in .env to update. "
+                "Manual edit required."
             )
         content = new_content
     else:
@@ -217,7 +216,6 @@ def _encrypt(fernet: Fernet, plaintext: str) -> str:
 
 
 # ---------- Per-table rotation logic ----------
-
 
 class Rotator:
     """Walks the DB rotating ciphertexts from old_pepper to new_pepper."""
@@ -317,9 +315,7 @@ class Rotator:
                         )
                         self.stats["auth.feed_token"] += 1
                     else:
-                        print(
-                            f"  WARN: auth.feed_token row {row_id}: cannot decrypt, leaving alone"
-                        )
+                        print(f"  WARN: auth.feed_token row {row_id}: cannot decrypt, leaving alone")
                 if samco_v:
                     pt, was_enc = _try_decrypt(self.old_auth, samco_v)
                     self.conn.execute(
@@ -332,15 +328,15 @@ class Rotator:
 
         # ---- apikeys: decrypt with old, re-encrypt with new, RE-HASH ----
         if self._table_exists("api_keys"):
-            cur = self.conn.execute("SELECT id, api_key_encrypted, api_key_hash FROM api_keys")
+            cur = self.conn.execute(
+                "SELECT id, api_key_encrypted, api_key_hash FROM api_keys"
+            )
             for row_id, enc_v, _hash_v in cur.fetchall():
                 if enc_v is None:
                     continue
                 pt, was_enc = _try_decrypt(self.old_auth, enc_v)
                 if not was_enc:
-                    print(
-                        f"  WARN: apikeys row {row_id}: api_key_encrypted does not decrypt, leaving alone"
-                    )
+                    print(f"  WARN: apikeys row {row_id}: api_key_encrypted does not decrypt, leaving alone")
                     continue
                 # Re-encrypt with new pepper
                 new_ct = _encrypt(self.new_auth, pt)
@@ -381,9 +377,7 @@ class Rotator:
                     try:
                         pt = self.old_settings_legacy.decrypt(smtp_v.encode()).decode()
                     except (InvalidToken, ValueError):
-                        print(
-                            f"  WARN: settings.smtp_password_encrypted row {row_id}: cannot decrypt, leaving alone"
-                        )
+                        print(f"  WARN: settings.smtp_password_encrypted row {row_id}: cannot decrypt, leaving alone")
                         continue
                 new_ct = self.new_settings.encrypt(pt.encode()).decode()
                 self.conn.execute(
@@ -401,9 +395,7 @@ class Rotator:
                 try:
                     pt = self.old_telegram.decrypt(tg_v.encode()).decode()
                 except (InvalidToken, ValueError):
-                    print(
-                        f"  WARN: telegram_users.encrypted_api_key row {row_id}: cannot decrypt, leaving alone"
-                    )
+                    print(f"  WARN: telegram_users.encrypted_api_key row {row_id}: cannot decrypt, leaving alone")
                     continue
                 new_ct = self.new_telegram.encrypt(pt.encode()).decode()
                 self.conn.execute(
@@ -451,21 +443,12 @@ class Rotator:
 
 # ---------- Main ----------
 
-
 def main():
-    parser = argparse.ArgumentParser(
-        description="Rotate API_KEY_PEPPER and re-encrypt all dependent fields"
-    )
-    parser.add_argument(
-        "--yes", action="store_true", help="Skip the interactive confirmation prompt"
-    )
+    parser = argparse.ArgumentParser(description="Rotate API_KEY_PEPPER and re-encrypt all dependent fields")
+    parser.add_argument("--yes", action="store_true", help="Skip the interactive confirmation prompt")
     parser.add_argument("--db", help="Path to SQLite DB (defaults to DATABASE_URL from .env)")
     parser.add_argument("--env", help="Path to .env file to update (defaults to project root .env)")
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Run rotation in a DB transaction but rollback at the end (no .env update)",
-    )
+    parser.add_argument("--dry-run", action="store_true", help="Run rotation in a DB transaction but rollback at the end (no .env update)")
     args = parser.parse_args()
 
     env_path = args.env or ENV_PATH

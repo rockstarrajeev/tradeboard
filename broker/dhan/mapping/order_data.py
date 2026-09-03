@@ -49,7 +49,7 @@ def map_order_data(order_data):
                     order["productType"] = "MIS"
 
                 elif (
-                    order["exchangeSegment"] in ["NFO", "MCX", "BFO", "CDS"]
+                    order["exchangeSegment"] in ["NFO", "MCX", "BFO", "CDS", "BCD", "NCO"]
                     and order["productType"] == "MARGIN"
                 ):
                     order["productType"] = "NRML"
@@ -58,8 +58,8 @@ def map_order_data(order_data):
                 # Never leave a null tradingSymbol — fall back to the raw broker
                 # symbol or securityId so the row stays usable instead of
                 # crashing the positions UI with null.toUpperCase(). See #1463.
-                order["tradingSymbol"] = order.get("tradingSymbol") or str(
-                    order.get("securityId") or ""
+                order["tradingSymbol"] = (
+                    order.get("tradingSymbol") or str(order.get("securityId") or "")
                 )
                 logger.warning(
                     f"Symbol not found for token {instrument_token} and exchange {exchange}. "
@@ -306,7 +306,9 @@ def map_portfolio_data(portfolio_data):
                 if h.get("_oa_symbol") and h.get("_exchange")
             ]
             if symbols_payload:
-                success, response, _ = get_multiquotes(symbols=symbols_payload, api_key=api_key)
+                success, response, _ = get_multiquotes(
+                    symbols=symbols_payload, api_key=api_key
+                )
                 if success and isinstance(response, dict) and "results" in response:
                     ltp_map = {}
                     for result in response["results"]:
@@ -367,16 +369,14 @@ def transform_holdings_data(holdings_data):
         else:
             pnl = 0.0
             pnlpercent = 0.0
-        transformed_data.append(
-            {
-                "symbol": h.get("_oa_symbol") or h.get("tradingSymbol", ""),
-                "exchange": h.get("_exchange") or "NSE",
-                "quantity": qty,
-                "product": "CNC",
-                "average_price": round(avg, 2),
-                "ltp": round(ltp, 2),
-                "pnl": pnl,
-                "pnlpercent": pnlpercent,
-            }
-        )
+        transformed_data.append({
+            "symbol": h.get("_oa_symbol") or h.get("tradingSymbol", ""),
+            "exchange": h.get("_exchange") or "NSE",
+            "quantity": qty,
+            "product": "CNC",
+            "average_price": round(avg, 2),
+            "ltp": round(ltp, 2),
+            "pnl": pnl,
+            "pnlpercent": pnlpercent,
+        })
     return transformed_data

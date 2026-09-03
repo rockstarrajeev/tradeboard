@@ -2,12 +2,12 @@
 
 ## Introduction
 
-This is the exciting part - placing your first order through Tradeboard! We'll start with the Analyzer (sandbox testing) mode to practice safely, then show you how to go live.
+This is the exciting part - placing your first order through OpenAlgo! We'll start with the Analyzer (sandbox testing) mode to practice safely, then show you how to go live.
 
 ## Before You Begin
 
 Ensure you have:
-- [ ] Tradeboard running
+- [ ] OpenAlgo running
 - [ ] Logged into your broker
 - [ ] API key generated
 - [ ] Understand order types (review [Module 03](../03-key-concepts/README.md) if needed)
@@ -24,7 +24,7 @@ The Playground is the best way to start - it's a visual interface to test orders
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  ⚠️ ANALYZER MODE ACTIVE                                        │
+│ ANALYZER MODE ACTIVE                                        │
 │  Orders will NOT go to your real broker                         │
 │  Sandbox Balance: ₹1,00,00,000                                  │
 └─────────────────────────────────────────────────────────────────┘
@@ -86,7 +86,7 @@ Fill in:
 4. Go to **Positions**
 5. See your new SBIN position
 
-Congratulations! You've placed your first order! 🎉
+Congratulations! You've placed your first order!
 
 ## Method 2: Using API (For Automation)
 
@@ -112,7 +112,7 @@ curl -X POST http://127.0.0.1:5000/api/v1/placeorder \
 ```python
 from openalgo import api
 
-# Connect to Tradeboard
+# Connect to OpenAlgo
 client = api(
     api_key="YOUR_API_KEY",
     host="http://127.0.0.1:5000"
@@ -175,7 +175,7 @@ Common error messages:
 │  1. You submit order                                                        │
 │         │                                                                    │
 │         ▼                                                                    │
-│  2. Tradeboard validates                                                      │
+│  2. OpenAlgo validates                                                      │
 │         │                                                                    │
 │         ├──→ Invalid? Return error                                          │
 │         │                                                                    │
@@ -251,7 +251,7 @@ Once comfortable with sandbox testing:
 
 ### Step 2: Verify Broker Connection
 
-- Check broker status is 🟢 Connected
+- Check broker status is Connected
 - Verify available margin
 
 ### Step 3: Start Small

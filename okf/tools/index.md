@@ -1,6 +1,6 @@
 # Tools & Terminals
 
-In-browser trading and analytics surfaces built into Tradeboard, sharing the broker
+In-browser trading and analytics surfaces built into OpenAlgo, sharing the broker
 session and market-data feed.
 
 * [Scalping Terminal (/scalping)](scalping.md) - Keyboard-driven, low-latency options/futures/equity scalping with a browser-independent server-side risk engine.

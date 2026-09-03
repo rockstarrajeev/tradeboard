@@ -29,9 +29,7 @@ class FirstockWebSocket:
     DISCONNECTED = 2
     ERROR = 3
 
-    def __init__(
-        self, user_id, auth_token, max_retry_attempt=5, retry_delay=5, token_provider=None
-    ):
+    def __init__(self, user_id, auth_token, max_retry_attempt=5, retry_delay=5, token_provider=None):
         """
         Initialize the Firstock WebSocket client
 
@@ -132,7 +130,7 @@ class FirstockWebSocket:
         """
         params = {"userId": self.user_id, "jKey": self.auth_token, "source": "developer-api"}
         connection_url = f"{self.ROOT_URI}?{urlencode(params)}"
-        self.logger.debug(f"Connection URL: {connection_url}")
+        self.logger.debug(f"Connection URL: {self.ROOT_URI}")
         return websocket.WebSocketApp(
             connection_url,
             on_open=self._on_open,
@@ -182,7 +180,7 @@ class FirstockWebSocket:
             self.logger.info(f"Connecting to Firstock WebSocket: {self.ROOT_URI}")
             self.logger.info(f"Using userId: {self.user_id}")
             self.logger.debug(
-                f"Using auth token (jKey): {self.auth_token[:10]}...{self.auth_token[-5:] if len(self.auth_token) > 15 else self.auth_token}"
+                f"Using auth token (jKey): {'present' if self.auth_token else 'missing'}"
             )
             self.logger.info(
                 "Note: The jKey must be the 'susertoken' obtained from Firstock's login API"
@@ -303,7 +301,9 @@ class FirstockWebSocket:
         ):
             ws_thread.join(timeout=5)
             if ws_thread.is_alive():
-                self.logger.warning("ws_thread did not exit within 5s after close_connection")
+                self.logger.warning(
+                    "ws_thread did not exit within 5s after close_connection"
+                )
         self.ws_thread = None
 
         # Join the monitor thread (stop_event was set above; it should exit
@@ -496,7 +496,7 @@ class FirstockWebSocket:
                             self.logger.error(f"Full response: {data}")
                             self.logger.error(f"Using userId: {self.user_id}")
                             self.logger.error(
-                                f"Using jKey (first 10 chars): {self.auth_token[:10] if self.auth_token else 'None'}..."
+                                f"Using jKey: {'present' if self.auth_token else 'None'}"
                             )
                             self.logger.error(
                                 "IMPORTANT: The jKey must be the 'susertoken' from Firstock's login API response"
@@ -534,8 +534,7 @@ class FirstockWebSocket:
                     # inject c_symbol/c_exch_seg so the existing adapter handler
                     # continues to work unchanged.
                     v2_tick_keys = [
-                        k
-                        for k in data.keys()
+                        k for k in data.keys()
                         if isinstance(k, str) and ":" in k and isinstance(data[k], dict)
                     ]
                     if v2_tick_keys:
@@ -558,10 +557,9 @@ class FirstockWebSocket:
                     # bounded preview of the first value (first few messages
                     # only) to help diagnose unexpected V2 payload formats.
                     first_key = next(iter(data.keys()), None)
-                    if (
-                        first_key is not None
-                        and not getattr(self, "_unknown_payload_samples_logged", 0) >= 5
-                    ):
+                    if first_key is not None and not getattr(
+                        self, "_unknown_payload_samples_logged", 0
+                    ) >= 5:
                         val = data[first_key]
                         try:
                             val_preview = json.dumps(val)[:500]
@@ -578,7 +576,9 @@ class FirstockWebSocket:
                     else:
                         # Steady-state unknown-type log — demote to debug so
                         # a misrouted feed can't flood the log at info.
-                        self.logger.debug(f"Received other message type: {list(data.keys())}")
+                        self.logger.debug(
+                            f"Received other message type: {list(data.keys())}"
+                        )
 
                     # Handle other message types
                     if self.on_message:

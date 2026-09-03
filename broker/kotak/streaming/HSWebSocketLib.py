@@ -799,7 +799,7 @@ class HSWrapper:
         field_count = buf2long(c[d : d + 1])
         d += 1
         if field_count > 0:
-            buf2long(c[d : d + 1])
+            fld = buf2long(c[d : d + 1])
             d = d + 1
             field_length = buf2long(c[d : d + 2])
             d += 2
@@ -811,6 +811,7 @@ class HSWrapper:
         if len(e) < 3:
             logger.warning(f"Truncated binary message: {len(e)} bytes, dropping")
             return None
+        pos = 0
         # logger.info(f"INTO Parse Data {e}")
         try:
             return self._parseDataInner(e)
@@ -820,7 +821,7 @@ class HSWrapper:
 
     def _parseDataInner(self, e):
         pos = 0
-        buf2long(e[pos:2])
+        packetsCount = buf2long(e[pos:2])
         pos += 2
         type = int.from_bytes(e[pos : pos + 1], "big")
         pos += 1
@@ -832,13 +833,13 @@ class HSWrapper:
             fCount = int.from_bytes(e[pos : pos + 1], "big")
             pos += 1
             if fCount >= 2:
-                int.from_bytes(e[pos : pos + 1], "big")
+                fid1 = int.from_bytes(e[pos : pos + 1], "big")
                 pos += 1
                 valLen = int.from_bytes(e[pos : pos + 2], "big")
                 pos += 2
                 status = e[pos : pos + valLen].decode("utf-8")
                 pos += valLen
-                int.from_bytes(e[pos : pos + 1], "big")
+                fid1 = int.from_bytes(e[pos : pos + 1], "big")
                 pos += 1
                 valLen = int.from_bytes(e[pos : pos + 2], "big")
                 pos += 2
@@ -856,7 +857,7 @@ class HSWrapper:
                     jsonRes["stCode"] = RespCodes.get("CONNECTION_FAILED")
                 self.ack_num = ackCount
             elif fCount == 1:
-                int.from_bytes(e[pos : pos + 1], "big")
+                fid1 = int.from_bytes(e[pos : pos + 1], "big")
                 pos += 1
                 valLen = int.from_bytes(e[pos : pos + 2], "big")
                 pos += 2
@@ -903,7 +904,7 @@ class HSWrapper:
                 g = buf2long(e[pos : pos + 2])
                 # logger.info(f"G in {g}")
                 pos += 2
-                for _n in range(g):
+                for n in range(g):
                     sub_msg_len = buf2long(e[pos : pos + 2])
                     pos += 2
                     sub_msg_start = pos
@@ -922,10 +923,7 @@ class HSWrapper:
                         d = self.getNewTopicData(topic_name)
                         if d:
                             # Evict oldest entries if topic_list exceeds cap
-                            if (
-                                len(self.topic_list) >= self._max_topics
-                                and f not in self.topic_list
-                            ):
+                            if len(self.topic_list) >= self._max_topics and f not in self.topic_list:
                                 oldest_key = next(iter(self.topic_list))
                                 del self.topic_list[oldest_key]
                             self.topic_list[f] = d
@@ -1077,14 +1075,14 @@ class HSWrapper:
                             json_res["type"] = RespTypeValues.get("OPC")
                             json_res["msg"] = "successful"
                             json_res["stCode"] = RespCodes.get("SUCCESS")
-                            buf2long(e[pos : pos + 1])
+                            fld = buf2long(e[pos : pos + 1])
                             pos += 1
                             field_length = buf2long(e[pos : pos + 2])
                             pos += 2
                             opc_key = buf2string(e[pos : pos + field_length])
                             pos += field_length
                             json_res["key"] = opc_key
-                            buf2long(e[pos : pos + 1])
+                            fld = buf2long(e[pos : pos + 1])
                             pos += 1
                             field_length = buf2long(e[pos : pos + 2])
                             pos += 2
@@ -1103,9 +1101,7 @@ class HSWrapper:
 
 
 class StartServer:
-    def __init__(
-        self, a, token, sid, onopen, onmessage, onerror, onclose, owner=None, send_lock=None
-    ):
+    def __init__(self, a, token, sid, onopen, onmessage, onerror, onclose, owner=None, send_lock=None):
         self.userSocket = self
         self.a = a
         self.onopen = onopen
@@ -1223,17 +1219,7 @@ class HSWebSocket:
         self.onmessage = on_message
         self.on_error = on_error
         self.onclose = on_close
-        StartServer(
-            self.url,
-            token,
-            sid,
-            self.onopen,
-            self.onmessage,
-            self.on_error,
-            self.onclose,
-            owner=self,
-            send_lock=self._send_lock,
-        )
+        StartServer(self.url, token, sid, self.onopen, self.onmessage, self.on_error, self.onclose, owner=self, send_lock=self._send_lock)
 
     def hs_send(self, d):
         req_json = json.loads(d)
@@ -1506,9 +1492,7 @@ class HSIWebSocket:
         self.onmessage = onmessage
         self.onclose = onclose
         self.onerror = onerror
-        StartHSIServer(
-            self.url, self.onopen, self.onmessage, self.onerror, self.onclose, owner=self
-        )
+        StartHSIServer(self.url, self.onopen, self.onmessage, self.onerror, self.onclose, owner=self)
 
     def send(self, d):
         reqJson = json.loads(d)

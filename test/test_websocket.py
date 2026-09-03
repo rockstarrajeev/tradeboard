@@ -170,7 +170,7 @@ async def receive_and_print_data(websocket, duration=30):
             pass
 
 
-async def run_ltp_subscribe():
+async def test_ltp_subscribe():
     """Test LTP subscription"""
     print("\n===== TESTING LTP SUBSCRIPTION =====")
     websocket = await connect_and_authenticate(WS_URL, API_KEY)
@@ -184,7 +184,7 @@ async def run_ltp_subscribe():
         await websocket.close()
 
 
-async def run_quote_subscribe():
+async def test_quote_subscribe():
     """Test Quote subscription"""
     print("\n===== TESTING QUOTE SUBSCRIPTION =====")
     websocket = await connect_and_authenticate(WS_URL, API_KEY)
@@ -198,7 +198,7 @@ async def run_quote_subscribe():
         await websocket.close()
 
 
-async def run_depth_subscribe():
+async def test_depth_subscribe():
     """Test Depth subscription"""
     print("\n===== TESTING DEPTH SUBSCRIPTION =====")
     websocket = await connect_and_authenticate(WS_URL, API_KEY)
@@ -214,9 +214,9 @@ async def run_depth_subscribe():
 
 async def run_all_tests():
     """Run all subscription tests one by one"""
-    await run_ltp_subscribe()
-    await run_quote_subscribe()
-    await run_depth_subscribe()
+    await test_ltp_subscribe()
+    await test_quote_subscribe()
+    await test_depth_subscribe()
 
 
 def main():
@@ -229,11 +229,11 @@ def main():
     if len(sys.argv) > 1:
         test_type = sys.argv[1].lower()
         if test_type == "ltp":
-            asyncio.run(run_ltp_subscribe())
+            asyncio.run(test_ltp_subscribe())
         elif test_type == "quote":
-            asyncio.run(run_quote_subscribe())
+            asyncio.run(test_quote_subscribe())
         elif test_type == "depth":
-            asyncio.run(run_depth_subscribe())
+            asyncio.run(test_depth_subscribe())
         else:
             print(f"Unknown test type: {test_type}")
             print("Available test types: ltp, quote, depth")

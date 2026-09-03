@@ -2,12 +2,12 @@
 
 ### Overview
 
-The Tradeboard WhatsApp Bot connects your Tradeboard install to a WhatsApp account that you control. It does two things:
+The OpenAlgo WhatsApp Bot connects your OpenAlgo install to a WhatsApp account that you control. It does two things:
 
 1. **Outbound** — fires real-time order alerts to you (and optionally to a small list of recipients) via the same event bus that already drives Telegram, so a `/api/v1/placeorder` call lands as a WhatsApp message on your phone moments later.
 2. **Inbound** — accepts slash-command queries (`/orderbook`, `/positions`, `/quote`, …) that you type from your **own phone** in the "Message yourself" chat. The bot replies in the same chat. Commands are gated by WhatsApp's own multi-device protocol — random contacts who message your number cannot drive the bot.
 
-Unlike Telegram, WhatsApp has no separate "bot account" concept. The Tradeboard server runs as a **linked device** on your personal WhatsApp account — the same way WhatsApp Web does. You pair once with a QR scan and the encrypted session lives in `openalgo.db`.
+Unlike Telegram, WhatsApp has no separate "bot account" concept. The OpenAlgo server runs as a **linked device** on your personal WhatsApp account — the same way WhatsApp Web does. You pair once with a QR scan and the encrypted session lives in `openalgo.db`.
 
 ### Features
 
@@ -20,9 +20,9 @@ Unlike Telegram, WhatsApp has no separate "bot account" concept. The Tradeboard 
 
 ### Setup
 
-#### 1. Pair Your WhatsApp Device in Tradeboard
+#### 1. Pair Your WhatsApp Device in OpenAlgo
 
-1. Log in to Tradeboard.
+1. Log in to OpenAlgo.
 2. From the profile dropdown (top-right) click **WhatsApp Bot**, or navigate to `/whatsapp`.
 3. Click **Start pairing**. A QR code renders inline on the page.
 4. On your phone: open WhatsApp → **Settings** → **Linked devices** → **Link a device** → scan the QR.
@@ -31,11 +31,11 @@ Unlike Telegram, WhatsApp has no separate "bot account" concept. The Tradeboard 
 
 That's the entire setup. No bot token, no developer account, no external service.
 
-> **Note:** WhatsApp permits a maximum of four (currently) linked devices per account. If you're already at the cap, remove an unused linked device on your phone before pairing Tradeboard.
+> **Note:** WhatsApp permits a maximum of four (currently) linked devices per account. If you're already at the cap, remove an unused linked device on your phone before pairing OpenAlgo.
 
-#### 2. (Optional) Generate an Tradeboard API Key
+#### 2. (Optional) Generate an OpenAlgo API Key
 
-Slash-command queries (`/orderbook`, `/positions`, etc.) execute against the Tradeboard SDK using **your own** Tradeboard API key, looked up server-side. If you haven't generated one yet:
+Slash-command queries (`/orderbook`, `/positions`, etc.) execute against the OpenAlgo SDK using **your own** OpenAlgo API key, looked up server-side. If you haven't generated one yet:
 
 1. Navigate to **API Key** in the profile dropdown.
 2. Generate a key.
@@ -50,16 +50,16 @@ If you plan to send images or documents via the API, set `WHATSAPP_ATTACHMENT_RO
 WHATSAPP_ATTACHMENT_ROOTS=/srv/charts,/srv/reports
 ```
 
-When unset, the default allowlist is `<tradeboard>/db/attachments/` only. Paths containing `..`, paths under sensitive system trees (`/etc`, `/proc`, `/sys`, `/root`, `/var/log`, `C:\Windows`, `C:\Users\Default`), and paths that resolve outside the allowlist are always rejected with `400 image_path is not allowed`.
+When unset, the default allowlist is `<openalgo>/db/attachments/` only. Paths containing `..`, paths under sensitive system trees (`/etc`, `/proc`, `/sys`, `/root`, `/var/log`, `C:\Windows`, `C:\Users\Default`), and paths that resolve outside the allowlist are always rejected with `400 image_path is not allowed`.
 
 ### How to Send Commands
 
-Commands work differently from Telegram. WhatsApp has no separate bot identity — the bot **is** your own WhatsApp account, running as a linked device on the Tradeboard server.
+Commands work differently from Telegram. WhatsApp has no separate bot identity — the bot **is** your own WhatsApp account, running as a linked device on the OpenAlgo server.
 
 1. Open WhatsApp on your phone.
 2. Scroll to the top of your chat list — there's a chat titled **"You"** or your own name (the "Message yourself" chat that WhatsApp creates automatically).
 3. Type a command starting with `/`, e.g. `/orderbook`.
-4. The linked device on the Tradeboard server sees the message as `is_from_me=True`, dispatches it, runs the matching SDK call, and replies in the same chat.
+4. The linked device on the OpenAlgo server sees the message as `is_from_me=True`, dispatches it, runs the matching SDK call, and replies in the same chat.
 5. The reply arrives back on your phone within a second or two.
 
 ### Available Commands
@@ -91,7 +91,7 @@ Commands work differently from Telegram. WhatsApp has no separate bot identity �
 
 #### Mode
 
-* `/mode` — Show whether the Tradeboard instance is in `live` or `analyze` (sandbox) mode
+* `/mode` — Show whether the OpenAlgo instance is in `live` or `analyze` (sandbox) mode
 
 Each reply is a plain-text WhatsApp message (no Markdown rendering — WhatsApp's `*bold*`, `_italic_`, ``` ```mono``` ``` markers are preserved). Long responses are auto-truncated at 3,500 characters.
 
@@ -99,7 +99,7 @@ Each reply is a plain-text WhatsApp message (no Markdown rendering — WhatsApp'
 
 #### Overview
 
-The bot automatically sends a WhatsApp message to the paired device's own number for every order-related API activity. No additional commands are needed — alerts are sent automatically when orders flow through the Tradeboard API.
+The bot automatically sends a WhatsApp message to the paired device's own number for every order-related API activity. No additional commands are needed — alerts are sent automatically when orders flow through the OpenAlgo API.
 
 #### Supported Order Events
 
@@ -175,13 +175,13 @@ Time: 14:23:45
 
 #### Requirements for Receiving Alerts
 
-1. WhatsApp device must be paired in Tradeboard (`/whatsapp` page in the web UI).
-2. The Tradeboard server must have rebooted at least once since pairing OR the bot must be currently connected (auto-reconnects on every boot from the encrypted session blob).
-3. Orders must be placed through the Tradeboard API (REST `/api/v1/*`, the Python SDK, or any tool that ultimately hits the API).
+1. WhatsApp device must be paired in OpenAlgo (`/whatsapp` page in the web UI).
+2. The OpenAlgo server must have rebooted at least once since pairing OR the bot must be currently connected (auto-reconnects on every boot from the encrypted session blob).
+3. Orders must be placed through the OpenAlgo API (REST `/api/v1/*`, the Python SDK, or any tool that ultimately hits the API).
 
 ### Sending Messages via API
 
-In addition to the automatic order alerts, you can send arbitrary WhatsApp messages from your own code through the Tradeboard REST API or the Python SDK.
+In addition to the automatic order alerts, you can send arbitrary WhatsApp messages from your own code through the OpenAlgo REST API or the Python SDK.
 
 #### Python SDK (1.0.50+)
 
@@ -248,7 +248,7 @@ curl -X POST http://127.0.0.1:5000/api/v1/whatsapp/notify \
 ```json
 {
   "status": "error",
-  "message": "WhatsApp is not paired or not connected. Pair the device first from the /whatsapp page in Tradeboard before sending."
+  "message": "WhatsApp is not paired or not connected. Pair the device first from the /whatsapp page in OpenAlgo before sending."
 }
 ```
 
@@ -261,7 +261,7 @@ Exactly one of the following must be specified (defaults to `self` if all are om
 | Field | Type | Description |
 | --- | --- | --- |
 | `self` | bool | `true` → send to the paired device's own number (the operator) |
-| `username` | string | Tradeboard username — resolves via the linked-users table |
+| `username` | string | OpenAlgo username — resolves via the linked-users table |
 | `phone` | string | Single E.164 digit string, e.g. `"919876543210"` |
 | `phones` | array | Up to 5 E.164 digit strings (small broadcast). Anything beyond 5 is dropped server-side |
 
@@ -280,7 +280,7 @@ Exactly one of the following must be specified (defaults to `self` if all are om
 
 #### Pairing Stays Inside the Web UI
 
-The QR-scan / pair-code flow lives behind `POST /whatsapp/pair`, which is protected by the Flask **session cookie** (`@check_session_validity`). It is deliberately **not** exposed in the public REST API. An Tradeboard API key alone cannot:
+The QR-scan / pair-code flow lives behind `POST /whatsapp/pair`, which is protected by the Flask **session cookie** (`@check_session_validity`). It is deliberately **not** exposed in the public REST API. An OpenAlgo API key alone cannot:
 
 * Create a new paired device session
 * Wipe the existing session
@@ -310,7 +310,7 @@ Keep both off public hosts, off public git, and off any backup destination that 
 
 #### Owner-Only Bot Commands
 
-Slash-commands are gated by WhatsApp's own multi-device cryptography. When the operator types `/orderbook` from their primary phone, WhatsApp marks the message as `is_from_me=True` when mirroring it to the linked Tradeboard device. Random contacts who message the operator's number arrive with `is_from_me=False`. The bot's handler unconditionally drops the latter — there is no allowlist to maintain or `/link` flow to manage.
+Slash-commands are gated by WhatsApp's own multi-device cryptography. When the operator types `/orderbook` from their primary phone, WhatsApp marks the message as `is_from_me=True` when mirroring it to the linked OpenAlgo device. Random contacts who message the operator's number arrive with `is_from_me=False`. The bot's handler unconditionally drops the latter — there is no allowlist to maintain or `/link` flow to manage.
 
 #### Attachment Path Allowlist
 
@@ -343,7 +343,7 @@ Singleton row (id=1) holding:
 
 #### whatsapp_users (optional, multi-recipient)
 
-Linked recipient phone numbers and their Tradeboard username/api_key mapping. Unused in the standard single-user deployment.
+Linked recipient phone numbers and their OpenAlgo username/api_key mapping. Unused in the standard single-user deployment.
 
 #### whatsapp_command_logs
 
@@ -446,7 +446,7 @@ bus.publish(OrderPlacedEvent(api_key, ...))
 #### Bot Not Sending Alerts
 
 1. Open `/whatsapp` — verify status badge shows **Connected**. If it shows **Not paired**, scan the QR.
-2. Check that you have an Tradeboard API key generated at `/apikey` (slash-commands need it for SDK calls).
+2. Check that you have an OpenAlgo API key generated at `/apikey` (slash-commands need it for SDK calls).
 3. Confirm the order actually flowed through `/api/v1/placeorder` (or the SDK / a strategy / any other API path). Orders placed directly via a broker website do NOT trigger event-bus events.
 4. Check the server logs for lines like `WhatsApp alert queued for owner user=<username> type=placeorder`. If present, the alert was dispatched.
 
@@ -455,21 +455,21 @@ bus.publish(OrderPlacedEvent(api_key, ...))
 The bot lost its connection — typically after a long offline period, a WhatsApp protocol upgrade, or your phone being offline for many days.
 
 1. Open `/whatsapp` and re-pair if the badge says **Not paired**.
-2. If the badge says **Connected** but sends still fail, restart the Tradeboard server. Auto-reconnect rebuilds the session from the encrypted blob.
+2. If the badge says **Connected** but sends still fail, restart the OpenAlgo server. Auto-reconnect rebuilds the session from the encrypted blob.
 
 #### Slash Commands Don't Reply
 
 1. Make sure you typed the command in the **"Message yourself"** chat (your own contact at the top of the chat list).
 2. Commands must start with `/` and use one of the supported names — check `/help` for the list.
-3. Verify the Tradeboard owner has an API key on file (`/apikey` page).
+3. Verify the OpenAlgo owner has an API key on file (`/apikey` page).
 4. Check `whatsapp_command_logs` table for the command — if it's logged, the bot received and processed it.
 
 #### Attachment Path Rejected
 
 `400 image_path is not allowed` means the path is outside the `WHATSAPP_ATTACHMENT_ROOTS` allowlist or contains a traversal token.
 
-1. Move the file to `<tradeboard>/db/attachments/` (the default allowlist), or
-2. Add the file's directory to `WHATSAPP_ATTACHMENT_ROOTS` in `.env` and restart Tradeboard.
+1. Move the file to `<openalgo>/db/attachments/` (the default allowlist), or
+2. Add the file's directory to `WHATSAPP_ATTACHMENT_ROOTS` in `.env` and restart OpenAlgo.
 
 Symlinks resolving outside the allowlist are also rejected.
 
@@ -481,11 +481,11 @@ WhatsApp allows up to 4 simultaneously linked devices per account. On your phone
 
 The bot respects the following environment variables:
 
-* `DATABASE_URL` — Main Tradeboard database (WhatsApp tables live here)
+* `DATABASE_URL` — Main OpenAlgo database (WhatsApp tables live here)
 * `API_KEY_PEPPER` — Encryption pepper, feeds the Fernet KDF
 * `FERNET_SALT` — Per-install random salt (auto-rotated on first boot by `utils/env_check.py`); the `:whatsapp-session` domain suffix is applied internally
-* `HOST_SERVER` — Tradeboard server URL the bot uses for SDK loopback calls (defaults to `http://127.0.0.1:5000`)
-* `WHATSAPP_ATTACHMENT_ROOTS` — Optional comma-separated allowlist for media paths. Defaults to `<tradeboard>/db/attachments/` only.
+* `HOST_SERVER` — OpenAlgo server URL the bot uses for SDK loopback calls (defaults to `http://127.0.0.1:5000`)
+* `WHATSAPP_ATTACHMENT_ROOTS` — Optional comma-separated allowlist for media paths. Defaults to `<openalgo>/db/attachments/` only.
 * `WHATSAPP_RATE_LIMIT` — Optional REST rate limit override. Defaults to `30 per minute`.
 * `WHATSAPP_MESSAGE_RATE_LIMIT` — Optional blueprint rate limit override. Defaults to `10 per minute`.
 * `RUST_LOG` — Optional log-level filter for wars / whatsapp-rust. Default silences three known-noisy modules while keeping genuine errors visible.
@@ -539,9 +539,9 @@ The bot respects the following environment variables:
 
 ### WhatsApp Terms of Service — Practical Risk Note
 
-Tradeboard's WhatsApp integration uses `wars`, an unofficial WhatsApp client. Unofficial clients can get the linked device unlinked, or in rare cases the entire account banned, by Meta's automation. The dominant trigger is send volume and pattern, not the client itself:
+OpenAlgo's WhatsApp integration uses `wars`, an unofficial WhatsApp client. Unofficial clients can get the linked device unlinked, or in rare cases the entire account banned, by Meta's automation. The dominant trigger is send volume and pattern, not the client itself:
 
-* **Low risk (typical Tradeboard usage)** — A handful of self-send order alerts per day, occasional `/status` replies, sending charts/reports to a small circle of subscribers. Indistinguishable from a person using WhatsApp normally; well under Meta's automated thresholds.
+* **Low risk (typical OpenAlgo usage)** — A handful of self-send order alerts per day, occasional `/status` replies, sending charts/reports to a small circle of subscribers. Indistinguishable from a person using WhatsApp normally; well under Meta's automated thresholds.
 * **Medium risk** — Sending to dozens of distinct contacts who haven't messaged you first, frequent broadcasts, sending the same body to many recipients in a short window.
 * **High risk (don't)** — Bulk marketing, cold outreach to scraped numbers, evading rate limits. This is what triggers bans. Use the official WhatsApp Business / Cloud API for those use cases.
 
@@ -559,11 +559,11 @@ The 5-recipient cap on `phones[]` broadcasts is a deliberate ToS-safety guardrai
 
 For issues or questions:
 
-1. Check the server logs (`log/tradeboard_YYYY-MM-DD.log` + `log/errors.jsonl`)
+1. Check the server logs (`log/openalgo_YYYY-MM-DD.log` + `log/errors.jsonl`)
 2. Open `/whatsapp` and inspect the status badge + pair-state JSON via `GET /whatsapp/pair/status`
 3. Verify wars is installed: `uv run python -c "import wars; print(wars.__version__)"` — should print `0.1.3` or later
 4. Review this documentation
-5. Contact Tradeboard support
+5. Contact OpenAlgo support
 
 ---
 
@@ -574,7 +574,7 @@ If you need additional information that is not directly available in this page, 
 Perform an HTTP GET request on the current page URL with the `ask` query parameter:
 
 ```
-GET https://docs.rajeevupadhyay.com/trading-platform/whatsapp.md?ask=<question>
+GET https://docs.openalgo.in/trading-platform/whatsapp.md?ask=<question>
 ```
 
 The question should be specific, self-contained, and written in natural language.

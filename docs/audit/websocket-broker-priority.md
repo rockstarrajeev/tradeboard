@@ -2,18 +2,18 @@
 
 **Scope:** All broker WebSocket integrations under `broker/*/streaming/`, the WebSocket proxy layer (`websocket_proxy/`), service-layer code in `services/` that depends on live broker streams, and cross-platform deployment compatibility (Windows/macOS dev → Docker/Ubuntu+gunicorn+eventlet production).
 **Date:** 2026-05-04 (revised for 24×7×365 self-hosted reality, weekend/holiday gap, and cross-platform deployment).
-**Companion to:** [`websocket-keepalive-audit.md`](./websocket-keepalive-audit.md) (transport/keepalive layer) and Issue [#1101 — Standard WebSocket Ping/Heartbeat](https://github.com/rockstarrajeev/tradeboard/issues/1101).
+**Companion to:** [`websocket-keepalive-audit.md`](./websocket-keepalive-audit.md) (transport/keepalive layer) and Issue [#1101 — Standard WebSocket Ping/Heartbeat](https://github.com/marketcalls/openalgo/issues/1101).
 **Source of truth:** code (every defect cited with `file:line`).
 
 ---
 
 ## 1. Purpose & Real-World Workload
 
-The keepalive audit catalogs **what each broker does** for ping/heartbeat. This document identifies **which brokers are broken or fragile under Tradeboard's actual self-hosted production workload**, ranked by impact, with concrete defects and a phased remediation plan.
+The keepalive audit catalogs **what each broker does** for ping/heartbeat. This document identifies **which brokers are broken or fragile under OpenAlgo's actual self-hosted production workload**, ranked by impact, with concrete defects and a phased remediation plan.
 
 ### 1.1 The deployment reality
 
-Tradeboard is **self-hosted by individual traders** on their own server (per CLAUDE.md: "Single user per deployment — no multi-user, no privilege escalation. One user, one broker session per instance."). The realistic operational profile:
+OpenAlgo is **self-hosted by individual traders** on their own server (per CLAUDE.md: "Single user per deployment — no multi-user, no privilege escalation. One user, one broker session per instance."). The realistic operational profile:
 
 | Dimension | Reality |
 |---|---|
@@ -62,17 +62,17 @@ Every broker WebSocket layer should satisfy these. Source-of-truth references va
 
 | # | Invariant | Reference | Fleet status |
 |---|---|---|---|
-| 1 | **Daemon-thread reconnect loop** with `while self.running` and exponential backoff (start 2s, cap 60s, max 50 attempts). | `broker/zerodha/streaming/zerodha_websocket.py:148-183` | 27/32 ✅ |
-| 2 | **Resubscribe on `_on_open`** — replay tracked subscriptions, batched by mode. State persists across reconnects. | `zerodha_websocket.py:453-477` | 26/32 ✅ |
-| 3 | **Health-check thread** monitoring `last_message_time`; force-close socket on data stall. | `zerodha_websocket.py:435-451` | 14/32 ✅ |
-| 4 | **`_on_close` flips flags only** — never spawns threads, sleeps, or recurses. | `zerodha_websocket.py:416-424` | 28/32 ✅ |
-| 5 | **Lock discipline** — never hold a lock across external I/O. Snapshot under lock; release; perform I/O. | `zerodha_websocket.py:453-477` | 24/32 ✅ |
-| 6 | **Auth-failure short-circuit** — detect 401/403/"unauthorized"/"session expired"/"invalid token" and stop the reconnect loop. | `broker/firstock/streaming/firstock_websocket.py:455-485` | **4/32 ✅** |
-| 7 | **Interruptible sleeps** — use `_stop_event.wait(delay)` instead of `time.sleep(delay)`. | `firstock_websocket.py:235` | **6/32 ✅** |
-| 8 | **Subscribe batch-queue** — coalesce many `subscribe()` calls into one broker message. | `broker/zerodha/streaming/zerodha_adapter.py:60-62, 151-194` | **5/32 ✅** |
-| 9 | **Configurable timeouts via env vars** (per #1101). | **Not implemented anywhere** | **0/32 ✅** |
-| 10 | **Eventlet-safe** — no `asyncio.run()` / bare `asyncio.get_event_loop()`. Async work isolated to a real OS thread. | telegram_bot_service.py pattern (per CLAUDE.md) | **31/32 ✅** (only dhan_sandbox at risk) |
-| 11 | **Weekend-gap-aware** — adapter is cleanly torn down by 3am orchestrator (Phase 4c), so subscription state doesn't carry stale tokens across multi-day gaps. Monday morning fresh login → fresh master contract → fresh `subscribe()` calls auto-resolve through normal flow. | **Not implemented anywhere** — depends on Phase 4c (3am orchestrator) + Phase 4b (`cache_loaded` listener tracking **symbols, not tokens**) | **0/32 ✅** |
+| 1 | **Daemon-thread reconnect loop** with `while self.running` and exponential backoff (start 2s, cap 60s, max 50 attempts). | `broker/zerodha/streaming/zerodha_websocket.py:148-183` | 27/32 |
+| 2 | **Resubscribe on `_on_open`** — replay tracked subscriptions, batched by mode. State persists across reconnects. | `zerodha_websocket.py:453-477` | 26/32 |
+| 3 | **Health-check thread** monitoring `last_message_time`; force-close socket on data stall. | `zerodha_websocket.py:435-451` | 14/32 |
+| 4 | **`_on_close` flips flags only** — never spawns threads, sleeps, or recurses. | `zerodha_websocket.py:416-424` | 28/32 |
+| 5 | **Lock discipline** — never hold a lock across external I/O. Snapshot under lock; release; perform I/O. | `zerodha_websocket.py:453-477` | 24/32 |
+| 6 | **Auth-failure short-circuit** — detect 401/403/"unauthorized"/"session expired"/"invalid token" and stop the reconnect loop. | `broker/firstock/streaming/firstock_websocket.py:455-485` | **4/32 ** |
+| 7 | **Interruptible sleeps** — use `_stop_event.wait(delay)` instead of `time.sleep(delay)`. | `firstock_websocket.py:235` | **6/32 ** |
+| 8 | **Subscribe batch-queue** — coalesce many `subscribe()` calls into one broker message. | `broker/zerodha/streaming/zerodha_adapter.py:60-62, 151-194` | **5/32 ** |
+| 9 | **Configurable timeouts via env vars** (per #1101). | **Not implemented anywhere** | **0/32 ** |
+| 10 | **Eventlet-safe** — no `asyncio.run()` / bare `asyncio.get_event_loop()`. Async work isolated to a real OS thread. | telegram_bot_service.py pattern (per CLAUDE.md) | **31/32 ** (only dhan_sandbox at risk) |
+| 11 | **Weekend-gap-aware** — adapter is cleanly torn down by 3am orchestrator (Phase 4c), so subscription state doesn't carry stale tokens across multi-day gaps. Monday morning fresh login → fresh master contract → fresh `subscribe()` calls auto-resolve through normal flow. | **Not implemented anywhere** — depends on Phase 4c (3am orchestrator) + Phase 4b (`cache_loaded` listener tracking **symbols, not tokens**) | **0/32 ** |
 
 **Note on previous Invariant 9 ("master-contract-aware resubscribe"):** The earlier draft of this document treated stale-token resubscribe as a separate broker-level invariant. After review, this is **automatically resolved by Phase 4c clean teardown** — once the 3am orchestrator clears `subscribed_tokens` and adapter state, every subsequent `subscribe(symbol, exchange)` call goes through `get_token()` which resolves via the freshly-downloaded `SymToken` table. F&O contract token rotation (new expiries, new strikes) is handled transparently. No per-broker change needed; only the Phase 4b listener must track **symbols, not cached tokens**, when restoring subscriptions.
 
@@ -146,49 +146,49 @@ Captures auth-fail behavior, weekend-gap survival, and cross-platform safety.
 
 Each broker scored against the 8 measurable per-broker criteria from §2. Criteria 9 (env-var) is "no" for everyone; 10 (eventlet-safe) is "yes" for everyone except dhan_sandbox; 11 (weekend-gap-aware) is "no" for everyone today (resolved by Phase 4c) — omitted from the row.
 
-**Legend:** ✅ implemented · ⚠️ partial · ❌ missing · n/a not applicable
+**Legend:** implemented · partial · missing · n/a not applicable
 
 | Broker | 1 reconnect loop | 2 resubscribe | 3 health check | 4 on_close clean | 5 lock discipline | 6 auth-fail | 7 interruptible sleep | 8 batch queue |
 |---|---|---|---|---|---|---|---|---|
-| **zerodha** | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ |
-| **angel** | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ (health only) | ❌ |
-| **dhan** | ✅ | ⚠️ caller-driven | ❌ | ✅ | ✅ | ✅ (fatal-error) | ❌ | ✅ |
-| **dhan_sandbox** | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ | ⚠️ async mixed | ❌ |
-| **flattrade** | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ |
-| **fyers HSM** | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ⚠️ health only | ✅ (150ms) |
-| **fyers TBT** | ✅ | ⚠️ | ❌ | ✅ | ⚠️ | ❌ | ❌ | ❌ |
-| **firstock** | ✅ | ✅ | ✅ | ✅ | ✅ | **✅** | ✅ | ❌ |
-| **shoonya** | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **zebu** | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **definedge** | ✅ | ⚠️ | ❌ (50s HB only) | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **deltaexchange** | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **kotak** | ✅ adapter | ✅ adapter | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **motilal** | ✅ | ✅ | ⚠️ passive | ✅ | ✅ | ❌ | ✅ | ❌ |
-| **paytm** | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **pocketful** | ✅ | ✅ | ⚠️ HB only | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **rmoney** | ✅ | ✅ | n/a (Socket.IO) | ✅ | ✅ | **✅** partial (re-auth + 1 retry) | ✅ via SIO | ❌ |
-| **fivepaisaxts** | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **ibulls** | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **iifl** | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **iiflcapital** | n/a (REST poll) | n/a | n/a | n/a | ✅ | n/a | ✅ | n/a |
-| **nubra** | ✅ | ✅ implicit | ❌ | ✅ | ✅ | **✅** ("Invalid Token") | ✅ | ❌ |
-| **upstox** | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ |
-| **aliceblue** | ✅ | ⚠️ | ❌ | ✅ | **❌** (lock during send) | ❌ | ❌ | ❌ |
-| **fivepaisa** | **❌** (run_forever blocks) | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **groww** | **❌** (recursive on_close, no cap) | ✅ | ❌ | **❌** | ✅ | ❌ | ❌ | ❌ |
-| **indmoney** | ✅ | ✅ | ❌ | ✅ | **❌** (unguarded flag) | ❌ | ❌ | ❌ |
-| **mstock** | ✅ | **❌** (no callback hook) | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **samco** | ⚠️ (dual paths racing) | ✅ | ✅ | **❌** (race) | ⚠️ | ❌ | ❌ | ❌ |
-| **tradejini** | ✅ | ⚠️ | ❌ | ✅ | **❌** (lock during subscribeL1/L2) | ❌ | ❌ | ❌ |
-| **wisdom** | ❌ (no WS reconnect) | **❌** | ❌ | ✅ | **❌** (HTTP under lock) | ❌ | ❌ | ❌ |
-| **compositedge** | ✅ | ⚠️ (iter race) | ❌ | ⚠️ | ⚠️ | ❌ | ❌ | ❌ |
-| **jainamxts** | ✅ (racing with SIO) | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **zerodha** | Yes | Yes | Yes | Yes | Yes | No | No | Yes |
+| **angel** | Yes | Yes | Yes | Yes | Yes | No | (health only) | No |
+| **dhan** | Yes | caller-driven | No | Yes | Yes | (fatal-error) | No | Yes |
+| **dhan_sandbox** | Yes | Yes | No | Yes | Yes | No | async mixed | No |
+| **flattrade** | Yes | Yes | Yes | Yes | Yes | No | No | Yes |
+| **fyers HSM** | Yes | Yes | Yes | Yes | Yes | No | health only | (150ms) |
+| **fyers TBT** | Yes | Warning | No | Yes | Warning | No | No | No |
+| **firstock** | Yes | Yes | Yes | Yes | Yes | ** ** | Yes | No |
+| **shoonya** | Yes | Yes | Yes | Yes | Yes | No | No | No |
+| **zebu** | Yes | Yes | Yes | Yes | Yes | No | No | No |
+| **definedge** | Yes | Warning | (50s HB only) | Yes | Yes | No | No | No |
+| **deltaexchange** | Yes | Yes | No | Yes | Yes | No | No | No |
+| **kotak** | adapter | adapter | No | Yes | Yes | No | No | No |
+| **motilal** | Yes | Yes | passive | Yes | Yes | No | Yes | No |
+| **paytm** | Yes | Yes | No | Yes | Yes | No | No | No |
+| **pocketful** | Yes | Yes | HB only | Yes | Yes | No | No | No |
+| **rmoney** | Yes | Yes | n/a (Socket.IO) | Yes | Yes | ** ** partial (re-auth + 1 retry) | via SIO | No |
+| **fivepaisaxts** | Yes | Yes | No | Yes | Yes | No | No | No |
+| **ibulls** | Yes | Yes | No | Yes | Yes | No | No | No |
+| **iifl** | Yes | Yes | No | Yes | Yes | No | No | No |
+| **iiflcapital** | n/a (REST poll) | n/a | n/a | n/a | Yes | n/a | Yes | n/a |
+| **nubra** | Yes | implicit | No | Yes | Yes | ** ** ("Invalid Token") | Yes | No |
+| **upstox** | Yes | Yes | Yes | Yes | Yes | No | No | Yes |
+| **aliceblue** | Yes | Warning | No | Yes | ** ** (lock during send) | No | No | No |
+| **fivepaisa** | ** ** (run_forever blocks) | No | No | Yes | Yes | No | No | No |
+| **groww** | ** ** (recursive on_close, no cap) | Yes | No | ** ** | Yes | No | No | No |
+| **indmoney** | Yes | Yes | No | Yes | ** ** (unguarded flag) | No | No | No |
+| **mstock** | Yes | ** ** (no callback hook) | No | Yes | Yes | No | No | No |
+| **samco** | (dual paths racing) | Yes | Yes | ** ** (race) | Warning | No | No | No |
+| **tradejini** | Yes | Warning | No | Yes | ** ** (lock during subscribeL1/L2) | No | No | No |
+| **wisdom** | (no WS reconnect) | ** ** | No | Yes | ** ** (HTTP under lock) | No | No | No |
+| **compositedge** | Yes | (iter race) | No | Warning | Warning | No | No | No |
+| **jainamxts** | (racing with SIO) | Yes | No | Yes | Yes | No | No | No |
 
 ---
 
 ## 5. The Six Cross-Cutting Gaps
 
-These affect every broker — the root causes of why so many cells in §4 are ❌. **These are the highest-leverage fixes**: each closes a gap across the entire fleet.
+These affect every broker — the root causes of why so many cells in §4 are . **These are the highest-leverage fixes**: each closes a gap across the entire fleet.
 
 ### 5.1 Gap A: Auth-failure detection (criterion 6)
 
@@ -316,7 +316,7 @@ Cumulative weekly cost across 30 brokers × every weekend × every Indian holida
 
 ## 6. Cross-Platform Compatibility (per CLAUDE.md)
 
-Tradeboard runs on Windows, macOS, Docker, and Ubuntu+gunicorn+eventlet. Code that works in dev may break in production due to eventlet's stdlib monkey-patching.
+OpenAlgo runs on Windows, macOS, Docker, and Ubuntu+gunicorn+eventlet. Code that works in dev may break in production due to eventlet's stdlib monkey-patching.
 
 ### 6.1 dhan_sandbox — eventlet compatibility risk
 
@@ -687,13 +687,13 @@ Verify that a fix to one broker doesn't disrupt others. Run all enabled brokers 
 - **Per-broker keepalive tuning rationale** — defer to [keepalive-audit](./websocket-keepalive-audit.md).
 - **WebSocket proxy server (port 8765) client-facing protocol.**
 - **Data correctness** (tick parsing, symbol mapping) — separate concern.
-- **Token refresh on broker side** — out of Tradeboard's control.
+- **Token refresh on broker side** — out of OpenAlgo's control.
 
 ---
 
 ## 14. Cross-References
 
-- Issue [#1101 — Standard WebSocket Ping/Heartbeat](https://github.com/rockstarrajeev/tradeboard/issues/1101)
+- Issue [#1101 — Standard WebSocket Ping/Heartbeat](https://github.com/marketcalls/openalgo/issues/1101)
 - [`docs/audit/websocket-keepalive-audit.md`](./websocket-keepalive-audit.md)
 - [`docs/websocket-architecture.md`](../websocket-architecture.md)
 - [`install/install.sh`](../../install/install.sh) — production deployment via gunicorn+eventlet+systemd

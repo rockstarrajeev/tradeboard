@@ -73,7 +73,8 @@ def attribution(
         return {"available": False, "reason": "no overlapping sessions with the benchmark"}
 
     gross_path = sum(
-        aligned[f"holding:{symbol}"] * aligned[f"weight:{symbol}"] for symbol in symbols
+        aligned[f"holding:{symbol}"] * aligned[f"weight:{symbol}"]
+        for symbol in symbols
     )
     equal_path = aligned[[f"holding:{symbol}" for symbol in symbols]].mean(axis=1)
     net_path = aligned["__net__"]
@@ -113,13 +114,16 @@ def attribution(
                         "return": own_return,
                         "vs_benchmark": own_return - benchmark_return,
                         "contribution": (
-                            float(contributions[symbol]) - float(target[symbol]) * benchmark_return
+                            float(contributions[symbol])
+                            - float(target[symbol]) * benchmark_return
                         ),
                     }
                 )
             rows.sort(key=lambda row: row["contribution"], reverse=True)
         else:
-            holdings_reason = "engine holding contributions do not reconcile to this period"
+            holdings_reason = (
+                "engine holding contributions do not reconcile to this period"
+            )
     else:
         holdings_reason = (
             "per-holding contributions require the benchmark and engine result "

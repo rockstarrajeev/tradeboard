@@ -81,7 +81,9 @@ def build_margin_leg(position, row, series_type, underlying_price):
         "token": str(row.token),
         "quantity": str(int(float(position.get("quantity", 0) or 0))),
         "price": str(_float(position.get("price", 0))),
-        "product": PRODUCT_NUMERIC_CODES.get(str(position.get("product", "MIS")).upper(), "2"),
+        "product": PRODUCT_NUMERIC_CODES.get(
+            str(position.get("product", "MIS")).upper(), "2"
+        ),
     }
 
 

@@ -5,11 +5,7 @@ import concurrent.futures
 import logging
 import os
 import sys
-from typing import TYPE_CHECKING, Any, Optional
-
-if TYPE_CHECKING:
-    from telegram import Update
-    from telegram.ext import ContextTypes
+from typing import Any, Dict, List, Optional, Tuple
 
 # Import the original threading module to run the bot in a real OS thread,
 # bypassing eventlet's monkey-patching which causes event loop conflicts.
@@ -41,6 +37,7 @@ from database.telegram_db import (
     log_command,
     update_bot_config,
 )
+from utils import real_threading
 from utils.constants import CRYPTO_BROKERS
 from utils.logging import get_logger
 
@@ -61,7 +58,7 @@ class TelegramBotService:
         self.sdk_clients = {}  # Cache for OpenAlgo SDK clients per user
         self._stop_event = original_threading.Event()  # Thread-safe stop signal
 
-    def _get_sdk_client(self, telegram_id: int) -> Any | None:
+    def _get_sdk_client(self, telegram_id: int) -> openalgo_api | None:
         """Get or create OpenAlgo SDK client for a user"""
         from openalgo import api as openalgo_api
 
@@ -139,7 +136,7 @@ class TelegramBotService:
         """
         import queue as _queue
 
-        result_q: _queue.Queue[tuple[str, object]] = _queue.Queue()
+        result_q: "_queue.Queue[tuple[str, object]]" = _queue.Queue()
 
         def _worker() -> None:
             try:
@@ -148,7 +145,9 @@ class TelegramBotService:
             except BaseException as exc:  # noqa: BLE001 - propagate across thread
                 result_q.put(("err", exc))
 
-        t = original_threading.Thread(target=_worker, daemon=True, name="openalgo-kaleido-render")
+        t = original_threading.Thread(
+            target=_worker, daemon=True, name="openalgo-kaleido-render"
+        )
         t.start()
         t.join()
 
@@ -263,8 +262,7 @@ class TelegramBotService:
 
             # Add volume bar chart
             colors = [
-                "red" if close < open else "green"
-                for close, open in zip(df["close"], df["open"], strict=False)
+                "red" if close < open else "green" for close, open in zip(df["close"], df["open"])
             ]
 
             fig.add_trace(
@@ -440,8 +438,7 @@ class TelegramBotService:
 
             # Add volume bar chart
             colors = [
-                "red" if close < open else "green"
-                for close, open in zip(df["close"], df["open"], strict=False)
+                "red" if close < open else "green" for close, open in zip(df["close"], df["open"])
             ]
 
             fig.add_trace(
@@ -553,9 +550,7 @@ class TelegramBotService:
             from utils.httpx_client import get_httpx_client
 
             try:
-                response = get_httpx_client().get(
-                    f"https://api.telegram.org/bot{token}/getMe", timeout=10
-                )
+                response = get_httpx_client().get(f"https://api.telegram.org/bot{token}/getMe", timeout=10)
 
                 if response.status_code == 200:
                     data = response.json()
@@ -847,7 +842,10 @@ class TelegramBotService:
 
             # Wait for thread to finish
             if self.bot_thread and self.bot_thread.is_alive():
-                self.bot_thread.join(timeout=10.0)
+                # Cooperative: bot_thread is a real OS thread and stop_bot()
+                # is reached from the /telegram stop route, so a blocking
+                # join would freeze every other request for up to 10s.
+                real_threading.join(self.bot_thread, timeout=10.0)
                 if self.bot_thread.is_alive():
                     logger.warning("Bot thread did not stop cleanly")
                     self.is_running = False
@@ -1174,9 +1172,7 @@ class TelegramBotService:
             try:
                 price = float(order.get("price", 0))
                 price_str = (
-                    "Market"
-                    if price == 0 and order.get("pricetype") == "MARKET"
-                    else f"{cs}{price}"
+                    "Market" if price == 0 and order.get("pricetype") == "MARKET" else f"{cs}{price}"
                 )
             except (ValueError, TypeError):
                 price_str = f"{cs}{order.get('price', 0)}"
@@ -1862,7 +1858,7 @@ class TelegramBotService:
 
         log_command(user.id, "menu", update.effective_chat.id)
 
-    def _format_orderbook(self, response: dict, cs: str = "₹") -> str:
+    def _format_orderbook(self, response: dict, cs: str = '₹') -> str:
         """Format orderbook response into message"""
         if not response or response.get("status") != "success":
             return "Failed to fetch orderbook"
@@ -1902,7 +1898,7 @@ class TelegramBotService:
             message += f"_... and {len(orders) - 10} more orders_"
         return message
 
-    def _format_tradebook(self, response: dict, cs: str = "₹") -> str:
+    def _format_tradebook(self, response: dict, cs: str = '₹') -> str:
         """Format tradebook response into message"""
         if not response or response.get("status") != "success":
             return "Failed to fetch tradebook"
@@ -1932,7 +1928,7 @@ class TelegramBotService:
             message += f"_... and {len(trades) - 10} more trades_"
         return message
 
-    def _format_positions(self, response: dict, cs: str = "₹") -> str:
+    def _format_positions(self, response: dict, cs: str = '₹') -> str:
         """Format positions response into message"""
         if not response or response.get("status") != "success":
             return "Failed to fetch positions"
@@ -1959,7 +1955,7 @@ class TelegramBotService:
             message += f"_... and {len(active_positions) - 10} more positions_"
         return message
 
-    def _format_holdings(self, response: dict, cs: str = "₹") -> str:
+    def _format_holdings(self, response: dict, cs: str = '₹') -> str:
         """Format holdings response into message"""
         if not response or response.get("status") != "success":
             return "Failed to fetch holdings"
@@ -1982,7 +1978,7 @@ class TelegramBotService:
             message += f"_... and {len(holdings) - 10} more holdings_"
         return message
 
-    def _format_funds(self, response: dict, cs: str = "₹") -> str:
+    def _format_funds(self, response: dict, cs: str = '₹') -> str:
         """Format funds response into message"""
         if not response or response.get("status") != "success":
             return "Failed to fetch funds"
@@ -2003,7 +1999,7 @@ class TelegramBotService:
             f"Total: {cs}{(available + collateral):,.2f}"
         )
 
-    def _format_pnl_funds(self, response: dict, cs: str = "₹") -> str:
+    def _format_pnl_funds(self, response: dict, cs: str = '₹') -> str:
         """Format P&L from the funds response (realized + unrealized + total).
 
         Shared by the /pnl command and the menu P&L button so both report the
@@ -2118,8 +2114,12 @@ class TelegramBotService:
             [InlineKeyboardButton(f"{name}", callback_data=f"spy_{idx}")]
             for idx, (_, name) in enumerate(running)
         ]
-        keyboard.append([InlineKeyboardButton("Stop All", callback_data="spy_all")])
-        keyboard.append([InlineKeyboardButton("Cancel", callback_data="cancel_action")])
+        keyboard.append(
+            [InlineKeyboardButton("Stop All", callback_data="spy_all")]
+        )
+        keyboard.append(
+            [InlineKeyboardButton("Cancel", callback_data="cancel_action")]
+        )
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         await update.message.reply_text(
@@ -2299,7 +2299,9 @@ class TelegramBotService:
 
             stoppy_list = context.user_data.get("stoppy_list", [])
             if idx < 0 or idx >= len(stoppy_list):
-                await query.edit_message_text("Selection expired. Please run /stoppython again.")
+                await query.edit_message_text(
+                    "Selection expired. Please run /stoppython again."
+                )
                 return
 
             sid, name = stoppy_list[idx]
@@ -2321,7 +2323,9 @@ class TelegramBotService:
             stoppy_list = context.user_data.get("stoppy_list", [])
             count = len(stoppy_list)
             if count == 0:
-                await query.edit_message_text("Selection expired. Please run /stoppython again.")
+                await query.edit_message_text(
+                    "Selection expired. Please run /stoppython again."
+                )
                 return
 
             keyboard = [
@@ -2349,7 +2353,9 @@ class TelegramBotService:
 
             stoppy_list = context.user_data.get("stoppy_list", [])
             if idx < 0 or idx >= len(stoppy_list):
-                await query.edit_message_text("Selection expired. Please run /stoppython again.")
+                await query.edit_message_text(
+                    "Selection expired. Please run /stoppython again."
+                )
                 return
 
             sid, name = stoppy_list[idx]
@@ -2428,7 +2434,6 @@ class TelegramBotService:
                 # Sync mode to frontend via SocketIO
                 try:
                     from extensions import socketio
-
                     socketio.emit("app_mode_changed", {"analyze_mode": new_mode})
                 except Exception:
                     pass
@@ -2587,9 +2592,7 @@ class TelegramBotService:
                         # Add small delay to avoid rate limits
                         await asyncio.sleep(0.1)
                 except Exception as e:
-                    logger.exception(
-                        f"Failed to send broadcast to {user.get('telegram_id')}: {str(e)}"
-                    )
+                    logger.exception(f"Failed to send broadcast to {user.get('telegram_id')}: {str(e)}")
                     fail_count += 1
 
             logger.debug(f"Broadcast complete: {success_count} success, {fail_count} failed")
@@ -2604,21 +2607,17 @@ class TelegramBotService:
 telegram_bot_service = TelegramBotService()
 
 
-def get_telegram_bot() -> TelegramBotService:
-    """Return the global TelegramBotService singleton instance."""
+def get_telegram_bot():
     return telegram_bot_service
 
 
-def init_bot_sync(token: str, webhook_url: str | None = None) -> tuple[bool, str]:
-    """Synchronously initialize the global telegram bot."""
-    return telegram_bot_service.initialize_bot_sync(token)
+def init_bot_sync(token, webhook_url=None):
+    return telegram_bot_service.init_bot(token, webhook_url)
 
 
-def start_bot_sync() -> tuple[bool, str]:
-    """Synchronously start the global telegram bot."""
+def start_bot_sync():
     return telegram_bot_service.start_bot()
 
 
-def stop_bot_sync() -> tuple[bool, str]:
-    """Synchronously stop the global telegram bot."""
+def stop_bot_sync():
     return telegram_bot_service.stop_bot()

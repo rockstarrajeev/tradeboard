@@ -2,7 +2,7 @@
 type: API Endpoint
 title: Holidays
 description: Get the list of market holidays for a year
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/market-calendar/holidays.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/market-calendar/holidays.md
 tags:
 - calendar
 - holidays

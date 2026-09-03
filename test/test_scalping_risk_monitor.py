@@ -140,13 +140,8 @@ class TestTrailing:
 
 # --------------------------------------------------------------------- _on_tick wiring
 def _tick(symbol, exchange, ltp):
-    return {
-        "type": "market_data",
-        "symbol": symbol,
-        "exchange": exchange,
-        "mode": "LTP",
-        "data": {"ltp": ltp},
-    }
+    return {"type": "market_data", "symbol": symbol, "exchange": exchange,
+            "mode": "LTP", "data": {"ltp": ltp}}
 
 
 class TestOnTickEventDriven:
@@ -159,11 +154,8 @@ class TestOnTickEventDriven:
 
     def test_breach_dispatches_exit(self, monkeypatch):
         fired = []
-        monkeypatch.setattr(
-            self.mon,
-            "_dispatch_exit",
-            lambda key, st, reason, ltp: fired.append((key, reason, ltp)),
-        )
+        monkeypatch.setattr(self.mon, "_dispatch_exit",
+                            lambda key, st, reason, ltp: fired.append((key, reason, ltp)))
         key = mod._slkey("NIFTY25JUN2623600CE", "NFO", "NRML")
         self.mon._states[key] = _long(current_sl=95.0)
         self.mon._on_tick(_tick("NIFTY25JUN2623600CE", "NFO", 94.0))
@@ -172,7 +164,8 @@ class TestOnTickEventDriven:
 
     def test_no_breach_no_exit(self, monkeypatch):
         fired = []
-        monkeypatch.setattr(self.mon, "_dispatch_exit", lambda *a: fired.append(a))
+        monkeypatch.setattr(self.mon, "_dispatch_exit",
+                            lambda *a: fired.append(a))
         key = mod._slkey("NIFTY25JUN2623600CE", "NFO", "NRML")
         self.mon._states[key] = _long(current_sl=95.0)
         self.mon._on_tick(_tick("NIFTY25JUN2623600CE", "NFO", 99.0))
@@ -180,12 +173,10 @@ class TestOnTickEventDriven:
 
     def test_trailing_updates_in_memory_and_persists(self, monkeypatch):
         persisted = []
-        monkeypatch.setattr(
-            self.mon, "_maybe_persist", lambda key, st: persisted.append((key, st["current_sl"]))
-        )
-        monkeypatch.setattr(
-            self.mon, "_dispatch_exit", lambda *a: pytest.fail("should not exit on a trailing tick")
-        )
+        monkeypatch.setattr(self.mon, "_maybe_persist",
+                            lambda key, st: persisted.append((key, st["current_sl"])))
+        monkeypatch.setattr(self.mon, "_dispatch_exit",
+                            lambda *a: pytest.fail("should not exit on a trailing tick"))
         key = mod._slkey("NIFTY25JUN2623600CE", "NFO", "NRML")
         self.mon._states[key] = _long(trailing_enabled=True, trailing_step=3.0, current_sl=90.0)
         self.mon._on_tick(_tick("NIFTY25JUN2623600CE", "NFO", 110.0))
@@ -194,9 +185,8 @@ class TestOnTickEventDriven:
         assert persisted and persisted[0][1] == pytest.approx(107.0)
 
     def test_tick_for_unwatched_symbol_is_ignored(self, monkeypatch):
-        monkeypatch.setattr(
-            self.mon, "_dispatch_exit", lambda *a: pytest.fail("no state for this symbol")
-        )
+        monkeypatch.setattr(self.mon, "_dispatch_exit",
+                            lambda *a: pytest.fail("no state for this symbol"))
         self.mon._on_tick(_tick("SOMETHINGELSE", "NFO", 1.0))  # no states at all
 
     def test_zero_or_missing_ltp_ignored(self, monkeypatch):
@@ -204,9 +194,8 @@ class TestOnTickEventDriven:
         key = mod._slkey("NIFTY25JUN2623600CE", "NFO", "NRML")
         self.mon._states[key] = _long(current_sl=95.0)
         self.mon._on_tick(_tick("NIFTY25JUN2623600CE", "NFO", 0))
-        self.mon._on_tick(
-            {"type": "market_data", "symbol": "NIFTY25JUN2623600CE", "exchange": "NFO", "data": {}}
-        )
+        self.mon._on_tick({"type": "market_data", "symbol": "NIFTY25JUN2623600CE",
+                           "exchange": "NFO", "data": {}})
 
 
 class TestModeSegregation:

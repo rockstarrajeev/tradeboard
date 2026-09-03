@@ -6,9 +6,9 @@
 
 | Script | Desktop/Server | Platform | Status |
 |--------|---------------|----------|--------|
-| `docker-run.sh` | Desktop | macOS/Linux | ✅ Updated |
-| `docker-run.bat` | Desktop | Windows | ✅ Updated |
-| `install-docker.sh` | Server | Ubuntu/Debian | ✅ Updated |
+| `docker-run.sh` | Desktop | macOS/Linux | Updated |
+| `docker-run.bat` | Desktop | Windows | Updated |
+| `install-docker.sh` | Server | Ubuntu/Debian | Updated |
 
 ---
 
@@ -40,24 +40,24 @@
 
 ### Verify Shared Memory
 ```bash
-docker inspect tradeboard --format='{{.HostConfig.ShmSize}}'
+docker inspect openalgo --format='{{.HostConfig.ShmSize}}'
 # Should show: 2147483648 (2GB)
 ```
 
 ### Verify Volumes
 ```bash
-docker inspect tradeboard --format='{{range .Mounts}}{{.Destination}} {{end}}'
+docker inspect openalgo --format='{{range .Mounts}}{{.Destination}} {{end}}'
 # Should include: /app/tmp /app/keys
 ```
 
 ### Test numba/scipy
 ```bash
-docker exec tradeboard python -c "import numba, llvmlite, scipy; print('✓ Working')"
+docker exec openalgo python -c "import numba, llvmlite, scipy; print('Working')"
 ```
 
 ### Test Strategy Indicators
 ```bash
-docker exec tradeboard python -c "
+docker exec openalgo python -c "
 from numba import jit
 import numpy as np
 @jit(nopython=True)
@@ -69,7 +69,7 @@ def ema(prices, period):
         ema[i] = alpha * prices[i] + (1 - alpha) * ema[i-1]
     return ema
 result = ema(np.array([100.0, 102.0, 98.0, 101.0]), 3)
-print('✓ EMA calculation works:', result[-1])
+print('EMA calculation works:', result[-1])
 "
 ```
 
@@ -102,7 +102,7 @@ docker-run.bat start
 ### Update Existing Installation
 
 ```bash
-cd /opt/tradeboard
+cd /opt/openalgo
 sudo docker compose down
 # Edit docker-compose.yaml to add shm_size and tmp volume
 sudo docker compose up -d
@@ -110,7 +110,7 @@ sudo docker compose up -d
 
 **Or re-run installer:**
 ```bash
-curl -O https://raw.githubusercontent.com/rockstarrajeev/tradeboard/main/install/install-docker.sh
+curl -O https://raw.githubusercontent.com/marketcalls/openalgo/main/install/install-docker.sh
 chmod +x install-docker.sh
 sudo ./install-docker.sh
 ```
@@ -121,16 +121,16 @@ sudo ./install-docker.sh
 
 | Error | Status | Solution |
 |-------|--------|----------|
-| `KeyError: 'LLVMPY_AddSymbol'` | ✅ Fixed | Added /app/tmp volume |
-| `OSError: failed to map segment` | ✅ Fixed | Added shm_size=2g |
-| `FileNotFoundError: tmp/NSE_CM.csv` | ✅ Fixed | Added /app/tmp volume |
-| API keys lost on restart | ✅ Fixed | Added /app/keys volume |
+| `KeyError: 'LLVMPY_AddSymbol'` | Fixed | Added /app/tmp volume |
+| `OSError: failed to map segment` | Fixed | Added shm_size=2g |
+| `FileNotFoundError: tmp/NSE_CM.csv` | Fixed | Added /app/tmp volume |
+| API keys lost on restart | Fixed | Added /app/keys volume |
 
 ---
 
 ## Backward Compatibility
 
-✅ **100% Compatible**
+**100% Compatible**
 - Existing installations won't break
 - New volumes created automatically
 - No database migrations needed
@@ -152,10 +152,10 @@ Full details in:
 
 If issues persist:
 1. Check logs: `docker-compose logs -f`
-2. Verify volumes: `docker inspect tradeboard`
-3. Test imports: `docker exec tradeboard python -c "import numba, scipy"`
+2. Verify volumes: `docker inspect openalgo`
+3. Test imports: `docker exec openalgo python -c "import numba, scipy"`
 4. Join Discord: https://discord.com/invite/UPh7QPsNhP
-5. GitHub Issues: https://github.com/rockstarrajeev/tradeboard/issues
+5. GitHub Issues: https://github.com/marketcalls/openalgo/issues
 
 ---
 

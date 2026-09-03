@@ -48,6 +48,7 @@ def transform_data(data, token=None, uid="", auth_token=None):
         "prctyp": order_type,
         "ret": "DAY",
         "ordersource": "API",
+        "remarks": "openalgo",
     }
 
     # Log without sensitive fields (uid/actid carry the client id)
@@ -112,7 +113,9 @@ def _apply_mpp(data, action, pricetype, supplied_price, auth_token):
     """
     target_type = "LMT" if pricetype == "MARKET" else "SL-LMT"
     fallback_price = (
-        supplied_price if pricetype == "MARKET" else str(data.get("trigger_price", "0") or "0")
+        supplied_price
+        if pricetype == "MARKET"
+        else str(data.get("trigger_price", "0") or "0")
     )
 
     if not auth_token:

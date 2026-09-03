@@ -5,13 +5,14 @@ Based on Noren WebSocket API (same as Flattrade)
 """
 
 import json
-import logging
 import threading
 import time
 from collections.abc import Callable
 from typing import Any, Dict, Optional
 
 import websocket
+
+from utils.logging import get_logger
 
 
 class ZebuWebSocket:
@@ -91,7 +92,7 @@ class ZebuWebSocket:
         self._heartbeat_lock = threading.Lock()
 
         # Logging
-        self.logger = logging.getLogger("zebu_websocket")
+        self.logger = get_logger("zebu_websocket")
 
     def connect(self) -> bool:
         """
@@ -221,7 +222,9 @@ class ZebuWebSocket:
         debug_msg = auth_msg.copy()
         token_val = debug_msg.get("accesstoken", "")
         if token_val:
-            debug_msg["accesstoken"] = token_val[:10] + "..." if len(token_val) > 10 else "***"
+            debug_msg["accesstoken"] = (
+                token_val[:10] + "..." if len(token_val) > 10 else "***"
+            )
         self.logger.info(f"Sending auth message: {debug_msg}")
 
         try:

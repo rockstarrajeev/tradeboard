@@ -90,12 +90,14 @@ def get_margin_data(auth_token):
         realized_pnl = _get_realized_pnl(client, headers)
 
         # Map V2 API fields to OpenAlgo format
-        processed_margin_data["availablecash"] = "{:.2f}".format(float(item.get("tradingLimit", 0)))
+        processed_margin_data["availablecash"] = "{:.2f}".format(
+            float(item.get("tradingLimit", 0))
+        )
         processed_margin_data["collateral"] = "{:.2f}".format(
             float(item.get("collateralMargin", 0))
         )
         processed_margin_data["m2munrealized"] = "0.00"
-        processed_margin_data["m2mrealized"] = f"{realized_pnl:.2f}"
+        processed_margin_data["m2mrealized"] = "{:.2f}".format(realized_pnl)
         processed_margin_data["utiliseddebits"] = "{:.2f}".format(
             float(item.get("utilizedMargin", 0))
         )

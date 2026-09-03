@@ -16,14 +16,12 @@ import pytz
 
 from services.history_service import get_history
 from services.quotes_service import get_quotes
+from services.strategy_builder_reference_service import resolve_strategy_builder_reference
 from services.strategy_chart_service import (
-    NO_SPOT_EXCHANGES,
     _cap_last_n_trading_dates,
     _convert_timestamp_to_ist,
-    _get_quote_exchange,
     _normalize_leg,
     _resolve_trading_window,
-    resolve_underlying_quote,
 )
 from utils.logging import get_logger
 
@@ -37,6 +35,8 @@ def get_multi_strike_oi_data(
     interval: str,
     api_key: str,
     days: int = 5,
+    underlying_symbol: str | None = None,
+    underlying_exchange: str | None = None,
 ):
     """
     Compute Multi Strike OI time series for the Strategy Builder.
@@ -60,7 +60,9 @@ def get_multi_strike_oi_data(
         if not base_symbol:
             return False, {"status": "error", "message": "underlying is required"}, 400
 
-        normalized_legs = [nl for nl in (_normalize_leg(leg) for leg in (legs or [])) if nl]
+        normalized_legs = [
+            normalized for normalized in (_normalize_leg(leg) for leg in (legs or [])) if normalized
+        ]
         if not normalized_legs:
             return (
                 False,
@@ -68,26 +70,24 @@ def get_multi_strike_oi_data(
                 400,
             )
 
-        quote_exchange = _get_quote_exchange(base_symbol, exchange)
-        underlying_quote_symbol = base_symbol
-
-        # multi-strike OI: MCX and the currency segments have no tradable spot, so the
-        # near-month future is the pricing reference. Without this the quote is
-        # requested for a symbol that does not exist and the tool renders empty.
-        if exchange.upper() in NO_SPOT_EXCHANGES:
-            _resolved = resolve_underlying_quote(base_symbol, exchange.upper())
-            if _resolved is None:
-                return (
-                    False,
-                    {
-                        "status": "error",
-                        "message": (
-                            f"No unexpired futures found for {base_symbol} on {exchange.upper()}"
-                        ),
-                    },
-                    404,
-                )
-            underlying_quote_symbol, quote_exchange = _resolved
+        resolved_reference = resolve_strategy_builder_reference(
+            base_symbol,
+            exchange,
+            underlying_symbol,
+            underlying_exchange,
+        )
+        if resolved_reference is None:
+            return (
+                False,
+                {
+                    "status": "error",
+                    "message": (
+                        f"No unexpired futures found for {base_symbol} on {exchange.upper()}"
+                    ),
+                },
+                404,
+            )
+        underlying_quote_symbol, quote_exchange = resolved_reference
 
         # ── Underlying history ────────────────────────────────────────
         # Some brokers (e.g., Zerodha) don't return intraday minute-level
@@ -194,7 +194,7 @@ def get_multi_strike_oi_data(
 
         # ── Latest underlying LTP ─────────────────────────────────────
         success_q, quote_resp, _ = get_quotes(
-            symbol=base_symbol,
+            symbol=underlying_quote_symbol,
             exchange=quote_exchange,
             api_key=api_key,
         )

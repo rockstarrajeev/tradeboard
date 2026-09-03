@@ -130,7 +130,7 @@ def get_margin_data(auth_token: str) -> dict[str, str]:
             pnl = processed_funds.get("realized_profit_and_loss", {})
             real_pnl_equity = float(pnl.get("equity_amount", 0))
             real_pnl_commodity = float(pnl.get("commodity_amount", 0))
-            real_pnl_equity + real_pnl_commodity
+            total_real_pnl = real_pnl_equity + real_pnl_commodity
 
             # Get utilized amount
             utilized = processed_funds.get("utilized_amount", {})
@@ -188,7 +188,8 @@ def get_margin_data(auth_token: str) -> dict[str, str]:
                     "backoff_seconds": backoff,
                 }
             logger.warning(
-                f"Fyers API rate limited (429). Backing off for {backoff}s. Serving cached data."
+                f"Fyers API rate limited (429). Backing off for {backoff}s. "
+                f"Serving cached data."
             )
             # Transient — serve genuinely-cached REAL data if we have it, else {}.
             return user_cache["data"] if user_cache["data"] else {}

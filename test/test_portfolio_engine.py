@@ -46,7 +46,9 @@ from portfolio.walkforward import _bootstrap_path, walk_forward
 def matrix(data: dict[str, list[float]], start: str = "2024-01-01") -> PriceMatrix:
     index = pd.bdate_range(start, periods=len(next(iter(data.values()))))
     closes = pd.DataFrame(data, index=index)
-    return PriceMatrix(closes=closes, source="db", start=index[0].date(), end=index[-1].date())
+    return PriceMatrix(
+        closes=closes, source="db", start=index[0].date(), end=index[-1].date()
+    )
 
 
 class TestExchangeGate:
@@ -166,12 +168,16 @@ class TestEngine:
 
     def test_buy_and_hold_never_trades_so_costs_cannot_bite(self):
         prices = matrix({"A": [100.0, 200.0], "B": [100.0, 100.0]})
-        r = run_backtest(prices, {"A": 50, "B": 50}, costs=Costs(bps=100, slippage=0.01))
+        r = run_backtest(
+            prices, {"A": 50, "B": 50}, costs=Costs(bps=100, slippage=0.01)
+        )
         assert r.cost_drag == pytest.approx(0.0)
         assert r.turnover.empty
 
     def test_rebalancing_resets_weights_to_target(self):
-        prices = matrix({"A": [100.0] * 21 + [200.0], "B": [100.0] * 22}, start="2024-01-01")
+        prices = matrix(
+            {"A": [100.0] * 21 + [200.0], "B": [100.0] * 22}, start="2024-01-01"
+        )
         r = run_backtest(prices, {"A": 50, "B": 50}, policy=RebalancePolicy("monthly"))
         assert len(r.rebalance_dates) >= 1
         assert r.weights.iloc[-1]["A"] == pytest.approx(0.5)
@@ -400,9 +406,9 @@ class TestAnalytics:
         base = rng.normal(0.0004, 0.01, n)
         return pd.DataFrame(
             {
-                "A": base + rng.normal(0, 0.002, n),  # nearly identical to B
+                "A": base + rng.normal(0, 0.002, n),   # nearly identical to B
                 "B": base + rng.normal(0, 0.002, n),
-                "C": rng.normal(0.0004, 0.01, n),  # independent
+                "C": rng.normal(0.0004, 0.01, n),      # independent
             },
             index=index,
         )
@@ -480,7 +486,9 @@ class TestCostDragExactness:
         # Reconstructing the gross path from weights left rounding error, so
         # a run that never traded reported a tiny non-zero drag.
         prices = matrix({"A": [100.0, 137.0, 92.0, 118.0], "B": [55.0, 51.0, 63.0, 60.0]})
-        r = run_backtest(prices, {"A": 35, "B": 65}, costs=Costs(bps=250, slippage=0.02))
+        r = run_backtest(
+            prices, {"A": 35, "B": 65}, costs=Costs(bps=250, slippage=0.02)
+        )
         assert r.cost_drag == 0.0
 
     def test_drag_equals_the_gap_to_an_uncharged_run(self):
@@ -588,7 +596,11 @@ class TestPortfolioHealth:
         ev = portfolio_health(weights=even, **base)
 
         def pick(health):
-            return next(pillar for pillar in health["pillars"] if pillar["key"] == "concentration")
+            return next(
+                pillar
+                for pillar in health["pillars"]
+                if pillar["key"] == "concentration"
+            )
 
         assert pick(lo)["score"] < pick(ev)["score"]
 
@@ -597,14 +609,8 @@ class TestPortfolioHealth:
         # No -- force it: 50 sessions cannot have a 200-session average.
         closes, rets, w = self._kit(n=50)
         h = portfolio_health(
-            weights=w,
-            returns=rets,
-            closes=closes,
-            sharpe=1.0,
-            sortino=1.2,
-            max_drawdown=-0.15,
-            cost_drag=0.0,
-            turnover=0.0,
+            weights=w, returns=rets, closes=closes, sharpe=1.0, sortino=1.2,
+            max_drawdown=-0.15, cost_drag=0.0, turnover=0.0,
         )
         assert "trend" in h["unmeasured"]
         trend = next(p for p in h["pillars"] if p["key"] == "trend")
@@ -796,14 +802,10 @@ class TestPriceCache:
             nonlocal calls
             calls += 1
             base = calls * 100.0
-            return (
-                True,
-                [
-                    {"date": "2024-01-01", "close": base},
-                    {"date": "2024-01-02", "close": base + 1},
-                ],
-                200,
-            )
+            return True, [
+                {"date": "2024-01-01", "close": base},
+                {"date": "2024-01-02", "close": base + 1},
+            ], 200
 
         monkeypatch.setattr("portfolio.data.get_history", fake_history)
         args = (["A"], ["NSE"], "2024-01-01", "2024-01-02")
@@ -912,7 +914,8 @@ class TestRebalancingSweep:
             },
             index=index,
         )
-        return PriceMatrix(closes=closes, source="db", start=index[0].date(), end=index[-1].date())
+        return PriceMatrix(closes=closes, source="db",
+                           start=index[0].date(), end=index[-1].date())
 
     def test_covers_every_rule_plus_drift(self):
         out = rebalancing_sweep(self._prices(), {"A": 50, "B": 50})
@@ -962,24 +965,19 @@ class TestLiveHoldings:
     """
 
     def test_coerces_string_numerics(self):
-        h = parse_holdings(
-            [
-                {
-                    "symbol": "itc",
-                    "exchange": "nse",
-                    "quantity": "4",
-                    "average_price": "296.14",
-                    "pnl": "-39.55",
-                }
-            ]
-        )
+        h = parse_holdings([
+            {"symbol": "itc", "exchange": "nse", "quantity": "4",
+             "average_price": "296.14", "pnl": "-39.55"}
+        ])
         assert len(h) == 1
         assert h[0].symbol == "ITC" and h[0].exchange == "NSE"
         assert h[0].quantity == 4.0
 
     def test_recovers_last_price_from_pnl_when_absent(self):
         # 4 shares bought at 100, P&L -40 -> the market is at 90.
-        h = parse_holdings([{"symbol": "X", "quantity": 4, "average_price": 100, "pnl": -40}])
+        h = parse_holdings([
+            {"symbol": "X", "quantity": 4, "average_price": 100, "pnl": -40}
+        ])
         assert h[0].last_price == pytest.approx(90.0)
 
     def test_drops_rows_it_cannot_weight(self):
@@ -1002,12 +1000,10 @@ class TestLiveHoldings:
 
     def test_weights_by_current_value_not_cost(self):
         # Equal cost, but A doubled: exposure is what it is worth now.
-        h = parse_holdings(
-            [
-                {"symbol": "A", "quantity": 10, "average_price": 100, "pnl": 1000},
-                {"symbol": "B", "quantity": 10, "average_price": 100, "pnl": 0},
-            ]
-        )
+        h = parse_holdings([
+            {"symbol": "A", "quantity": 10, "average_price": 100, "pnl": 1000},
+            {"symbol": "B", "quantity": 10, "average_price": 100, "pnl": 0},
+        ])
         s = holdings_summary(h)
         by = {r["symbol"]: r for r in s["holdings"]}
         # Weights are rounded to 5dp for transport, so approx's default 1e-6
@@ -1016,12 +1012,10 @@ class TestLiveHoldings:
         assert by["B"]["weight"] == pytest.approx(1 / 3, abs=1e-4)
 
     def test_summary_totals_reconcile(self):
-        h = parse_holdings(
-            [
-                {"symbol": "A", "quantity": 7, "average_price": 282.96, "pnl": -50.01},
-                {"symbol": "B", "quantity": 4, "average_price": 296.14, "pnl": -39.55},
-            ]
-        )
+        h = parse_holdings([
+            {"symbol": "A", "quantity": 7, "average_price": 282.96, "pnl": -50.01},
+            {"symbol": "B", "quantity": 4, "average_price": 296.14, "pnl": -39.55},
+        ])
         s = holdings_summary(h)
         assert s["current"] == pytest.approx(s["invested"] + s["pnl"], abs=0.02)
         assert sum(r["weight"] for r in s["holdings"]) == pytest.approx(1.0, abs=1e-4)
@@ -1059,7 +1053,9 @@ class TestAttribution:
         policy=None,
     ):
         generated, generated_benchmark = self._kit()
-        holding_returns = generated if holding_returns is None else holding_returns
+        holding_returns = (
+            generated if holding_returns is None else holding_returns
+        )
         benchmark = generated_benchmark if benchmark is None else benchmark
         weights = weights or {"GOOD": 70, "BAD": 30}
         closes = 100.0 * (1.0 + holding_returns).cumprod()
@@ -1091,7 +1087,9 @@ class TestAttribution:
         _, out = self._attribute()
         assert out["available"]
         assert (
-            out["selection_effect"] + out["allocation_effect"] + out["cost_effect"]
+            out["selection_effect"]
+            + out["allocation_effect"]
+            + out["cost_effect"]
         ) == pytest.approx(out["excess_return"], abs=1e-6)
 
     def test_identical_holdings_leave_no_allocation_effect(self):
@@ -1140,7 +1138,9 @@ class TestAttribution:
 
         assert out["portfolio_return"] == pytest.approx(result.total_return)
         assert (
-            out["selection_effect"] + out["allocation_effect"] + out["cost_effect"]
+            out["selection_effect"]
+            + out["allocation_effect"]
+            + out["cost_effect"]
         ) == pytest.approx(out["excess_return"])
         assert sum(row["contribution"] for row in out["holdings"]) == pytest.approx(
             out["excess_return"]
@@ -1236,30 +1236,12 @@ class TestHoldingsWithoutCostBasis:
 
     def _rows(self):
         return [
-            {
-                "symbol": "NHPC",
-                "exchange": "NSE",
-                "quantity": 24,
-                "average_price": 0,
-                "last_price": 78.07,
-                "pnl": 2.05,
-            },
-            {
-                "symbol": "SBICARD",
-                "exchange": "NSE",
-                "quantity": 1,
-                "average_price": 0,
-                "last_price": 657.80,
-                "pnl": -232.95,
-            },
-            {
-                "symbol": "NIFTYBEES",
-                "exchange": "NSE",
-                "quantity": 2,
-                "average_price": 0,
-                "last_price": 276.49,
-                "pnl": 1.56,
-            },
+            {"symbol": "NHPC", "exchange": "NSE", "quantity": 24,
+             "average_price": 0, "last_price": 78.07, "pnl": 2.05},
+            {"symbol": "SBICARD", "exchange": "NSE", "quantity": 1,
+             "average_price": 0, "last_price": 657.80, "pnl": -232.95},
+            {"symbol": "NIFTYBEES", "exchange": "NSE", "quantity": 2,
+             "average_price": 0, "last_price": 276.49, "pnl": 1.56},
         ]
 
     def test_parses_holdings_that_carry_no_average_price(self):
@@ -1294,19 +1276,9 @@ class TestHoldingsWithoutCostBasis:
         assert h[0].last_price == 50.0
 
     def test_cost_basis_is_used_when_the_broker_does_supply_it(self):
-        s = holdings_summary(
-            parse_holdings(
-                [
-                    {
-                        "symbol": "A",
-                        "quantity": 10,
-                        "average_price": 100,
-                        "last_price": 110,
-                        "pnl": 100,
-                    }
-                ]
-            )
-        )
+        s = holdings_summary(parse_holdings([
+            {"symbol": "A", "quantity": 10, "average_price": 100, "last_price": 110, "pnl": 100}
+        ]))
         assert s["has_cost_basis"] is True
         assert s["invested"] == pytest.approx(1000.0)
         assert s["pnl_pct"] == pytest.approx(10.0)

@@ -874,12 +874,10 @@ export default function Positions() {
               icon={ChartCandlestick}
               title="No positions match your filters"
               description="Try adjusting or clearing your filters to see results."
-              action={
-                hasActiveFilters ? (
-                  <Button variant="ghost" size="sm" onClick={clearFilters}>
-                    Clear Filters
-                  </Button>
-                ) : undefined
+              action={hasActiveFilters ?
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  Clear Filters
+                </Button> : undefined
               }
             />
           ) : (

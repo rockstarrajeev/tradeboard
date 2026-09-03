@@ -1,11 +1,11 @@
 """
 RELIANCE 5-Minute EMA Crossover Backtest using VectorBT
-Author : Tradeboard GPT
+Author : OpenAlgo GPT
 Description: Backtests 10/20 EMA crossover strategy on RELIANCE 5m data
-             Data fetched from Tradeboard API, backtested with VectorBT
+             Data fetched from OpenAlgo API, backtested with VectorBT
 """
 
-print("🔁 Tradeboard Python Bot is running.")
+print("OpenAlgo Python Bot is running.")
 
 from datetime import datetime
 
@@ -59,7 +59,7 @@ def fetch_historical_data():
     # Print the raw response info
     print(f"History Response received: {type(response)}")
 
-    # Tradeboard history() returns DataFrame directly
+    # OpenAlgo history() returns DataFrame directly
     if isinstance(response, pd.DataFrame):
         df = response.copy()
     else:
@@ -82,9 +82,9 @@ def fetch_historical_data():
     if df.index.tz is not None:
         df.index = df.index.tz_localize(None)
 
-    print(f"✅ Fetched {len(df)} candles")
-    print(f"📅 Date range: {df.index.min()} to {df.index.max()}")
-    print(f"📊 Columns: {list(df.columns)}")
+    print(f"Fetched {len(df)} candles")
+    print(f"Date range: {df.index.min()} to {df.index.max()}")
+    print(f"Columns: {list(df.columns)}")
 
     return df
 
@@ -112,8 +112,8 @@ def run_backtest(df: pd.DataFrame):
     exits = fast_ema.ma_crossed_below(slow_ema)
 
     # Print signal counts
-    print(f"📈 Total Entry Signals: {entries.sum()}")
-    print(f"📉 Total Exit Signals: {exits.sum()}")
+    print(f"Total Entry Signals: {entries.sum()}")
+    print(f"Total Exit Signals: {exits.sum()}")
 
     # Create portfolio
     portfolio = vbt.Portfolio.from_signals(
@@ -140,7 +140,7 @@ def print_backtest_stats(portfolio):
     stats = portfolio.stats()
 
     print(f"\n{'=' * 60}")
-    print("📊 BACKTEST STATISTICS")
+    print("BACKTEST STATISTICS")
     print(f"{'=' * 60}")
     print(stats)
     print(f"{'=' * 60}\n")
@@ -155,7 +155,7 @@ def get_trade_details(portfolio):
     trades = portfolio.trades.records_readable
 
     print(f"\n{'=' * 60}")
-    print("📋 TRADE DETAILS")
+    print("TRADE DETAILS")
     print(f"{'=' * 60}")
     print(f"Total Trades: {len(trades)}")
     print("\nFirst 10 Trades:")
@@ -222,7 +222,7 @@ def plot_results(df, portfolio, fast_ema, slow_ema, entries, exits):
             x=x_category,
             y=fast_ema.ma.values.flatten(),
             name=f"EMA {FAST_EMA}",
-            line={"color": "blue", "width": 1},
+            line=dict(color="blue", width=1),
             showlegend=True,
         ),
         row=1,
@@ -235,7 +235,7 @@ def plot_results(df, portfolio, fast_ema, slow_ema, entries, exits):
             x=x_category,
             y=slow_ema.ma.values.flatten(),
             name=f"EMA {SLOW_EMA}",
-            line={"color": "orange", "width": 1},
+            line=dict(color="orange", width=1),
             showlegend=True,
         ),
         row=1,
@@ -255,7 +255,7 @@ def plot_results(df, portfolio, fast_ema, slow_ema, entries, exits):
                 y=entry_y,
                 mode="markers",
                 name="Buy Signal",
-                marker={"symbol": "triangle-up", "size": 10, "color": "lime"},
+                marker=dict(symbol="triangle-up", size=10, color="lime"),
                 showlegend=True,
             ),
             row=1,
@@ -275,7 +275,7 @@ def plot_results(df, portfolio, fast_ema, slow_ema, entries, exits):
                 y=exit_y,
                 mode="markers",
                 name="Sell Signal",
-                marker={"symbol": "triangle-down", "size": 10, "color": "red"},
+                marker=dict(symbol="triangle-down", size=10, color="red"),
                 showlegend=True,
             ),
             row=1,
@@ -288,7 +288,7 @@ def plot_results(df, portfolio, fast_ema, slow_ema, entries, exits):
             x=x_category,
             y=equity_data.values,
             name="Equity",
-            line={"color": "#00bcd4", "width": 1.5},
+            line=dict(color="#00bcd4", width=1.5),
             fill="tozeroy",
             fillcolor="rgba(0, 188, 212, 0.1)",
             showlegend=True,
@@ -313,7 +313,7 @@ def plot_results(df, portfolio, fast_ema, slow_ema, entries, exits):
             x=x_category,
             y=drawdown_data.values,
             name="Drawdown",
-            line={"color": "brown", "width": 1},
+            line=dict(color="brown", width=1),
             fill="tozeroy",
             fillcolor="rgba(165, 42, 42, 0.3)",
             showlegend=True,
@@ -324,19 +324,19 @@ def plot_results(df, portfolio, fast_ema, slow_ema, entries, exits):
 
     # ───────── LAYOUT ─────────
     fig.update_layout(
-        title={
-            "text": f"{SYMBOL} EMA({FAST_EMA}/{SLOW_EMA}) Crossover Backtest<br>"
+        title=dict(
+            text=f"{SYMBOL} EMA({FAST_EMA}/{SLOW_EMA}) Crossover Backtest<br>"
             f"<sup>{START_DATE} to {END_DATE} | Initial: ₹{INITIAL_CAPITAL:,} | "
             f"Final: ₹{equity_data.iloc[-1]:,.2f}</sup>",
-            "x": 0.5,
-            "font": {"size": 16},
-        },
+            x=0.5,
+            font=dict(size=16),
+        ),
         template="plotly_dark",
         height=1000,
         width=1400,
         hovermode="x unified",
-        margin={"l": 60, "r": 100, "t": 100, "b": 80},
-        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
+        margin=dict(l=60, r=100, t=100, b=80),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     )
 
     # Update x-axes
@@ -348,7 +348,7 @@ def plot_results(df, portfolio, fast_ema, slow_ema, entries, exits):
             tickangle=-45,
             showgrid=True,
             gridcolor="rgba(128, 128, 128, 0.2)",
-            rangeslider={"visible": False},
+            rangeslider=dict(visible=False),
             row=row,
             col=1,
         )
@@ -364,7 +364,7 @@ def plot_results(df, portfolio, fast_ema, slow_ema, entries, exits):
 # ───────────────────── MAIN EXECUTION ─────────────────────
 if __name__ == "__main__":
     try:
-        # Step 1: Fetch data from Tradeboard
+        # Step 1: Fetch data from OpenAlgo
         df = fetch_historical_data()
 
         # Step 2: Run VectorBT backtest
@@ -382,17 +382,17 @@ if __name__ == "__main__":
         # Save as HTML
         output_file = "reliance_ema_backtest.html"
         fig.write_html(output_file)
-        print(f"📈 Chart saved to: {output_file}")
+        print(f"Chart saved to: {output_file}")
 
         # Show the chart
         fig.show()
 
         # Also show VectorBT's built-in plot
-        print("\n📊 Opening VectorBT Portfolio Plot...")
+        print("\n Opening VectorBT Portfolio Plot...")
         portfolio.plot().show()
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
         import traceback
 
         traceback.print_exc()

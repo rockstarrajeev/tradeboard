@@ -253,7 +253,7 @@ class BrokerData:
         if interval in ["D", "1D", "1d", "W", "w", "1W", "1w"]:
             logger.info(f"Setting all {interval} candles to 09:15:00 IST market open time")
             new_index = []
-            for _i, idx in enumerate(df.index):
+            for i, idx in enumerate(df.index):
                 # Convert the date part to a Python date object
                 if isinstance(idx, pd.Timestamp):
                     date_part = idx.date()
@@ -1587,7 +1587,7 @@ class BrokerData:
 
         # Debug output
         logger.info("FINAL SIMPLE FORMAT:")
-        for _key, value in simple_data.items():
+        for key, value in simple_data.items():
             logger.info(f"{{key}}: {value}")
 
         # Return exact structure expected by OpenAlgo
@@ -1617,6 +1617,7 @@ class BrokerData:
         # Back-compat: legacy callers passed timeout in the second positional
         # slot. If we got an int there, treat it as the timeout and ignore.
         if isinstance(exchange, int) and not isinstance(exchange, bool):
+            timeout = exchange
             exchange = None
 
         # If a bare-string symbol came in along with an explicit exchange,
@@ -1662,7 +1663,9 @@ class BrokerData:
                 if isinstance(sym, dict) and "symbol" in sym and "exchange" in sym:
                     symbols_to_process.append(sym)
                 elif isinstance(sym, str):
-                    symbols_to_process.append({"symbol": sym, "exchange": _infer_exchange(sym)})
+                    symbols_to_process.append(
+                        {"symbol": sym, "exchange": _infer_exchange(sym)}
+                    )
 
         # No valid symbols to process
         if not symbols_to_process:
@@ -1675,7 +1678,7 @@ class BrokerData:
         exchange = sym_data["exchange"]
 
         # Get token for this symbol
-        get_token(symbol, exchange)
+        token = get_token(symbol, exchange)
 
         # Map OpenAlgo exchange to Groww exchange format
         if exchange == "NSE":
@@ -2233,7 +2236,9 @@ class BrokerData:
         # us in cooldown and continuing only delays the user.
         MAX_CONSECUTIVE_429 = 4
         # Index existing results so we can merge by (symbol, exchange).
-        result_index = {(r.get("symbol"), r.get("exchange")): r for r in existing_results}
+        result_index = {
+            (r.get("symbol"), r.get("exchange")): r for r in existing_results
+        }
 
         def _fetch_one(exchange_symbol: str) -> dict:
             original = symbol_map.get(exchange_symbol, {})
@@ -2260,7 +2265,9 @@ class BrokerData:
                     debug=False,
                 )
             except Exception as fetch_err:
-                logger.warning(f"Quote fetch failed for {exchange_symbol}: {fetch_err}")
+                logger.warning(
+                    f"Quote fetch failed for {exchange_symbol}: {fetch_err}"
+                )
                 return {
                     "symbol": original.get("symbol", exchange_symbol),
                     "exchange": original.get("exchange", "UNKNOWN"),
@@ -2436,3 +2443,4 @@ class BrokerData:
             f"Full-quote overlay: {overlaid}/{len(exchange_symbols)} strikes enriched "
             f"with bid/ask/qty/volume/OI."
         )
+

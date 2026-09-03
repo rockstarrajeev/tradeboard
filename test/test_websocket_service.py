@@ -71,7 +71,7 @@ def format_timestamp(timestamp):
     return "N/A"
 
 
-def _run_ltp_test(client, symbols):
+def test_ltp(client, symbols):
     """Test LTP subscription and data"""
     print_section("Testing LTP (Last Traded Price)")
 
@@ -106,7 +106,7 @@ def _run_ltp_test(client, symbols):
     print(f"\n{Colors.BLUE}Unsubscribed from LTP{Colors.ENDC}")
 
 
-def _run_quote_test(client, symbols):
+def test_quote(client, symbols):
     """Test Quote subscription and data"""
     print_section("Testing Quote Data")
 
@@ -150,7 +150,7 @@ def _run_quote_test(client, symbols):
     print(f"\n{Colors.BLUE}Unsubscribed from Quote{Colors.ENDC}")
 
 
-def _run_depth_test(client, symbols):
+def test_depth(client, symbols):
     """Test Depth subscription and data"""
     print_section("Testing Market Depth")
 
@@ -178,7 +178,7 @@ def _run_depth_test(client, symbols):
             print("-" * 30)
 
             buy_depth = depth_data.get("buy", [])
-            for _i, level in enumerate(buy_depth[:5]):
+            for i, level in enumerate(buy_depth[:5]):
                 price = format_price(level.get("price", 0))
                 qty = level.get("quantity", 0)
                 orders = level.get("orders", 0)
@@ -190,7 +190,7 @@ def _run_depth_test(client, symbols):
             print("-" * 30)
 
             sell_depth = depth_data.get("sell", [])
-            for _i, level in enumerate(sell_depth[:5]):
+            for i, level in enumerate(sell_depth[:5]):
                 price = format_price(level.get("price", 0))
                 qty = level.get("quantity", 0)
                 orders = level.get("orders", 0)
@@ -267,7 +267,7 @@ def test_market_data_service():
     print(f"  Cache hit rate: {metrics['hit_rate']}%")
 
 
-def _run_subscription_management_test(client, symbols):
+def test_subscription_management(client, symbols):
     """Test subscription and unsubscription functionality"""
     print_section("Testing Subscription Management")
 
@@ -331,7 +331,7 @@ def _run_subscription_management_test(client, symbols):
     print(f"After unsubscribe all: {subs['count']} subscriptions")
 
 
-def _run_mode_switching_test(client, symbols):
+def test_mode_switching(client, symbols):
     """Test switching between different modes"""
     print_section("Testing Mode Switching")
 
@@ -375,7 +375,7 @@ def _run_mode_switching_test(client, symbols):
     client.unsubscribe([symbol], modes[-1])
 
 
-def _run_concurrent_subscriptions_test(client, symbols):
+def test_concurrent_subscriptions(client, symbols):
     """Test concurrent subscriptions to multiple modes"""
     print_section("Testing Concurrent Subscriptions")
 
@@ -503,25 +503,25 @@ def main():
 
     try:
         # Test different subscription modes
-        _run_ltp_test(client, symbols)
+        test_ltp(client, symbols)
         time.sleep(2)
 
-        _run_quote_test(client, symbols)
+        test_quote(client, symbols)
         time.sleep(2)
 
-        _run_depth_test(client, symbols)
+        test_depth(client, symbols)
         time.sleep(2)
 
         # Test subscription management
-        _run_subscription_management_test(client, symbols)
+        test_subscription_management(client, symbols)
         time.sleep(2)
 
         # Test mode switching
-        _run_mode_switching_test(client, symbols)
+        test_mode_switching(client, symbols)
         time.sleep(2)
 
         # Test concurrent subscriptions
-        _run_concurrent_subscriptions_test(client, symbols)
+        test_concurrent_subscriptions(client, symbols)
         time.sleep(2)
 
         # Test market data service

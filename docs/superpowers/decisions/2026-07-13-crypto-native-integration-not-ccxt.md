@@ -7,7 +7,7 @@
 
 ## Context
 
-Tradeboard is adding crypto (Delta Exchange live; Binance / CoinDCX / Hyperliquid
+OpenAlgo is adding crypto (Delta Exchange live; Binance / CoinDCX / Hyperliquid
 planned). The existing Delta integration is **hand-rolled**: a custom REST client
 plus a synchronous `websocket` + `threading` streaming client, structured exactly
 like an Indian broker (`api/`, `mapping/`, `database/`, `streaming/`,
@@ -20,7 +20,7 @@ path for the crypto slice.
 ## Decision
 
 Each crypto exchange is integrated as a **direct native `BrokerAdapter`** against
-that exchange's own REST + WebSocket API. Tradeboard will **not** use CCXT — or any
+that exchange's own REST + WebSocket API. OpenAlgo will **not** use CCXT — or any
 third-party aggregation library — for crypto connectivity.
 
 ## Rationale

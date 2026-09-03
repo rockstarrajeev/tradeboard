@@ -1,9 +1,9 @@
 import json
 import os
-import threading
-import time
 
 import httpx
+import threading
+import time
 
 from broker.dhan_sandbox.api.baseurl import get_url
 from broker.dhan_sandbox.mapping.transform_data import (
@@ -121,14 +121,14 @@ def get_holdings(auth):
 # --- Per-Symbol Smart Order Lock ---
 # Ensures only one smart order per symbol executes at a time.
 # Others queue and execute sequentially, each getting a fresh position book.
-_symbol_locks = {}  # {symbol_key: threading.Lock}
+_symbol_locks = {}          # {symbol_key: threading.Lock}
 _symbol_locks_lock = threading.Lock()
 
 # --- Position Book Cache ---
 # Caches get_positions() for 1 second. Invalidated after each smart order placement.
-_position_cache = {}  # {auth_token: {"data": ..., "timestamp": ...}}
+_position_cache = {}        # {auth_token: {"data": ..., "timestamp": ...}}
 _position_cache_lock = threading.Lock()
-_POSITION_CACHE_TTL = 1.0  # seconds
+_POSITION_CACHE_TTL = 1.0   # seconds
 
 
 def _get_symbol_lock(symbol, exchange, product):
@@ -163,8 +163,14 @@ def _invalidate_position_cache(auth):
         _position_cache.pop(auth, None)
 
 
+
 def get_open_position(tradingsymbol, exchange, product, auth):
     # Convert Trading Symbol from OpenAlgo Format to Broker Format Before Search in OpenPosition
+    # securityId is the authoritative match: tradingSymbol is identical across
+    # NSE series, so matching on it alone could read a warrant's position for
+    # an equity order (#1930). Keep the symbol as a fallback for when the
+    # master contract has no token for the symbol.
+    security_id = get_token(tradingsymbol, exchange)
     tradingsymbol = get_br_symbol(tradingsymbol, exchange)
     positions_data = _get_cached_positions(auth)
     net_qty = "0"
@@ -184,10 +190,15 @@ def get_open_position(tradingsymbol, exchange, product, auth):
     if positions_data and isinstance(positions_data, list):
         for position in positions_data:
             if (
-                position.get("tradingSymbol") == tradingsymbol
-                and position.get("exchangeSegment") == map_exchange_type(exchange)
-                and position.get("productType") == product
+                position.get("exchangeSegment") != map_exchange_type(exchange)
+                or position.get("productType") != product
             ):
+                continue
+            if security_id is not None:
+                matched = str(position.get("securityId", "")) == str(security_id)
+            else:
+                matched = position.get("tradingSymbol") == tradingsymbol
+            if matched:
                 net_qty = position.get("netQty", "0")
                 break  # Assuming you need the first match
 
@@ -219,7 +230,7 @@ def place_order_api(data, auth):
     }
     if client_id:
         headers["client-id"] = client_id
-
+        
     payload = json.dumps(newdata)
 
     logger.debug(
@@ -248,9 +259,7 @@ def place_order_api(data, auth):
     logger.debug(
         "Place order response status=%s keys=%s",
         res.status_code,
-        list(response_data.keys())
-        if isinstance(response_data, dict)
-        else type(response_data).__name__,
+        list(response_data.keys()) if isinstance(response_data, dict) else type(response_data).__name__,
     )
 
     # Check if the API call was successful before accessing orderId
@@ -402,9 +411,7 @@ def close_all_positions(current_api_key, auth):
 
             logger.debug(
                 "Squareoff response keys=%s",
-                list(api_response.keys())
-                if isinstance(api_response, dict)
-                else type(api_response).__name__,
+                list(api_response.keys()) if isinstance(api_response, dict) else type(api_response).__name__,
             )
 
             # Note: Ensure place_order_api handles any errors and logs accordingly
@@ -422,7 +429,7 @@ def cancel_order(orderid, auth):
         "Content-Type": "application/json",
         "Accept": "application/json",
     }
-
+    
     client_id = _get_dhan_client_id()
     if client_id:
         headers["client-id"] = client_id
@@ -531,21 +538,13 @@ def cancel_all_orders_api(data, auth):
         return [], []  # Return empty lists indicating failure to retrieve the order book
 
     # Handle error dict responses from the API
-    if isinstance(order_book_response, dict) and (
-        order_book_response.get("errorType")
-        or order_book_response.get("status") in ("error", "failed")
-    ):
-        logger.debug(
-            f"Cannot cancel orders - API error: {order_book_response.get('errorType', 'unknown')}"
-        )
+    if isinstance(order_book_response, dict) and (order_book_response.get("errorType") or order_book_response.get("status") in ("error", "failed")):
+        logger.debug(f"Cannot cancel orders - API error: {order_book_response.get('errorType', 'unknown')}")
         return [], []
 
     # Filter orders that are in 'open' or 'trigger_pending' state
     orders_to_cancel = [
-        order
-        for order in order_book_response
-        if isinstance(order, dict)
-        and order.get("orderStatus") in ["PENDING", "TRIGGER_PENDING", "TRANSIT"]
+        order for order in order_book_response if isinstance(order, dict) and order.get("orderStatus") in ["PENDING", "TRIGGER_PENDING", "TRANSIT"]
     ]
     logger.debug("Orders to cancel: count=%s", len(orders_to_cancel))
     canceled_orders = []

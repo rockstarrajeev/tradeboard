@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The Flow Visual Strategy Builder is Tradeboard's node-based visual programming interface. It allows you to create trading strategies without writing code by connecting nodes in a flowchart-like canvas.
+The Flow Visual Strategy Builder is OpenAlgo's node-based visual programming interface. It allows you to create trading strategies without writing code by connecting nodes in a flowchart-like canvas.
 
 ## What is the Flow Builder?
 
@@ -32,7 +32,7 @@ The Flow Visual Strategy Builder is Tradeboard's node-based visual programming i
 
 ## Accessing the Flow Builder
 
-1. Login to Tradeboard
+1. Login to OpenAlgo
 2. Navigate to **Flow** in the sidebar
 3. Click **New Flow** or select existing
 
@@ -239,7 +239,7 @@ Configuration:
 
 Flow webhooks need to be accessible from the internet for external triggers (TradingView, ChartInk, etc.).
 
-**Recommended**: Deploy Tradeboard on an Ubuntu server with your domain using `install.sh`:
+**Recommended**: Deploy OpenAlgo on an Ubuntu server with your domain using `install.sh`:
 ```
 https://yourdomain.com/flow/webhook/<token>
 ```
@@ -257,10 +257,10 @@ See [Installation Guide](../04-installation/README.md) for detailed setup.
 ### Webhook URL Format
 
 ```
-https://your-tradeboard-url/flow/webhook/<token>
+https://your-openalgo-url/flow/webhook/<token>
 ```
 
-Flows that use a symbol path parameter also accept `https://your-tradeboard-url/flow/webhook/<token>/<symbol>`.
+Flows that use a symbol path parameter also accept `https://your-openalgo-url/flow/webhook/<token>/<symbol>`.
 
 ### TradingView Alert Message
 
@@ -283,7 +283,7 @@ Flows that use a symbol path parameter also accept `https://your-tradeboard-url/
 
 ## Flow Templates
 
-Tradeboard provides pre-built templates:
+OpenAlgo provides pre-built templates:
 
 | Template | Description |
 |----------|-------------|
@@ -316,13 +316,13 @@ Tradeboard provides pre-built templates:
 │  Execution #12345                                   2025-01-21 10:30:15     │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
-│  ✅ Webhook Input         Duration: 2ms                                     │
+│ Webhook Input         Duration: 2ms                                     │
 │     Input: {"symbol": "SBIN", "action": "BUY"}                             │
 │                                                                              │
-│  ✅ Place Order           Duration: 150ms                                   │
+│ Place Order           Duration: 150ms                                   │
 │     Output: {"status": "success", "orderid": "12345"}                       │
 │                                                                              │
-│  ✅ Telegram Notify       Duration: 300ms                                   │
+│ Telegram Notify       Duration: 300ms                                   │
 │     Output: {"status": "sent"}                                              │
 │                                                                              │
 │  Total Duration: 452ms                                                      │

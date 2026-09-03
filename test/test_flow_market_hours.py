@@ -34,7 +34,6 @@ def at(hour, minute, day=4):
 
 def session(start_hhmm, end_hhmm, day=4):
     """A calendar window, expressed the way the calendar expresses it."""
-
     def ms(hhmm):
         h, m = (int(p) for p in hhmm.split(":"))
         return int(IST.localize(datetime(2026, 8, day, h, m)).timestamp() * 1000)
@@ -85,7 +84,12 @@ class TestClosedDays:
     def test_an_override_cannot_reopen_a_closed_day(self):
         """A holiday is not something a workflow may configure its way out of."""
         with mock.patch(CAL, return_value=None):
-            assert is_within_market_hours(at(12, 0, day=8), start="00:00", end="23:59") is False
+            assert (
+                is_within_market_hours(
+                    at(12, 0, day=8), start="00:00", end="23:59"
+                )
+                is False
+            )
 
 
 class TestFlowJsonOverride:

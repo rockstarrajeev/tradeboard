@@ -2,7 +2,7 @@
 type: API Endpoint
 title: History
 description: Get historical OHLCV data
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/market-data/history.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/market-data/history.md
 tags:
 - market-data
 - history

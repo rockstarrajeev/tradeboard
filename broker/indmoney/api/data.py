@@ -19,8 +19,8 @@ logger = get_logger(__name__)
 # server won't price). We isolate the offending code(s) via bisection and cache
 # them here so subsequent quote calls skip them and stay a single fast batch.
 # Cached codes are re-tested after a TTL in case they become quotable again.
-_BAD_SCRIP_CODES = {}  # scrip_code -> monotonic() time it was marked bad
-_BAD_SCRIP_TTL = 300.0  # seconds before a bad code is retried
+_BAD_SCRIP_CODES = {}          # scrip_code -> monotonic() time it was marked bad
+_BAD_SCRIP_TTL = 300.0         # seconds before a bad code is retried
 _bad_scrip_lock = threading.Lock()
 
 
@@ -46,6 +46,8 @@ def _mark_bad(scrip_code):
         for code, ts in list(_BAD_SCRIP_CODES.items()):
             if now - ts > _BAD_SCRIP_TTL:
                 _BAD_SCRIP_CODES.pop(code, None)
+
+
 
 
 def get_api_response(endpoint, auth, method="GET", params=None):
@@ -409,7 +411,9 @@ class BrokerData:
                 )
                 depth_raw = depth_response.get("data", {}).get(scrip_code, {})
 
-                market_depth = self._extract_market_depth(depth_raw.get("market_depth"), scrip_code)
+                market_depth = self._extract_market_depth(
+                    depth_raw.get("market_depth"), scrip_code
+                )
                 depth_levels = market_depth.get("depth", [])
 
                 if depth_levels and len(depth_levels) > 0:
@@ -584,7 +588,9 @@ class BrokerData:
                 symbol_map[scrip_code] = {"symbol": symbol, "exchange": exchange}
             except Exception as e:
                 logger.warning(f"Skipping symbol {symbol} on {exchange}: {str(e)}")
-                skipped_symbols.append({"symbol": symbol, "exchange": exchange, "error": str(e)})
+                skipped_symbols.append(
+                    {"symbol": symbol, "exchange": exchange, "error": str(e)}
+                )
 
         # Return skipped symbols if no valid symbols
         if not scrip_codes:
@@ -594,9 +600,7 @@ class BrokerData:
         # Fetch quotes, tolerating poison codes that would otherwise 400 the
         # whole batch. Returns {scrip_code: raw_quote} for codes with data.
         quotes_data = self._fetch_full_quotes_map(scrip_codes)
-        logger.debug(
-            f"Multiquotes returned data for {len(quotes_data)} of {len(scrip_codes)} codes"
-        )
+        logger.debug(f"Multiquotes returned data for {len(quotes_data)} of {len(scrip_codes)} codes")
 
         succeeded = 0
         for scrip_code, original in symbol_map.items():
@@ -616,14 +620,14 @@ class BrokerData:
                             "open": self._clean_number(quote.get("day_open", 0)),
                             "high": self._clean_number(quote.get("day_high", 0)),
                             "low": self._clean_number(quote.get("day_low", 0)),
-                            "ltp": self._clean_number(quote.get("live_price", quote.get("ltp", 0))),
+                            "ltp": self._clean_number(
+                                quote.get("live_price", quote.get("ltp", 0))
+                            ),
                             "prev_close": self._clean_number(
                                 quote.get("prev_close", quote.get("close", 0))
                             ),
                             "volume": self._clean_number(quote.get("volume", 0)),
-                            "oi": self._clean_number(
-                                quote.get("oi", quote.get("open_interest", 0))
-                            ),
+                            "oi": self._clean_number(quote.get("oi", quote.get("open_interest", 0))),
                         },
                     }
                 )

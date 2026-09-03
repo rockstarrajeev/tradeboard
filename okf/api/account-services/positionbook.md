@@ -2,7 +2,7 @@
 type: API Endpoint
 title: PositionBook
 description: Get all current open positions
-resource: https://github.com/rockstarrajeev/tradeboard/blob/main/docs/api/account-services/positionbook.md
+resource: https://github.com/marketcalls/openalgo/blob/main/docs/api/account-services/positionbook.md
 tags:
 - positions
 - account

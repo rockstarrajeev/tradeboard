@@ -13,6 +13,7 @@ from services.orderbook_service import get_orderbook
 from services.place_smart_order_service import place_smart_order
 from services.positionbook_service import get_positionbook
 from services.tradebook_service import get_tradebook
+from utils.latency_monitor import track_latency
 from utils.logging import get_logger
 from utils.session import check_session_validity
 
@@ -502,6 +503,7 @@ def export_positions():
 @orders_bp.route("/close_position", methods=["POST"])
 @check_session_validity
 @limiter.limit(API_RATE_LIMIT)
+@track_latency("CLOSE")
 def close_position():
     """Close a specific position - uses broker API in live mode, placesmartorder service in analyze mode"""
     try:
@@ -612,20 +614,18 @@ def close_position():
                 log_request = order_data.copy()
                 log_request["api_type"] = "closeposition"
 
-                bus.publish(
-                    PositionClosedEvent(
-                        mode="live",
-                        api_type="closeposition",
-                        symbol=symbol,
-                        exchange=exchange,
-                        product=product,
-                        orderid=str(orderid),
-                        message="Position close order placed successfully.",
-                        request_data=log_request,
-                        response_data=response_data,
-                        api_key=api_key,
-                    )
-                )
+                bus.publish(PositionClosedEvent(
+                    mode="live",
+                    api_type="closeposition",
+                    symbol=symbol,
+                    exchange=exchange,
+                    product=product,
+                    orderid=str(orderid),
+                    message="Position close order placed successfully.",
+                    request_data=log_request,
+                    response_data=response_data,
+                    api_key=api_key,
+                ))
         else:
             # No orderid, definite error
             response_data = {
@@ -649,6 +649,7 @@ def close_position():
 @orders_bp.route("/close_all_positions", methods=["POST"])
 @check_session_validity
 @limiter.limit(API_RATE_LIMIT)
+@track_latency("CLOSE")
 def close_all_positions():
     """Close all open positions using the broker API"""
     try:

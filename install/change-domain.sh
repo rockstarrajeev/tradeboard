@@ -7,19 +7,19 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Tradeboard Domain Change Banner
+# OpenAlgo Domain Change Banner
 echo -e "${BLUE}"
-echo " ████████╗██████╗  █████╗ ██████╗ ███████╗██████╗  ██████╗  █████╗ ██████╗ ██████╗ "
-echo " ╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔══██╗██╔═══██╗██╔══██╗██╔══██╗██╔══██╗"
-echo "    ██║   ██████╔╝███████║██║  ██║█████╗  ██████╔╝██║   ██║███████║██████╔╝██║  ██║"
-echo "    ██║   ██╔══██╗██╔══██║██║  ██║██╔══╝  ██╔══██╗██║   ██║██╔══██║██╔══██╗██║  ██║"
-echo "    ██║   ██║  ██║██║  ██║██████╔╝███████╗██████╔╝╚██████╔╝██║  ██║██║  ██║██████╔╝"
-echo "    ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚══════╝╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ "
-echo "                                TRADEBOARD                                         "
+echo "  ██████╗ ██████╗ ███████╗███╗   ██╗ █████╗ ██╗      ██████╗  ██████╗ "
+echo " ██╔═══██╗██╔══██╗██╔════╝████╗  ██║██╔══██╗██║     ██╔════╝ ██╔═══██╗"
+echo " ██║   ██║██████╔╝███████╗██╔██╗ ██║███████║██║     ██║  ███╗██║   ██║"
+echo " ██║   ██║██╔═══╝ ██╔══╝  ██║╚██╗██║██╔══██║██║     ██║   ██║██║   ██║"
+echo " ╚██████╔╝██╗     ███████╗██║ ╚████║██║  ██║███████╗╚██████╔╝╚██████╔╝"
+echo "  ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝ ╚═════╝  ╚═════╝ "
+echo "                      DOMAIN  CHANGE  SCRIPT                             "
 echo -e "${NC}"
 
-# Tradeboard Domain Change Script
-# Changes the domain for an existing Tradeboard server deployment.
+# OpenAlgo Domain Change Script
+# Changes the domain for an existing OpenAlgo server deployment.
 # Updates .env, Nginx config, and obtains a new SSL certificate.
 
 # Create logs directory if it doesn't exist
@@ -47,7 +47,7 @@ check_status() {
 }
 
 # Start logging
-log_message "Starting Tradeboard domain change log at: $LOG_FILE" "$BLUE"
+log_message "Starting OpenAlgo domain change log at: $LOG_FILE" "$BLUE"
 log_message "----------------------------------------" "$BLUE"
 
 # ============================================
@@ -94,22 +94,22 @@ log_message "Detected OS: $OS_TYPE" "$GREEN"
 # Step 2: Discover existing deployment
 # ============================================
 # Try the simple single-install layout (current install.sh) first, then
-# fall back to scanning the legacy /var/python/tradeboard-flask/ tree
+# fall back to scanning the legacy /var/python/openalgo-flask/ tree
 # produced by older install.sh versions and install/install-multi.sh.
-SIMPLE_PATH="/var/python/tradeboard"
-DEPLOY_BASE="/var/python/tradeboard-flask"
+SIMPLE_PATH="/var/python/openalgo"
+DEPLOY_BASE="/var/python/openalgo-flask"
 
 if [ -f "$SIMPLE_PATH/.env" ]; then
-    SELECTED_DEPLOY="tradeboard"
+    SELECTED_DEPLOY="openalgo"
     BASE_PATH="$SIMPLE_PATH"
-    TRADEBOARD_PATH="$SIMPLE_PATH"
-    SOCKET_FILE="$SIMPLE_PATH/tradeboard.sock"
-    SERVICE_NAME="tradeboard"
-    ENV_FILE="$TRADEBOARD_PATH/.env"
-    log_message "Found Tradeboard install at $SIMPLE_PATH" "$GREEN"
+    OPENALGO_PATH="$SIMPLE_PATH"
+    SOCKET_FILE="$SIMPLE_PATH/openalgo.sock"
+    SERVICE_NAME="openalgo"
+    ENV_FILE="$OPENALGO_PATH/.env"
+    log_message "Found OpenAlgo install at $SIMPLE_PATH" "$GREEN"
 else
     if [ ! -d "$DEPLOY_BASE" ]; then
-        log_message "Error: No Tradeboard deployment found." "$RED"
+        log_message "Error: No OpenAlgo deployment found." "$RED"
         log_message "Looked at $SIMPLE_PATH and $DEPLOY_BASE" "$YELLOW"
         log_message "This script is for server deployments installed via install.sh" "$YELLOW"
         exit 1
@@ -118,14 +118,14 @@ else
     # Find all legacy deployments
     DEPLOYMENTS=()
     for dir in "$DEPLOY_BASE"/*/; do
-        if [ -d "${dir}tradeboard" ] && [ -f "${dir}tradeboard/.env" ]; then
+        if [ -d "${dir}openalgo" ] && [ -f "${dir}openalgo/.env" ]; then
             deploy_name=$(basename "$dir")
             DEPLOYMENTS+=("$deploy_name")
         fi
     done
 
     if [ ${#DEPLOYMENTS[@]} -eq 0 ]; then
-        log_message "Error: No Tradeboard deployments found in $SIMPLE_PATH or $DEPLOY_BASE" "$RED"
+        log_message "Error: No OpenAlgo deployments found in $SIMPLE_PATH or $DEPLOY_BASE" "$RED"
         exit 1
     fi
 
@@ -152,10 +152,10 @@ else
 
     # Derive paths (legacy multi-deploy layout)
     BASE_PATH="$DEPLOY_BASE/$SELECTED_DEPLOY"
-    TRADEBOARD_PATH="$BASE_PATH/tradeboard"
-    SOCKET_FILE="$BASE_PATH/tradeboard.sock"
-    SERVICE_NAME="tradeboard-$SELECTED_DEPLOY"
-    ENV_FILE="$TRADEBOARD_PATH/.env"
+    OPENALGO_PATH="$BASE_PATH/openalgo"
+    SOCKET_FILE="$BASE_PATH/openalgo.sock"
+    SERVICE_NAME="openalgo-$SELECTED_DEPLOY"
+    ENV_FILE="$OPENALGO_PATH/.env"
 fi
 
 # ============================================
@@ -215,7 +215,7 @@ log_message "  Current Deployment Configuration" "$YELLOW"
 log_message "========================================" "$YELLOW"
 log_message "" ""
 log_message "Deployment Name:    $SELECTED_DEPLOY" "$BLUE"
-log_message "Install Path:       $TRADEBOARD_PATH" "$BLUE"
+log_message "Install Path:       $OPENALGO_PATH" "$BLUE"
 log_message "Service Name:       $SERVICE_NAME" "$BLUE"
 log_message "Socket File:        $SOCKET_FILE" "$BLUE"
 log_message "" ""
@@ -363,7 +363,7 @@ fi
 # ============================================
 log_message "\n[Step 2/6] Backing up current configuration..." "$BLUE"
 
-BACKUP_DIR="$TRADEBOARD_PATH/db/domain_change_backup_${TIMESTAMP}"
+BACKUP_DIR="$OPENALGO_PATH/db/domain_change_backup_${TIMESTAMP}"
 sudo mkdir -p "$BACKUP_DIR"
 
 # Backup .env
@@ -619,8 +619,12 @@ server {
         proxy_buffers 4 256k;
         proxy_busy_buffers_size 256k;
 
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "upgrade";
+        # Plain HTTP only: /ws, /ws/ and /socket.io/ have their own blocks.
+        # Forcing "Connection: upgrade" here sent every ordinary request
+        # upstream with a bogus upgrade header and an empty Upgrade:, which
+        # breaks HTTP/1.1 keep-alive to gunicorn and shows up as intermittent
+        # truncated asset responses and 5xx (GitHub issue #1807).
+        proxy_set_header Connection "";
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -692,7 +696,7 @@ if [ -n "$BROKER_NAME" ]; then
     log_message "" ""
 fi
 
-log_message "Your Tradeboard instance is now available at:" "$GREEN"
+log_message "Your OpenAlgo instance is now available at:" "$GREEN"
 log_message "  https://$NEW_DOMAIN" "$GREEN"
 log_message "" ""
 

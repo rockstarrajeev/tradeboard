@@ -1,13 +1,13 @@
 """
 NIFTY Option Chain - CE/PE Open Interest Histogram (Side by Side)
-Author : Tradeboard GPT
+Author : OpenAlgo GPT
 Description: Plots Option Chain OI histogram for NIFTY 30JUN26 expiry
              CE (green) and PE (red) bars SIDE BY SIDE
              Only 100-point strikes (no 50s)
              White background
 """
 
-print("🔁 Tradeboard Python Bot is running.")
+print("OpenAlgo Python Bot is running.")
 
 from datetime import datetime
 
@@ -34,9 +34,9 @@ client = api(api_key=API_KEY, host=API_HOST)
 
 # ───────────────────── FETCH OPTION CHAIN ─────────────────────
 def fetch_option_chain():
-    """Fetch option chain data from Tradeboard API"""
+    """Fetch option chain data from OpenAlgo API"""
 
-    print(f"\n📥 Fetching {UNDERLYING} Option Chain for {EXPIRY} expiry...")
+    print(f"\n Fetching {UNDERLYING} Option Chain for {EXPIRY} expiry...")
 
     chain_data = client.optionchain(
         underlying=UNDERLYING, exchange=EXCHANGE, expiry_date=EXPIRY, strike_count=STRIKE_COUNT
@@ -51,9 +51,9 @@ def fetch_option_chain():
     atm_strike = chain_data.get("atm_strike", 0)
     chain = chain_data.get("chain", [])
 
-    print(f"✅ Underlying LTP: {underlying_ltp}")
-    print(f"✅ ATM Strike: {atm_strike}")
-    print(f"✅ Total Strikes (raw): {len(chain)}")
+    print(f"Underlying LTP: {underlying_ltp}")
+    print(f"ATM Strike: {atm_strike}")
+    print(f"Total Strikes (raw): {len(chain)}")
 
     return chain_data
 
@@ -104,12 +104,12 @@ def process_chain_data(chain_data):
     # Round ATM to nearest 100
     atm_strike_100 = int(round(atm_strike / 100) * 100)
 
-    print(f"✅ Filtered Strikes (100s only): {len(df)}")
-    print(f"📊 Strike Range: {df['strike'].min()} to {df['strike'].max()}")
-    print(f"📊 Total CE OI (lots): {df['ce_oi_lots'].sum():,}")
-    print(f"📊 Total PE OI (lots): {df['pe_oi_lots'].sum():,}")
+    print(f"Filtered Strikes (100s only): {len(df)}")
+    print(f"Strike Range: {df['strike'].min()} to {df['strike'].max()}")
+    print(f"Total CE OI (lots): {df['ce_oi_lots'].sum():,}")
+    print(f"Total PE OI (lots): {df['pe_oi_lots'].sum():,}")
     print(
-        f"📊 PCR (OI): {df['pe_oi'].sum() / df['ce_oi'].sum():.2f}"
+        f"PCR (OI): {df['pe_oi'].sum() / df['ce_oi'].sum():.2f}"
         if df["ce_oi"].sum() > 0
         else "   PCR: N/A"
     )
@@ -131,7 +131,7 @@ def plot_oi_side_by_side(df, atm_strike, underlying_ltp, expiry):
 
     fig = go.Figure()
 
-    df["strike"].tolist()
+    strikes = df["strike"].tolist()
 
     # CE OI - Green bars
     fig.add_trace(
@@ -139,13 +139,13 @@ def plot_oi_side_by_side(df, atm_strike, underlying_ltp, expiry):
             x=df["strike"].astype(str),
             y=df["ce_oi_lots"],
             name="Call OI",
-            marker={
-                "color": "rgba(34, 197, 94, 0.9)",  # Green
-                "line": {"color": "rgba(22, 163, 74, 1)", "width": 1},
-            },
+            marker=dict(
+                color="rgba(34, 197, 94, 0.9)",  # Green
+                line=dict(color="rgba(22, 163, 74, 1)", width=1),
+            ),
             text=[format_num(x) for x in df["ce_oi_lots"]],
             textposition="outside",
-            textfont={"size": 9, "color": "rgba(22, 163, 74, 1)"},
+            textfont=dict(size=9, color="rgba(22, 163, 74, 1)"),
             customdata=np.column_stack(
                 [
                     df["ce_oi_lots"],
@@ -171,13 +171,13 @@ def plot_oi_side_by_side(df, atm_strike, underlying_ltp, expiry):
             x=df["strike"].astype(str),
             y=df["pe_oi_lots"],
             name="Put OI",
-            marker={
-                "color": "rgba(239, 68, 68, 0.9)",  # Red
-                "line": {"color": "rgba(220, 38, 38, 1)", "width": 1},
-            },
+            marker=dict(
+                color="rgba(239, 68, 68, 0.9)",  # Red
+                line=dict(color="rgba(220, 38, 38, 1)", width=1),
+            ),
             text=[format_num(x) for x in df["pe_oi_lots"]],
             textposition="outside",
-            textfont={"size": 9, "color": "rgba(220, 38, 38, 1)"},
+            textfont=dict(size=9, color="rgba(220, 38, 38, 1)"),
             customdata=np.column_stack(
                 [
                     df["ce_oi_lots"],
@@ -213,7 +213,7 @@ def plot_oi_side_by_side(df, atm_strike, underlying_ltp, expiry):
             y1=1,
             xref="x",
             yref="paper",
-            line={"color": "rgba(100, 100, 100, 0.7)", "width": 2, "dash": "dash"},
+            line=dict(color="rgba(100, 100, 100, 0.7)", width=2, dash="dash"),
         )
 
         # ATM annotation
@@ -224,7 +224,7 @@ def plot_oi_side_by_side(df, atm_strike, underlying_ltp, expiry):
             yref="paper",
             text=f"ATM: {atm_strike}",
             showarrow=False,
-            font={"size": 11, "color": "black", "family": "Arial Black"},
+            font=dict(size=11, color="black", family="Arial Black"),
             bgcolor="rgba(255,255,255,0.8)",
             bordercolor="gray",
             borderwidth=1,
@@ -247,32 +247,32 @@ def plot_oi_side_by_side(df, atm_strike, underlying_ltp, expiry):
 
     # Layout - WHITE BACKGROUND
     fig.update_layout(
-        title={
-            "text": f"NIFTY {expiry} - current",
-            "x": 0.5,
-            "font": {"size": 18, "color": "black", "family": "Arial"},
-        },
-        xaxis={
-            "title": "Strike Price",
-            "type": "category",
-            "tickangle": -45,
-            "tickfont": {"size": 9, "color": "black"},
-            "showgrid": True,
-            "gridcolor": "rgba(200, 200, 200, 0.5)",
-            "showline": True,
-            "linecolor": "black",
-            "linewidth": 1,
-        },
-        yaxis={
-            "title": {"text": "Open Interest (Lots)", "font": {"color": "black"}},
-            "showgrid": True,
-            "gridcolor": "rgba(200, 200, 200, 0.5)",
-            "tickformat": ",d",
-            "tickfont": {"color": "black"},
-            "showline": True,
-            "linecolor": "black",
-            "linewidth": 1,
-        },
+        title=dict(
+            text=f"NIFTY {expiry} - current",
+            x=0.5,
+            font=dict(size=18, color="black", family="Arial"),
+        ),
+        xaxis=dict(
+            title="Strike Price",
+            type="category",
+            tickangle=-45,
+            tickfont=dict(size=9, color="black"),
+            showgrid=True,
+            gridcolor="rgba(200, 200, 200, 0.5)",
+            showline=True,
+            linecolor="black",
+            linewidth=1,
+        ),
+        yaxis=dict(
+            title=dict(text="Open Interest (Lots)", font=dict(color="black")),
+            showgrid=True,
+            gridcolor="rgba(200, 200, 200, 0.5)",
+            tickformat=",d",
+            tickfont=dict(color="black"),
+            showline=True,
+            linecolor="black",
+            linewidth=1,
+        ),
         # WHITE BACKGROUND
         template="plotly_white",
         plot_bgcolor="white",
@@ -283,49 +283,49 @@ def plot_oi_side_by_side(df, atm_strike, underlying_ltp, expiry):
         bargap=0.15,
         bargroupgap=0.05,
         hovermode="x unified",
-        legend={
-            "orientation": "h",
-            "yanchor": "bottom",
-            "y": -0.2,
-            "xanchor": "center",
-            "x": 0.5,
-            "font": {"color": "black"},
-        },
-        margin={"l": 80, "r": 100, "t": 80, "b": 100},
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.2,
+            xanchor="center",
+            x=0.5,
+            font=dict(color="black"),
+        ),
+        margin=dict(l=80, r=100, t=80, b=100),
         annotations=[
             # Timestamp
-            {
-                "text": f"{current_time}",
-                "xref": "paper",
-                "yref": "paper",
-                "x": 1,
-                "y": 1.06,
-                "showarrow": False,
-                "font": {"size": 11, "color": "gray"},
-                "bgcolor": "rgba(240,240,240,0.8)",
-                "borderpad": 4,
-            },
+            dict(
+                text=f"{current_time}",
+                xref="paper",
+                yref="paper",
+                x=1,
+                y=1.06,
+                showarrow=False,
+                font=dict(size=11, color="gray"),
+                bgcolor="rgba(240,240,240,0.8)",
+                borderpad=4,
+            ),
             # PCR on right side
-            {
-                "text": f"PCR: {pcr:.2f}",
-                "xref": "paper",
-                "yref": "paper",
-                "x": 1.04,
-                "y": 0.5,
-                "showarrow": False,
-                "font": {"size": 12, "color": "black", "family": "Arial Black"},
-                "textangle": -90,
-            },
+            dict(
+                text=f"PCR: {pcr:.2f}",
+                xref="paper",
+                yref="paper",
+                x=1.04,
+                y=0.5,
+                showarrow=False,
+                font=dict(size=12, color="black", family="Arial Black"),
+                textangle=-90,
+            ),
             # Max OI info at bottom
-            {
-                "text": f"Max CE OI: {max_ce_strike} ({format_num(max_ce_oi)}) | Max PE OI: {max_pe_strike} ({format_num(max_pe_oi)})",
-                "xref": "paper",
-                "yref": "paper",
-                "x": 0.5,
-                "y": -0.18,
-                "showarrow": False,
-                "font": {"size": 10, "color": "gray"},
-            },
+            dict(
+                text=f"Max CE OI: {max_ce_strike} ({format_num(max_ce_oi)}) | Max PE OI: {max_pe_strike} ({format_num(max_pe_oi)})",
+                xref="paper",
+                yref="paper",
+                x=0.5,
+                y=-0.18,
+                showarrow=False,
+                font=dict(size=10, color="gray"),
+            ),
         ],
     )
 
@@ -337,21 +337,21 @@ def print_oi_table(df, atm_strike):
     """Print top OI strikes"""
 
     print(f"\n{'=' * 70}")
-    print("📊 TOP 10 STRIKES BY OI")
+    print("TOP 10 STRIKES BY OI")
     print(f"{'=' * 70}")
 
-    print("\n🟢 TOP 5 CALL OI (Resistance Levels):")
+    print("\n TOP 5 CALL OI (Resistance Levels):")
     top_ce = df.nlargest(5, "ce_oi_lots")[["strike", "ce_oi_lots", "ce_ltp"]]
     for _, row in top_ce.iterrows():
-        marker = " ⬅️ ATM" if row["strike"] == atm_strike else ""
+        marker = " ATM" if row["strike"] == atm_strike else ""
         print(
             f"   Strike {int(row['strike'])}: {int(row['ce_oi_lots']):>10,} lots | LTP: ₹{row['ce_ltp']:.2f}{marker}"
         )
 
-    print("\n🔴 TOP 5 PUT OI (Support Levels):")
+    print("\n TOP 5 PUT OI (Support Levels):")
     top_pe = df.nlargest(5, "pe_oi_lots")[["strike", "pe_oi_lots", "pe_ltp"]]
     for _, row in top_pe.iterrows():
-        marker = " ⬅️ ATM" if row["strike"] == atm_strike else ""
+        marker = " ATM" if row["strike"] == atm_strike else ""
         print(
             f"   Strike {int(row['strike'])}: {int(row['pe_oi_lots']):>10,} lots | LTP: ₹{row['pe_ltp']:.2f}{marker}"
         )
@@ -377,12 +377,12 @@ if __name__ == "__main__":
         # Save and show
         output_file = f"nifty_oi_chain_{EXPIRY}.html"
         fig.write_html(output_file)
-        print(f"📈 Chart saved to: {output_file}")
+        print(f"Chart saved to: {output_file}")
 
         fig.show()
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
         import traceback
 
         traceback.print_exc()
