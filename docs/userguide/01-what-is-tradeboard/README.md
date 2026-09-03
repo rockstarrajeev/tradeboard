@@ -5,7 +5,7 @@
 **Tradeboard** is a free, open-source algorithmic trading platform that bridges your trading ideas with execution. Built with Python Flask and a modern React frontend, it provides a unified API layer across 29 Indian brokers, enabling seamless automation from TradingView, Amibroker, Python scripts, Excel, and AI agents.
 
 **Website**: [https://rajeevupadhyay.com](https://rajeevupadhyay.com)
-**GitHub**: [https://github.com/wesoftcorp/tradeboard](https://github.com/wesoftcorp/tradeboard)
+**GitHub**: [https://github.com/rockstarrajeev/tradeboard](https://github.com/rockstarrajeev/tradeboard)
 **Documentation**: [https://docs.rajeevupadhyay.com](https://docs.rajeevupadhyay.com)
 
 ## The Problem Tradeboard Solves
@@ -288,7 +288,7 @@ Ready to begin? Here's your path:
 
 | Resource | Link |
 |----------|------|
-| **GitHub** | [github.com/wesoftcorp/tradeboard](https://github.com/wesoftcorp/tradeboard) |
+| **GitHub** | [github.com/rockstarrajeev/tradeboard](https://github.com/rockstarrajeev/tradeboard) |
 | **Documentation** | [docs.rajeevupadhyay.com](https://docs.rajeevupadhyay.com) |
 | **API Reference** | [/api/docs](http://localhost:5000/api/docs) (after installation) |
 | **Discord Community** | Join for support and discussions |

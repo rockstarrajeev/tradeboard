@@ -8,7 +8,7 @@ A systematic testing procedure to ensure quality and catch bugs effectively.
 
 ```bash
 # 1. Setup
-git clone --filter=blob:none https://github.com/wesoftcorp/tradeboard.git
+git clone --filter=blob:none https://github.com/rockstarrajeev/tradeboard.git
 cd openalgo
 cp .sample.env .env
 # Edit .env with your broker credentials

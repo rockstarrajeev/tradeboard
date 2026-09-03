@@ -71,4 +71,4 @@ Alongside those: Dhan master contract and symbol construction fixes, runtime-loa
 * **Website**: [rajeevupadhyay.com](https://rajeevupadhyay.com)
 * **Documentation**: [docs.rajeevupadhyay.com](https://docs.rajeevupadhyay.com)
 * **Contact**: [rajeev.upadhyay@live.in](mailto:rajeev.upadhyay@live.in)
-* **Repository**: [github.com/wesoftcorp/tradeboard](https://github.com/wesoftcorp/tradeboard)
+* **Repository**: [github.com/rockstarrajeev/tradeboard](https://github.com/rockstarrajeev/tradeboard)

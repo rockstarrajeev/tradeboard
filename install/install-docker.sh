@@ -257,7 +257,7 @@ fi
 # branch switching working. Nearly all of that 280 MB is superseded
 # frontend/dist bundles that a server never reads. A host without filter
 # support just full-clones, so this is never worse than no flag at all.
-$SUDO git clone --filter=blob:none https://github.com/wesoftcorp/tradeboard.git $INSTALL_PATH
+$SUDO git clone --filter=blob:none https://github.com/rockstarrajeev/tradeboard.git $INSTALL_PATH
 check_status "Git clone failed"
 
 cd $INSTALL_PATH
