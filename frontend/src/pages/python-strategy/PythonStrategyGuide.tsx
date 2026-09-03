@@ -30,7 +30,7 @@ Run via OpenAlgo's /python strategy runner:
                                   the host's calendar/holiday gating, so the two
                                   always agree.
     STRATEGY_ID / STRATEGY_NAME : injected for log/order tagging.
-    HOST_SERVER / WEBSOCKET_URL : inherited from OpenAlgo's .env.
+    HOST_SERVER / WEBSOCKET_URL : inherited from Tradeboard's .env.
     No code changes required.
 """
 
@@ -49,8 +49,8 @@ from openalgo import api
 # API Configuration — read from environment with sensible fallbacks.
 # When launched via OpenAlgo's /python runner, these come from the platform:
 #   OPENALGO_API_KEY : injected per-strategy (decrypted from DB)
-#   HOST_SERVER      : inherited from OpenAlgo's .env
-#   WEBSOCKET_URL    : inherited from OpenAlgo's .env
+#   HOST_SERVER      : inherited from Tradeboard's .env
+#   WEBSOCKET_URL    : inherited from Tradeboard's .env
 API_KEY = os.getenv("OPENALGO_API_KEY", "openalgo-apikey")
 API_HOST = os.getenv("HOST_SERVER", "http://127.0.0.1:5000")
 WS_URL = os.getenv("WEBSOCKET_URL", "ws://127.0.0.1:8765")
@@ -512,8 +512,8 @@ export default function PythonStrategyGuide() {
           <div>
             <p className="font-medium mb-2">Inherited from .env</p>
             <p className="text-sm text-muted-foreground mb-3">
-              Strategies inherit every variable from OpenAlgo's <code>.env</code> via{' '}
-              <code>os.environ.copy()</code>. The key ones for connecting back to OpenAlgo:
+              Strategies inherit every variable from Tradeboard's <code>.env</code> via{' '}
+              <code>os.environ.copy()</code>. The key ones for connecting back to Tradeboard:
             </p>
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
@@ -1002,7 +1002,7 @@ export default function PythonStrategyGuide() {
                   <div className="bg-muted p-3 rounded-lg">
                     <p className="font-medium">Manual Override</p>
                     <p className="mt-1">
-                      Log in to OpenAlgo before the session, wait for master contracts to download,
+                      Log in to Tradeboard before the session, wait for master contracts to download,
                       and click <strong>Start</strong> manually. Click <strong>Stop</strong> when
                       the session ends.
                     </p>
@@ -1020,7 +1020,7 @@ export default function PythonStrategyGuide() {
                 </p>
                 <p>Master contracts are automatically downloaded when you:</p>
                 <ol className="list-decimal list-inside space-y-1 ml-2">
-                  <li>Log in to OpenAlgo</li>
+                  <li>Log in to Tradeboard</li>
                   <li>Wait for the download to complete (shown in header)</li>
                 </ol>
                 <p className="text-sm">
@@ -1101,7 +1101,7 @@ export default function PythonStrategyGuide() {
             </AccordionItem>
 
             <AccordionItem value="restart">
-              <AccordionTrigger>What happens if I restart OpenAlgo?</AccordionTrigger>
+              <AccordionTrigger>What happens if I restart Tradeboard?</AccordionTrigger>
               <AccordionContent className="text-muted-foreground space-y-3">
                 <p>OpenAlgo handles restarts gracefully:</p>
                 <ul className="list-disc list-inside space-y-1 ml-2">
@@ -1193,7 +1193,7 @@ export default function PythonStrategyGuide() {
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground space-y-3">
                 <p>
-                  If your strategy needs additional Python libraries, install them in OpenAlgo's
+                  If your strategy needs additional Python libraries, install them in Tradeboard's
                   environment.
                 </p>
 
@@ -1208,7 +1208,7 @@ export default function PythonStrategyGuide() {
                       <li>
                         Run <code>uv sync</code> in the openalgo directory
                       </li>
-                      <li>Restart OpenAlgo</li>
+                      <li>Restart Tradeboard</li>
                     </ol>
                   </div>
 
@@ -1221,7 +1221,7 @@ export default function PythonStrategyGuide() {
                       <li>
                         Activate your venv and run <code>pip install -r requirements.txt</code>
                       </li>
-                      <li>Restart OpenAlgo</li>
+                      <li>Restart Tradeboard</li>
                     </ol>
                   </div>
                 </div>

@@ -99,7 +99,7 @@ function getPageTitle(pathname: string): string {
     }
   }
 
-  return 'OpenAlgo'
+  return 'Tradeboard'
 }
 
 export function usePageTitle() {
@@ -107,6 +107,6 @@ export function usePageTitle() {
 
   useEffect(() => {
     const title = getPageTitle(pathname)
-    document.title = title === 'OpenAlgo' ? 'OpenAlgo' : `${title} | OpenAlgo`
+    document.title = title === 'Tradeboard' ? 'Tradeboard' : `${title} | Tradeboard`
   }, [pathname])
 }

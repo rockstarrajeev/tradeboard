@@ -247,7 +247,7 @@ export default function Dashboard() {
     {
       href: 'https://rajeevupadhyay.com/learn',
       label: 'OpenVarsity',
-      description: 'Learn algo trading with OpenAlgo',
+      description: 'Learn algo trading with Tradeboard',
       icon: GraduationCap,
       gradient: 'from-blue-500/10 to-blue-500/5 hover:from-blue-500/20 hover:to-blue-500/10',
       iconBg: 'bg-blue-500/20',
