@@ -112,8 +112,8 @@ def api_get_configs():
         # Default values to use if config not in database
         defaults = {
             "starting_capital": {
-                "value": "10000000.00",
-                "description": "Starting sandbox capital in INR",
+                "value": "50.00",
+                "description": "Starting sandbox capital in USD ($10 Million) - Min: $50",
             },
             "reset_day": {"value": "Never", "description": "Day of week for automatic fund reset"},
             "reset_time": {"value": "00:00", "description": "Time for automatic fund reset (IST)"},

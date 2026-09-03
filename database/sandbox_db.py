@@ -201,8 +201,8 @@ class SandboxFunds(Base):
     user_id = Column(String(50), unique=True, nullable=False, index=True)
 
     # Fund balances
-    total_capital = Column(DECIMAL(15, 2), default=10000000.00)  # ₹1 Crore starting capital
-    available_balance = Column(DECIMAL(15, 2), default=10000000.00)  # Available for trading
+    total_capital = Column(DECIMAL(15, 2), default=50.00)  # $50 starting capital
+    available_balance = Column(DECIMAL(15, 2), default=50.00)  # Available for trading
     used_margin = Column(DECIMAL(15, 2), default=0.00)  # Margin blocked in positions
 
     # P&L tracking
@@ -505,7 +505,7 @@ def init_default_config():
         {
             "config_key": "starting_capital",
             "config_value": "50.00",
-            "description": "Starting sandbox capital in USD ($50)",
+            "description": "Starting sandbox capital in USD ($10 Million) - Min: $50",
         },
         {
             "config_key": "reset_day",
