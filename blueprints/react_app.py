@@ -833,7 +833,9 @@ def serve_favicon():
     """Serve favicon."""
     if not is_react_frontend_available():
         return "Not found", 404
-    return send_from_directory(FRONTEND_DIST, "favicon.ico")
+    resp = send_from_directory(FRONTEND_DIST, "favicon.ico")
+    resp.headers["Cache-Control"] = "no-cache, must-revalidate"
+    return resp
 
 
 @react_bp.route("/logo.png")
