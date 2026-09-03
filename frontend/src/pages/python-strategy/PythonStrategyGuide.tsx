@@ -15,14 +15,14 @@ import { showToast } from '@/utils/toast'
 const sampleStrategy = `"""
 ===============================================================================
                 EMA CROSSOVER WITH FIXED DATETIME HANDLING
-                            OpenAlgo Trading Bot
+                            Tradeboard Trading Bot
 ===============================================================================
 
 Run standalone:
     export OPENALGO_API_KEY="your-api-key"
     python emacrossover_strategy_python.py
 
-Run via OpenAlgo's /python strategy runner:
+Run via Tradeboard's /python strategy runner:
     OPENALGO_API_KEY            : injected per-strategy (PR #1247).
     OPENALGO_STRATEGY_EXCHANGE  : set from the strategy's \`exchange\` config
                                   (NSE / BSE / NFO / BFO / MCX / BCD / CDS / CRYPTO).
@@ -47,7 +47,7 @@ from openalgo import api
 # ===============================================================================
 
 # API Configuration — read from environment with sensible fallbacks.
-# When launched via OpenAlgo's /python runner, these come from the platform:
+# When launched via Tradeboard's /python runner, these come from the platform:
 #   OPENALGO_API_KEY : injected per-strategy (decrypted from DB)
 #   HOST_SERVER      : inherited from Tradeboard's .env
 #   WEBSOCKET_URL    : inherited from Tradeboard's .env
@@ -302,7 +302,7 @@ export default function PythonStrategyGuide() {
       <div className="space-y-2">
         <h1 className="text-2xl font-bold tracking-tight">Python Strategy Guide</h1>
         <p className="text-muted-foreground">
-          Self-host automated trading strategies inside OpenAlgo. Each strategy runs as an isolated
+          Self-host automated trading strategies inside Tradeboard. Each strategy runs as an isolated
           subprocess with its own process, memory, and log file &mdash; managed through the{' '}
           <Link to="/python" className="text-primary hover:underline">
             /python
@@ -348,7 +348,7 @@ export default function PythonStrategyGuide() {
                   <Link to="/apikey" className="text-primary hover:underline">
                     API Key
                   </Link>{' '}
-                  page and copy your OpenAlgo API key
+                  page and copy your Tradeboard API key
                 </p>
               </div>
             </div>
@@ -1103,7 +1103,7 @@ export default function PythonStrategyGuide() {
             <AccordionItem value="restart">
               <AccordionTrigger>What happens if I restart Tradeboard?</AccordionTrigger>
               <AccordionContent className="text-muted-foreground space-y-3">
-                <p>OpenAlgo handles restarts gracefully:</p>
+                <p>Tradeboard handles restarts gracefully:</p>
                 <ul className="list-disc list-inside space-y-1 ml-2">
                   <li>Strategy configurations are saved to disk and persist</li>
                   <li>Schedules are automatically re-created for all strategies</li>
@@ -1309,7 +1309,7 @@ export default function PythonStrategyGuide() {
       {/* SDK Quick Reference */}
       <Card>
         <CardHeader>
-          <CardTitle>OpenAlgo SDK Quick Reference</CardTitle>
+          <CardTitle>Tradeboard SDK Quick Reference</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 text-sm">

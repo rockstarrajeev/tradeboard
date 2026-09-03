@@ -235,7 +235,7 @@ export default function Diagnostics() {
       <p className="text-sm text-muted-foreground">
         Use this page to troubleshoot issues. Click{' '}
         <span className="font-semibold">Download .md</span> and attach it when asking for help on
-        the OpenAlgo community — secrets and tokens are never included.
+        the Tradeboard community — secrets and tokens are never included.
       </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
