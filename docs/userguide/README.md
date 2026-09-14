@@ -80,7 +80,7 @@ This guide takes you from zero to automated trading, covering everything from ba
 ## Additional Resources
 
 - **Developer Documentation**: See `/design` folder for technical architecture
-- **Official Docs**: [docs.openalgo.in](https://docs.openalgo.in)
+- **Official Docs**: [docs.algo.wesoftcorp.com](https://docs.algo.wesoftcorp.com)
 - **Community**: [Discord](https://www.openalgo.in/discord)
 - **Video Tutorials**: [YouTube](https://www.youtube.com/@openalgo)
 

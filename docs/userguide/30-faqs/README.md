@@ -126,7 +126,7 @@ Yes. Strategy isolation and host capacity still matter; use unique strategy name
 
 ## Support
 
-- Documentation: [docs.openalgo.in](https://docs.openalgo.in)
+- Documentation: [docs.algo.wesoftcorp.com](https://docs.algo.wesoftcorp.com)
 - GitHub issues: [github.com/marketcalls/openalgo/issues](https://github.com/marketcalls/openalgo/issues)
 - GitHub discussions: [github.com/marketcalls/openalgo/discussions](https://github.com/marketcalls/openalgo/discussions)
 - Community: [openalgo.in/discord](https://openalgo.in/discord)

@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://openalgo.in/docs
+# Mapping OpenAlgo API Request https://docs.algo.wesoftcorp.com
 # Mapping Groww API Parameters based on SDK documentation
 
 # Groww API constants based on the SDK documentation

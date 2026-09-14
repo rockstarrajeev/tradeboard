@@ -19,10 +19,10 @@ Every surface above runs on the same Sandbox engine (₹1 Crore sandbox capital,
 
 ## Quick Links
 
-- **Documentation**: [docs.rajeevupadhyay.com](https://docs.rajeevupadhyay.com)
-- **Installation Guide**: [Getting Started](https://docs.rajeevupadhyay.com/installation-guidelines/getting-started)
-- **Upgrade Guide**: [Upgrade Instructions](https://docs.rajeevupadhyay.com/installation-guidelines/getting-started/upgrade)
-- **Why Tradeboard**: [Why Build with Tradeboard](https://docs.rajeevupadhyay.com/why-to-build-with-tradeboard)
+- **Documentation**: [docs.algo.wesoftcorp.com](https://docs.algo.wesoftcorp.com)
+- **Installation Guide**: [Getting Started](https://docs.algo.wesoftcorp.com/installation-guidelines/getting-started)
+- **Upgrade Guide**: [Upgrade Instructions](https://docs.algo.wesoftcorp.com/installation-guidelines/getting-started/upgrade)
+- **Why Tradeboard**: [Why Build with Tradeboard](https://docs.algo.wesoftcorp.com/why-to-build-with-tradeboard)
 
 
 ## Python Compatibility
@@ -126,7 +126,7 @@ Complete testing environment with ₹1 Crore sandbox capital:
 - Configurable sandbox square-off schedules
 - Separate database for complete isolation
 
-[API Analyzer Documentation](https://docs.rajeevupadhyay.com/new-features/api-analyzer)
+[API Analyzer Documentation](https://docs.algo.wesoftcorp.com/new-features/api-analyzer)
 
 ### Action Center
 Order approval workflow for manual control:
@@ -135,7 +135,7 @@ Order approval workflow for manual control:
 - Complete audit trail with IST timestamps
 - Approve individual orders or bulk approve all
 
-[Action Center Documentation](https://docs.rajeevupadhyay.com/new-features/action-center)
+[Action Center Documentation](https://docs.algo.wesoftcorp.com/new-features/action-center)
 
 ### Python Strategy Host (`/python`)
 Host and run your Python strategies directly inside Tradeboard — no separate VM, no cron, no Docker:
@@ -176,9 +176,9 @@ Real-time notifications and command execution:
 
 **PnL Tracker**: Real-time profit/loss with interactive charts powered by TradingView Lightweight Charts
 
-[PnL Tracker Documentation](https://docs.rajeevupadhyay.com/new-features/pnl-tracker)
+[PnL Tracker Documentation](https://docs.algo.wesoftcorp.com/new-features/pnl-tracker)
 
-[Traffic & Latency Monitor Documentation](https://docs.rajeevupadhyay.com/new-features/traffic-latency-monitor)
+[Traffic & Latency Monitor Documentation](https://docs.algo.wesoftcorp.com/new-features/traffic-latency-monitor)
 
 ### Enterprise-Grade Security
 **Password Security**: Argon2 hashing (Password Hashing Competition winner)
@@ -287,7 +287,7 @@ Tradeboard is part of a larger open-source trading ecosystem:
 - **Chrome Plugin**: Browser-based tools
 - **Fast Scalper**: High-performance trading (Rust + Tauri)
 - **Web Portal**: Modern UI (NextJS + ShadcnUI)
-- **Documentation**: Comprehensive guides on [Gitbook](https://docs.rajeevupadhyay.com/mini-foss-universe)
+- **Documentation**: Comprehensive guides on [Gitbook](https://docs.algo.wesoftcorp.com/mini-foss-universe)
 
 ## Installation
 
@@ -320,13 +320,13 @@ uv run app.py
 
 The application will be available at `http://127.0.0.1:5000`
 
-For detailed installation instructions, deployment options (Docker, AWS, etc.), and configuration guides, visit [docs.rajeevupadhyay.com/installation-guidelines/getting-started](https://docs.rajeevupadhyay.com/installation-guidelines/getting-started)
+For detailed installation instructions, deployment options (Docker, AWS, etc.), and configuration guides, visit [docs.algo.wesoftcorp.com/installation-guidelines/getting-started](https://docs.algo.wesoftcorp.com/installation-guidelines/getting-started)
 
 ## API Documentation
 
 Complete API reference and examples:
-- **API Documentation**: [docs.rajeevupadhyay.com/api-documentation/v1](https://docs.rajeevupadhyay.com/api-documentation/v1)
-- **Symbol Format**: [docs.rajeevupadhyay.com/symbol-format](https://docs.rajeevupadhyay.com/symbol-format)
+- **API Documentation**: [docs.algo.wesoftcorp.com/api-documentation/v1](https://docs.algo.wesoftcorp.com/api-documentation/v1)
+- **Symbol Format**: [docs.algo.wesoftcorp.com/symbol-format](https://docs.algo.wesoftcorp.com/symbol-format)
 
 ## Key Benefits
 
@@ -344,7 +344,7 @@ Complete API reference and examples:
 
 ## Documentation
 
-Comprehensive documentation is available at [docs.rajeevupadhyay.com](https://docs.rajeevupadhyay.com):
+Comprehensive documentation is available at [docs.algo.wesoftcorp.com](https://docs.algo.wesoftcorp.com):
 - API Reference with examples
 - Broker-specific guides
 - Security best practices

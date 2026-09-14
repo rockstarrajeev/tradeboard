@@ -1163,13 +1163,13 @@ uv run app.py
 
 - **Discord**: Join our [Discord server](https://discord.com/invite/UPh7QPsNhP) for real-time help
 - **GitHub Discussions**: Ask questions in [GitHub Discussions](https://github.com/marketcalls/openalgo/discussions)
-- **Documentation**: Check [docs.openalgo.in](https://docs.openalgo.in)
+- **Documentation**: Check [docs.algo.wesoftcorp.com](https://docs.algo.wesoftcorp.com)
 - **GitHub Issues**: Report bugs in [Issues](https://github.com/marketcalls/openalgo/issues)
 
 ### Before Asking for Help
 
 1. **Search existing issues** — your question might already be answered
-2. **Check documentation** — review docs at docs.openalgo.in
+2. **Check documentation** — review docs at docs.algo.wesoftcorp.com
 3. **Review error logs** — include error messages when asking for help
 4. **Provide context** — share your environment (OS, Python version, Node version, broker)
 
@@ -1240,7 +1240,7 @@ We value all contributions! Contributors will be:
 
 - **Repository**: [github.com/marketcalls/openalgo](https://github.com/marketcalls/openalgo)
 - **Issue Tracker**: [github.com/marketcalls/openalgo/issues](https://github.com/marketcalls/openalgo/issues)
-- **Documentation**: [docs.openalgo.in](https://docs.openalgo.in)
+- **Documentation**: [docs.algo.wesoftcorp.com](https://docs.algo.wesoftcorp.com)
 - **Discord**: [discord.com/invite/UPh7QPsNhP](https://discord.com/invite/UPh7QPsNhP)
 - **PyPI Package**: [pypi.org/project/openalgo](https://pypi.org/project/openalgo)
 - **YouTube**: [youtube.com/@openalgoHQ](https://youtube.com/@openalgoHQ)

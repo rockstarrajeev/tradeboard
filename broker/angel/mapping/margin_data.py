@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://openalgo.in/docs
+# Mapping OpenAlgo API Request https://docs.algo.wesoftcorp.com
 # Mapping Angel Broking Margin API https://smartapi.angelbroking.com/docs/Margin
 
 from database.token_db import get_token

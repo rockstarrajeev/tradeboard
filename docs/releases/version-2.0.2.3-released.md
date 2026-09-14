@@ -80,7 +80,7 @@ Thank you to everyone who filed an issue, reproduced a defect or reviewed a pull
 **Links**
 
 * **Repository**: <https://github.com/marketcalls/openalgo>
-* **Documentation**: <https://docs.openalgo.in>
+* **Documentation**: <https://docs.algo.wesoftcorp.com>
 * **Python SDK on PyPI**: <https://pypi.org/project/openalgo/>
 * **Discord**: <https://www.openalgo.in/discord>
 * **YouTube**: <https://www.youtube.com/@openalgo>

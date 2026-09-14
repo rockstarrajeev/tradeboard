@@ -90,10 +90,10 @@ describe('Message rendering controls', () => {
   })
 
   it('still renders ordinary prose and links', () => {
-    const { container } = renderAssistant('See [the docs](https://docs.rajeevupadhyay.com) for more.\n')
+    const { container } = renderAssistant('See [the docs](https://docs.algo.wesoftcorp.com) for more.\n')
     const link = container.querySelector('a')
     expect(link).not.toBeNull()
-    expect(link?.getAttribute('href')).toBe('https://docs.rajeevupadhyay.com')
+    expect(link?.getAttribute('href')).toBe('https://docs.algo.wesoftcorp.com')
     expect(link?.getAttribute('rel')).toContain('noopener')
   })
 

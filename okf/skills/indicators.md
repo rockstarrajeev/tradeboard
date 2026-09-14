@@ -2,7 +2,7 @@
 type: Reference
 title: Indicator Skills (Agentic)
 description: The OpenAlgo indicator skill package for AI coding agents — charting, scanners, custom indicators, and live feeds.
-resource: https://docs.openalgo.in/skills/indicators
+resource: https://docs.algo.wesoftcorp.com/skills/indicators
 tags:
 - skills
 - agentic
@@ -17,6 +17,6 @@ timestamp: '2026-07-03T00:00:00+00:00'
 
 The OpenAlgo indicator skill package for AI coding agents — charting, scanners, custom indicators, and live feeds.
 
-**Source:** [https://docs.openalgo.in/skills/indicators](https://docs.openalgo.in/skills/indicators)
+**Source:** [https://docs.algo.wesoftcorp.com/skills/indicators](https://docs.algo.wesoftcorp.com/skills/indicators)
 
 **Related:** [overview](../overview.md)

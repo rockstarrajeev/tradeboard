@@ -2,7 +2,7 @@
 type: Reference
 title: Execution Skills (Agentic)
 description: The OpenAlgo execution skill package for AI coding agents — order execution, custom algos, scanners, streaming, and alerts.
-resource: https://docs.openalgo.in/skills/execution
+resource: https://docs.algo.wesoftcorp.com/skills/execution
 tags:
 - skills
 - agentic
@@ -17,6 +17,6 @@ timestamp: '2026-07-03T00:00:00+00:00'
 
 The OpenAlgo execution skill package for AI coding agents — order execution, custom algos, scanners, streaming, and alerts.
 
-**Source:** [https://docs.openalgo.in/skills/execution](https://docs.openalgo.in/skills/execution)
+**Source:** [https://docs.algo.wesoftcorp.com/skills/execution](https://docs.algo.wesoftcorp.com/skills/execution)
 
 **Related:** [overview](../overview.md)

@@ -87,4 +87,4 @@ We acknowledge security researchers who responsibly disclose vulnerabilities. Wi
 
 - **Security issues:** rajandran@openalgo.in
 - **General issues:** https://github.com/marketcalls/openalgo/issues
-- **Documentation:** https://docs.openalgo.in
+- **Documentation:** https://docs.algo.wesoftcorp.com

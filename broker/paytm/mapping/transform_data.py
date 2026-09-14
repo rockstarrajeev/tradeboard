@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://openalgo.in/docs
+# Mapping OpenAlgo API Request https://docs.algo.wesoftcorp.com
 # Mapping Paytm Broking Parameters https://developer.paytmmoney.com/docs/api/login
 
 from database.token_db import get_token

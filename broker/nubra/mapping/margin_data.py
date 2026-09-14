@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://openalgo.in/docs
+# Mapping OpenAlgo API Request https://docs.algo.wesoftcorp.com
 # Mapping Nubra Trading API V3 margin (POST /sentinel/orders/funds_required)
 
 from broker.nubra.mapping.transform_data import (

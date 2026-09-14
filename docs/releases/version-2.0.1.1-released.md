@@ -324,9 +324,9 @@ The session blob never leaves your server. There is no second-party service to r
 **Links**
 
 * **Repository**: <https://github.com/marketcalls/openalgo>
-* **Documentation**: <https://docs.openalgo.in>
+* **Documentation**: <https://docs.algo.wesoftcorp.com>
 * **Python SDK on PyPI**: <https://pypi.org/project/openalgo/1.0.50/>
-* **WhatsApp service docs**: <https://docs.openalgo.in/api-documentation/v1/whatsapp-services>
+* **WhatsApp service docs**: <https://docs.algo.wesoftcorp.com/api-documentation/v1/whatsapp-services>
 * **Discord**: <https://www.openalgo.in/discord>
 * **YouTube**: <https://www.youtube.com/@openalgo>
 * **Issue tracker**: <https://github.com/marketcalls/openalgo/issues>
@@ -343,7 +343,7 @@ If you need additional information that is not directly available in this page, 
 Perform an HTTP GET request on the current page URL with the `ask` query parameter:
 
 ```
-GET https://docs.openalgo.in/change-log/release/version-2.0.1.1-released.md?ask=<question>
+GET https://docs.algo.wesoftcorp.com/change-log/release/version-2.0.1.1-released.md?ask=<question>
 ```
 
 The question should be specific, self-contained, and written in natural language.

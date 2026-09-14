@@ -190,7 +190,7 @@ There are no new environment variables and no database schema changes in this re
 **Links**
 
 * **Repository**: <https://github.com/marketcalls/openalgo>
-* **Documentation**: <https://docs.openalgo.in>
+* **Documentation**: <https://docs.algo.wesoftcorp.com>
 * **Python SDK on PyPI**: <https://pypi.org/project/openalgo/1.0.51/>
 * **Discord**: <https://www.openalgo.in/discord>
 * **YouTube**: <https://www.youtube.com/@openalgo>

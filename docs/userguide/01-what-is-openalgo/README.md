@@ -6,7 +6,7 @@
 
 **Website**: [https://openalgo.in](https://openalgo.in)
 **GitHub**: [https://github.com/marketcalls/openalgo](https://github.com/marketcalls/openalgo)
-**Documentation**: [https://docs.openalgo.in](https://docs.openalgo.in)
+**Documentation**: [https://docs.algo.wesoftcorp.com](https://docs.algo.wesoftcorp.com)
 
 ## The Problem OpenAlgo Solves
 
@@ -285,7 +285,7 @@ Ready to begin? Here's your path:
 | Resource | Link |
 |----------|------|
 | **GitHub** | [github.com/marketcalls/openalgo](https://github.com/marketcalls/openalgo) |
-| **Documentation** | [docs.openalgo.in](https://docs.openalgo.in) |
+| **Documentation** | [docs.algo.wesoftcorp.com](https://docs.algo.wesoftcorp.com) |
 | **API Reference** | [Maintained REST API documentation](../../api/README.md) |
 | **Discord Community** | Join for support and discussions |
 

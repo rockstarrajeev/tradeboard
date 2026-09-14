@@ -171,7 +171,7 @@ Output:
 │ Endpoints                                                    │
 │ Web App    http://127.0.0.1:5000                            │
 │ WebSocket  ws://127.0.0.1:8765                              │
-│ Docs       https://docs.openalgo.in                         │
+│ Docs       https://docs.algo.wesoftcorp.com                         │
 │                                                              │
 │ Status     Ready                                             │
 │                                                              │

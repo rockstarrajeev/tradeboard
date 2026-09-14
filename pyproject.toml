@@ -6,7 +6,7 @@ description = "Broker-agnostic open-source trading automation"
 authors = [
   { name = "Rajeev Upadhyay", email = "rajeev.upadhyay@live.in" },
 ]
-urls = { Homepage = "https://rajeevupadhyay.com", Documentation = "https://docs.rajeevupadhyay.com" }
+urls = { Homepage = "https://rajeevupadhyay.com", Documentation = "https://docs.algo.wesoftcorp.com" }
 dependencies = [
   "aniso8601==9.0.1",
   "annotated-types==0.8.0",

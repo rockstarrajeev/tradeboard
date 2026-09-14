@@ -536,7 +536,7 @@ export default function BrokerTOTP() {
                   Back to Broker Selection
                 </Link>
                 <a
-                  href="https://docs.rajeevupadhyay.com"
+                  href="https://docs.algo.wesoftcorp.com"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary hover:underline inline-flex items-center gap-1"

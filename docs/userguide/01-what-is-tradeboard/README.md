@@ -6,7 +6,7 @@
 
 **Website**: [https://rajeevupadhyay.com](https://rajeevupadhyay.com)
 **GitHub**: [https://github.com/rockstarrajeev/tradeboard](https://github.com/rockstarrajeev/tradeboard)
-**Documentation**: [https://docs.rajeevupadhyay.com](https://docs.rajeevupadhyay.com)
+**Documentation**: [https://docs.algo.wesoftcorp.com](https://docs.algo.wesoftcorp.com)
 
 ## The Problem Tradeboard Solves
 
@@ -289,7 +289,7 @@ Ready to begin? Here's your path:
 | Resource | Link |
 |----------|------|
 | **GitHub** | [github.com/rockstarrajeev/tradeboard](https://github.com/rockstarrajeev/tradeboard) |
-| **Documentation** | [docs.rajeevupadhyay.com](https://docs.rajeevupadhyay.com) |
+| **Documentation** | [docs.algo.wesoftcorp.com](https://docs.algo.wesoftcorp.com) |
 | **API Reference** | [/api/docs](http://localhost:5000/api/docs) (after installation) |
 | **Discord Community** | Join for support and discussions |
 

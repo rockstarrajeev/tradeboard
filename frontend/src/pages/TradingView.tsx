@@ -448,7 +448,7 @@ export default function TradingView() {
               </p>
               <Button asChild variant="default">
                 <a
-                  href="https://docs.rajeevupadhyay.com/trading-platform/tradingview"
+                  href="https://docs.algo.wesoftcorp.com/trading-platform/tradingview"
                   target="_blank"
                   rel="noopener noreferrer"
                 >

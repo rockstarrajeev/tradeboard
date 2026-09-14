@@ -339,7 +339,7 @@ The script updates `.env` (`HOST_SERVER`, `WEBSOCKET_URL`), the Nginx vhost's `s
 ### Support
 
 * GitHub: [github.com/marketcalls/openalgo](https://github.com/marketcalls/openalgo)
-* Documentation: [docs.openalgo.in](https://docs.openalgo.in)
+* Documentation: [docs.algo.wesoftcorp.com](https://docs.algo.wesoftcorp.com)
 * Discord: [openalgo.in/discord](https://www.openalgo.in/discord)
 
 Remember to:
@@ -358,7 +358,7 @@ If you need additional information that is not directly available in this page, 
 Perform an HTTP GET request on the current page URL with the `ask` query parameter:
 
 ```
-GET https://docs.openalgo.in/installation-guidelines/getting-started/ubuntu-server-installation.md?ask=<question>
+GET https://docs.algo.wesoftcorp.com/installation-guidelines/getting-started/ubuntu-server-installation.md?ask=<question>
 ```
 
 The question should be specific, self-contained, and written in natural language.

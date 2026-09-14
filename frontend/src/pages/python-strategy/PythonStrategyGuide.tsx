@@ -1357,12 +1357,12 @@ export default function PythonStrategyGuide() {
           <p className="text-sm text-muted-foreground">
             For complete SDK documentation, visit:{' '}
             <a
-              href="https://docs.rajeevupadhyay.com"
+              href="https://docs.algo.wesoftcorp.com"
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:underline"
             >
-              docs.openalgo.in
+              docs.algo.wesoftcorp.com
             </a>
           </p>
         </CardContent>

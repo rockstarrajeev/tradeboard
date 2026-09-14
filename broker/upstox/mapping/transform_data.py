@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://openalgo.in/docs
+# Mapping OpenAlgo API Request https://docs.algo.wesoftcorp.com
 # Mapping Upstox Broking Parameters https://upstox.com/developer/api-documentation/orders
 
 from utils.logging import get_logger

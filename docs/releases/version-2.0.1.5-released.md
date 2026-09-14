@@ -156,7 +156,7 @@ uv run app.py
 **Links**
 
 * **Repository**: <https://github.com/marketcalls/openalgo>
-* **Documentation**: <https://docs.openalgo.in>
+* **Documentation**: <https://docs.algo.wesoftcorp.com>
 * **Python SDK on PyPI**: <https://pypi.org/project/openalgo/>
 * **Discord**: <https://www.openalgo.in/discord>
 * **YouTube**: <https://www.youtube.com/@openalgo>

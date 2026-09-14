@@ -35,7 +35,7 @@ export function Footer({ className }: FooterProps) {
             <span>Copyright 2026</span>
             <span className="hidden md:inline">|</span>
             <a
-              href="https://www.openalgo.in"
+              href="https://rajeevupadhyay.com"
               className="text-primary hover:underline font-medium"
               target="_blank"
               rel="noopener noreferrer"
@@ -98,7 +98,7 @@ export function Footer({ className }: FooterProps) {
           </Button>
           <Button variant="ghost" size="icon" asChild className="h-8 w-8" title="Follow us on X">
             <a
-              href="https://x.com/openalgoHQ"
+              href="https://x.com/tradeboardHQ"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="X (Twitter)"
@@ -116,7 +116,7 @@ export function Footer({ className }: FooterProps) {
             title="Subscribe to our YouTube channel"
           >
             <a
-              href="https://www.youtube.com/@openalgo"
+              href="https://docs.algo.wesoftcorp.com"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="YouTube"

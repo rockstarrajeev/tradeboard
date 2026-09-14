@@ -2,7 +2,7 @@
 type: Reference
 title: Forgot Password / Account Recovery
 description: OpenAlgo's dual-mode password recovery via TOTP authenticator or SMTP email verification.
-resource: https://docs.openalgo.in/installation-guidelines/getting-started/forgot-password
+resource: https://docs.algo.wesoftcorp.com/installation-guidelines/getting-started/forgot-password
 tags:
 - installation
 - password-reset
@@ -17,6 +17,6 @@ timestamp: '2026-07-03T00:00:00+00:00'
 
 OpenAlgo's dual-mode password recovery via TOTP authenticator or SMTP email verification.
 
-**Source:** [https://docs.openalgo.in/installation-guidelines/getting-started/forgot-password](https://docs.openalgo.in/installation-guidelines/getting-started/forgot-password)
+**Source:** [https://docs.algo.wesoftcorp.com/installation-guidelines/getting-started/forgot-password](https://docs.algo.wesoftcorp.com/installation-guidelines/getting-started/forgot-password)
 
 **Related:** [overview](../overview.md)

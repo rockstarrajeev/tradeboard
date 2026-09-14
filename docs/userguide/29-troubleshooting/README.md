@@ -461,7 +461,7 @@ OpenAlgo is community-driven:
 |---------|---------|------|
 | GitHub Issues | Bug reports, feature requests | [github.com/marketcalls/openalgo/issues](https://github.com/marketcalls/openalgo/issues) |
 | Discord | Community support, questions | [openalgo.in/discord](http://openalgo.in/discord) |
-| Documentation | How-to guides | [docs.openalgo.in](https://docs.openalgo.in) |
+| Documentation | How-to guides | [docs.algo.wesoftcorp.com](https://docs.algo.wesoftcorp.com) |
 
 ### Useful Commands
 

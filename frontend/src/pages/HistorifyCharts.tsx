@@ -816,7 +816,7 @@ export default function HistorifyCharts() {
               ))}
               <DropdownMenuItem asChild>
                 <a
-                  href="https://docs.rajeevupadhyay.com"
+                  href="https://docs.algo.wesoftcorp.com"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"

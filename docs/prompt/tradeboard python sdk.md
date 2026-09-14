@@ -14,7 +14,7 @@ pip install openalgo[indicators]
 
 Make Sure that your Tradeboard Application is running. Login to Tradeboard Application with valid credentials and get the Tradeboard apikey
 
-For detailed function parameters refer to the [API Documentation](https://docs.rajeevupadhyay.com/api-documentation/v1)
+For detailed function parameters refer to the [API Documentation](https://docs.algo.wesoftcorp.com/api-documentation/v1)
 
 ### Getting Started with Tradeboard
 
@@ -39,7 +39,7 @@ openalgo.__version__
 
 ### Examples
 
-Please refer to the documentation on [order constants](https://docs.rajeevupadhyay.com/api-documentation/v1/order-constants), and consult the API reference for details on optional parameters
+Please refer to the documentation on [order constants](https://docs.algo.wesoftcorp.com/api-documentation/v1/order-constants), and consult the API reference for details on optional parameters
 
 ### PlaceOrder example
 
@@ -1981,7 +1981,7 @@ If you need additional information that is not directly available in this page, 
 Perform an HTTP GET request on the current page URL with the `ask` query parameter:
 
 ```
-GET https://docs.rajeevupadhyay.com/trading-platform/python.md?ask=<question>
+GET https://docs.algo.wesoftcorp.com/trading-platform/python.md?ask=<question>
 ```
 
 The question should be specific, self-contained, and written in natural language.

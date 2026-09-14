@@ -186,7 +186,7 @@ export function Navbar({ fluid = false }: NavbarProps = {}) {
                   )
                 })}
                 <a
-                  href="https://docs.rajeevupadhyay.com"
+                  href="https://docs.algo.wesoftcorp.com"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors min-h-[44px] touch-manipulation hover:bg-muted active:bg-muted"
@@ -343,7 +343,7 @@ export function Navbar({ fluid = false }: NavbarProps = {}) {
               )}
               <DropdownMenuItem asChild>
                 <a
-                  href="https://docs.rajeevupadhyay.com"
+                  href="https://docs.algo.wesoftcorp.com"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"

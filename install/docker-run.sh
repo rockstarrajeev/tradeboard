@@ -309,7 +309,7 @@ do_setup() {
     echo "  Redirect URL for broker portal:"
     echo "  http://127.0.0.1:5000/$BROKER_NAME/callback"
     echo ""
-    echo "  Documentation: https://docs.rajeevupadhyay.com"
+    echo "  Documentation: https://docs.algo.wesoftcorp.com"
     echo ""
 
     # Try to open .env in editor (non-blocking)

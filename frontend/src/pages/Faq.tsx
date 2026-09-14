@@ -136,7 +136,7 @@ export default function Faq() {
     { href: '/faq', label: 'FAQ', internal: true },
     { href: 'https://rajeevupadhyay.com/discord', label: 'Community', internal: false },
     { href: 'https://rajeevupadhyay.com/roadmap', label: 'Roadmap', internal: false },
-    { href: 'https://docs.rajeevupadhyay.com', label: 'Docs', internal: false },
+    { href: 'https://docs.algo.wesoftcorp.com', label: 'Docs', internal: false },
   ]
 
   return (
@@ -219,7 +219,7 @@ export default function Faq() {
                     Roadmap
                   </a>
                   <a
-                    href="https://docs.rajeevupadhyay.com"
+                    href="https://docs.algo.wesoftcorp.com"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 rounded-md hover:bg-accent"
@@ -331,7 +331,7 @@ export default function Faq() {
                     Comprehensive guides and API references
                   </p>
                   <Button variant="outline" asChild>
-                    <a href="https://docs.rajeevupadhyay.com" target="_blank" rel="noopener noreferrer">
+                    <a href="https://docs.algo.wesoftcorp.com" target="_blank" rel="noopener noreferrer">
                       Read Docs
                     </a>
                   </Button>

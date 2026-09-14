@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://openalgo.in/docs
+# Mapping OpenAlgo API Request https://docs.algo.wesoftcorp.com
 # Mapping AliceBlue V2 API Parameters
 
 from database.token_db import get_br_symbol, get_token

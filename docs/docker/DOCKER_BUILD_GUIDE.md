@@ -512,7 +512,7 @@ The repository includes GitHub Actions workflow (`.github/workflows/ci.yml`):
 - **Docker Documentation:** https://docs.docker.com
 - **Dockerfile Reference:** https://docs.docker.com/engine/reference/builder/
 - **Docker Compose Reference:** https://docs.docker.com/compose/compose-file/
-- **OpenAlgo Documentation:** https://docs.openalgo.in
+- **OpenAlgo Documentation:** https://docs.algo.wesoftcorp.com
 - **Numba Documentation:** https://numba.readthedocs.io
 - **SciPy Documentation:** https://scipy.org
 

@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://openalgo.in/docs
+# Mapping OpenAlgo API Request https://docs.algo.wesoftcorp.com
 # Mapping Pocketful API Parameters https://api.pocketful.in/docs/
 
 from broker.pocketful.api.data import BrokerData

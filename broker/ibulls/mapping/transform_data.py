@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://openalgo.in/docs
+# Mapping OpenAlgo API Request https://docs.algo.wesoftcorp.com
 # Mapping ibullssecurities Broking Parameters https://symphonyfintech.com/xts-trading-front-end-api/
 
 from flask import session

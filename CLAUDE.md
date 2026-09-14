@@ -25,7 +25,7 @@ All surfaces share the Sandbox engine (1 Crore sandbox capital, exchange-aligned
 auto square-off) and support Telegram alerts.
 
 Repository: https://github.com/marketcalls/openalgo
-Documentation: https://docs.openalgo.in
+Documentation: https://docs.algo.wesoftcorp.com
 
 ## Documentation Map
 

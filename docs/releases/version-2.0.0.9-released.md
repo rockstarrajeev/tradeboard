@@ -76,7 +76,7 @@ After this, `_generate_keys_on_first_run` takes the silent fast path for `APP_KE
 **Links**
 
 * **Repository**: <https://github.com/marketcalls/openalgo>
-* **Documentation**: <https://docs.openalgo.in>
+* **Documentation**: <https://docs.algo.wesoftcorp.com>
 * **Discord**: <https://www.openalgo.in/discord>
 * **YouTube**: <https://www.youtube.com/@openalgo>
 * **Issue tracker**: <https://github.com/marketcalls/openalgo/issues>
@@ -93,7 +93,7 @@ If you need additional information that is not directly available in this page, 
 Perform an HTTP GET request on the current page URL with the `ask` query parameter:
 
 ```
-GET https://docs.openalgo.in/change-log/release/version-2.0.0.9-released.md?ask=<question>
+GET https://docs.algo.wesoftcorp.com/change-log/release/version-2.0.0.9-released.md?ask=<question>
 ```
 
 The question should be specific, self-contained, and written in natural language.

@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://openalgo.in/docs
+# Mapping OpenAlgo API Request https://docs.algo.wesoftcorp.com
 # Mapping HDFC Sky Trading Parameters (developer.hdfcsky.com)
 #
 # HDFC Sky's vocabulary is very close to OpenAlgo's -- the only real

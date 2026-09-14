@@ -483,7 +483,7 @@ sudo rm -rf /var/lib/docker
 
 ### Getting Help
 
-- **Documentation**: https://docs.rajeevupadhyay.com
+- **Documentation**: https://docs.algo.wesoftcorp.com
 - **Discord Community**: https://discord.com/invite/UPh7QPsNhP
 - **GitHub Issues**: https://github.com/rockstarrajeev/tradeboard/issues
 - **YouTube Tutorials**: https://youtube.com/@tradeboardHQ

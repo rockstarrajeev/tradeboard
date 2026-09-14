@@ -1038,6 +1038,6 @@ See [GitHub Releases](https://github.com/marketcalls/openalgo/releases) for prev
 ## Links
 
 - **Repository**: https://github.com/marketcalls/openalgo
-- **Documentation**: https://docs.openalgo.in
+- **Documentation**: https://docs.algo.wesoftcorp.com
 - **Discord**: https://www.openalgo.in/discord
 - **YouTube**: https://www.youtube.com/@openalgo

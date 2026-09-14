@@ -55,7 +55,7 @@ const integrations = [
   'Telegram',
 ]
 
-// Open Varsity (openalgo.in/learn) course count, shown in the hero pill.
+// Open Varsity (docs.algo.wesoftcorp.com/getting-started/) course count, shown in the hero pill.
 const VARSITY_COURSES = 13
 
 // The surfaces that share one broker session and feed inside a single
@@ -102,10 +102,10 @@ export default function Home() {
   const navLinks = [
     { href: '/', label: 'Home', internal: true },
     { href: '/faq', label: 'FAQ', internal: true },
-    { href: 'https://www.openalgo.in/learn', label: 'Varsity', internal: false },
+    { href: 'https://docs.algo.wesoftcorp.com/getting-started/', label: 'Varsity', internal: false },
     { href: 'https://rajeevupadhyay.com/discord', label: 'Community', internal: false },
     { href: 'https://rajeevupadhyay.com/roadmap', label: 'Roadmap', internal: false },
-    { href: 'https://docs.rajeevupadhyay.com', label: 'Docs', internal: false },
+    { href: 'https://docs.algo.wesoftcorp.com', label: 'Docs', internal: false },
   ]
 
   return (
@@ -170,7 +170,7 @@ export default function Home() {
                     Download
                   </Link>
                   <a
-                    href="https://www.openalgo.in/learn"
+                    href="https://docs.algo.wesoftcorp.com/getting-started/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 rounded-md hover:bg-accent"
@@ -197,7 +197,7 @@ export default function Home() {
                     Roadmap
                   </a>
                   <a
-                    href="https://docs.rajeevupadhyay.com"
+                    href="https://docs.algo.wesoftcorp.com"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 rounded-md hover:bg-accent"
@@ -256,7 +256,7 @@ export default function Home() {
         <section className="container mx-auto px-4 pt-20 pb-16 sm:pt-28 sm:pb-20">
           <div className="text-center max-w-4xl mx-auto">
             <a
-              href="https://www.openalgo.in/learn"
+              href="https://docs.algo.wesoftcorp.com/getting-started/"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] mb-8 shadow-sm transition-colors hover:border-emerald-500/40 hover:bg-card"

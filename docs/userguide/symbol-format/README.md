@@ -274,7 +274,7 @@ OpenAlgo uses standardized index symbols with exchange code `NSE_INDEX` or `BSE_
 
 `BSECARBONEX`, `BSEDOLLEX30`, `BSEDOLLEX100`, `BSEDOLLEX200`, `BSEGREENEX`, `BSEINDIAINFRASTRUCTUREINDEX`, `BSEIPO`, `BSESMEIPO`
 
-> The `BSEOIL&GAS` symbol literally contains an ampersand — preserve it exactly as shown when passing the symbol via API, JSON body, or webhook. For the full authoritative reference see [docs.openalgo.in/symbol-format](https://docs.openalgo.in/symbol-format).
+> The `BSEOIL&GAS` symbol literally contains an ampersand — preserve it exactly as shown when passing the symbol via API, JSON body, or webhook. For the full authoritative reference see [docs.algo.wesoftcorp.com/symbol-format](https://docs.algo.wesoftcorp.com/symbol-format).
 
 ## Product Types
 
