@@ -1236,7 +1236,7 @@ def load_and_check_env_variables() -> None:
             print("  BROKER_API_KEY = 'abc123xyz:::12345678:::5P12345678'")
             print("  BROKER_API_SECRET = 'your_encryption_key'")
             print("\nFor detailed instructions, please refer to:")
-            print("  https://docs.rajeevupadhyay.com/connect-brokers/brokers/5paisa")
+            print("  https://docs.openalgo.in/connect-brokers/brokers/5paisa")
             sys.exit(1)
 
     # Validate flattrade API key format
@@ -1249,7 +1249,7 @@ def load_and_check_env_variables() -> None:
             print("  BROKER_API_KEY = 'FT123456:::your_api_key_here'")
             print("  BROKER_API_SECRET = 'your_api_secret'")
             print("\nFor detailed instructions, please refer to:")
-            print("  https://docs.rajeevupadhyay.com/connect-brokers/brokers/flattrade")
+            print("  https://docs.openalgo.in/connect-brokers/brokers/flattrade")
             sys.exit(1)
 
     # Validate dhan API key format
@@ -1262,7 +1262,7 @@ def load_and_check_env_variables() -> None:
             print("  BROKER_API_KEY = '1234567890:::your_dhan_apikey'")
             print("  BROKER_API_SECRET = 'your_dhan_apisecret'")
             print("\nFor detailed instructions, please refer to:")
-            print("  https://docs.rajeevupadhyay.com/connect-brokers/brokers/dhan")
+            print("  https://docs.openalgo.in/connect-brokers/brokers/dhan")
             sys.exit(1)
 
     # Validate environment variable values

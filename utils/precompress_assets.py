@@ -176,7 +176,6 @@ def ensure_precompressed_assets(dist_root: Path) -> None:
         dist_root: The built frontend directory, normally ``frontend/dist``.
     """
     try:
-        dist_root = Path(dist_root)
         if not dist_root.is_dir():
             return
 

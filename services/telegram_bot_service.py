@@ -2605,19 +2605,3 @@ class TelegramBotService:
 
 # Create global instance
 telegram_bot_service = TelegramBotService()
-
-
-def get_telegram_bot():
-    return telegram_bot_service
-
-
-def init_bot_sync(token, webhook_url=None):
-    return telegram_bot_service.init_bot(token, webhook_url)
-
-
-def start_bot_sync():
-    return telegram_bot_service.start_bot()
-
-
-def stop_bot_sync():
-    return telegram_bot_service.stop_bot()

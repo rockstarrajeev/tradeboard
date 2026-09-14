@@ -24,17 +24,6 @@ import { strikeMoneyness } from '@/lib/strategyMath'
 import { cn } from '@/lib/utils'
 import type { OptionStrike } from '@/types/option-chain'
 
-export function invalidateIvWhenContractChanges(
-  original: StrategyLeg,
-  next: StrategyLeg
-): StrategyLeg {
-  const contractChanged =
-    original.strike !== next.strike ||
-    original.optionType !== next.optionType ||
-    original.expiry !== next.expiry
-  return contractChanged ? { ...next, iv: 0 } : next
-}
-
 export interface EditLegDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void

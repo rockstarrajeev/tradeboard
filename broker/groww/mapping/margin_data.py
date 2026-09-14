@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://rajeevupadhyay.com/docs
+# Mapping OpenAlgo API Request https://openalgo.in/docs
 # Mapping Groww Margin API
 
 from broker.groww.mapping.transform_data import (

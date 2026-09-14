@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://rajeevupadhyay.com/docs
+# Mapping OpenAlgo API Request https://openalgo.in/docs
 # Mapping Flattrade Broking Parameters https://piconnect.flattrade.in/docs/
 
 from broker.flattrade.api.data import BrokerData

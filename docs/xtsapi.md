@@ -195,11 +195,11 @@ broker/compositedge/
 ```json
 {
   "Plugin Name": "compositedge",
-  "Plugin URI": "https://rajeevupadhyay.com",
+  "Plugin URI": "https://openalgo.in",
   "Description": "CompositedgeOpenAlgo Plugin",
   "Version": "1.0",
   "Author": "Kalaivani",
-  "Author URI": "https://rajeevupadhyay.com"
+  "Author URI": "https://openalgo.in"
 }
 ```
 

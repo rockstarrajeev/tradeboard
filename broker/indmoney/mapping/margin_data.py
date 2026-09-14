@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://rajeevupadhyay.com/docs
+# Mapping OpenAlgo API Request https://openalgo.in/docs
 # Mapping IndMoney Margin API https://api.indstocks.com/margin
 
 from database.token_db import get_token

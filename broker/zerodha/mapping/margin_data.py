@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://rajeevupadhyay.com/docs
+# Mapping OpenAlgo API Request https://openalgo.in/docs
 # Mapping Zerodha Margin API https://kite.trade/docs/connect/v3/margins/
 
 from database.token_db import get_br_symbol

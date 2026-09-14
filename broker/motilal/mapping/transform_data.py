@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://rajeevupadhyay.com/docs
+# Mapping OpenAlgo API Request https://openalgo.in/docs
 # Mapping Motilal Oswal Parameters - See Motilal_Oswal.md documentation
 
 from database.token_db import get_symbol_info

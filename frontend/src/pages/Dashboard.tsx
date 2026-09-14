@@ -204,7 +204,7 @@ export default function Dashboard() {
   const quickAccessCards = [
     {
       href: '/search',
-      label: 'Tradeboard Symbols',
+      label: 'OpenAlgo Symbols',
       description: 'Universal symbology across brokers',
       icon: Search,
       gradient: 'from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10',
@@ -245,7 +245,7 @@ export default function Dashboard() {
       borderColor: 'border-green-500/20 hover:border-green-500/40',
     },
     {
-      href: 'https://rajeevupadhyay.com/learn',
+      href: 'https://www.openalgo.in/learn',
       label: 'OpenVarsity',
       description: 'Learn algo trading with Tradeboard',
       icon: GraduationCap,

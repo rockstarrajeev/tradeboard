@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://rajeevupadhyay.com/docs
+# Mapping OpenAlgo API Request https://openalgo.in/docs
 # Mapping Motilal Oswal Margin API
 # See broker-api-docs/motilaloswal-api-docs/ (docs 24 margin summary,
 # 25 margin detail).

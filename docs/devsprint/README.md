@@ -47,8 +47,8 @@ code you are about to read:
 
 Links:
 
-- Quick start for users: https://www.rajeevupadhyay.com/getting-started
-- Full docs: https://docs.rajeevupadhyay.com
+- Quick start for users: https://www.openalgo.in/getting-started
+- Full docs: https://docs.openalgo.in
 - Repository: https://github.com/marketcalls/openalgo
 - Contributing guide: [CONTRIBUTING.md](../../CONTRIBUTING.md)
 - Documentation map for contributors: [docs/INDEX.md](../INDEX.md)
@@ -161,7 +161,7 @@ Fork https://github.com/marketcalls/openalgo on GitHub, then:
 ```bash
 git clone https://github.com/YOUR_USERNAME/openalgo.git
 cd openalgo
-git remote add upstream https://github.com/rockstarrajeev/tradeboard.git
+git remote add upstream https://github.com/marketcalls/openalgo.git
 git remote -v
 ```
 
@@ -293,7 +293,7 @@ excellent for "does my change work end to end" and poor for fast iteration. Most
 contributors will be happier on option A. Ports exposed: 5000 (web), 8765
 (WebSocket), 5555 (ZeroMQ).
 
-Full details: https://docs.rajeevupadhyay.com/installation-guidelines/getting-started/docker-development
+Full details: https://docs.openalgo.in/installation-guidelines/getting-started/docker-development
 
 ---
 

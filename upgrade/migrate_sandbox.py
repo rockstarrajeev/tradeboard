@@ -304,8 +304,8 @@ def insert_default_config(conn):
     default_configs = [
         (
             "starting_capital",
-            "50.00",
-            "Starting sandbox capital in USD ($10 Million) - Min: $50",
+            "10000000.00",
+            "Starting sandbox capital in INR (₹1 Crore) - Min: ₹1000",
         ),
         ("reset_day", "Never", "Day of week for automatic fund reset (Never = disabled)"),
         ("reset_time", "00:00", "Time for automatic fund reset (IST)"),

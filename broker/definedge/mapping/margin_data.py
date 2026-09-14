@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://rajeevupadhyay.com/docs
+# Mapping OpenAlgo API Request https://openalgo.in/docs
 # Mapping Definedge Span Calculator API
 
 from broker.definedge.mapping.transform_data import map_exchange, map_product_type

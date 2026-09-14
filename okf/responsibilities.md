@@ -2,7 +2,7 @@
 type: Reference
 title: User Responsibilities
 description: The responsibilities every OpenAlgo user accepts — transparency, self-support, compliance, security, and risk ownership.
-resource: https://docs.rajeevupadhyay.com/responsibilities
+resource: https://docs.openalgo.in/responsibilities
 tags:
 - responsibilities
 - compliance
@@ -17,6 +17,6 @@ timestamp: '2026-07-03T00:00:00+00:00'
 
 The responsibilities every OpenAlgo user accepts — transparency, self-support, compliance, security, and risk ownership.
 
-**Source:** [https://docs.rajeevupadhyay.com/responsibilities](https://docs.rajeevupadhyay.com/responsibilities)
+**Source:** [https://docs.openalgo.in/responsibilities](https://docs.openalgo.in/responsibilities)
 
 **Related:** [overview](overview.md)

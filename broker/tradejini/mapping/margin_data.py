@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://rajeevupadhyay.com/docs
+# Mapping OpenAlgo API Request https://openalgo.in/docs
 # Tradejini does not provide position-specific Margin Calculator API
 
 from utils.logging import get_logger

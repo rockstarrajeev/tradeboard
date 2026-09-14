@@ -69,7 +69,7 @@ def init_for_http(api_key_value: str, host_value: str) -> None:
 MCP_STRATEGY = "python mcp"
 
 # OpenAlgo standardized index symbols (NSE_INDEX / BSE_INDEX) — rolled out across all brokers.
-# Source: https://docs.rajeevupadhyay.com/symbol-format
+# Source: https://docs.openalgo.in/symbol-format
 NSE_INDEX_SYMBOLS = [
     "NIFTY", "NIFTYNXT50", "FINNIFTY", "BANKNIFTY", "MIDCPNIFTY", "INDIAVIX",
     "HANGSENGBEESNAV",

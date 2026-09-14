@@ -221,7 +221,7 @@ If you encounter issues:
 ## Related Documentation
 
 - [Installation Scripts](/install/) - Desktop and server installation scripts
-- [Main Documentation](https://docs.rajeevupadhyay.com) - Official documentation site
+- [Main Documentation](https://docs.openalgo.in) - Official documentation site
 - [CLAUDE.md](/CLAUDE.md) - Development guide
 
 ---

@@ -59,6 +59,9 @@ This guide takes you from zero to automated trading, covering everything from ba
 ### Analytics Tools (Module 31)
 - [31 - Tools (Options & Strategy Analytics Suite)](./31-tools/README.md)
 
+### Charting (Module 32)
+- [32 - Charting Terminal](./32-charting-terminal/README.md) - trade from the chart, the order dock, drawing tools and every keyboard shortcut
+
 ## Quick Navigation
 
 | I want to... | Go to |
@@ -77,8 +80,8 @@ This guide takes you from zero to automated trading, covering everything from ba
 ## Additional Resources
 
 - **Developer Documentation**: See `/design` folder for technical architecture
-- **Official Docs**: [docs.rajeevupadhyay.com](https://docs.rajeevupadhyay.com)
-- **Community**: [Discord](https://www.rajeevupadhyay.com/discord)
+- **Official Docs**: [docs.openalgo.in](https://docs.openalgo.in)
+- **Community**: [Discord](https://www.openalgo.in/discord)
 - **Video Tutorials**: [YouTube](https://www.youtube.com/@openalgo)
 
 ## Support
@@ -86,5 +89,5 @@ This guide takes you from zero to automated trading, covering everything from ba
 If you encounter issues:
 1. Check [Troubleshooting](./29-troubleshooting/README.md)
 2. Read [FAQs](./30-faqs/README.md)
-3. Ask on [Discord](https://www.rajeevupadhyay.com/discord)
+3. Ask on [Discord](https://www.openalgo.in/discord)
 4. Open a [GitHub Issue](https://github.com/marketcalls/openalgo/issues)

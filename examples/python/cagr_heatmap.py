@@ -2,7 +2,7 @@
 # Python Code to Compute Rolling CAGR Heatmap for NIFTY 50
 # Recommended to use Daily Historical Data more than 5 Years
 # Minor variations in Rolling Returns might occur due to data source differences
-# Coded by Rajandran R - Creator of OpenAlgo (https://rajeevupadhyay.com)
+# Coded by Rajandran R - Creator of OpenAlgo (https://openalgo.in)
 # Author - www.marketcalls.in
 # ---------------------------------------------------
 # NOTE: This code requires OpenAlgo to be running locally or on a server.

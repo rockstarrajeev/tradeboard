@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://rajeevupadhyay.com/docs
+# Mapping OpenAlgo API Request https://openalgo.in/docs
 # Mapping Tradejini API Parameters https://api.tradejini.com/v2
 
 from database.token_db import get_br_symbol

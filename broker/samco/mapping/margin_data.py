@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://rajeevupadhyay.com/docs
+# Mapping OpenAlgo API Request https://openalgo.in/docs
 # Mapping Samco Span Margin API https://docs-tradeapi.samco.in/span-margin.html
 
 from database.token_db import get_br_symbol

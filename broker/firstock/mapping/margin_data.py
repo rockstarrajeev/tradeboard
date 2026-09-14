@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://rajeevupadhyay.com/docs
+# Mapping OpenAlgo API Request https://openalgo.in/docs
 # Mapping Firstock basketMargin API
 
 from broker.firstock.mapping.transform_data import map_order_type, map_product_type

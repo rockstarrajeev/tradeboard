@@ -43,7 +43,7 @@ uv run python upgrade/migrate_gtt.py
 
 Adds `sandbox_gtt` and `sandbox_gtt_legs` tables and defaults. Sandbox / analyze-mode GTT execution is Phase 3 — analyze mode currently returns `501` for GTT calls until the in-progress sandbox integration ships.
 
-API docs: <https://docs.rajeevupadhyay.com/api-documentation/v1/orders-api/placegttorder>
+API docs: <https://docs.openalgo.in/api-documentation/v1/orders-api/placegttorder>
 
 ***
 
@@ -166,8 +166,8 @@ After applying the APP_KEY-only migration, `_generate_keys_on_first_run` takes t
 **Links**
 
 * **Repository**: <https://github.com/marketcalls/openalgo>
-* **Documentation**: <https://docs.rajeevupadhyay.com>
-* **Discord**: <https://www.rajeevupadhyay.com/discord>
+* **Documentation**: <https://docs.openalgo.in>
+* **Discord**: <https://www.openalgo.in/discord>
 * **YouTube**: <https://www.youtube.com/@openalgo>
 * **Issue tracker**: <https://github.com/marketcalls/openalgo/issues>
 
@@ -183,7 +183,7 @@ If you need additional information that is not directly available in this page, 
 Perform an HTTP GET request on the current page URL with the `ask` query parameter:
 
 ```
-GET https://docs.rajeevupadhyay.com/change-log/release/version-2.0.0.8-released.md?ask=<question>
+GET https://docs.openalgo.in/change-log/release/version-2.0.0.8-released.md?ask=<question>
 ```
 
 The question should be specific, self-contained, and written in natural language.

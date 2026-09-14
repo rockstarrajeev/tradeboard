@@ -2,7 +2,7 @@
 type: Reference
 title: Backtesting Skills (VectorBT, Agentic)
 description: The VectorBT backtesting skill package for AI coding agents — multi-market backtests with realistic costs, templates, and tearsheets.
-resource: https://docs.rajeevupadhyay.com/skills/backtesting
+resource: https://docs.openalgo.in/skills/backtesting
 tags:
 - skills
 - agentic
@@ -17,6 +17,6 @@ timestamp: '2026-07-03T00:00:00+00:00'
 
 The VectorBT backtesting skill package for AI coding agents — multi-market backtests with realistic costs, templates, and tearsheets.
 
-**Source:** [https://docs.rajeevupadhyay.com/skills/backtesting](https://docs.rajeevupadhyay.com/skills/backtesting)
+**Source:** [https://docs.openalgo.in/skills/backtesting](https://docs.openalgo.in/skills/backtesting)
 
 **Related:** [overview](../overview.md)

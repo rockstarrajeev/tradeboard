@@ -213,11 +213,11 @@ Broker metadata file. This is a simple metadata file (NOT configuration).
 ```json
 {
     "Plugin Name": "zerodha",
-    "Plugin URI": "https://rajeevupadhyay.com",
+    "Plugin URI": "https://openalgo.in",
     "Description": "Zerodha OpenAlgo Plugin",
     "Version": "1.0",
     "Author": "Rajandran R",
-    "Author URI": "https://rajeevupadhyay.com"
+    "Author URI": "https://openalgo.in"
 }
 ```
 

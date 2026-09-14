@@ -528,7 +528,7 @@ If you hit rate limits:
 ## Support & Resources
 
 ### Documentation
-- OpenAlgo Docs: https://docs.rajeevupadhyay.com
+- OpenAlgo Docs: https://docs.openalgo.in
 - GoCharting Help: https://gocharting.com/help
 
 ### Community

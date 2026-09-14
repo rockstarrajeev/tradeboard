@@ -116,9 +116,6 @@ def test_t1_settlement_does_not_sweep_in_a_position_created_early_today(monkeypa
 
     user_id = "test-t1-cutoff"
     _clear_test_user(user_id)
-    from database.sandbox_db import SandboxPositions, db_session
-    SandboxPositions.query.filter_by(product="CNC").delete(synchronize_session=False)
-    db_session.commit()
 
     ist_midnight = datetime.combine(datetime.now(IST).date(), datetime.min.time(), tzinfo=IST)
     _create_position(

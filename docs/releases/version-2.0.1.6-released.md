@@ -138,8 +138,8 @@ Never run `cp .sample.env .env` on an existing installation — it destroys brok
 **Links**
 
 * **Repository**: <https://github.com/marketcalls/openalgo>
-* **Documentation**: <https://docs.rajeevupadhyay.com>
+* **Documentation**: <https://docs.openalgo.in>
 * **Python SDK on PyPI**: <https://pypi.org/project/openalgo/>
-* **Discord**: <https://www.rajeevupadhyay.com/discord>
+* **Discord**: <https://www.openalgo.in/discord>
 * **YouTube**: <https://www.youtube.com/@openalgo>
 * **Issue tracker**: <https://github.com/marketcalls/openalgo/issues>

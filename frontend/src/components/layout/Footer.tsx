@@ -35,22 +35,23 @@ export function Footer({ className }: FooterProps) {
             <span>Copyright 2026</span>
             <span className="hidden md:inline">|</span>
             <a
-              href="https://rajeevupadhyay.com"
+              href="https://www.openalgo.in"
               className="text-primary hover:underline font-medium"
               target="_blank"
               rel="noopener noreferrer"
             >
-              rajeevupadhyay.com
+              www.openalgo.in
             </a>
           </div>
-          <span className="hidden md:inline">|</span>
-          <span className="text-center">Tradeboard - Algorithmic Trading Platform</span>
-          <span className="hidden md:inline">|</span>
+          <span className="text-center">Open Source Algo Platform for Everyone</span>
           {version && (
-            <Badge variant="secondary" className="gap-1">
-              <span className="opacity-75">v</span>
-              <span>{version}</span>
-            </Badge>
+            <>
+              <span className="hidden md:inline">|</span>
+              <Badge variant="secondary" className="gap-1">
+                <span className="opacity-75">v</span>
+                <span>{version}</span>
+              </Badge>
+            </>
           )}
           {activeSessionCount > 0 && (
             <>
@@ -85,7 +86,7 @@ export function Footer({ className }: FooterProps) {
             title="Join our Discord community"
           >
             <a
-              href="https://www.rajeevupadhyay.com/discord"
+              href="https://rajeevupadhyay.com/discord"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Discord"
@@ -97,7 +98,7 @@ export function Footer({ className }: FooterProps) {
           </Button>
           <Button variant="ghost" size="icon" asChild className="h-8 w-8" title="Follow us on X">
             <a
-              href="https://x.com/tradeboardHQ"
+              href="https://x.com/openalgoHQ"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="X (Twitter)"
@@ -115,7 +116,7 @@ export function Footer({ className }: FooterProps) {
             title="Subscribe to our YouTube channel"
           >
             <a
-              href="https://www.youtube.com/@tradeboard"
+              href="https://www.youtube.com/@openalgo"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="YouTube"

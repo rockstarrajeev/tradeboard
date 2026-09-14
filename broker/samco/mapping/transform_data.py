@@ -1,4 +1,4 @@
-# Mapping OpenAlgo API Request https://rajeevupadhyay.com/docs
+# Mapping OpenAlgo API Request https://openalgo.in/docs
 # Mapping Samco Parameters https://docs-tradeapi.samco.in/
 
 from database.token_db import get_br_symbol, get_symbol_info
