@@ -290,7 +290,7 @@ function microphoneRefusal(cause: unknown): string {
   if (!window.isSecureContext || name === 'SecurityError') {
     return (
       'Your browser will not allow the microphone on this address. Open ' +
-      'OpenAlgo at http://127.0.0.1:5000, or set up https for your domain. ' +
+      'Tradeboard at http://127.0.0.1:5000, or set up https for your domain. ' +
       'A plain http address that is not on this machine can never use a ' +
       'microphone, whatever the settings say.'
     )

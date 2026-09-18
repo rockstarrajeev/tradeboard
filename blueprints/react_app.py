@@ -867,6 +867,15 @@ def serve_logo():
     return send_from_directory(FRONTEND_DIST, "logo.png")
 
 
+@react_bp.route("/chart-logo.png")
+def serve_chart_logo():
+    """Serve chart watermark logo."""
+    if not is_react_frontend_available():
+        return "Not found", 404
+    return send_from_directory(FRONTEND_DIST, "chart-logo.png")
+
+
+
 @react_bp.route("/apple-touch-icon.png")
 def serve_apple_touch_icon():
     """Serve Apple touch icon."""

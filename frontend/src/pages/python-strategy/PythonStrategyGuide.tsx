@@ -302,7 +302,7 @@ export default function PythonStrategyGuide() {
       <div className="space-y-2">
         <h1 className="text-2xl font-bold tracking-tight">Python Strategy Guide</h1>
         <p className="text-muted-foreground">
-          Self-host automated trading strategies inside OpenAlgo. Each strategy runs as an isolated
+          Self-host automated trading strategies inside Tradeboard. Each strategy runs as an isolated
           subprocess with its own process, memory, and log file &mdash; managed through the{' '}
           <Link to="/python" className="text-primary hover:underline">
             /python
@@ -348,7 +348,7 @@ export default function PythonStrategyGuide() {
                   <Link to="/apikey" className="text-primary hover:underline">
                     API Key
                   </Link>{' '}
-                  page and copy your OpenAlgo API key
+                  page and copy your Tradeboard API key
                 </p>
               </div>
             </div>

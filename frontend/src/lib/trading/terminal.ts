@@ -50,6 +50,13 @@ import type {
   DrawingTool,
 } from 'openalgo-charts/draw'
 import { runTransform } from 'openalgo-charts/transform'
+import { CHART_EMBLEM_DATA_URI } from './chartLogo'
+
+// Preload the Tradeboard emblem image early so it decodes in memory before chart initialization
+const chartEmblemImage = typeof Image !== 'undefined' ? new Image() : null
+if (chartEmblemImage) {
+  chartEmblemImage.src = CHART_EMBLEM_DATA_URI
+}
 
 // Re-exported so the React layer imports its chart types from this facade
 // rather than reaching into the library directly, as it already does for
@@ -1599,7 +1606,33 @@ export class TradingTerminal {
       // the SELL/qty/BUY panel (44 + 42*0.72 ~= 75). Indicator legend rows have
       // to start under both or they land on top of the buttons.
       legendOffset: { top: 80 },
+      branding: {
+        position: 'bottom-left',
+        src: CHART_EMBLEM_DATA_URI,
+        ...(chartEmblemImage && chartEmblemImage.complete && chartEmblemImage.naturalWidth > 0
+          ? { image: chartEmblemImage }
+          : {}),
+        label: 'Chart by Tradeboard',
+        href: 'https://docs.algo.wesoftcorp.com',
+        height: 24,
+        opacity: 1,
+        tint: 'none',
+      },
     })
+    if (chartEmblemImage && !chartEmblemImage.complete) {
+      chartEmblemImage.onload = () => {
+        this.chart?.setBranding({
+          position: 'bottom-left',
+          src: CHART_EMBLEM_DATA_URI,
+          image: chartEmblemImage,
+          label: 'Chart by Tradeboard',
+          href: 'https://docs.algo.wesoftcorp.com',
+          height: 24,
+          opacity: 1,
+          tint: 'none',
+        })
+      }
+    }
     this.chart.setDataContext(
       this.sym
         ? { symbol: this.sym.symbol, exchange: this.sym.exchange, interval: this.interval }

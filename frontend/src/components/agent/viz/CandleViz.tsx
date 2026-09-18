@@ -318,7 +318,7 @@ export function CandleViz({ spec, title, source, variant = 'figure', className }
         opacity: 0.8,
         // Mark alone at rest; the wording unrolls to its right on hover, so it
         // names itself when looked at without occupying the corner always.
-        label: 'OpenAlgo Charts',
+        label: 'Tradeboard Charts',
         labelColor: mode === 'dark' || appMode === 'analyzer' ? '#e4e8f4' : '#3c4354',
         href: 'https://rajeevupadhyay.com',
       })

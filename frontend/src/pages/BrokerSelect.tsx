@@ -327,7 +327,7 @@ export default function BrokerSelect() {
               Connect Your <span className="text-primary">Broker</span>
             </h1>
             <p className="text-lg lg:text-xl mb-8 text-muted-foreground">
-              Link your trading account to start executing trades through OpenAlgo's algorithmic
+              Link your trading account to start executing trades through Tradeboard's algorithmic
               trading platform.
             </p>
 
