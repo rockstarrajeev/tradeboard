@@ -89,7 +89,7 @@ def check_tmp_noexec() -> None:
                         print("WARNING: /tmp is mounted with 'noexec' flag")
                         print("   This can cause issues with Python libraries like numba/llvmlite.")
                         print("")
-                        print("   OpenAlgo has auto-configured alternative paths:")
+                        print("   Tradeboard has auto-configured alternative paths:")
                         print(f"   - NUMBA_CACHE_DIR={os.environ.get('NUMBA_CACHE_DIR', 'not set')}")
                         print(f"   - LLVMLITE_TMPDIR={os.environ.get('LLVMLITE_TMPDIR', 'not set')}")
                         print("")
@@ -498,7 +498,7 @@ def _warn_fernet_write_failed(reason: str, error: BaseException) -> None:
     See marketcalls/openalgo#1394.
     """
     sys.stderr.write(
-        "\n\033[93m\033[1m[OpenAlgo Fernet salt]\033[0m "
+        "\n\033[93m\033[1m[Tradeboard Fernet salt]\033[0m "
         f"\033[93m{reason}: {error}\n"
         "Continuing with the legacy static salt — the app will boot, but the\n"
         "per-install salt rotation is deferred until .env becomes writable.\n"
@@ -697,7 +697,7 @@ def _ensure_fernet_salt(env_path: str) -> None:
             )
             if not decryptable:
                 sys.stderr.write(
-                    "\n\033[91m\033[1m[OpenAlgo Fernet salt]\033[0m\n"
+                    "\n\033[91m\033[1m[Tradeboard Fernet salt]\033[0m\n"
                     "\033[91mFERNET_SALT is missing from .env, but stored ciphertext\n"
                     "in the database does not decrypt with the legacy static salt\n"
                     "either. The salt was rotated previously and the value has been\n"
@@ -912,7 +912,7 @@ def _migrate_fernet_db(env_path: str, pepper: str, new_salt: str) -> None:
             conn.commit()
     except sqlite3.Error as e:
         sys.stderr.write(
-            "\n\033[93m\033[1m[OpenAlgo Fernet salt]\033[0m "
+            "\n\033[93m\033[1m[Tradeboard Fernet salt]\033[0m "
             f"\033[93mDB error during salt migration: {e}.\n"
             "FERNET_SALT was already persisted; rows that did not get\n"
             "re-encrypted will fail decrypt under the new key and trigger\n"
@@ -924,7 +924,7 @@ def _migrate_fernet_db(env_path: str, pepper: str, new_salt: str) -> None:
     is_reloader_parent = flask_debug and os.environ.get("WERKZEUG_RUN_MAIN") != "true"
     if not is_reloader_parent and (migrated or skipped):
         print(
-            "\n\033[92m\033[1m[OpenAlgo Fernet salt rotation]\033[0m "
+            "\n\033[92m\033[1m[Tradeboard Fernet salt rotation]\033[0m "
             f"\033[92mGenerated per-install FERNET_SALT and re-encrypted\n"
             f"{migrated} stored secret(s). {skipped} row(s) could not be\n"
             "decrypted with the legacy static salt and were left as-is\n"
@@ -1019,7 +1019,7 @@ def _generate_keys_on_first_run(env_path: str) -> None:
                 # rotation requires re-encryption + password reset via the
                 # dedicated upgrade/rotate_pepper.py script.
                 sys.stderr.write(
-                    "\n\033[91m\033[1m[OpenAlgo security]\033[0m\n"
+                    "\n\033[91m\033[1m[Tradeboard security]\033[0m\n"
                     "\033[91mDetected publicly-known APP_KEY in .env, but could not\n"
                     f"rewrite the file ({e}).\n"
                     "\n"
@@ -1039,7 +1039,7 @@ def _generate_keys_on_first_run(env_path: str) -> None:
             else:
                 # Fresh DB (no users yet): both can be safely regenerated.
                 sys.stderr.write(
-                    "\n\033[91m\033[1m[OpenAlgo security]\033[0m\n"
+                    "\n\033[91m\033[1m[Tradeboard security]\033[0m\n"
                     "\033[91mDetected publicly-known APP_KEY/API_KEY_PEPPER in .env, but\n"
                     f"could not rewrite the file ({e}).\n"
                     "\n"
@@ -1057,7 +1057,7 @@ def _generate_keys_on_first_run(env_path: str) -> None:
 
     if rotated_names and not db_populated and not is_reloader_parent:
         print(
-            "\n\033[92m\033[1m[OpenAlgo first-run setup]\033[0m "
+            "\n\033[92m\033[1m[Tradeboard first-run setup]\033[0m "
             f"\033[92mGenerated fresh {' and '.join(rotated_names)} and saved\n"
             f"to {env_path}. The .sample.env placeholder values have been replaced\n"
             "with cryptographically random secrets. This message will not appear\n"
@@ -1066,7 +1066,7 @@ def _generate_keys_on_first_run(env_path: str) -> None:
         )
     elif "APP_KEY" in rotated_names and db_populated and not is_reloader_parent:
         print(
-            "\n\033[93m\033[1m[OpenAlgo security]\033[0m "
+            "\n\033[93m\033[1m[Tradeboard security]\033[0m "
             "\033[93mYour APP_KEY in .env was the public sample value. It has been\n"
             "rotated to a fresh random value. Active browser sessions will need\n"
             "to log in again.\033[0m\n",
@@ -1091,7 +1091,7 @@ def _generate_keys_on_first_run(env_path: str) -> None:
     #      in the app explains why. See issue #1660.
     if pepper_compromised and db_populated and not is_reloader_parent:
         sys.stderr.write(
-            "\n\033[91m\033[1m[OpenAlgo security] API_KEY_PEPPER is the public sample value\033[0m\n"
+            "\n\033[91m\033[1m[Tradeboard security] API_KEY_PEPPER is the public sample value\033[0m\n"
             "\033[91mYour .env still carries the API_KEY_PEPPER placeholder from\n"
             ".sample.env, and this database already has a user account.\n"
             "\n"

@@ -150,11 +150,11 @@ describe('the component subset', () => {
 
 describe('the committed prompt file', () => {
   it('matches a fresh regeneration', () => {
-    const onDisk = readFileSync(promptFilePath(), 'utf8')
+    const onDisk = readFileSync(promptFilePath(), 'utf8').replace(/\r\n/g, '\n')
     expect(
       onDisk,
       `${AGENT_UI_PROMPT_PATH} is stale. Regenerate it: cd frontend && node scripts/generate-openui-prompt.mjs`
-    ).toBe(renderAgentUiPromptFile())
+    ).toBe(renderAgentUiPromptFile().replace(/\r\n/g, '\n'))
   })
 
   it('is ASCII, so it can live in this repository', () => {

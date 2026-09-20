@@ -2,109 +2,170 @@ import {
   Activity,
   ArrowRight,
   ClipboardList,
-  Clock,
   FileText,
   FlaskConical,
   HeartPulse,
   Shield,
+  Zap,
 } from 'lucide-react'
 import { Link } from 'react-router'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Emblem3D, type EmblemVariant } from '@/components/ui/Emblem3D'
+import { cn } from '@/lib/utils'
+
+interface LogCardConfig {
+  title: string
+  description: string
+  detail: string
+  icon: typeof ClipboardList
+  href: string
+  emblemVariant: EmblemVariant
+  countLabel: string
+  actionLabel: string
+}
 
 export default function LogsIndex() {
-  const logCards = [
+  const logCards: LogCardConfig[] = [
     {
       title: 'Live Logs',
-      description: 'View real-time API order logs with request and response data',
+      description: 'Stream real-time API order logs with comprehensive request headers and broker payloads',
+      detail: 'Live WebSockets & HTTP',
       icon: ClipboardList,
       href: '/logs/live',
-      color: 'bg-blue-500',
-      countLabel: 'orders',
+      emblemVariant: 'blue',
+      countLabel: 'Orders Stream',
+      actionLabel: 'Open live logs',
     },
     {
       title: 'Sandbox Logs',
-      description: 'Track and test your trading strategies before going live',
+      description: 'Track and simulate paper trading strategies in an isolated risk-free sandbox environment',
+      detail: 'Simulated Execution',
       icon: FlaskConical,
       href: '/logs/sandbox',
-      color: 'bg-purple-500',
-      countLabel: 'testing',
+      emblemVariant: 'violet',
+      countLabel: 'Simulation',
+      actionLabel: 'Open sandbox',
     },
     {
       title: 'Latency Monitor',
-      description: 'Track order execution latency and performance metrics',
-      icon: Clock,
+      description: 'Monitor sub-millisecond order execution latency and broker round-trip timings',
+      detail: 'Round-Trip Telemetry',
+      icon: Zap,
       href: '/logs/latency',
-      color: 'bg-orange-500',
-      countLabel: 'monitoring',
+      emblemVariant: 'orange',
+      countLabel: 'Telemetry',
+      actionLabel: 'View latency',
     },
     {
       title: 'Traffic Monitor',
-      description: 'Monitor HTTP requests, endpoints, and response times',
+      description: 'Inspect HTTP endpoint throughput, response times, and active client connections',
+      detail: 'Network Performance',
       icon: Activity,
       href: '/logs/traffic',
-      color: 'bg-cyan-500',
-      countLabel: 'monitoring',
+      emblemVariant: 'cyan',
+      countLabel: 'HTTP Traffic',
+      actionLabel: 'Inspect traffic',
     },
     {
       title: 'Security Logs',
-      description: 'Monitor security events, banned IPs, and threat activity',
+      description: 'Monitor authentication events, banned IP addresses, and rate-limit guardrails',
+      detail: 'WAF & Audit Trail',
       icon: Shield,
       href: '/logs/security',
-      color: 'bg-red-500',
-      countLabel: 'security',
+      emblemVariant: 'rose',
+      countLabel: 'Security Audit',
+      actionLabel: 'View security',
     },
     {
       title: 'Health Monitor',
-      description: 'Track system health, file descriptors, memory, and connections',
+      description: 'Inspect system memory, CPU load, open sockets, and database connection pools',
+      detail: 'System Diagnostics',
       icon: HeartPulse,
       href: '/health',
-      color: 'bg-green-500',
-      countLabel: 'health',
+      emblemVariant: 'emerald',
+      countLabel: 'Diagnostics',
+      actionLabel: 'Check health',
     },
   ]
 
   return (
-    <div className="py-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <FileText className="h-6 w-6" />
-          Logs & Monitoring
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Access trading logs, monitor system performance, and track security events
-        </p>
+    <div className="space-y-8 md:space-y-10">
+      {/* Header matching Dashboard */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-contrast-heading flex items-center gap-3">
+            <FileText className="h-7 w-7 md:h-8 md:w-8 text-primary shrink-0" />
+            Logs & Monitoring
+          </h1>
+          <p className="text-contrast-subtext mt-1 text-sm md:text-base font-medium">
+            Access trading logs, monitor system latency, and track infrastructure telemetry
+          </p>
+        </div>
+
+        {/* Telemetry Status Indicator */}
+        <div className="flex items-center gap-3 glass-card px-4 py-2.5 w-fit lg:ml-auto lg:self-center shadow-xs">
+          <span className="text-xs md:text-sm font-semibold text-contrast-label whitespace-nowrap">
+            System Telemetry:
+          </span>
+          <div className="flex items-center gap-2">
+            <Emblem3D variant="emerald" size="sm" pulse className="h-6 w-6 min-w-[24px]">
+              <div className="h-2 w-2 rounded-full bg-white shadow-xs" />
+            </Emblem3D>
+            <span className="text-xs md:text-sm font-bold text-emerald-600 dark:text-emerald-400">
+              Engines Operational
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Log Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {logCards.map((card) => (
-          <Link key={card.href} to={card.href}>
-            <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer group">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div
-                    className={`w-10 h-10 rounded-lg ${card.color} flex items-center justify-center`}
-                  >
-                    <card.icon className="h-5 w-5 text-white" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        {logCards.map((card) => {
+          const glowClass = `glass-glow-${card.emblemVariant}`
+          return (
+            <Link key={card.href} to={card.href} className="block h-full group">
+              <div
+                className={cn(
+                  'glass-card glass-card-interactive group p-5 md:p-6 h-full flex flex-col justify-between gap-5',
+                  glowClass
+                )}
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Emblem3D
+                      icon={card.icon}
+                      variant={card.emblemVariant}
+                      size="md"
+                      floating
+                      className="group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-md"
+                    />
+                    <Badge variant="glass" className="text-[11px] font-bold">
+                      {card.countLabel}
+                    </Badge>
                   </div>
-                  <Badge variant="secondary">{card.countLabel}</Badge>
+                  <div>
+                    <h3 className="font-bold text-lg md:text-xl text-contrast-heading group-hover:text-primary transition-colors">
+                      {card.title}
+                    </h3>
+                    <p className="text-sm text-contrast-subtext mt-1.5 leading-relaxed">
+                      {card.description}
+                    </p>
+                  </div>
                 </div>
-                <CardTitle className="flex items-center gap-2 group-hover:text-primary transition-colors">
-                  {card.title}
-                  <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </CardTitle>
-                <CardDescription>{card.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm text-muted-foreground">
-                  Click to view {card.title.toLowerCase()}
+
+                <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                  <span className="text-xs font-medium text-contrast-label">
+                    {card.detail}
+                  </span>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-primary/90 group-hover:text-primary group-hover:translate-x-1 transition-all">
+                    {card.actionLabel}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+              </div>
+            </Link>
+          )
+        })}
       </div>
     </div>
   )

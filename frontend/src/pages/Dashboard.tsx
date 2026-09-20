@@ -1,8 +1,21 @@
-import { BarChart3, BookOpen, FileText, GraduationCap, Search, Zap } from 'lucide-react'
+import {
+  Activity,
+  Award,
+  BarChart3,
+  BookOpen,
+  FileText,
+  GraduationCap,
+  Search,
+  ShieldCheck,
+  TrendingDown,
+  TrendingUp,
+  Wallet,
+  Zap,
+} from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
+import { Emblem3D, type EmblemVariant } from '@/components/ui/Emblem3D'
 import { useOrderEventRefresh } from '@/hooks/useOrderEventRefresh'
 import { cn } from '@/lib/utils'
 import { onModeChange } from '@/stores/themeStore'
@@ -44,18 +57,18 @@ function formatIndianNumber(value: string | number): string {
   return isNegative ? `-${formatted}` : formatted
 }
 
-// Get color class based on P&L value
+// Get color class based on P&L value with high contrast
 function getPnLColor(value: string | number): string {
   const num = typeof value === 'string' ? parseFloat(value) : value
-  if (num > 0) return 'text-green-600 dark:text-green-400'
-  if (num < 0) return 'text-red-600 dark:text-red-400'
-  return 'text-foreground'
+  if (num > 0) return 'text-emerald-600 dark:text-emerald-400 font-extrabold'
+  if (num < 0) return 'text-rose-600 dark:text-rose-400 font-extrabold'
+  return 'text-contrast-heading font-extrabold'
 }
 
-function getPnLBadgeVariant(value: string | number): 'default' | 'destructive' | 'secondary' {
+function getPnLBadgeVariant(value: string | number): 'profit' | 'loss' | 'secondary' {
   const num = typeof value === 'string' ? parseFloat(value) : value
-  if (num > 0) return 'default'
-  if (num < 0) return 'destructive'
+  if (num > 0) return 'profit'
+  if (num < 0) return 'loss'
   return 'secondary'
 }
 
@@ -159,19 +172,6 @@ export default function Dashboard() {
     return () => clearInterval(interval)
   }, [checkMasterContractStatus])
 
-  // Master Contract LED color
-  const getMasterContractLedColor = () => {
-    switch (masterContract.status) {
-      case 'success':
-        return 'bg-green-500'
-      case 'downloading':
-        return 'bg-yellow-500 animate-pulse'
-      case 'error':
-        return 'bg-red-500'
-      default:
-        return 'bg-gray-400 animate-pulse'
-    }
-  }
 
   const getMasterContractStatusText = () => {
     switch (masterContract.status) {
@@ -201,70 +201,57 @@ export default function Dashboard() {
     }
   }
 
-  const quickAccessCards = [
+  const quickAccessCards: Array<{
+    href: string
+    label: string
+    description: string
+    icon: typeof Search
+    emblemVariant: EmblemVariant
+    external?: boolean
+  }> = [
     {
       href: '/search',
       label: 'Tradeboard Symbols',
-      description: 'Universal symbology across brokers',
+      description: 'Universal symbology across brokers with instant contract search',
       icon: Search,
-      gradient: 'from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10',
-      iconBg: 'bg-primary/20',
-      iconColor: 'text-primary',
-      borderColor: 'border-primary/20 hover:border-primary/40',
+      emblemVariant: 'indigo',
     },
     {
       href: '/logs',
       label: 'Live Logs',
-      description: 'Real-time trading activity logs',
+      description: 'Real-time order execution and trading telemetry feed',
       icon: FileText,
-      gradient:
-        'from-violet-500/10 to-violet-500/5 hover:from-violet-500/20 hover:to-violet-500/10',
-      iconBg: 'bg-violet-500/20',
-      iconColor: 'text-violet-500',
-      borderColor: 'border-violet-500/20 hover:border-violet-500/40',
+      emblemVariant: 'violet',
     },
     {
       href: 'https://docs.algo.wesoftcorp.com',
       label: 'Documentation',
-      description: 'Tutorials, API docs & features',
+      description: 'Tutorials, REST & WebSocket API developer guides',
       icon: BookOpen,
-      gradient: 'from-cyan-500/10 to-cyan-500/5 hover:from-cyan-500/20 hover:to-cyan-500/10',
-      iconBg: 'bg-cyan-500/20',
-      iconColor: 'text-cyan-500',
-      borderColor: 'border-cyan-500/20 hover:border-cyan-500/40',
+      emblemVariant: 'cyan',
       external: true,
     },
     {
       href: '/pnl-tracker',
       label: 'P&L Tracker',
-      description: 'Live intraday MTM tracker',
+      description: 'Real-time intraday mark-to-market performance analytics',
       icon: BarChart3,
-      gradient: 'from-green-500/10 to-green-500/5 hover:from-green-500/20 hover:to-green-500/10',
-      iconBg: 'bg-green-500/20',
-      iconColor: 'text-green-500',
-      borderColor: 'border-green-500/20 hover:border-green-500/40',
+      emblemVariant: 'emerald',
     },
     {
       href: 'https://docs.algo.wesoftcorp.com/getting-started/',
       label: 'OpenVarsity',
-      description: 'Learn algo trading with Tradeboard',
+      description: 'Comprehensive quantitative and algorithmic trading curriculum',
       icon: GraduationCap,
-      gradient: 'from-blue-500/10 to-blue-500/5 hover:from-blue-500/20 hover:to-blue-500/10',
-      iconBg: 'bg-blue-500/20',
-      iconColor: 'text-blue-500',
-      borderColor: 'border-blue-500/20 hover:border-blue-500/40',
+      emblemVariant: 'blue',
       external: true,
     },
     {
       href: '/logs/latency',
       label: 'Latency Monitor',
-      description: 'Monitor order & API latency',
+      description: 'Sub-millisecond broker round-trip execution telemetry',
       icon: Zap,
-      gradient:
-        'from-orange-500/10 to-orange-500/5 hover:from-orange-500/20 hover:to-orange-500/10',
-      iconBg: 'bg-orange-500/20',
-      iconColor: 'text-orange-500',
-      borderColor: 'border-orange-500/20 hover:border-orange-500/40',
+      emblemVariant: 'orange',
     },
   ]
 
@@ -273,13 +260,13 @@ export default function Dashboard() {
   if (brokerExpired) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
-        <h1 className="text-2xl font-bold">Broker Session Expired</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl font-bold text-contrast-heading">Broker Session Expired</h1>
+        <p className="text-contrast-subtext text-center max-w-md">
           Your broker token has expired (brokers roll tokens daily). Reconnect to continue trading.
         </p>
         <Link
           to="/broker"
-          className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          className="inline-flex items-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-md hover:scale-105 active:scale-95 transition-all"
         >
           Reconnect Broker
         </Link>
@@ -291,34 +278,55 @@ export default function Dashboard() {
   if (!isAuthenticated) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
-        <h1 className="text-2xl font-bold">Session Expired</h1>
-        <p className="text-muted-foreground">Please log in to access the dashboard.</p>
-        <Link to="/login" className="text-primary hover:underline">
+        <h1 className="text-2xl font-bold text-contrast-heading">Session Expired</h1>
+        <p className="text-contrast-subtext">Please log in to access the dashboard.</p>
+        <Link to="/login" className="text-primary hover:underline font-semibold">
           Go to Login
         </Link>
       </div>
     )
   }
 
+  const unrealizedNum = marginData ? parseFloat(marginData.m2munrealized || '0') : 0
+  const realizedNum = marginData ? parseFloat(marginData.m2mrealized || '0') : 0
+
   return (
-    <div className="space-y-6 md:space-y-12">
+    <div className="space-y-8 md:space-y-12">
       {/* Dashboard Header */}
-      <div className="flex flex-col lg:flex-row lg:items-start gap-4">
-        <div className="flex-1">
-          <h1 className="text-2xl md:text-3xl font-bold">Trading Dashboard</h1>
-          <p className="text-muted-foreground mt-1 md:mt-2 text-sm md:text-base">
-            Overview of your trading account and market positions
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-contrast-heading">
+            Trading Dashboard
+          </h1>
+          <p className="text-contrast-subtext mt-1 text-sm md:text-base font-medium">
+            Live overview of your trading account, margins, and market positions
           </p>
         </div>
-        {/* Master Contract Status Indicator */}
-        <div className="flex items-center gap-2 md:gap-3 bg-muted rounded-lg px-3 md:px-4 py-2 md:py-3 w-fit lg:ml-auto lg:self-start">
-          <span className="text-xs md:text-sm font-medium whitespace-nowrap">Master Contract:</span>
-          <div className="flex items-center gap-2">
-            <div
-              className={cn('w-2.5 h-2.5 md:w-3 md:h-3 rounded-full', getMasterContractLedColor())}
-            />
+
+        {/* Master Contract Status Indicator with 3D Aura */}
+        <div className="flex items-center gap-3 glass-card px-4 py-2.5 w-fit lg:ml-auto lg:self-center shadow-xs">
+          <span className="text-xs md:text-sm font-semibold text-contrast-label whitespace-nowrap">
+            Master Contract:
+          </span>
+          <div className="flex items-center gap-2.5">
+            <Emblem3D
+              size="sm"
+              variant={
+                masterContract.status === 'success'
+                  ? 'emerald'
+                  : masterContract.status === 'downloading'
+                    ? 'amber'
+                    : masterContract.status === 'error'
+                      ? 'rose'
+                      : 'slate'
+              }
+              pulse={masterContract.status !== 'success'}
+              className="h-6 w-6 min-w-[24px]"
+            >
+              <div className="h-2 w-2 rounded-full bg-white shadow-xs" />
+            </Emblem3D>
             <span
-              className={cn('text-xs md:text-sm', getMasterContractTextColor())}
+              className={cn('text-xs md:text-sm font-bold', getMasterContractTextColor())}
               title={masterContract.message}
             >
               {getMasterContractStatusText()}
@@ -327,153 +335,226 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+      {/* Stats Grid with 3D Emblems & Glassmorphism */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-5">
         {/* Available Balance */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Available Balance</p>
-              <p className="text-2xl font-bold text-primary">
-                {isLoading
-                  ? '...'
-                  : marginData
-                    ? formatIndianNumber(marginData.availablecash)
-                    : '0.00'}
-              </p>
-              <Badge variant="secondary" className="mt-2">
-                Cash Balance
-              </Badge>
+        <div className="glass-card glass-card-interactive glass-glow-emerald p-5 flex flex-col justify-between gap-4 group">
+          <div className="flex items-center justify-between">
+            <span className="text-xs md:text-sm font-semibold text-contrast-label uppercase tracking-wider">
+              Available Balance
+            </span>
+            <Emblem3D
+              variant="emerald"
+              icon={Wallet}
+              size="md"
+              floating
+              className="group-hover:scale-110 transition-transform duration-300"
+            />
+          </div>
+          <div>
+            <div className="text-2xl lg:text-3xl font-extrabold text-contrast-heading tracking-tight">
+              {isLoading
+                ? '...'
+                : marginData
+                  ? formatIndianNumber(marginData.availablecash)
+                  : '0.00'}
             </div>
-          </CardContent>
-        </Card>
+            <Badge variant="profit" className="mt-3 text-[11px]">
+              Cash Balance
+            </Badge>
+          </div>
+        </div>
 
         {/* Collateral */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Collateral</p>
-              <p className="text-2xl font-bold text-violet-500 dark:text-violet-400">
-                {isLoading
-                  ? '...'
-                  : marginData
-                    ? formatIndianNumber(marginData.collateral)
-                    : '0.00'}
-              </p>
-              <Badge variant="secondary" className="mt-2">
-                Total Collateral
-              </Badge>
+        <div className="glass-card glass-card-interactive glass-glow-violet p-5 flex flex-col justify-between gap-4 group">
+          <div className="flex items-center justify-between">
+            <span className="text-xs md:text-sm font-semibold text-contrast-label uppercase tracking-wider">
+              Collateral
+            </span>
+            <Emblem3D
+              variant="violet"
+              icon={ShieldCheck}
+              size="md"
+              floating
+              className="group-hover:scale-110 transition-transform duration-300"
+            />
+          </div>
+          <div>
+            <div className="text-2xl lg:text-3xl font-extrabold text-purple-600 dark:text-purple-400 tracking-tight">
+              {isLoading
+                ? '...'
+                : marginData
+                  ? formatIndianNumber(marginData.collateral)
+                  : '0.00'}
             </div>
-          </CardContent>
-        </Card>
+            <Badge
+              variant="glass"
+              className="mt-3 text-[11px] text-purple-700 dark:text-purple-300 border-purple-500/30"
+            >
+              Total Collateral
+            </Badge>
+          </div>
+        </div>
 
         {/* Unrealized P&L */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Unrealized P&L</p>
-              <p
-                className={cn(
-                  'text-2xl font-bold',
-                  marginData ? getPnLColor(marginData.m2munrealized) : ''
-                )}
-              >
-                {isLoading
-                  ? '...'
-                  : marginData
-                    ? formatIndianNumber(marginData.m2munrealized)
-                    : '0.00'}
-              </p>
-              <Badge
-                variant={marginData ? getPnLBadgeVariant(marginData.m2munrealized) : 'secondary'}
-                className="mt-2"
-              >
-                Mark to Market
-              </Badge>
+        <div
+          className={cn(
+            'glass-card glass-card-interactive p-5 flex flex-col justify-between gap-4 group',
+            unrealizedNum >= 0 ? 'glass-glow-emerald' : 'glass-glow-rose'
+          )}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs md:text-sm font-semibold text-contrast-label uppercase tracking-wider">
+              Unrealized P&L
+            </span>
+            <Emblem3D
+              variant={unrealizedNum >= 0 ? 'emerald' : 'rose'}
+              icon={unrealizedNum >= 0 ? TrendingUp : TrendingDown}
+              size="md"
+              floating
+              className="group-hover:scale-110 transition-transform duration-300"
+            />
+          </div>
+          <div>
+            <div
+              className={cn(
+                'text-2xl lg:text-3xl font-extrabold tracking-tight',
+                marginData ? getPnLColor(marginData.m2munrealized) : 'text-contrast-heading'
+              )}
+            >
+              {isLoading
+                ? '...'
+                : marginData
+                  ? formatIndianNumber(marginData.m2munrealized)
+                  : '0.00'}
             </div>
-          </CardContent>
-        </Card>
+            <Badge
+              variant={marginData ? getPnLBadgeVariant(marginData.m2munrealized) : 'secondary'}
+              className="mt-3 text-[11px]"
+            >
+              Mark to Market
+            </Badge>
+          </div>
+        </div>
 
         {/* Realized P&L */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Realized P&L</p>
-              <p
-                className={cn(
-                  'text-2xl font-bold',
-                  marginData ? getPnLColor(marginData.m2mrealized) : ''
-                )}
-              >
-                {isLoading
-                  ? '...'
-                  : marginData
-                    ? formatIndianNumber(marginData.m2mrealized)
-                    : '0.00'}
-              </p>
-              <Badge
-                variant={marginData ? getPnLBadgeVariant(marginData.m2mrealized) : 'secondary'}
-                className="mt-2"
-              >
-                Booked P&L
-              </Badge>
+        <div
+          className={cn(
+            'glass-card glass-card-interactive p-5 flex flex-col justify-between gap-4 group',
+            realizedNum >= 0 ? 'glass-glow-emerald' : 'glass-glow-rose'
+          )}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs md:text-sm font-semibold text-contrast-label uppercase tracking-wider">
+              Realized P&L
+            </span>
+            <Emblem3D
+              variant={realizedNum >= 0 ? 'emerald' : 'rose'}
+              icon={realizedNum >= 0 ? Award : TrendingDown}
+              size="md"
+              floating
+              className="group-hover:scale-110 transition-transform duration-300"
+            />
+          </div>
+          <div>
+            <div
+              className={cn(
+                'text-2xl lg:text-3xl font-extrabold tracking-tight',
+                marginData ? getPnLColor(marginData.m2mrealized) : 'text-contrast-heading'
+              )}
+            >
+              {isLoading
+                ? '...'
+                : marginData
+                  ? formatIndianNumber(marginData.m2mrealized)
+                  : '0.00'}
             </div>
-          </CardContent>
-        </Card>
+            <Badge
+              variant={marginData ? getPnLBadgeVariant(marginData.m2mrealized) : 'secondary'}
+              className="mt-3 text-[11px]"
+            >
+              Booked P&L
+            </Badge>
+          </div>
+        </div>
 
         {/* Utilised Margin */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Utilised Margin</p>
-              <p className="text-2xl font-bold text-cyan-500 dark:text-cyan-400">
-                {isLoading
-                  ? '...'
-                  : marginData
-                    ? formatIndianNumber(marginData.utiliseddebits)
-                    : '0.00'}
-              </p>
-              <Badge
-                variant="outline"
-                className="mt-2 border-cyan-500/50 text-cyan-600 dark:text-cyan-400"
-              >
-                Used Margin
-              </Badge>
+        <div className="glass-card glass-card-interactive glass-glow-cyan p-5 flex flex-col justify-between gap-4 group">
+          <div className="flex items-center justify-between">
+            <span className="text-xs md:text-sm font-semibold text-contrast-label uppercase tracking-wider">
+              Utilised Margin
+            </span>
+            <Emblem3D
+              variant="cyan"
+              icon={Activity}
+              size="md"
+              floating
+              className="group-hover:scale-110 transition-transform duration-300"
+            />
+          </div>
+          <div>
+            <div className="text-2xl lg:text-3xl font-extrabold text-cyan-600 dark:text-cyan-400 tracking-tight">
+              {isLoading
+                ? '...'
+                : marginData
+                  ? formatIndianNumber(marginData.utiliseddebits)
+                  : '0.00'}
             </div>
-          </CardContent>
-        </Card>
+            <Badge
+              variant="glass"
+              className="mt-3 text-[11px] text-cyan-700 dark:text-cyan-300 border-cyan-500/30"
+            >
+              Used Margin
+            </Badge>
+          </div>
+        </div>
       </div>
 
       {/* Error Alert */}
       {error && (
-        <Card className="border-destructive bg-destructive/5">
-          <CardContent className="pt-6">
-            <p className="text-destructive text-sm">{error}</p>
-          </CardContent>
-        </Card>
+        <div className="glass-card border-destructive/30 bg-destructive/10 p-5 rounded-xl">
+          <p className="text-destructive font-semibold text-sm">{error}</p>
+        </div>
       )}
 
       {/* Quick Access Tools */}
       <div>
-        <h2 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6">Quick Access</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
+        <div className="flex items-center justify-between mb-4 md:mb-6">
+          <h2 className="text-xl md:text-2xl font-bold text-contrast-heading tracking-tight">
+            Quick Access Tools
+          </h2>
+          <span className="text-xs font-semibold text-contrast-label">
+            Universal Symbology & Platform Telemetry
+          </span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
           {quickAccessCards.map((card) => {
-            const cardClasses = cn(
-              'block rounded-lg border transition-all duration-300 hover:shadow-lg',
-              `bg-gradient-to-br ${card.gradient}`,
-              card.borderColor
-            )
-
+            const glowClass = `glass-glow-${card.emblemVariant}`
             const cardContent = (
-              <div className="p-4 md:p-5">
-                <div className="flex items-start gap-3 md:gap-4">
-                  <div className={cn('p-2.5 md:p-3 rounded-lg flex-shrink-0', card.iconBg)}>
-                    <card.icon className={cn('h-5 w-5 md:h-6 md:w-6', card.iconColor)} />
-                  </div>
+              <div
+                className={cn(
+                  'glass-card glass-card-interactive group p-5 h-full flex flex-col justify-between gap-4',
+                  glowClass
+                )}
+              >
+                <div className="flex items-start gap-4">
+                  <Emblem3D
+                    icon={card.icon}
+                    variant={card.emblemVariant}
+                    size="md"
+                    className="group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-md"
+                  />
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold mb-1 text-base md:text-lg">{card.label}</h3>
-                    <p className="text-sm text-muted-foreground">{card.description}</p>
+                    <h3 className="font-bold text-base md:text-lg text-contrast-heading group-hover:text-primary transition-colors">
+                      {card.label}
+                    </h3>
+                    <p className="text-sm text-contrast-subtext mt-1 leading-relaxed">
+                      {card.description}
+                    </p>
                   </div>
+                </div>
+                <div className="flex items-center justify-end text-xs font-bold text-primary/80 group-hover:text-primary group-hover:translate-x-1 transition-all">
+                  Open tool →
                 </div>
               </div>
             )
@@ -485,7 +566,7 @@ export default function Dashboard() {
                   href={card.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={cardClasses}
+                  className="block h-full"
                 >
                   {cardContent}
                 </a>
@@ -493,7 +574,7 @@ export default function Dashboard() {
             }
 
             return (
-              <Link key={card.href} to={card.href} className={cardClasses}>
+              <Link key={card.href} to={card.href} className="block h-full">
                 {cardContent}
               </Link>
             )

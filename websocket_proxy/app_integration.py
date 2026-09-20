@@ -24,6 +24,8 @@ else:
 
 def _eventlet_active() -> bool:
     """True when eventlet has monkey-patched the stdlib (gunicorn worker)."""
+    if "eventlet" not in sys.modules:
+        return False
     try:
         from eventlet.patcher import is_monkey_patched
         return bool(is_monkey_patched("socket"))

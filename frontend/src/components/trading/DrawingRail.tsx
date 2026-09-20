@@ -95,7 +95,7 @@ export function DrawingRail({
   return (
     // A flush column with a divider, not a floating card: the plot starts to
     // its right, so nothing the chart draws in that corner can sit under it.
-    <div className="flex w-10 shrink-0 flex-col items-center gap-0.5 no-scrollbar overflow-y-auto border-r bg-background/40 py-1">
+    <div className="flex w-10 shrink-0 flex-col items-center gap-0.5 no-scrollbar overflow-visible border-r bg-background/40 py-1 z-30">
       {/* Cursor — disarms whatever is active */}
       <div className="group relative">
         <button

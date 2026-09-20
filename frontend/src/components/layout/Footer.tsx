@@ -28,26 +28,28 @@ export function Footer({ className }: FooterProps) {
   }, [])
 
   return (
-    <footer className={cn('mt-auto border-t bg-muted/30', className)}>
+    <footer className={cn('mt-auto border-t border-[#FF6B00]/20 bg-muted/20 backdrop-blur-sm', className)}>
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <span>Copyright 2026</span>
-            <span className="hidden md:inline">|</span>
+            <span className="hidden md:inline text-[#FF6B00]/50">|</span>
             <a
               href="https://rajeevupadhyay.com"
-              className="text-primary hover:underline font-medium"
+              className="text-[#FF6B00] dark:text-[#FF7700] hover:text-orange-400 hover:underline font-bold transition-colors drop-shadow-[0_0_6px_rgba(255,107,0,0.2)]"
               target="_blank"
               rel="noopener noreferrer"
             >
               Rajeev Upadhyay
             </a>
           </div>
-          <span className="text-center">Tradeboard - Algorithmic Trading Platform</span>
+          <span className="text-center font-semibold text-[#FF6B00] dark:text-[#FF7700] drop-shadow-[0_0_8px_rgba(255,107,0,0.25)]">
+            Tradeboard - Algorithmic Trading Platform
+          </span>
           {version && (
             <>
-              <span className="hidden md:inline">|</span>
-              <Badge variant="secondary" className="gap-1">
+              <span className="hidden md:inline text-[#FF6B00]/50">|</span>
+              <Badge variant="outline" className="gap-1 border-[#FF6B00]/40 bg-[#FF6B00]/10 text-[#FF6B00] dark:text-[#FF7700] font-semibold shadow-[0_0_10px_rgba(255,107,0,0.15)]">
                 <span className="opacity-75">v</span>
                 <span>{version}</span>
               </Badge>
@@ -55,9 +57,9 @@ export function Footer({ className }: FooterProps) {
           )}
           {activeSessionCount > 0 && (
             <>
-              <span className="hidden md:inline">|</span>
-              <Badge variant="outline" className="gap-1">
-                <Monitor className="h-3 w-3" />
+              <span className="hidden md:inline text-[#FF6B00]/50">|</span>
+              <Badge variant="outline" className="gap-1 border-[#FF6B00]/40 bg-[#FF6B00]/10 text-[#FF6B00] dark:text-[#FF7700] font-semibold shadow-[0_0_10px_rgba(255,107,0,0.15)]">
+                <Monitor className="h-3 w-3 text-[#FF6B00]" />
                 <span>
                   {activeSessionCount} {activeSessionCount === 1 ? 'session' : 'sessions'}
                 </span>
@@ -68,7 +70,7 @@ export function Footer({ className }: FooterProps) {
 
         {/* Social Links */}
         <div className="flex justify-center gap-2 mt-4">
-          <Button variant="ghost" size="icon" asChild className="h-8 w-8" title="GitHub">
+          <Button variant="ghost" size="icon" asChild className="h-8 w-8 text-muted-foreground hover:text-[#FF6B00] dark:hover:text-[#FF7700] hover:bg-[#FF6B00]/15 hover:shadow-[0_0_12px_rgba(255,107,0,0.3)] transition-all" title="GitHub">
             <a
               href="https://github.com/rockstarrajeev"
               target="_blank"
@@ -82,7 +84,7 @@ export function Footer({ className }: FooterProps) {
             variant="ghost"
             size="icon"
             asChild
-            className="h-8 w-8"
+            className="h-8 w-8 text-muted-foreground hover:text-[#FF6B00] dark:hover:text-[#FF7700] hover:bg-[#FF6B00]/15 hover:shadow-[0_0_12px_rgba(255,107,0,0.3)] transition-all"
             title="LinkedIn"
           >
             <a
@@ -94,7 +96,7 @@ export function Footer({ className }: FooterProps) {
               <Linkedin className="h-4 w-4" />
             </a>
           </Button>
-          <Button variant="ghost" size="icon" asChild className="h-8 w-8" title="Follow us on X">
+          <Button variant="ghost" size="icon" asChild className="h-8 w-8 text-muted-foreground hover:text-[#FF6B00] dark:hover:text-[#FF7700] hover:bg-[#FF6B00]/15 hover:shadow-[0_0_12px_rgba(255,107,0,0.3)] transition-all" title="Follow us on X">
             <a
               href="https://x.com/rajeevrockstar"
               target="_blank"
@@ -110,7 +112,7 @@ export function Footer({ className }: FooterProps) {
             variant="ghost"
             size="icon"
             asChild
-            className="h-8 w-8"
+            className="h-8 w-8 text-muted-foreground hover:text-[#FF6B00] dark:hover:text-[#FF7700] hover:bg-[#FF6B00]/15 hover:shadow-[0_0_12px_rgba(255,107,0,0.3)] transition-all"
             title="Subscribe to YouTube"
           >
             <a

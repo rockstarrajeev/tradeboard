@@ -1,13 +1,13 @@
-# OpenAlgo Installation Guide
+# Tradeboard Installation Guide
 
 ## Prerequisites
 
-Before installing OpenAlgo, ensure you have the following prerequisites installed:
+Before installing Tradeboard, ensure you have the following prerequisites installed:
 
 - **Visual Studio Code (VS Code)** installed on Windows.
 - **Python** version 3.12 or newer installed.
 - **Git** for cloning the repository (Download from [https://git-scm.com/downloads](https://git-scm.com/downloads)).
-- **Node.js** for CSS compilation (Download from [https://nodejs.org/](https://nodejs.org/)).
+- **Node.js** for frontend compilation (Download from [https://nodejs.org/](https://nodejs.org/)).
 
 ## Installation Steps
 
@@ -17,9 +17,9 @@ Before installing OpenAlgo, ensure you have the following prerequisites installe
    - Install the Python, Pylance, and Jupyter extensions
 
 2. **Clone the Repository**: 
-   Open the VS Code Terminal and clone the OpenAlgo repository:
+   Open the VS Code Terminal and clone the Tradeboard repository:
    ```bash
-   git clone https://github.com/marketcalls/openalgo
+   git clone https://github.com/rockstarrajeev/tradeboard
    ```
 
 3. **Install Python Dependencies**: 
@@ -36,12 +36,12 @@ Before installing OpenAlgo, ensure you have the following prerequisites installe
 
 4. **Install Node.js Dependencies**: 
    ```bash
-   cd openalgo
+   cd tradeboard/frontend
    npm install
    ```
 
 5. **Configure Environment Variables**: 
-   - Rename `.sample.env` to `.env` in the `openalgo` folder
+   - Rename `.sample.env` to `.env` in the `tradeboard` folder
    - Update the `.env` file with your specific configurations
 
 ## CSS Compilation Setup

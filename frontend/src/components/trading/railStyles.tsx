@@ -60,12 +60,16 @@ export function RailTip({
     <span
       role="tooltip"
       className={cn(
-        'pointer-events-none absolute top-1/2 z-50 -translate-y-1/2 whitespace-nowrap rounded border bg-popover px-2 py-1 text-[12px] text-popover-foreground opacity-0 shadow-md transition-opacity duration-75 group-hover:opacity-100',
+        'pointer-events-none absolute top-1/2 z-[100] -translate-y-1/2 whitespace-nowrap rounded-md border px-2.5 py-1 text-[12px] font-semibold opacity-0 shadow-2xl backdrop-blur-md transition-opacity duration-100 group-hover:opacity-100 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700 bg-white text-slate-900 border-slate-300',
         side === 'right' ? 'left-full ml-2' : 'right-full mr-2'
       )}
     >
       {text}
-      {chord && <span className="ml-2 text-muted-foreground">{chord}</span>}
+      {chord && (
+        <span className="ml-2 font-mono text-[10px] text-muted-foreground dark:text-slate-400">
+          {chord}
+        </span>
+      )}
     </span>
   )
 }

@@ -1,5 +1,6 @@
 import json
 import os
+import tempfile
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
@@ -276,16 +277,21 @@ def api_freeze_upload():
         if not file.filename.endswith(".csv"):
             return jsonify({"status": "error", "message": "Please upload a CSV file"}), 400
 
-        # Save temporarily and load
-        temp_path = "/tmp/qtyfreeze_upload.csv"
-        file.save(temp_path)
+        # Save temporarily in a secure temporary file and load
+        with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as tmp_file:
+            temp_path = tmp_file.name
+            file.save(temp_path)
 
-        exchange = request.form.get("exchange", "NFO").strip().upper()
-        result = load_freeze_qty_from_csv(temp_path, exchange)
-
-        # Clean up
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
+        try:
+            exchange = request.form.get("exchange", "NFO").strip().upper()
+            result = load_freeze_qty_from_csv(temp_path, exchange)
+        finally:
+            # Clean up securely
+            if os.path.exists(temp_path):
+                try:
+                    os.remove(temp_path)
+                except OSError:
+                    pass
 
         if result:
             count = QtyFreeze.query.filter_by(exchange=exchange).count()
@@ -1565,10 +1571,12 @@ def _check_loopback_http():
 
     last_error = "no target answered"
     for target, label in targets:
+        if not (target.startswith("http://") or target.startswith("https://")):
+            continue
         started = time.perf_counter()
         try:
             req = urllib.request.Request(target, method="HEAD")
-            with urllib.request.urlopen(req, timeout=3.0) as resp:
+            with urllib.request.urlopen(req, timeout=3.0) as resp:  # nosec B310
                 elapsed = round((time.perf_counter() - started) * 1000, 1)
                 return {
                     "name": "Loopback HTTP",

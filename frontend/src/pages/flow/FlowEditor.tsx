@@ -556,8 +556,8 @@ function FlowEditorContent() {
       <div className="flex h-screen flex-col bg-background text-foreground">
         <div className="h-12 border-b border-border flex items-center px-2 bg-card/50">
           <div className="flex items-center gap-2 px-2">
-            <img src="/images/android-chrome-192x192.png" alt="Tradeboard" className="w-6 h-6" />
-            <span className="font-semibold text-sm">openalgo</span>
+            <img src="/logo.png" alt="Tradeboard" className="w-6 h-6 object-contain" />
+            <span className="font-semibold text-sm">Tradeboard</span>
           </div>
           <div className="flex-1" />
         </div>
@@ -581,8 +581,8 @@ function FlowEditorContent() {
       <div className="flex h-screen flex-col bg-background text-foreground">
         <div className="h-12 border-b border-border flex items-center px-2 bg-card/50">
           <div className="flex items-center gap-2 px-2">
-            <img src="/images/android-chrome-192x192.png" alt="Tradeboard" className="w-6 h-6" />
-            <span className="font-semibold text-sm">openalgo</span>
+            <img src="/logo.png" alt="Tradeboard" className="w-6 h-6 object-contain" />
+            <span className="font-semibold text-sm">Tradeboard</span>
           </div>
           <div className="flex-1" />
         </div>
@@ -615,8 +615,8 @@ function FlowEditorContent() {
         {/* Top Header Bar */}
         <div className="h-12 border-b border-border flex items-center px-2 bg-card/50">
           <div className="flex items-center gap-2 px-2">
-            <img src="/images/android-chrome-192x192.png" alt="Tradeboard" className="w-6 h-6" />
-            <span className="font-semibold text-sm">openalgo</span>
+            <img src="/logo.png" alt="Tradeboard" className="w-6 h-6 object-contain" />
+            <span className="font-semibold text-sm">Tradeboard</span>
           </div>
           <div className="flex-1" />
         </div>
@@ -633,8 +633,8 @@ function FlowEditorContent() {
       <div className="h-12 border-b border-border flex items-center px-2 bg-card/50">
         {/* Left: Logo */}
         <div className="flex items-center gap-2 px-2">
-          <img src="/images/android-chrome-192x192.png" alt="Tradeboard" className="w-6 h-6" />
-          <span className="font-semibold text-sm">openalgo</span>
+          <img src="/logo.png" alt="Tradeboard" className="w-6 h-6 object-contain" />
+          <span className="font-semibold text-sm">Tradeboard</span>
         </div>
 
         {/* Center: Workflow Name */}

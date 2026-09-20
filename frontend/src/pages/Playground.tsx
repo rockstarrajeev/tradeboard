@@ -624,7 +624,7 @@ export default function Playground() {
           </Button>
           <div className="flex items-center gap-2 px-2">
             <img src="/images/android-chrome-192x192.png" alt="Tradeboard" className="w-6 h-6" />
-            <span className="font-semibold text-sm">openalgo</span>
+            <span className="font-semibold text-sm">tradeboard</span>
           </div>
         </div>
 

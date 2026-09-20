@@ -74,7 +74,7 @@ export function RightRail({ active, onSelect }: Props) {
   }, [active])
 
   return (
-    <div className="flex w-10 shrink-0 flex-col items-center gap-0.5 no-scrollbar overflow-y-auto border-l bg-background/40 py-1">
+    <div className="flex w-10 shrink-0 flex-col items-center gap-0.5 no-scrollbar overflow-visible border-l bg-background/40 py-1 z-30">
       {PANELS.map(({ id, label, icon: Icon }) => {
         const isOpen = active === id
         return (

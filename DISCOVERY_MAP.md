@@ -1,4 +1,4 @@
-# OpenAlgo Discovery Map
+# Tradeboard Discovery Map
 
 Phase 1 discovery map. This file documents behavior found in the current source tree only. It does not use secrets from `.env`.
 

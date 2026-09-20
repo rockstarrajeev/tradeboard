@@ -541,7 +541,7 @@ export default function Trading() {
                 'flex aspect-square flex-col items-center justify-center gap-1 rounded border',
                 l.id === layoutId
                   ? 'border-primary bg-primary/10 text-primary'
-                  : 'text-muted-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent'
               )}
             >
               <LayoutIcon preset={l} />

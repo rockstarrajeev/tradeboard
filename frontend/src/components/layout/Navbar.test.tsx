@@ -107,4 +107,11 @@ describe('Navbar width', () => {
     expect(inner.className).not.toContain('container')
     expect(inner.className).not.toContain('mx-auto')
   })
+
+  it('renders the Tradeboard brand logo pointing to /logo.png', () => {
+    renderNavbar('/dashboard')
+    const logos = screen.getAllByAltText('Tradeboard')
+    expect(logos.length).toBeGreaterThan(0)
+    expect(logos[0]).toHaveAttribute('src', '/logo.png')
+  })
 })

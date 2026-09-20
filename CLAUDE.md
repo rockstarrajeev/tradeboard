@@ -7,7 +7,7 @@ read them from the repo.
 
 ## Overview
 
-OpenAlgo is a production algorithmic trading platform: Flask backend, React 19
+Tradeboard is a production algorithmic trading platform: Flask backend, React 19
 frontend. It is **several products in one self-hosted instance**, all sharing a
 single broker session and WebSocket feed:
 
@@ -24,7 +24,7 @@ single broker session and WebSocket feed:
 All surfaces share the Sandbox engine (1 Crore sandbox capital, exchange-aligned
 auto square-off) and support Telegram alerts.
 
-Repository: https://github.com/marketcalls/openalgo
+Repository: https://github.com/rockstarrajeev/tradeboard
 Documentation: https://docs.algo.wesoftcorp.com
 
 ## Documentation Map
@@ -38,7 +38,7 @@ Read `docs/INDEX.md` first, then open only the specific doc you need instead of
 scanning the tree. Do **not** copy or restate docs into a second location — edit
 the source file in `docs/` and every reader sees the change.
 
-## Skills
+## Skills & AI Upgrade Instructions
 
 Detailed procedures live in `.claude/skills/` and load on demand:
 
@@ -46,13 +46,15 @@ Detailed procedures live in `.claude/skills/` and load on demand:
 - **`version-bump`** — releasing the platform, or bumping the pinned `openalgo` SDK (two unrelated version numbers)
 - **`broker-integration`** — adding or modifying a broker plugin
 - **`chart-indicator`** — building a custom indicator for the `/trading` chart. These are plain JavaScript descriptors on `openalgo-charts`, unrelated to the Python `openalgo.ta` indicators used from strategies and scanners.
+- **Upstream Upgrades**: When pulling new features or bug fixes from upstream OpenAlgo, follow [`AI_UPGRADE_INSTRUCTIONS.md`](AI_UPGRADE_INSTRUCTIONS.md) and `.agents/rules/upstream_upgrade_protocol.md`. NEVER overwrite Tradeboard branding, custom UI layouts, Delta/Crypto modules, 3D strategy builder IV logic, or production security hardenings. Run `python scripts/audit_rebranding.py` to verify integrity.
+
 
 ## Security and Deployment Model
 
 - **Single user per deployment** — no multi-user, no privilege escalation. One user, one broker session per instance.
 - **Self-hosted on the user's own server** — server access equals full control. No SaaS component.
 - All official install scripts (`install.sh`, `install-docker.sh`, `install-multi.sh`, `docker-run.sh`, `docker-run.bat`, `start.sh`) auto-generate unique `APP_KEY` and `API_KEY_PEPPER` via `secrets.token_hex(32)`.
-- **SEBI static IP mandate** (effective April 1, 2026): transactional API orders require broker-side static IP whitelisting. Delta Exchange (crypto) enforces the same. Stolen broker credentials cannot be used from an attacker's machine — the broker rejects non-registered IPs. Attacks routed *through* the OpenAlgo server (which holds the registered IP) remain viable.
+- **SEBI static IP mandate** (effective April 1, 2026): transactional API orders require broker-side static IP whitelisting. Delta Exchange (crypto) enforces the same. Stolen broker credentials cannot be used from an attacker's machine — the broker rejects non-registered IPs. Attacks routed *through* the Tradeboard server (which holds the registered IP) remain viable.
 - External platforms (TradingView, GoCharting, Chartink) send API keys in the JSON body or URL query params — they cannot set custom HTTP headers. This is an accepted architectural trade-off.
 - The stdio MCP server (`mcp/mcpserver.py`) is local-only and not remotely exposed. `blueprints/mcp_http.py` and `blueprints/mcp_oauth.py` are the remote-facing MCP surfaces.
 - Indian broker tokens expire daily at ~3:00 AM IST. Session management is aligned to that schedule.
@@ -90,7 +92,7 @@ and the cache-invalidation publisher (`database/cache_invalidation.py`).
 
 ### Multi-session login must not tear down the shared broker feed
 
-OpenAlgo is single-user, but the same user may be logged in from **multiple
+Tradeboard is single-user, but the same user may be logged in from **multiple
 devices at once** (`active_sessions`, cap `MAX_SESSIONS_PER_USER = 5`). All of
 them share **one** server-side broker feed — a single pool keyed
 `{broker}_{user_id}` in `websocket_proxy/broker_factory.py:_POOLED_ADAPTERS`,

@@ -159,7 +159,7 @@ function cellBg(pnl: number | undefined): string {
 /** Annual heatmap cell — inline style approach for 7 intensity levels */
 function heatmapStyle(pnl: number | undefined): React.CSSProperties {
   if (pnl === undefined || pnl === 0) {
-    return { background: 'hsl(var(--muted))' }
+    return { background: 'var(--color-muted)' }
   }
   const abs = Math.abs(pnl)
   const isProfit = pnl > 0

@@ -1,93 +1,157 @@
 import { ArrowRight, BarChart3, Layers, Lightbulb, LineChart } from 'lucide-react'
 import { Link } from 'react-router'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Emblem3D, type EmblemVariant } from '@/components/ui/Emblem3D'
+import { cn } from '@/lib/utils'
+
+interface PlatformConfig {
+  title: string
+  description: string
+  detail: string
+  icon: typeof BarChart3
+  href: string
+  emblemVariant: EmblemVariant
+  badge: string
+}
 
 export default function Platforms() {
-  const platforms = [
+  const platforms: PlatformConfig[] = [
     {
       title: 'TradingView',
-      description: 'Advanced charting with Pine Script alerts and webhook integration',
+      description: 'Advanced charting with Pine Script alerts and instant webhook order execution',
+      detail: 'Webhook & Pine Alerts',
       icon: BarChart3,
       href: '/tradingview',
-      color: 'bg-blue-500',
+      emblemVariant: 'blue',
+      badge: 'TradingView Alerts',
     },
     {
       title: 'GoCharting',
-      description: 'Professional HTML5 charting optimized for Indian markets',
+      description: 'Professional HTML5 charting, order flow, and foot-print bars for Indian markets',
+      detail: 'HTML5 Webhook Engine',
       icon: LineChart,
       href: '/gocharting',
-      color: 'bg-cyan-500',
+      emblemVariant: 'cyan',
+      badge: 'Order Flow & DOM',
     },
     {
       title: 'Chartink',
-      description: 'Custom stock screeners with technical scan automation',
+      description: 'Custom multi-timeframe stock screeners with technical scan automation triggers',
+      detail: 'Scanner Automation',
       icon: Lightbulb,
       href: '/chartink',
-      color: 'bg-orange-500',
+      emblemVariant: 'orange',
+      badge: 'Scan Webhooks',
     },
   ]
 
   return (
-    <div className="py-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Layers className="h-6 w-6" />
-          Trading Platforms
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Connect your favorite charting platforms with Tradeboard for automated trading
-        </p>
+    <div className="space-y-8 md:space-y-10">
+      {/* Header matching Dashboard */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-contrast-heading flex items-center gap-3">
+            <Layers className="h-7 w-7 md:h-8 md:w-8 text-primary shrink-0" />
+            Trading Platforms
+          </h1>
+          <p className="text-contrast-subtext mt-1 text-sm md:text-base font-medium">
+            Connect your favorite charting and screening platforms with Tradeboard for automated trading
+          </p>
+        </div>
+
+        {/* Status Indicator */}
+        <div className="flex items-center gap-3 glass-card px-4 py-2.5 w-fit lg:ml-auto lg:self-center shadow-xs">
+          <span className="text-xs md:text-sm font-semibold text-contrast-label whitespace-nowrap">
+            Gateway Status:
+          </span>
+          <div className="flex items-center gap-2">
+            <Emblem3D variant="violet" size="sm" pulse className="h-6 w-6 min-w-[24px]">
+              <div className="h-2 w-2 rounded-full bg-white shadow-xs" />
+            </Emblem3D>
+            <span className="text-xs md:text-sm font-bold text-violet-600 dark:text-violet-400">
+              Webhooks Active
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Platform Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {platforms.map((platform) => (
-          <Link key={platform.href} to={platform.href}>
-            <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer group">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div
-                    className={`w-10 h-10 rounded-lg ${platform.color} flex items-center justify-center`}
-                  >
-                    <platform.icon className="h-5 w-5 text-white" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        {platforms.map((platform) => {
+          const glowClass = `glass-glow-${platform.emblemVariant}`
+          return (
+            <Link key={platform.href} to={platform.href} className="block h-full group">
+              <div
+                className={cn(
+                  'glass-card glass-card-interactive group p-5 md:p-6 h-full flex flex-col justify-between gap-5',
+                  glowClass
+                )}
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Emblem3D
+                      icon={platform.icon}
+                      variant={platform.emblemVariant}
+                      size="md"
+                      floating
+                      className="group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-md"
+                    />
+                    <Badge variant="glass" className="text-[11px] font-bold">
+                      {platform.badge}
+                    </Badge>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg md:text-xl text-contrast-heading group-hover:text-primary transition-colors">
+                      {platform.title}
+                    </h3>
+                    <p className="text-sm text-contrast-subtext mt-1.5 leading-relaxed">
+                      {platform.description}
+                    </p>
                   </div>
                 </div>
-                <CardTitle className="flex items-center gap-2 group-hover:text-primary transition-colors">
-                  {platform.title}
-                  <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </CardTitle>
-                <CardDescription>{platform.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm text-muted-foreground">
-                  Click to configure {platform.title}
+
+                <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                  <span className="text-xs font-medium text-contrast-label">
+                    {platform.detail}
+                  </span>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-primary/90 group-hover:text-primary group-hover:translate-x-1 transition-all">
+                    Configure {platform.title}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+              </div>
+            </Link>
+          )
+        })}
       </div>
 
-      {/* Information Section */}
-      <Alert>
-        <Lightbulb className="h-4 w-4" />
-        <AlertTitle className="font-bold">Getting Started</AlertTitle>
-        <AlertDescription className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <span>
-            Each platform requires webhook configuration. Click on a platform to generate your
-            webhook URLs and JSON payloads. Make sure you have set up your API key before
-            configuring webhooks.
-          </span>
-          <Button asChild variant="outline" size="sm" className="gap-1 flex-shrink-0">
-            <a href="https://docs.algo.wesoftcorp.com" target="_blank" rel="noopener noreferrer">
-              View Documentation
-            </a>
-          </Button>
-        </AlertDescription>
-      </Alert>
+      {/* Getting Started Glass Panel */}
+      <div className="glass-card glass-glow-amber p-6 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 border border-amber-500/20 bg-gradient-to-r from-amber-500/5 via-transparent to-amber-500/5">
+        <div className="flex items-start gap-4">
+          <Emblem3D variant="amber" icon={Lightbulb} size="md" floating />
+          <div>
+            <h3 className="text-base font-bold text-contrast-heading">
+              Webhook Architecture & Getting Started
+            </h3>
+            <p className="text-sm text-contrast-subtext mt-1 max-w-2xl leading-relaxed">
+              Each charting platform dispatches webhook alerts directly into Tradeboard's execution gateway.
+              Click any platform above to generate unique webhook endpoints, JSON payloads, and automated order rules.
+            </p>
+          </div>
+        </div>
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="gap-1.5 shrink-0 font-bold border-amber-500/30 hover:border-amber-500 hover:bg-amber-500/10 text-amber-600 dark:text-amber-400"
+        >
+          <a href="https://docs.algo.wesoftcorp.com" target="_blank" rel="noopener noreferrer">
+            View Documentation
+            <ArrowRight className="h-3.5 w-3.5" />
+          </a>
+        </Button>
+      </div>
     </div>
   )
 }

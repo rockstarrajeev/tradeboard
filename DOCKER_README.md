@@ -1,18 +1,18 @@
-# OpenAlgo - Algorithmic Trading Platform
+# Tradeboard - Algorithmic Trading Platform
 
-OpenAlgo is a production-ready algorithmic trading platform providing a unified API layer across 36 broker plugins: 35 securities integrations and Delta Exchange for crypto derivatives. Seamlessly integrate with TradingView, Amibroker, Excel, Python, and AI agents.
+Tradeboard is a production-ready algorithmic trading platform providing a unified API layer across 36 broker plugins: 35 securities integrations and Delta Exchange for crypto derivatives. Seamlessly integrate with TradingView, Amibroker, Excel, Python, and AI agents.
 
 ## Quick Start
 
 ### Windows
 ```powershell
-curl.exe -O https://raw.githubusercontent.com/marketcalls/openalgo/main/install/docker-run.bat
+curl.exe -O https://raw.githubusercontent.com/rockstarrajeev/tradeboard/main/install/docker-run.bat
 docker-run.bat
 ```
 
 ### macOS / Linux
 ```bash
-curl -O https://raw.githubusercontent.com/marketcalls/openalgo/main/install/docker-run.sh
+curl -O https://raw.githubusercontent.com/rockstarrajeev/tradeboard/main/install/docker-run.sh
 chmod +x docker-run.sh
 ./docker-run.sh
 ```
@@ -33,8 +33,8 @@ Zerodha, Fyers, Angel One, Dhan, Delta Exchange, Upstox, Shoonya, Flattrade, Kot
 
 ```bash
 # Windows
-docker-run.bat start      # Start OpenAlgo
-docker-run.bat stop       # Stop OpenAlgo
+docker-run.bat start      # Start Tradeboard
+docker-run.bat stop       # Stop Tradeboard
 docker-run.bat restart    # Update & restart
 docker-run.bat logs       # View logs
 docker-run.bat status     # Check status
@@ -58,8 +58,7 @@ All data is stored locally in the script directory:
 ## Documentation
 
 - **Full Docs**: https://docs.algo.wesoftcorp.com
-- **Installation Guide**: https://github.com/marketcalls/openalgo/blob/main/install/Docker-install-readme.md
-- **GitHub**: https://github.com/marketcalls/openalgo
+- **GitHub**: https://github.com/rockstarrajeev/tradeboard
 
 ## Community
 

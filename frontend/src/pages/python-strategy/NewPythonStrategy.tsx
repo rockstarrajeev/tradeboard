@@ -14,7 +14,7 @@ import { showToast } from '@/utils/toast'
 
 const EXAMPLE_STRATEGY = `"""
 Example Tradeboard Strategy
-This is a minimal example showing how to use the OpenAlgo Python SDK.
+This is a minimal example showing how to use the Tradeboard Python SDK.
 """
 
 import os

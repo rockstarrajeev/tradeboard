@@ -921,7 +921,7 @@ export function ChartPane({
                   </div>
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs hover:bg-accent"
+                    className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs hover:bg-accent hover:text-accent-foreground transition-colors"
                     onClick={() => {
                       setSnapOpen(false)
                       void terminalRef.current?.screenshot()
@@ -932,7 +932,7 @@ export function ChartPane({
                   </button>
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs hover:bg-accent"
+                    className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs hover:bg-accent hover:text-accent-foreground transition-colors"
                     onClick={() => {
                       setSnapOpen(false)
                       void terminalRef.current?.copyScreenshot()
@@ -1021,7 +1021,7 @@ export function ChartPane({
             </span>
             <button
               type="button"
-              className="rounded border border-border px-2 py-1 hover:bg-accent"
+              className="rounded border border-border px-2 py-1 hover:bg-accent hover:text-accent-foreground transition-colors"
               onClick={() => terminalRef.current?.cancelReplayPick()}
             >
               Cancel
@@ -1039,7 +1039,7 @@ export function ChartPane({
               <div className="flex justify-end gap-2">
                 <button
                   type="button"
-                  className="rounded border border-border px-3 py-1.5 text-xs hover:bg-accent"
+                  className="rounded border border-border px-3 py-1.5 text-xs hover:bg-accent hover:text-accent-foreground transition-colors"
                   onClick={() => setConfirmLeave(false)}
                 >
                   Stay
@@ -1063,7 +1063,7 @@ export function ChartPane({
           <div className="pointer-events-auto absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-lg border border-border bg-popover/95 px-2 py-1.5 shadow-lg backdrop-blur">
             <button
               type="button"
-              className="rounded px-2 py-1 text-xs hover:bg-accent"
+              className="rounded px-2 py-1 text-xs hover:bg-accent hover:text-accent-foreground transition-colors"
               title={`Step back ${replay.subSteps > 1 ? 'one step of the forming bar' : 'one bar'}`}
               onClick={() => terminalRef.current?.replayStepBack()}
             >
@@ -1083,7 +1083,7 @@ export function ChartPane({
             </button>
             <button
               type="button"
-              className="rounded px-2 py-1 text-xs hover:bg-accent"
+              className="rounded px-2 py-1 text-xs hover:bg-accent hover:text-accent-foreground transition-colors"
               title={`Step forward ${replay.subSteps > 1 ? 'one step of the forming bar' : 'one bar'}`}
               onClick={() => terminalRef.current?.replayStep()}
             >

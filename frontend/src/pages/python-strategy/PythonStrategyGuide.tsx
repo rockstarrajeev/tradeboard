@@ -15,14 +15,14 @@ import { showToast } from '@/utils/toast'
 const sampleStrategy = `"""
 ===============================================================================
                 EMA CROSSOVER WITH FIXED DATETIME HANDLING
-                            OpenAlgo Trading Bot
+                            Tradeboard Trading Bot
 ===============================================================================
 
 Run standalone:
     export OPENALGO_API_KEY="your-api-key"
     python emacrossover_strategy_python.py
 
-Run via OpenAlgo's /python strategy runner:
+Run via Tradeboard's /python strategy runner:
     OPENALGO_API_KEY            : injected per-strategy (PR #1247).
     OPENALGO_STRATEGY_EXCHANGE  : set from the strategy's \`exchange\` config
                                   (NSE / BSE / NFO / BFO / MCX / BCD / CDS / CRYPTO).
@@ -47,7 +47,7 @@ from openalgo import api
 # ===============================================================================
 
 # API Configuration — read from environment with sensible fallbacks.
-# When launched via OpenAlgo's /python runner, these come from the platform:
+# When launched via Tradeboard's /python runner, these come from the platform:
 #   OPENALGO_API_KEY : injected per-strategy (decrypted from DB)
 #   HOST_SERVER      : inherited from Tradeboard's .env
 #   WEBSOCKET_URL    : inherited from Tradeboard's .env
@@ -324,8 +324,8 @@ export default function PythonStrategyGuide() {
                 1
               </Badge>
               <div>
-                <p className="font-medium">Install OpenAlgo SDK</p>
-                <div className="mt-1 flex items-center gap-2">
+                <p className="font-medium">Install Python SDK</p>
+                <div className="flex items-center gap-2 mt-1">
                   <code className="bg-muted px-2 py-1 rounded text-sm">pip install openalgo</code>
                   <Button
                     variant="ghost"
@@ -1034,7 +1034,7 @@ export default function PythonStrategyGuide() {
               <AccordionContent className="text-muted-foreground space-y-3">
                 <p>
                   On Linux/macOS, per-strategy resource limits prevent buggy scripts from crashing
-                  OpenAlgo. On Windows, these are not enforced at the OS level.
+                  Tradeboard. On Windows, these are not enforced at the OS level.
                 </p>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm border-collapse">
@@ -1103,7 +1103,7 @@ export default function PythonStrategyGuide() {
             <AccordionItem value="restart">
               <AccordionTrigger>What happens if I restart Tradeboard?</AccordionTrigger>
               <AccordionContent className="text-muted-foreground space-y-3">
-                <p>OpenAlgo handles restarts gracefully:</p>
+                <p>Tradeboard handles restarts gracefully:</p>
                 <ul className="list-disc list-inside space-y-1 ml-2">
                   <li>Strategy configurations are saved to disk and persist</li>
                   <li>Schedules are automatically re-created for all strategies</li>
@@ -1206,7 +1206,7 @@ export default function PythonStrategyGuide() {
                         <code>dependencies</code> section
                       </li>
                       <li>
-                        Run <code>uv sync</code> in the openalgo directory
+                        Run <code>uv sync</code> in the tradeboard directory
                       </li>
                       <li>Restart Tradeboard</li>
                     </ol>
@@ -1309,7 +1309,7 @@ export default function PythonStrategyGuide() {
       {/* SDK Quick Reference */}
       <Card>
         <CardHeader>
-          <CardTitle>OpenAlgo SDK Quick Reference</CardTitle>
+          <CardTitle>Tradeboard Python SDK Quick Reference</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 text-sm">

@@ -21,12 +21,18 @@ export function Layout() {
 
   return (
     <SocketProvider>
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="relative min-h-screen bg-background flex flex-col overflow-x-hidden">
+        {/* Atmospheric Ambient Mesh Glow Orbs for Glassmorphism */}
+        <div className="ambient-mesh-container" aria-hidden="true">
+          <div className="ambient-orb ambient-orb-1" />
+          <div className="ambient-orb ambient-orb-2" />
+          <div className="ambient-orb ambient-orb-3" />
+        </div>
         <Navbar />
-        <main className="container mx-auto px-4 py-6 pb-24 md:pb-6 flex-1">
+        <main className="relative z-10 container mx-auto px-4 py-6 pb-24 md:pb-6 flex-1">
           <Outlet />
         </main>
-        <Footer className="hidden md:block" />
+        <Footer className="relative z-10 hidden md:block" />
         <MobileBottomNav />
       </div>
     </SocketProvider>
@@ -35,8 +41,15 @@ export function Layout() {
 
 export function PublicLayout() {
   return (
-    <div className="min-h-screen bg-background">
-      <Outlet />
+    <div className="relative min-h-screen bg-background overflow-x-hidden">
+      <div className="ambient-mesh-container" aria-hidden="true">
+        <div className="ambient-orb ambient-orb-1" />
+        <div className="ambient-orb ambient-orb-2" />
+        <div className="ambient-orb ambient-orb-3" />
+      </div>
+      <div className="relative z-10">
+        <Outlet />
+      </div>
     </div>
   )
 }

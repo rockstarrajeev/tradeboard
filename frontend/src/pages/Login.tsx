@@ -4,9 +4,9 @@ import {
   EyeOff,
   Github,
   Info,
+  Linkedin,
   Loader2,
   LogIn,
-  MessageCircle,
   ShieldCheck,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -222,7 +222,11 @@ export default function Login() {
           <Card className="w-full max-w-md order-1 lg:order-2 shadow-xl">
             <CardHeader className="text-center">
               <div className="flex justify-center mb-4">
-                <img src="/logo.png" alt="Tradeboard" className="h-20 w-20" />
+                <img
+                  src="/logo.png"
+                  alt="Tradeboard"
+                  className="h-20 w-20 object-contain drop-shadow-[0_0_12px_rgba(0,180,255,0.4)]"
+                />
               </div>
               <CardTitle className="text-2xl">Welcome Back</CardTitle>
               <CardDescription>Sign in to your Tradeboard account</CardDescription>
@@ -388,7 +392,7 @@ export default function Login() {
             <div className="flex justify-center lg:justify-start gap-4">
               <Button variant="outline" asChild>
                 <a
-                  href="https://github.com/rockstarrajeev/tradeboard"
+                  href="https://github.com/rockstarrajeev"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"
@@ -399,13 +403,13 @@ export default function Login() {
               </Button>
               <Button variant="outline" asChild>
                 <a
-                  href="https://rajeevupadhyay.com/discord"
+                  href="https://www.linkedin.com/in/rajeevrockstar/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"
                 >
-                  <MessageCircle className="h-5 w-5" />
-                  Discord
+                  <Linkedin className="h-5 w-5" />
+                  LinkedIn
                 </a>
               </Button>
             </div>

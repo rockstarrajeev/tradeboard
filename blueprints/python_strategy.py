@@ -459,7 +459,7 @@ def start_strategy_process(strategy_id):
                     f"Strategy file {file_path} is not executable. Setting execute permission."
                 )
                 try:
-                    os.chmod(file_path, 0o755)
+                    os.chmod(file_path, 0o700)
                 except Exception as e:
                     logger.warning(f"Could not set execute permission: {e}")
                     # Continue anyway, Python can still run it
@@ -479,8 +479,8 @@ def start_strategy_process(strategy_id):
             log_file.parent.mkdir(parents=True, exist_ok=True)
             if not IS_WINDOWS:
                 try:
-                    # Ensure log directory is writable
-                    os.chmod(log_file.parent, 0o755)
+                    # Ensure log directory is writable (owner-restricted)
+                    os.chmod(log_file.parent, 0o700)
                 except Exception:
                     pass
 
@@ -1816,10 +1816,10 @@ def new_strategy():
             STRATEGIES_DIR.mkdir(parents=True, exist_ok=True)
             file.save(str(file_path))
 
-            # Make file executable on Unix-like systems
+            # Make file executable for owner on Unix-like systems
             if not IS_WINDOWS:
                 try:
-                    os.chmod(file_path, 0o755)
+                    os.chmod(file_path, 0o700)
                 except Exception:
                     pass
 
@@ -2934,21 +2934,52 @@ def save_strategy(strategy_id):
         return jsonify({"status": "error", "message": f"Failed to save: {str(e)}"}), 500
 
 
+def _is_stream_open(stream) -> bool:
+    """Check if stream or wrapped colorama stream is still open and writable."""
+    try:
+        if stream is None or getattr(stream, "closed", False):
+            return False
+        wrapped = getattr(stream, "wrapped", None)
+        if wrapped is not None and getattr(wrapped, "closed", False):
+            return False
+        return True
+    except Exception:
+        return False
+
+
+def _safe_exit_log(msg: str) -> None:
+    """Log messages during shutdown only if console streams are open."""
+    try:
+        for stream in (sys.stdout, sys.stderr):
+            if not _is_stream_open(stream):
+                return
+        for h in logging.getLogger().handlers:
+            stream = getattr(h, "stream", None)
+            if stream is not None and not _is_stream_open(stream):
+                return
+        logger.info(msg)
+    except Exception:
+        pass
+
+
 # Cleanup on shutdown
 def cleanup_on_exit():
     """Clean up all running processes on application exit"""
-    logger.info("Cleaning up running strategies...")
+    _safe_exit_log("Cleaning up running strategies...")
     # Snapshot under the lock, stop outside it: stop_strategy_process takes the
     # lock itself and waits for each process, so holding it across the loop
     # would serialise shutdown behind every termination in turn.
-    with PROCESS_LOCK:
-        strategy_ids = list(RUNNING_STRATEGIES.keys())
-    for strategy_id in strategy_ids:
-        try:
-            stop_strategy_process(strategy_id)
-        except Exception:
-            pass
-    logger.info("Cleanup complete")
+    try:
+        with PROCESS_LOCK:
+            strategy_ids = list(RUNNING_STRATEGIES.keys())
+        for strategy_id in strategy_ids:
+            try:
+                stop_strategy_process(strategy_id)
+            except Exception:
+                pass
+        _safe_exit_log("Cleanup complete")
+    except Exception:
+        pass
 
 
 # Register cleanup handler

@@ -21,6 +21,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Emblem3D } from '@/components/ui/Emblem3D'
 import {
   Dialog,
   DialogContent,
@@ -285,61 +286,106 @@ export default function PythonStrategyIndex() {
 
       {/* Stats Bar */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total</p>
-                <p className="text-2xl font-bold">{stats.total}</p>
-              </div>
-              <FileCode className="h-8 w-8 text-muted-foreground" />
+        <div className="glass-card glass-card-interactive glass-glow-indigo p-5 flex flex-col justify-between gap-4 group">
+          <div className="flex items-center justify-between">
+            <span className="text-xs md:text-sm font-semibold text-contrast-label uppercase tracking-wider">
+              Total Strategies
+            </span>
+            <Emblem3D
+              variant="indigo"
+              icon={FileCode}
+              size="md"
+              floating
+              className="group-hover:scale-110 transition-transform duration-300"
+            />
+          </div>
+          <div>
+            <div className="text-2xl lg:text-3xl font-extrabold text-contrast-heading tracking-tight">
+              {stats.total}
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Running</p>
-                <p className="text-2xl font-bold text-green-500">{stats.running}</p>
-              </div>
-              <Play className="h-8 w-8 text-green-500" />
+            <Badge variant="secondary" className="mt-3 text-[11px]">
+              Active Scripts
+            </Badge>
+          </div>
+        </div>
+
+        <div className="glass-card glass-card-interactive glass-glow-emerald p-5 flex flex-col justify-between gap-4 group">
+          <div className="flex items-center justify-between">
+            <span className="text-xs md:text-sm font-semibold text-contrast-label uppercase tracking-wider">
+              Running
+            </span>
+            <Emblem3D
+              variant="emerald"
+              icon={Play}
+              size="md"
+              floating
+              pulse={stats.running > 0}
+              className="group-hover:scale-110 transition-transform duration-300"
+            />
+          </div>
+          <div>
+            <div className="text-2xl lg:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
+              {stats.running}
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Scheduled</p>
-                <p className="text-2xl font-bold text-blue-500">{stats.scheduled}</p>
-              </div>
-              <Calendar className="h-8 w-8 text-blue-500" />
+            <Badge variant="profit" className="mt-3 text-[11px]">
+              Live Executing
+            </Badge>
+          </div>
+        </div>
+
+        <div className="glass-card glass-card-interactive glass-glow-blue p-5 flex flex-col justify-between gap-4 group">
+          <div className="flex items-center justify-between">
+            <span className="text-xs md:text-sm font-semibold text-contrast-label uppercase tracking-wider">
+              Scheduled
+            </span>
+            <Emblem3D
+              variant="blue"
+              icon={Calendar}
+              size="md"
+              floating
+              className="group-hover:scale-110 transition-transform duration-300"
+            />
+          </div>
+          <div>
+            <div className="text-2xl lg:text-3xl font-extrabold text-blue-600 dark:text-blue-400 tracking-tight">
+              {stats.scheduled}
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Master Contract</p>
-                <Badge variant={masterStatus?.ready ? 'default' : 'secondary'}>
-                  {masterStatus?.ready ? 'Ready' : 'Not Ready'}
-                </Badge>
-              </div>
-              {!masterStatus?.ready && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleCheckContracts}
-                  disabled={actionLoading === 'master'}
-                >
-                  Check
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+            <Badge variant="glass" className="mt-3 text-[11px] text-blue-600 dark:text-blue-400 border-blue-500/30">
+              Timer Triggers
+            </Badge>
+          </div>
+        </div>
+
+        <div className="glass-card glass-card-interactive glass-glow-amber p-5 flex flex-col justify-between gap-4 group">
+          <div className="flex items-center justify-between">
+            <span className="text-xs md:text-sm font-semibold text-contrast-label uppercase tracking-wider">
+              Master Contract
+            </span>
+            <Emblem3D
+              variant={masterStatus?.ready ? 'emerald' : 'amber'}
+              icon={Clock}
+              size="md"
+              floating
+              className="group-hover:scale-110 transition-transform duration-300"
+            />
+          </div>
+          <div className="flex items-center justify-between mt-2">
+            <Badge variant={masterStatus?.ready ? 'profit' : 'secondary'} className="text-[11px]">
+              {masterStatus?.ready ? 'Ready & Loaded' : 'Not Ready'}
+            </Badge>
+            {!masterStatus?.ready && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs h-7"
+                onClick={handleCheckContracts}
+                disabled={actionLoading === 'master'}
+              >
+                Check
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Current Time */}

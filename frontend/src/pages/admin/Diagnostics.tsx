@@ -318,7 +318,7 @@ export default function Diagnostics() {
         <Section icon={Settings} title="Build">
           <div>
             <KV label="Tradeboard" value={info?.build.openalgo_version} />
-            <KV label="OpenAlgo SDK" value={info?.build.openalgo_sdk_version} />
+            <KV label="Tradeboard SDK" value={info?.build.openalgo_sdk_version} />
             <KV label="Git branch" value={info?.build.git_branch} />
             <KV label="Git commit" value={info?.build.git_commit} />
             <KV label="Frontend build" value={info?.build.frontend_build_time} />
