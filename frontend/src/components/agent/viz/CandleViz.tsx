@@ -262,11 +262,11 @@ export function CandleViz({ spec, title, source, variant = 'figure', className }
       // Every one of these is dynamic so a chat with no chart never loads the
       // charting engine. `chartTheme` and `chartTypes` both import the library
       // themselves, so importing either statically would pull it in anyway.
-      const [core, theme, types, transform] = await Promise.all([
+      // `chartTypes` also registers the transforms its chart types name.
+      const [core, theme, types] = await Promise.all([
         import('openalgo-charts'),
         import('@/lib/trading/chartTheme'),
         import('@/lib/trading/chartTypes'),
-        import('openalgo-charts/transform'),
       ])
       if (disposed) return
 
@@ -284,65 +284,68 @@ export function CandleViz({ spec, title, source, variant = 'figure', className }
         shortcuts: false,
         timeNavigator: false,
         ...(timezone ? { timezone } : {}),
+        // The brand mark, through the engine's own branding rather than as a
+        // primitive added on top of it. The engine draws one by default, so a
+        // host that adds its own gets two marks stacked in the corner. This
+        // configures the one that is already there.
+        //
+        // The glyph, not the app icon: that asset is a full-bleed plate whose
+        // mark fills under half of it, so scaling it up scales the padding too.
+        // Sized proportionally to the card, because a mark sized for a full
+        // screen would sit on the candles rather than under them.
+        branding: {
+          src: '/images/openalgo-glyph.svg',
+          position: 'bottom-left',
+          height: inline ? 15 : 22,
+          padding: 3,
+          margin: 8,
+          opacity: 0.8,
+          label: 'Tradeboard Charts',
+          labelColor: mode === 'dark' || appMode === 'analyzer' ? '#e4e8f4' : '#3c4354',
+          href: 'https://docs.algo.wesoftcorp.com',
+        },
       })
       instance = created
-      // The component can unmount inside the awaits above, in which case the
-      // cleanup has already run and this instance is the one nobody would
-      // destroy.
       if (disposed) {
         created.destroy()
         instance = null
         return
       }
 
-      // The brand mark, the same primitive and the same asset /trading mounts,
-      // so a chart in the conversation is recognisably the platform's chart
-      // rather than an anonymous one. It is smaller here than on the terminal:
-      // a chat card is a fraction of the height, and a mark sized for a full
-      // screen would sit on the candles instead of under them.
-      //
-      // The library has no watermark option; the mark is a primitive the host
-      // owns and adds, which is why a chart that never adds one simply has
-      // none. Pane 0, because volume is an overlay there and pane 1 only
-      // exists once an indicator asks for one.
-      const watermark = new core.LogoWatermark({
-        // The glyph, not the app icon: that asset is a full-bleed plate whose
-        // mark fills under half of it, so scaling it up scales the padding too.
-        src: '/images/openalgo-glyph.svg',
-        position: 'bottom-left',
-        // Proportional to the chart it sits in: a mark sized for the standalone
-        // block would occupy a sixth of an inline one.
-        height: inline ? 15 : 22,
-        padding: 3,
-        margin: 8,
-        opacity: 0.8,
-        // Mark alone at rest; the wording unrolls to its right on hover, so it
-        // names itself when looked at without occupying the corner always.
-        label: 'Tradeboard Charts',
-        labelColor: mode === 'dark' || appMode === 'analyzer' ? '#e4e8f4' : '#3c4354',
-        href: 'https://rajeevupadhyay.com',
-      })
-      created.addPrimitive(watermark, 0)
-
       const definition = types.CHART_TYPES[chartSpec.chartType] ?? types.CHART_TYPES.candlestick
       // Only Heikin Ashi is reachable from the backend's list and it ignores
       // the box size, but the movement-driven types share one signature, so
-      // one is computed rather than the map being read a second way.
-      const bars = definition.transform
-        ? transform.runTransform(definition.transform(boxSize(chartSpec.bars)), chartSpec.bars)
-        : chartSpec.bars
+      // one is computed rather than the map being read a second way. The chart
+      // applies it to the bars it is fed, as `/trading` does.
+      const transform = definition.transform?.(boxSize(chartSpec.bars))
 
       const style: SeriesStyle = definition.baseline
-        ? { baseValue: bars.reduce((sum, bar) => sum + bar.close, 0) / bars.length }
+        ? {
+            baseValue:
+              chartSpec.bars.reduce((sum: number, bar: Bar) => sum + bar.close, 0) /
+              chartSpec.bars.length,
+          }
         : {}
-      const price = created.addSeries(definition.series as SeriesType, { style })
-      price.setData(bars)
+      const price = created.addSeries(definition.series as SeriesType, {
+        style,
+        ...(transform ? { transform } : {}),
+      })
+      price.setData(chartSpec.bars)
+      // What the chart draws: the transform's elements, or the bars as given.
+      // Under a transform the volume is the raw bars' summed onto the element
+      // they formed, as on `/trading`: a brick carries no volume of its own
+      // and a Kagi line keeps its thickness there.
+      const elements = created.primaryBars()
+      const bars = transform
+        ? types
+            .volumeUnderElements(elements, chartSpec.bars)
+            .map((under: { close: number }, i: number) => ({ ...elements[i], volume: under.close }))
+        : elements
 
       // Volume rides an overlay scale inside the price pane, as it does on
       // `/trading`: it autoscales on its own and draws no second axis, so the
-      // card keeps one price ladder. A transform carries its own volume, so a
-      // Heikin Ashi chart still gets it and a type that drops it draws none.
-      if (bars.some((bar) => typeof bar.volume === 'number' && bar.volume > 0)) {
+      // card keeps one price ladder. Bars with no traded volume draw none.
+      if (bars.some((bar: Bar) => typeof bar.volume === 'number' && bar.volume > 0)) {
         const volume = created.addSeries('histogram', {
           paneIndex: 0,
           priceScaleId: '',
@@ -350,7 +353,7 @@ export function CandleViz({ spec, title, source, variant = 'figure', className }
           priceFormat: { type: 'volume' },
         })
         volume.setData(
-          bars.map((bar) => ({
+          bars.map((bar: Bar) => ({
             time: bar.time,
             open: 0,
             high: bar.volume ?? 0,

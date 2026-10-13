@@ -102,9 +102,10 @@ answer is read they will have moved.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from services import depth_service, quotes_service
@@ -119,18 +120,21 @@ from services.agent.tools.base import (
 from services.agent.tools.instrument import depth_levels, normalise_quote, quote_move
 from services.agent.tools.market import IST, is_listed, symbol_pairs
 from services.agent.tools.option_viz import (
+    DEFAULT_EXPIRY_CHOICE,
+    EXPIRY_CHOICES,
     MAX_LEGS,
+    choose_expiry,
     leg_entries,
     leg_label,
-    leg_lots,
-    leg_side,
+    leg_side_and_lots,
     leg_symbol,
     listed_expiries,
+    master_lot_size,
     resolve_contract,
     resolve_underlying_exchange,
     signed_multiplier,
 )
-from services.agent.tools.options import normalise_expiry, normalise_int, normalise_symbol
+from services.agent.tools.options import normalise_int, normalise_symbol
 from services.agent.tools.symbols import DERIVATIVE_EXCHANGES, INDEX_EXCHANGES
 from services.agent.tools.viz import tool_answer
 from services.agent.viz_sink import emit, no_sink_message, sink_of
@@ -161,6 +165,9 @@ LIVE_COMBO_VIZ = "live_combo"
 #: the way it spells them. Taking its vocabulary rather than inventing one is
 #: what stops a card asking for a mode the manager silently ignores.
 MODES: tuple[str, ...] = ("LTP", "Quote", "Depth")
+
+#: The protocol's numeric mode codes (docs/prompt/websockets-format.md).
+_MODE_NUMBERS: dict[str, str] = {"1": "LTP", "2": "Quote", "3": "Depth"}
 
 #: What the model gets when it does not name a mode. Quote carries the day's
 #: open, high, low, volume and the touch as well as the last price, which is
@@ -320,17 +327,12 @@ STRUCTURES: Mapping[str, Structure] = {
 #: What ``structure`` becomes when the operator named the contracts themselves.
 CUSTOM_STRUCTURE = "custom"
 
-#: How the model may spell "the nearest listed expiry", and the rest of the
-#: expiry vocabulary. Every one of these resolves against the **listed**
-#: expiries, so the tool always names a real date back.
-_EXPIRY_CHOICES: tuple[str, ...] = (
-    "current_week",
-    "next_week",
-    "current_month",
-    "next_month",
-)
-
-_DEFAULT_EXPIRY_CHOICE = "current_week"
+#: The expiry vocabulary, which lives in :mod:`services.agent.tools.option_viz`
+#: with the rest of the shared option language. It was written twice once, and
+#: the copies disagreed: the live card understood "current month" while the
+#: premium chart refused it.
+_EXPIRY_CHOICES = EXPIRY_CHOICES
+_DEFAULT_EXPIRY_CHOICE = DEFAULT_EXPIRY_CHOICE
 
 
 # ---------------------------------------------------------------------------
@@ -341,6 +343,10 @@ _DEFAULT_EXPIRY_CHOICE = "current_week"
 def normalise_mode(value: Any) -> str:
     """Settle which subscription mode a card opens in.
 
+    The WebSocket protocol numbers the modes 1, 2 and 3 (LTP, Quote, Depth),
+    so a model that has read that format may send the number, as an int or as
+    text, and it is read the same way.
+
     Args:
         value: The model's value, or an empty value for the default.
 
@@ -350,17 +356,19 @@ def normalise_mode(value: Any) -> str:
     Raises:
         RetryAgentRun: For a word that is not one of the three.
     """
-    text = "" if value is None else str(value).strip().lower()
+    text = "" if value is None or isinstance(value, bool) else str(value).strip().lower()
     if not text:
         return DEFAULT_MODE
+    if text in _MODE_NUMBERS:
+        return _MODE_NUMBERS[text]
     for mode in MODES:
         if text == mode.lower():
             return mode
     invalid_argument(
         "mode",
         f"{text!r} is not a subscription mode",
-        f"Pass one of {', '.join(MODES)}. LTP is the last price only, Quote adds the day's "
-        "open, high, low, volume and the touch, and Depth adds the order book.",
+        f"Pass one of {', '.join(MODES)} (or 1, 2, 3). LTP is the last price only, Quote adds "
+        "the day's open, high, low, volume and the touch, and Depth adds the order book.",
     )
 
 
@@ -414,25 +422,6 @@ def strike_spacing(strikes: Sequence[Any]) -> float | None:
     return min(gaps, key=lambda gap: (-gaps[gap], gap))
 
 
-def _within_this_week(expiry: str) -> bool:
-    """Whether a ``DDMMMYY`` expiry falls inside the current calendar week.
-
-    Args:
-        expiry: The expiry, as every OpenAlgo symbol spells it.
-
-    Returns:
-        True when the date is on or before the coming Sunday. An unparseable
-        date answers False, so the card says "the nearest listed one" rather
-        than claiming a week it could not check.
-    """
-    try:
-        moment = datetime.strptime(expiry, "%d%b%y").date()
-    except ValueError:
-        return False
-    today = datetime.now(IST).date()
-    return today <= moment <= today + timedelta(days=6 - today.weekday())
-
-
 def _epoch_ms(value: Any) -> int | None:
     """Read a market-calendar timestamp, which is in epoch milliseconds.
 
@@ -472,6 +461,29 @@ def _quote_rows(response: Any) -> dict[tuple[str, str], Mapping[str, Any]]:
         if symbol and exchange:
             rows[(symbol, exchange)] = data
     return rows
+
+
+def symbols_argument(value: Any) -> Any:
+    """Turn a bare ``NSE:INFY`` string into the one-entry list it stands for.
+
+    :func:`services.agent.tools.market.symbol_pairs` already accepts a list, a
+    single object and a JSON string of either, but reads any other string as
+    broken JSON. A model asked to watch one instrument often sends just
+    ``"NSE:INFY"``, or a comma separated run of them, so that spelling is split
+    here and everything else is passed through for ``symbol_pairs`` to judge.
+
+    Args:
+        value: The ``symbols`` argument as the model sent it.
+
+    Returns:
+        A list of ``EXCHANGE:SYMBOL`` strings for a plain string that is not
+        JSON, otherwise the value unchanged.
+    """
+    if isinstance(value, str):
+        text = value.strip()
+        if text and text[0] not in "[{":
+            return [part.strip() for part in re.split(r"[,\n]", text) if part.strip()]
+    return value
 
 
 def _subscription_list(pairs: Sequence[Mapping[str, Any]]) -> list[dict[str, str]]:
@@ -558,7 +570,11 @@ class LiveToolkit(OpenAlgoToolkit):
 
     # -- tool one: the live quotes card --------------------------------------
 
-    def stream_quotes(self, symbols: list[str | dict[str, str]], mode: str = DEFAULT_MODE) -> str:
+    def stream_quotes(
+        self,
+        symbols: list[str | dict] | dict | str,
+        mode: str | int | None = DEFAULT_MODE,
+    ) -> str:
         """Open a live streaming card for a list of instruments.
 
         This is the tool for watch, track, monitor, stream, live and "keep an
@@ -584,7 +600,8 @@ class LiveToolkit(OpenAlgoToolkit):
                 carrying a ``symbol`` and an ``exchange``, for example
                 ``[{"symbol": "RELIANCE", "exchange": "NSE"}, {"symbol":
                 "NIFTY", "exchange": "NSE_INDEX"}]``. A plain ``"NSE:INFY"``
-                string is accepted in place of an object. Both fields are
+                string is accepted in place of an object, or on its own for a
+                single instrument. Both fields are
                 required on every entry; the exchange is not inherited from the
                 entry before it. When the operator did not name an exchange,
                 use NSE for an Indian share and the index code for an index,
@@ -598,7 +615,7 @@ class LiveToolkit(OpenAlgoToolkit):
                 volume and the best bid and ask, which is what a watchlist row
                 shows. ``Depth`` adds the five level order book, and is worth
                 the extra weight only when the question is about liquidity or
-                the spread.
+                the spread. The protocol numbers 1, 2 and 3 mean the same three.
 
         Returns:
             One line naming what is on the card and the price each instrument
@@ -609,7 +626,7 @@ class LiveToolkit(OpenAlgoToolkit):
         """
         mode = normalise_mode(mode)
         limit = MAX_LIVE_DEPTH_SYMBOLS if mode == "Depth" else MAX_LIVE_SYMBOLS
-        pairs, notices = symbol_pairs(symbols, limit=limit, truncate=True)
+        pairs, notices = symbol_pairs(symbols_argument(symbols), limit=limit, truncate=True)
 
         resolved: list[dict[str, str]] = []
         refused: list[dict[str, str]] = []
@@ -674,12 +691,12 @@ class LiveToolkit(OpenAlgoToolkit):
 
     def stream_combo(
         self,
-        underlying: str = "",
-        exchange: str = "",
-        structure: str = "straddle",
-        expiry: str = _DEFAULT_EXPIRY_CHOICE,
-        width: int = 1,
-        legs: list[str | dict[str, str | int]] | None = None,
+        underlying: str | None = "",
+        exchange: str | None = "",
+        structure: str | None = "straddle",
+        expiry: str | None = _DEFAULT_EXPIRY_CHOICE,
+        width: int | None = 1,
+        legs: list[str | dict] | dict | str | None = None,
     ) -> str:
         """Open a live card showing one derived value recomputed on every tick.
 
@@ -715,8 +732,8 @@ class LiveToolkit(OpenAlgoToolkit):
             exchange: Exchange of the **underlying**, not of the options:
                 ``NSE_INDEX`` for NIFTY, BANKNIFTY, FINNIFTY, MIDCPNIFTY;
                 ``BSE_INDEX`` for SENSEX and BANKEX; ``NSE`` or ``BSE`` for a
-                stock; ``MCX`` for a commodity. Leave it empty to have it
-                looked up in the instrument master, which is right almost
+                stock; ``MCX`` for a commodity. Leave it empty or null to have
+                it looked up in the instrument master, which is right almost
                 always.
             structure: Which combination to build: ``straddle`` (the default,
                 the ATM call plus the ATM put), ``strangle``, ``call_spread``,
@@ -752,6 +769,8 @@ class LiveToolkit(OpenAlgoToolkit):
         entries = leg_entries(legs, "legs")
         if entries:
             return self._custom_combo(entries, underlying, expiry, notices)
+        # A null width means the default, exactly as leaving it out does.
+        width = 1 if width is None else width
         return self._named_structure(underlying, exchange, structure, expiry, width, notices)
 
     # -- tool one: seeding ---------------------------------------------------
@@ -916,7 +935,7 @@ class LiveToolkit(OpenAlgoToolkit):
                 "Confirm the underlying has listed options, or watch the instruments "
                 "themselves with stream_quotes.",
             )
-        settled = self._settle_expiry(listed, expiry, notices)
+        settled = choose_expiry(listed, expiry, notices)
 
         steps = normalise_int(width, "width", 1, 20) if chosen.needs_width else 1
         if not chosen.needs_width and as_number(width) not in (None, 1):
@@ -984,8 +1003,17 @@ class LiveToolkit(OpenAlgoToolkit):
         for index, entry in enumerate(entries, start=1):
             symbol, venue = leg_symbol(entry, index, base, shorthand)
             contract = resolve_contract(self.service_call, symbol, venue, f"leg {index}")
-            side = leg_side(entry.get("side") if isinstance(entry, Mapping) else None, index)
-            lots = leg_lots(entry.get("lots") if isinstance(entry, Mapping) else None, index)
+            # The same reading the payoff and premium charts use, so a leg sent
+            # as {"action": "SELL"} or with a quantity streams as what it is
+            # rather than as one bought lot.
+            side, lots = leg_side_and_lots(
+                entry,
+                index,
+                lambda contract=contract: master_lot_size(
+                    self.service_call, contract["symbol"], contract["exchange"]
+                ),
+                notices,
+            )
             resolved.append(self._leg_row(contract, side, lots, "named"))
 
         underlyings = {str(leg.get("base") or "") for leg in resolved}
@@ -1033,91 +1061,6 @@ class LiveToolkit(OpenAlgoToolkit):
         )
 
     # -- tool two: resolution ------------------------------------------------
-
-    def _settle_expiry(self, listed: Sequence[str], value: Any, notices: list[str]) -> str:
-        """Turn an expiry choice into one of the expiries actually listed.
-
-        "Current week" has to come out as a real date or the card is naming a
-        contract that does not exist, so every branch here picks from
-        ``listed`` and says which date it picked.
-
-        Args:
-            listed: The listed expiries in ``DDMMMYY`` form, nearest first.
-            value: The model's choice or an exact date.
-            notices: Collected notices, appended to.
-
-        Returns:
-            One of ``listed``.
-
-        Raises:
-            RetryAgentRun: If an exact date was named and is not listed.
-        """
-        text = str(value or _DEFAULT_EXPIRY_CHOICE).strip().lower().replace(" ", "_")
-        text = text.replace("-", "_")
-
-        if text in ("", "current_week", "nearest", "weekly", "this_week"):
-            picked = listed[0]
-            if _within_this_week(picked):
-                notices.append(f"{picked} is this week's expiry and was used.")
-            else:
-                # "Current week" has to come out as a contract that exists. A
-                # stock lists monthly expiries only, and this week's index
-                # expiry is behind us by Wednesday evening, so saying "the
-                # current week" back would name a date nothing trades on.
-                notices.append(
-                    f"No expiry is listed inside the current week, so {picked}, the nearest "
-                    "listed one, was used."
-                )
-            return picked
-
-        if text in ("next_week", "next"):
-            picked = listed[1] if len(listed) > 1 else listed[0]
-            if picked == listed[0]:
-                notices.append(
-                    f"{picked} is the only listed expiry, so the next one could not be used."
-                )
-            else:
-                notices.append(f"{picked} is the next listed expiry after {listed[0]}.")
-            return picked
-
-        if text in ("current_month", "monthly", "this_month", "next_month"):
-            picked = self._monthly(listed, later=text == "next_month")
-            notices.append(
-                f"{picked} is the last expiry listed in "
-                f"{'the following' if text == 'next_month' else 'the current'} contract month."
-            )
-            return picked
-
-        exact = normalise_expiry(text.upper(), "", allow_embedded=False)
-        if exact not in listed:
-            invalid_argument(
-                "expiry",
-                f"{exact} is not a listed expiry",
-                "The listed ones are " + ", ".join(listed[:8]) + ". Pass one of those, or one "
-                f"of {', '.join(_EXPIRY_CHOICES)}.",
-            )
-        return exact
-
-    @staticmethod
-    def _monthly(listed: Sequence[str], *, later: bool) -> str:
-        """The last expiry listed in a contract month.
-
-        Args:
-            listed: The listed expiries, nearest first.
-            later: True for the month after the nearest expiry's month.
-
-        Returns:
-            The last expiry of that month, falling back to the last listed
-            expiry when the month has none.
-        """
-        months: list[str] = []
-        for entry in listed:
-            month = entry[2:]
-            if month not in months:
-                months.append(month)
-        wanted = months[1] if later and len(months) > 1 else months[0]
-        matching = [entry for entry in listed if entry[2:] == wanted]
-        return matching[-1] if matching else listed[-1]
 
     def _spot_instrument(self, base: str, venue: str) -> tuple[str, str]:
         """The instrument the underlying is actually quoted on.

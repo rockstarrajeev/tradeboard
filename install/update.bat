@@ -91,12 +91,12 @@ set "UV_CMD="
 where uv >nul 2>&1
 if not errorlevel 1 (
     set "UV_CMD=uv"
-    echo   [OK] uv found (standalone)
+    echo   [OK] uv found (standalone^)
 ) else (
     python -m uv --version >nul 2>&1
     if not errorlevel 1 (
         set "UV_CMD=python -m uv"
-        echo   [OK] uv found (Python module)
+        echo   [OK] uv found (Python module^)
     ) else (
         echo [ERROR] uv is not installed.
         echo Install with: pip install uv
@@ -117,9 +117,23 @@ if "%CURRENT_BRANCH%"=="" set "CURRENT_BRANCH=main"
 echo [INFO] Current version: %CURRENT_COMMIT% (branch: %CURRENT_BRANCH%)
 echo.
 
-REM Generate timestamp for backups
-for /f "tokens=2 delims==" %%i in ('wmic os get localdatetime /value 2^>nul ^| findstr LocalDateTime') do set "DT=%%i"
-set "TIMESTAMP=%DT:~0,8%_%DT:~8,6%"
+REM Generate timestamp for backups. WMIC is absent from Windows 11 24H2 and
+REM later, so read the clock from PowerShell in the format update.sh already uses.
+REM An empty timestamp must stop the update: it builds a backup folder name
+REM containing a colon, which Windows cannot create, and Step 1 would then report
+REM a backup it never made.
+set "TIMESTAMP="
+for /f "delims=" %%i in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd_HHmmss" 2^>nul') do set "TIMESTAMP=%%i"
+if not defined TIMESTAMP (
+    echo [ERROR] Could not read the current date and time, so this update cannot
+    echo         name a folder to back your databases up into.
+    echo         That step needs Windows PowerShell. Once it is available on this
+    echo         machine, run the update again. Nothing has been changed.
+    echo.
+    popd
+    pause
+    exit /b 1
+)
 
 REM ========================================
 REM Step 1: Backup databases
@@ -191,7 +205,7 @@ if errorlevel 1 (
 for /f "tokens=*" %%i in ('git rev-parse --short HEAD 2^>nul') do set "NEW_COMMIT=%%i"
 
 if "%CURRENT_COMMIT%"=="%NEW_COMMIT%" (
-    echo   [OK] Already up to date (%CURRENT_COMMIT%)
+    echo   [OK] Already up to date (%CURRENT_COMMIT%^)
 ) else (
     echo   [OK] Updated: %CURRENT_COMMIT% -^> %NEW_COMMIT%
 )
@@ -262,7 +276,7 @@ if exist "%TRADEBOARD_DIR%\upgrade\migrate_all.py" (
         echo   [OK] Database migrations completed.
     )
 ) else (
-    echo   [WARNING] No migration script found (upgrade\migrate_all.py)
+    echo   [WARNING] No migration script found (upgrade\migrate_all.py^)
 )
 echo.
 

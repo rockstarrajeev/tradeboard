@@ -579,6 +579,18 @@ else
 fi
 
 # ============================================
+# Telegram /chart browser
+# ============================================
+# Installs made before this check could hold only Ubuntu's chromium snap, which the
+# service account cannot start, so /chart never drew. A server gets a working browser
+# here; a local install, running as its own user, is told what to install.
+if [ "$SERVER_MODE" = true ]; then
+    ensure_chart_browser
+elif ! chart_browser_path >/dev/null; then
+    log_message "Telegram /chart needs Google Chrome or a Chromium that is not a snap, and none was found" "$YELLOW"
+fi
+
+# ============================================
 # Step 7: Restart services (server mode) or finish (local mode)
 # ============================================
 if [ "$SERVER_MODE" = true ]; then
