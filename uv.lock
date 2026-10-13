@@ -4786,7 +4786,7 @@ wheels = [
 
 [[package]]
 name = "tradeboardui"
-version = "2.0.2.5"
+version = "2.0.2.7"
 source = { editable = "." }
 dependencies = [
     { name = "agno" },
