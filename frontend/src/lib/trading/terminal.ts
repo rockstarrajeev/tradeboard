@@ -2538,11 +2538,10 @@ export class TradingTerminal {
         ...(chartEmblemImage && chartEmblemImage.complete && chartEmblemImage.naturalWidth > 0
           ? { image: chartEmblemImage }
           : {}),
-        label: 'Chart by Tradeboard',
         href: 'https://docs.algo.wesoftcorp.com',
-        height: 24,
-        opacity: 1,
-        tint: 'none',
+        height: 28,
+        margin: 12,
+        opacity: 0.95,
       },
     })
     if (chartEmblemImage && !chartEmblemImage.complete) {
@@ -2551,11 +2550,10 @@ export class TradingTerminal {
           position: 'bottom-left',
           src: CHART_EMBLEM_DATA_URI,
           image: chartEmblemImage,
-          label: 'Chart by Tradeboard',
           href: 'https://docs.algo.wesoftcorp.com',
-          height: 24,
-          opacity: 1,
-          tint: 'none',
+          height: 28,
+          margin: 12,
+          opacity: 0.95,
         })
       }
     }
@@ -2856,7 +2854,7 @@ export class TradingTerminal {
     const label =
       typeof options.label === 'string' && options.label.trim()
         ? options.label.trim()
-        : 'Chart branding'
+        : 'Chart by Tradeboard'
     return { href: options.href, label }
   }
 
