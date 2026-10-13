@@ -72,7 +72,7 @@ node_modules/
 **/node_modules/
 
 # Build output
-dist/
+/dist/
 build/
 .next/
 out/
@@ -86,8 +86,9 @@ frontend/dist/**/*.gz
 frontend/dist/**/*.br
 frontend/dist/**/*.gz.tmp
 
-# frontend/dist/ is built by CI/CD pipeline
-frontend/dist/
+# Frontend build assets are committed for production server deploys without Node.js
+!frontend/dist/
+!frontend/dist/**
 frontend/.cache/
 *.local
 
