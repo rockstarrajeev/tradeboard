@@ -18,6 +18,7 @@ When upgrading or porting features from upstream OpenAlgo, the AI agent must adh
 The following components are protected. Any modification that overwrites, degrades, or reverts these components is considered an **unauthorized regression**:
 
 ### A. Rebranding & Owner Identity
+
 1. **Brand Name**: Always **Tradeboard**. Never revert page titles, navigation bars, headers, footers, docstrings, systemd services, or startup scripts to "OpenAlgo".
 2. **Author & Repository**:
    - GitHub Repository: `https://github.com/rockstarrajeev/tradeboard`
@@ -31,6 +32,7 @@ The following components are protected. Any modification that overwrites, degrad
    - Chart watermark emblem in `frontend/src/lib/trading/chartLogo.ts` and `frontend/src/lib/trading/terminal.ts`.
 
 ### B. User Interface Innovations & Styling
+
 1. **Glassmorphism & Gradient Card Layouts**:
    - The modern animated gradient cards and hover effects on:
      - `/dashboard`
@@ -44,6 +46,7 @@ The following components are protected. Any modification that overwrites, degrad
    - Retain custom styling tokens, animations, and Tailwind/vanilla CSS transitions.
 
 ### C. Custom Added Features ("Tradeboard Superpowers")
+
 1. **Crypto Derivatives Integration**:
    - Delta Exchange broker adapter (`broker/delta/` or crypto handlers), crypto symbols, order routing, and WebSocket endpoints.
 2. **3D Strategy Builder & Options Leg Dialogs**:
@@ -59,7 +62,9 @@ The following components are protected. Any modification that overwrites, degrad
    - `csp.py` & `app.py`: Hardened CSP headers (`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Permissions-Policy`, `Referrer-Policy`).
 
 ### D. Preserved Compatibility Exceptions
+
 To avoid breaking external tools and existing client strategies, retain these compatibility bindings:
+
 - **PyPI SDK Name**: The external Python client SDK package remains `openalgo` (`pip install openalgo`, `from openalgo import api`).
 - **Environment Variables**: Subprocess strategy runner env vars (`OPENALGO_API_KEY`, `OPENALGO_STRATEGY_EXCHANGE`, `OPENALGO_HOST`).
 - **Database & Cryptography**: The default SQLite database path `db/openalgo.db` and static Fernet salt `b"openalgo_static_salt"` must NOT be renamed (renaming would corrupt existing user databases and API key decryption).
@@ -81,39 +86,54 @@ flowchart TD
 ```
 
 ### Step 1: Pre-Upgrade Safety Check & Branch Creation
+
 1. Ensure the working tree is clean:
+
    ```bash
    git status
    ```
+
 2. Run the audit script to verify the baseline is green:
+
    ```bash
    python scripts/audit_rebranding.py
    ```
+
 3. Create an isolated upgrade branch:
+
    ```bash
    git checkout -b feature/upstream-upgrade-<version_or_date>
    ```
 
 ### Step 2: Fetch Upstream & Inspect Changes (DO NOT Blindly Merge)
+
 **NEVER execute `git merge openalgo/main` or `git pull` without reviewing!** Blind merges will overwrite Tradeboard branding and custom UI components.
+
 1. Fetch latest changes from upstream:
+
    ```bash
    git fetch openalgo
    ```
+
 2. Inspect the commits:
+
    ```bash
    git log --oneline HEAD..openalgo/main -n 20
    ```
+
 3. Inspect which files changed:
+
    ```bash
    git diff HEAD..openalgo/main --stat
    ```
+
 4. Categorize files:
    - **Type A: Pure Additions** (e.g. new broker file `broker/newbroker.py`, new indicator function) $\rightarrow$ Port directly.
    - **Type B: Core Shared Code** (e.g. `app.py`, `blueprints/`, `frontend/src/`) $\rightarrow$ Perform line-by-line 3-way merge, keeping Tradeboard enhancements intact.
    - **Type C: Brand & UI Protected** (e.g. `frontend/src/pages/Login.tsx`, `index.html`, `README.md`, `PRD.md`, `CLAUDE.md`, logos) $\rightarrow$ DO NOT overwrite with upstream. Only extract technical or functional updates if relevant.
 
 ### Step 3: Porting Upstream Changes
+
 - **Backend API & Brokers**:
   - Add new broker endpoints or handlers.
   - Verify that Delta Exchange (Crypto) routes in `app.py` and `broker/` remain intact.
@@ -128,14 +148,19 @@ flowchart TD
   - Ensure `EditLegDialog.tsx` retains `invalidateIvWhenContractChanges`.
 
 ### Step 4: Run Rebranding & Feature Integrity Audit
+
 Always run the automated integrity audit script:
+
 ```bash
 python scripts/audit_rebranding.py
 ```
+
 If any check fails, fix the regression before proceeding.
 
 ### Step 5: Automated Tests & Bundle Build
+
 Run the full validation suite:
+
 ```bash
 # 1. Production security checks
 pytest test/test_production_security.py -v
@@ -153,21 +178,28 @@ python -m utils.precompress_assets
 # 5. Database migrations check
 python upgrade/migrate_all.py
 ```
+
 All commands must exit with code 0 without errors.
 
 ### Step 6: Multi-Repository Parity Sync
+
 Tradeboard exists in two synchronized repository trees:
+
 1. **Crypto Version**: `d:\Code\Antigravity\My_Projects\tradeboard`
 2. **Indian Stock Version**: `D:\Code\VS Code\tradeboard`
 
 Every change made to the Crypto version must be mirrored to the Indian Stock version:
+
 1. Copy updated files to `D:\Code\VS Code\tradeboard`.
 2. Run the audit script in the Indian Stock repo:
+
    ```bash
    cd "D:\Code\VS Code\tradeboard"
    python scripts/audit_rebranding.py
    ```
+
 3. Run tests and build the bundle in the Indian Stock repo:
+
    ```bash
    pytest test/test_production_security.py
    cd frontend && npm run build && cd ..
@@ -175,8 +207,10 @@ Every change made to the Crypto version must be mirrored to the Indian Stock ver
    ```
 
 ### Step 7: Final Verification & Clean Commit
+
 1. Verify `git status` and `git diff` in both repositories.
 2. Commit with clear, descriptive messages:
+
    ```bash
    git commit -m "feat: port upstream OpenAlgo <version> features while preserving Tradeboard branding and custom modules"
    ```
