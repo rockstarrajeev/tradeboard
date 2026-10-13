@@ -282,9 +282,10 @@ describe('CandleViz', () => {
 
     const chart = harness.charts[0]
     const branding = chart.options.branding as Record<string, unknown>
-    expect(branding.src).toBe('/images/openalgo-glyph.svg')
+    expect(branding.src).toBe('/images/tradeboard-glyph.svg')
     expect(branding.position).toBe('bottom-left')
-    expect(branding.label).toBe('Tradeboard Charts')
+    expect(branding.label).toBe('Chart by Tradeboard')
+    expect(branding.tint).toBe('#38bdf8')
     expect(chart.primitives).toHaveLength(0)
   })
 })

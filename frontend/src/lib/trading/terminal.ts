@@ -2541,7 +2541,10 @@ export class TradingTerminal {
         href: 'https://docs.algo.wesoftcorp.com',
         height: 28,
         margin: 12,
-        opacity: 0.95,
+        opacity: 0.75,
+        label: 'Chart by Tradeboard',
+        labelColor: '#38bdf8',
+        tint: '#38bdf8',
       },
     })
     if (chartEmblemImage && !chartEmblemImage.complete) {
@@ -2553,7 +2556,10 @@ export class TradingTerminal {
           href: 'https://docs.algo.wesoftcorp.com',
           height: 28,
           margin: 12,
-          opacity: 0.95,
+          opacity: 0.75,
+          label: 'Chart by Tradeboard',
+          labelColor: '#38bdf8',
+          tint: '#38bdf8',
         })
       }
     }
